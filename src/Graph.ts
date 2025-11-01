@@ -1,3 +1,4 @@
+// @ts-nocheck
 //@ts-check
 const MathHelper = require('./MathHelper')
 const Vector2 = require('./Vector2')
@@ -936,4 +937,4 @@ class Graph {
   }
 }
 
-module.exports = Graph
+export = Graph

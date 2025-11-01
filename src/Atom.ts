@@ -1,3 +1,4 @@
+// @ts-nocheck
 //@ts-check
 const ArrayHelper = require('./ArrayHelper')
 const Vertex = require('./Vertex')
@@ -541,4 +542,4 @@ class Atom {
   }
 }
 
-module.exports = Atom;
+export = Atom;

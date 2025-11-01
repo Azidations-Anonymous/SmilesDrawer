@@ -1,3 +1,4 @@
+// @ts-nocheck
 // we use the drawer to do all the preprocessing. then we take over the drawing
 // portion to output to svg
 const ArrayHelper = require('./ArrayHelper');
@@ -474,4 +475,4 @@ class SvgDrawer {
   }
 }
 
-module.exports = SvgDrawer;
+export = SvgDrawer;

@@ -4,3 +4,9 @@ yarn-error.log
 # TypeScript
 *.tsbuildinfo
 tsconfig.tsbuildinfo
+
+# TypeScript compiled output in src/ (generated from .ts sources)
+src/**/*.js
+src/**/*.d.ts
+src/**/*.js.map
+src/**/*.d.ts.map

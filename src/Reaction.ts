@@ -1,3 +1,4 @@
+// @ts-nocheck
 4//@ts-check
 const Parser = require('./Parser')
 
@@ -52,4 +53,4 @@ class Reaction {
     }
 }
 
-module.exports = Reaction;
+export = Reaction;

@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 "use strict";
 
-//@ts-check
+// @ts-nocheck
 const Drawer = require('./src/Drawer');
 
 const Parser = require('./src/Parser');
@@ -3741,13 +3741,13 @@ module.exports = SmilesDrawer;
 }));
 
 },{}],3:[function(require,module,exports){
-"use strict";
-
+"use strict"; // @ts-nocheck
 //@ts-check
 
-/** 
- * A static class containing helper functions for array-related tasks. 
+/**
+ * A static class containing helper functions for array-related tasks.
  */
+
 class ArrayHelper {
   /**
    * Clone an array or an object. If an object is passed, a shallow clone will be created.
@@ -4117,7 +4117,7 @@ class ArrayHelper {
   }
   /**
    * Copies a an n-dimensional array.
-   * 
+   *
    * @param {Array} arr The array to be copied.
    * @returns {Array} The copy.
    */
@@ -4144,17 +4144,17 @@ class ArrayHelper {
 module.exports = ArrayHelper;
 
 },{}],4:[function(require,module,exports){
-"use strict";
-
+"use strict"; // @ts-nocheck
 //@ts-check
+
 const ArrayHelper = require('./ArrayHelper');
 
 const Vertex = require('./Vertex');
 
 const Ring = require('./Ring');
-/** 
+/**
  * A class representing an atom.
- * 
+ *
  * @property {String} element The element symbol of this atom. Single-letter symbols are always uppercase. Examples: H, C, F, Br, Si, ...
  * @property {Boolean} drawExplicit A boolean indicating whether or not this atom is drawn explicitly (for example, a carbon atom). This overrides the default behaviour.
  * @property {Object[]} ringbonds An array containing the ringbond ids and bond types as specified in the original SMILE.
@@ -4229,7 +4229,7 @@ class Atom {
   }
   /**
    * Adds a neighbouring element to this atom.
-   * 
+   *
    * @param {String} element A string representing an element.
    */
 
@@ -4376,7 +4376,7 @@ class Atom {
   }
   /**
    * Check whether or not the neighbouring elements of this atom equal the supplied array.
-   * 
+   *
    * @param {String[]} arr An array containing all the elements that are neighbouring this atom. E.g. ['C', 'O', 'O', 'N']
    * @returns {Boolean} A boolean indicating whether or not the neighbours match the supplied array of elements.
    */
@@ -4400,7 +4400,7 @@ class Atom {
   }
   /**
    * Get the atomic number of this atom.
-   * 
+   *
    * @returns {Number} The atomic number of this atom.
    */
 
@@ -4410,7 +4410,7 @@ class Atom {
   }
   /**
    * Get the maximum number of bonds for this atom.
-   * 
+   *
    * @returns {Number} The maximum number of bonds of this atom.
    */
 
@@ -4710,9 +4710,9 @@ class Atom {
 module.exports = Atom;
 
 },{"./ArrayHelper":3,"./Ring":20,"./Vertex":29}],5:[function(require,module,exports){
-"use strict";
-
+"use strict"; // @ts-nocheck
 //@ts-check
+
 const MathHelper = require('./MathHelper');
 
 const Vector2 = require('./Vector2');
@@ -4726,9 +4726,9 @@ const Ring = require('./Ring');
 const {
   getChargeText
 } = require('./UtilityFunctions');
-/** 
+/**
  * A class wrapping a canvas element.
- * 
+ *
  * @property {HTMLElement} canvas The HTML element for the canvas associated with this CanvasWrapper instance.
  * @property {CanvasRenderingContext2D} ctx The CanvasRenderingContext2D of the canvas associated with this CanvasWrapper instance.
  * @property {Object} colors The colors object as defined in the SmilesDrawer options.
@@ -4775,9 +4775,9 @@ class CanvasWrapper {
   }
   /**
    * Update the width and height of the canvas
-   * 
-   * @param {Number} width 
-   * @param {Number} height 
+   *
+   * @param {Number} width
+   * @param {Number} height
    */
 
 
@@ -5542,13 +5542,12 @@ class CanvasWrapper {
 module.exports = CanvasWrapper;
 
 },{"./Line":12,"./MathHelper":13,"./Ring":20,"./UtilityFunctions":27,"./Vector2":28,"./Vertex":29}],6:[function(require,module,exports){
-"use strict";
+"use strict"; // @ts-nocheck
 
-//@ts-check
 const SvgDrawer = require('./SvgDrawer');
-/** 
- * The main class of the application representing the smiles drawer 
- * 
+/**
+ * The main class of the application representing the smiles drawer
+ *
  * @property {Graph} graph The graph associated with this SmilesDrawer.Drawer instance.
  * @property {Number} ringIdCounter An internal counter to keep track of ring ids.
  * @property {Number} ringConnectionIdCounter An internal counter to keep track of ring connection ids.
@@ -5608,7 +5607,7 @@ class Drawer {
   }
   /**
    * Returns the molecular formula of the loaded molecule as a string.
-   * 
+   *
    * @returns {String} The molecular formula.
    */
 
@@ -5622,9 +5621,8 @@ class Drawer {
 module.exports = Drawer;
 
 },{"./SvgDrawer":24}],7:[function(require,module,exports){
-"use strict";
+"use strict"; // @ts-nocheck
 
-//@ts-check
 const MathHelper = require('./MathHelper');
 
 const ArrayHelper = require('./ArrayHelper');
@@ -5652,9 +5650,9 @@ const SSSR = require('./SSSR');
 const ThemeManager = require('./ThemeManager');
 
 const Options = require('./Options');
-/** 
- * The main class of the application representing the smiles drawer 
- * 
+/**
+ * The main class of the application representing the smiles drawer
+ *
  * @property {Graph} graph The graph associated with this SmilesDrawer.Drawer instance.
  * @property {Number} ringIdCounter An internal counter to keep track of ring ids.
  * @property {Number} ringConnectionIdCounter An internal counter to keep track of ring connection ids.
@@ -6143,7 +6141,7 @@ class DrawerBase {
   }
   /**
    * Returns the molecular formula of the loaded molecule as a string.
-   * 
+   *
    * @returns {String} The molecular formula.
    */
 
@@ -6898,8 +6896,8 @@ class DrawerBase {
   }
   /**
    * Get a ring connection with a given id.
-   * 
-   * @param {Number} id 
+   *
+   * @param {Number} id
    * @returns {RingConnection} The ring connection with the specified id.
    */
 
@@ -7638,7 +7636,7 @@ class DrawerBase {
   }
   /**
    * Returns the current (positioned vertices so far) center of mass.
-   * 
+   *
    * @returns {Vector2} The current center of mass.
    */
 
@@ -8504,8 +8502,8 @@ class DrawerBase {
     }
   }
   /**
-   * 
-   * 
+   *
+   *
    * @param {Number} vertexId The id of a vertex.
    * @param {(Number|null)} previousVertexId The id of the parent vertex of the vertex.
    * @param {Uint8Array} visited An array containing the visited flag for all vertices in the graph.
@@ -8679,8 +8677,7 @@ class DrawerBase {
 module.exports = DrawerBase;
 
 },{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Edge":8,"./Graph":11,"./Line":12,"./MathHelper":13,"./Options":14,"./Ring":20,"./RingConnection":21,"./SSSR":22,"./ThemeManager":26,"./Vector2":28,"./Vertex":29}],8:[function(require,module,exports){
-"use strict";
-
+"use strict"; // @ts-nocheck
 //@ts-check
 
 /**
@@ -8695,6 +8692,7 @@ module.exports = DrawerBase;
  * @property {Boolean} [center=false] Wheter or not the bond is centered. For example, this affects straight double bonds.
  * @property {String} [wedge=''] Wedge direction. Either '', 'up' or 'down'
  */
+
 class Edge {
   /**
    * The constructor for the class Edge.
@@ -8747,9 +8745,8 @@ class Edge {
 module.exports = Edge;
 
 },{}],9:[function(require,module,exports){
-"use strict";
+"use strict"; // @ts-nocheck
 
-//@ts-check
 const formulaToCommonName = {
   'C2H4O2': 'acetic acid',
   'C3H6O': 'acetone',
@@ -8786,7 +8783,7 @@ const formulaToCommonName = {
 module.exports = formulaToCommonName;
 
 },{}],10:[function(require,module,exports){
-"use strict";
+"use strict"; // @ts-nocheck
 
 const Vector2 = require('./Vector2');
 
@@ -8797,7 +8794,7 @@ const chroma = require("chroma-js");
 class GaussDrawer {
   /**
   * The constructor of the class Graph.
-  * 
+  *
   * @param {Vector2[]} points The centres of the gaussians.
   * @param {Number[]} weights The weights / amplitudes for each gaussian.
   */
@@ -8853,7 +8850,7 @@ class GaussDrawer {
     // fraction is faster than division ...
 
 
-    let divisor = 1.0 / (2 * this.sigma ** 2);
+    let divisor = 1.0 / (2 * Math.pow(this.sigma, 2));
 
     for (let i = 0; i < this.points.length; i++) {
       let v = this.points[i];
@@ -8863,7 +8860,7 @@ class GaussDrawer {
         for (let y = 0; y < this.height; y++) {
           // let v_x = (x - v.x) ** 2 / (2 * this.sigma ** 2);
           // let v_y = (y - v.y) ** 2 / (2 * this.sigma ** 2);
-          let v_xy = ((x - v.x) ** 2 + (y - v.y) ** 2) * divisor;
+          let v_xy = (Math.pow(x - v.x, 2) + Math.pow(y - v.y, 2)) * divisor;
           let val = a * Math.exp(-v_xy);
           m[x][y] += val;
         }
@@ -8910,7 +8907,7 @@ class GaussDrawer {
   }
   /**
    * Get the canvas as an HTML image.
-   * 
+   *
    * @param {CallableFunction} callback
    */
 
@@ -8935,7 +8932,7 @@ class GaussDrawer {
   }
   /**
    * Get the canvas as an SVG element.
-   * 
+   *
    * @param {CallableFunction} callback
    */
 
@@ -8945,7 +8942,7 @@ class GaussDrawer {
   }
   /**
    * Set the colour at a specific point on the canvas.
-   * 
+   *
    * @param {Vector2} vec The pixel position on the canvas.
    * @param {Number} r The red colour-component.
    * @param {Number} g The green colour-component.
@@ -8964,9 +8961,9 @@ class GaussDrawer {
 module.exports = GaussDrawer;
 
 },{"./PixelsToSvg":16,"./Vector2":28,"chroma-js":2}],11:[function(require,module,exports){
-"use strict";
-
+"use strict"; // @ts-nocheck
 //@ts-check
+
 const MathHelper = require('./MathHelper');
 
 const Vector2 = require('./Vector2');
@@ -8978,9 +8975,9 @@ const Edge = require('./Edge');
 const Ring = require('./Ring');
 
 const Atom = require('./Atom');
-/** 
- * A class representing the molecular graph. 
- * 
+/**
+ * A class representing the molecular graph.
+ *
  * @property {Vertex[]} vertices The vertices of the graph.
  * @property {Edge[]} edges The edges of this graph.
  * @property {Number[]} atomIdxToVertexId A map mapping atom indices to vertex ids.
@@ -8992,7 +8989,7 @@ const Atom = require('./Atom');
 class Graph {
   /**
    * The constructor of the class Graph.
-   * 
+   *
    * @param {Object} parseTree A SMILES parse tree.
    * @param {Boolean} [isomeric=false] A boolean specifying whether or not the SMILES is isomeric.
    */
@@ -9191,7 +9188,7 @@ class Graph {
   }
   /**
    * Returns an array containing the vertex ids of this graph.
-   * 
+   *
    * @returns {Number[]} An array containing all vertex ids of this graph.
    */
 
@@ -9207,7 +9204,7 @@ class Graph {
   }
   /**
    * Returns an array containing source, target arrays of this graphs edges.
-   * 
+   *
    * @returns {Array[]} An array containing source, target arrays of this graphs edges. Example: [ [ 2, 5 ], [ 6, 9 ] ].
    */
 
@@ -9223,7 +9220,7 @@ class Graph {
   }
   /**
    * Get the adjacency matrix of the graph.
-   * 
+   *
    * @returns {Array[]} The adjancency matrix of the molecular graph.
    */
 
@@ -9247,7 +9244,7 @@ class Graph {
   }
   /**
    * Get the adjacency matrix of the graph with all bridges removed (thus the components). Thus the remaining vertices are all part of ring systems.
-   * 
+   *
    * @returns {Array[]} The adjancency matrix of the molecular graph with all bridges removed.
    */
 
@@ -9277,7 +9274,7 @@ class Graph {
   }
   /**
    * Get the adjacency matrix of a subgraph.
-   * 
+   *
    * @param {Number[]} vertexIds An array containing the vertex ids contained within the subgraph.
    * @returns {Array[]} The adjancency matrix of the subgraph.
    */
@@ -9306,7 +9303,7 @@ class Graph {
   }
   /**
    * Get the distance matrix of the graph.
-   * 
+   *
    * @returns {Array[]} The distance matrix of the graph.
    */
 
@@ -9343,7 +9340,7 @@ class Graph {
   }
   /**
    * Get the distance matrix of a subgraph.
-   * 
+   *
    * @param {Number[]} vertexIds An array containing the vertex ids contained within the subgraph.
    * @returns {Array[]} The distance matrix of the subgraph.
    */
@@ -9381,7 +9378,7 @@ class Graph {
   }
   /**
    * Get the adjacency list of the graph.
-   * 
+   *
    * @returns {Array[]} The adjancency list of the graph.
    */
 
@@ -9408,7 +9405,7 @@ class Graph {
   }
   /**
    * Get the adjacency list of a subgraph.
-   * 
+   *
    * @param {Number[]} vertexIds An array containing the vertex ids contained within the subgraph.
    * @returns {Array[]} The adjancency list of the subgraph.
    */
@@ -9436,7 +9433,7 @@ class Graph {
   }
   /**
    * Returns an array containing the edge ids of bridges. A bridge splits the graph into multiple components when removed.
-   * 
+   *
    * @returns {Number[]} An array containing the edge ids of the bridges.
    */
 
@@ -9463,7 +9460,7 @@ class Graph {
   }
   /**
    * Traverses the graph in breadth-first order.
-   * 
+   *
    * @param {Number} startVertexId The id of the starting vertex.
    * @param {Function} callback The callback function to be called on every vertex.
    */
@@ -9556,7 +9553,7 @@ class Graph {
   /**
    * Positiones the (sub)graph using Kamada and Kawais algorithm for drawing general undirected graphs. https://pdfs.semanticscholar.org/b8d3/bca50ccc573c5cb99f7d201e8acce6618f04.pdf
    * There are undocumented layout parameters. They are undocumented for a reason, so be very careful.
-   * 
+   *
    * @param {Number[]} vertexIds An array containing vertexIds to be placed using the force based layout.
    * @param {Vector2} center The center of the layout.
    * @param {Number} startVertexId A vertex id. Should be the starting vertex - e.g. the first to be positioned and connected to a previously place vertex.
@@ -9829,7 +9826,7 @@ class Graph {
   }
   /**
    * Returns the connected components of the graph.
-   * 
+   *
    * @param {Array[]} adjacencyMatrix An adjacency matrix.
    * @returns {Set[]} Connected components as sets.
    */
@@ -9860,8 +9857,8 @@ class Graph {
     return components;
   }
   /**
-   * Returns the number of connected components for the graph. 
-   * 
+   * Returns the number of connected components for the graph.
+   *
    * @param {Array[]} adjacencyMatrix An adjacency matrix.
    * @returns {Number} The number of connected components of the supplied graph.
    */
@@ -9927,13 +9924,13 @@ class Graph {
 module.exports = Graph;
 
 },{"./Atom":4,"./Edge":8,"./MathHelper":13,"./Ring":20,"./Vector2":28,"./Vertex":29}],12:[function(require,module,exports){
-"use strict";
-
+"use strict"; // @ts-nocheck
 //@ts-check
+
 const Vector2 = require('./Vector2');
-/** 
+/**
  * A class representing a line.
- * 
+ *
  * @property {Vector2} from The Vector2 defining the start of the line.
  * @property {Vector2} to The Vector2 defining the end of the line.
  * @property {String} elementFrom The element symbol associated with the start of the line.
@@ -10199,7 +10196,7 @@ class Line {
   }
   /**
    * Shorten the left side.
-   * 
+   *
    * @param {Number} by The length in pixels to shorten the vector by.
    * @returns {Line} Returns itself.
    */
@@ -10236,11 +10233,12 @@ class Line {
 module.exports = Line;
 
 },{"./Vector2":28}],13:[function(require,module,exports){
-"use strict";
+"use strict"; // @ts-nocheck
 
-/** 
- * A static class containing helper functions for math-related tasks. 
+/**
+ * A static class containing helper functions for math-related tasks.
  */
+
 class MathHelper {
   /**
    * Rounds a value to a given number of decimals.
@@ -10409,9 +10407,8 @@ class MathHelper {
 module.exports = MathHelper;
 
 },{}],14:[function(require,module,exports){
-"use strict";
+"use strict"; // @ts-nocheck
 
-//@ts-check
 class Options {
   /**
    * A helper method to extend the default options with user supplied ones.
@@ -10453,10 +10450,10 @@ class Options {
 module.exports = Options;
 
 },{}],15:[function(require,module,exports){
-"use strict";
-
+"use strict"; // @ts-nocheck
 // WHEN REPLACING, CHECK FOR:
 // KEEP THIS WHEN REGENERATING THE PARSER !!
+
 module.exports = function () {
   "use strict";
   /*
@@ -12352,9 +12349,9 @@ module.exports = function () {
 }();
 
 },{}],16:[function(require,module,exports){
-"use strict";
-
+"use strict"; // @ts-nocheck
 // Adapted from https://codepen.io/shshaw/pen/XbxvNj by 
+
 function convertImage(img) {
   "use strict";
 
@@ -12475,7 +12472,7 @@ function convertImage(img) {
 module.exports = convertImage;
 
 },{}],17:[function(require,module,exports){
-"use strict";
+"use strict"; // @ts-nocheck
 
 4; //@ts-check
 
@@ -12533,7 +12530,7 @@ class Reaction {
 module.exports = Reaction;
 
 },{"./Parser":15}],18:[function(require,module,exports){
-"use strict";
+"use strict"; // @ts-nocheck
 
 const SvgDrawer = require('./SvgDrawer');
 
@@ -12587,7 +12584,7 @@ class ReactionDrawer {
   * @param {String} textBelow='' The text below the arrow.
   * @param {?Object} weights=null The weights for reactants, agents, and products.
   * @param {Boolean} infoOnly=false Only output info on the molecule without drawing anything to the canvas.
-  * 
+  *
   * @returns {SVGElement} The svg element
   */
 
@@ -12798,8 +12795,10 @@ class ReactionDrawer {
 
     let totalWidth = 0.0;
     elements.forEach(element => {
-      let offsetX = element.offsetX ?? 0.0;
-      let offsetY = element.offsetY ?? 0.0;
+      var _a, _b;
+
+      let offsetX = (_a = element.offsetX) !== null && _a !== void 0 ? _a : 0.0;
+      let offsetY = (_b = element.offsetY) !== null && _b !== void 0 ? _b : 0.0;
       element.svg.setAttributeNS(null, 'x', Math.round(totalWidth + offsetX));
       element.svg.setAttributeNS(null, 'y', Math.round((maxHeight - element.height) / 2.0 + offsetY));
       element.svg.setAttributeNS(null, 'width', Math.round(element.width));
@@ -12903,9 +12902,8 @@ class ReactionDrawer {
 module.exports = ReactionDrawer;
 
 },{"./FormulaToCommonName":9,"./Options":14,"./SvgDrawer":24,"./SvgWrapper":25,"./ThemeManager":26}],19:[function(require,module,exports){
-"use strict";
+"use strict"; // @ts-nocheck
 
-//@ts-check
 const Reaction = require('./Reaction');
 
 class ReactionParser {
@@ -12925,9 +12923,9 @@ class ReactionParser {
 module.exports = ReactionParser;
 
 },{"./Reaction":17}],20:[function(require,module,exports){
-"use strict";
-
+"use strict"; // @ts-nocheck
 //@ts-check
+
 const ArrayHelper = require('./ArrayHelper');
 
 const Vector2 = require('./Vector2');
@@ -12935,9 +12933,9 @@ const Vector2 = require('./Vector2');
 const Vertex = require('./Vertex');
 
 const RingConnection = require('./RingConnection');
-/** 
+/**
  * A class representing a ring.
- * 
+ *
  * @property {Number} id The id of this ring.
  * @property {Number[]} members An array containing the vertex ids of the ring members.
  * @property {Number[]} edges An array containing the edge ids of the edges between the ring members.
@@ -13147,15 +13145,15 @@ class Ring {
 module.exports = Ring;
 
 },{"./ArrayHelper":3,"./RingConnection":21,"./Vector2":28,"./Vertex":29}],21:[function(require,module,exports){
-"use strict";
-
+"use strict"; // @ts-nocheck
 //@ts-check
+
 const Vertex = require('./Vertex');
 
 const Ring = require('./Ring');
-/** 
+/**
  * A class representing a ring connection.
- * 
+ *
  * @property {Number} id The id of this ring connection.
  * @property {Number} firstRingId A ring id.
  * @property {Number} secondRingId A ring id.
@@ -13215,7 +13213,7 @@ class RingConnection {
   }
   /**
    * Returns a boolean indicating whether or not a ring with a given id is participating in this ring connection.
-   * 
+   *
    * @param {Number} ringId A ring id.
    * @returns {Boolean} A boolean indicating whether or not a ring with a given id participates in this ring connection.
    */
@@ -13321,9 +13319,9 @@ class RingConnection {
 module.exports = RingConnection;
 
 },{"./Ring":20,"./Vertex":29}],22:[function(require,module,exports){
-"use strict";
-
+"use strict"; // @ts-nocheck
 //@ts-check
+
 const Graph = require('./Graph');
 /** A class encapsulating the functionality to find the smallest set of smallest rings in a graph. */
 
@@ -13331,7 +13329,7 @@ const Graph = require('./Graph');
 class SSSR {
   /**
    * Returns an array containing arrays, each representing a ring from the smallest set of smallest rings in the graph.
-   * 
+   *
    * @param {Graph} graph A Graph object.
    * @param {Boolean} [experimental=false] Whether or not to use experimental SSSR.
    * @returns {Array[]} An array containing arrays, each representing a ring from the smallest set of smallest rings in the group.
@@ -13425,7 +13423,7 @@ class SSSR {
   }
   /**
    * Creates a printable string from a matrix (2D array).
-   * 
+   *
    * @param {Array[]} matrix A 2D array.
    * @returns {String} A string representing the matrix.
    */
@@ -13446,7 +13444,7 @@ class SSSR {
   }
   /**
    * Returnes the two path-included distance matrices used to find the sssr.
-   * 
+   *
    * @param {Array[]} adjacencyMatrix An adjacency matrix.
    * @returns {Object} The path-included distance matrices. { p1, p2 }
    */
@@ -13614,7 +13612,7 @@ class SSSR {
   }
   /**
    * Get the ring candidates from the path-included distance matrices.
-   * 
+   *
    * @param {Array[]} d The distance matrix.
    * @param {Array[]} pe A matrix containing the shortest paths.
    * @param {Array[]} pe_prime A matrix containing the shortest paths + one vertex.
@@ -13654,7 +13652,7 @@ class SSSR {
   }
   /**
    * Searches the candidates for the smallest set of smallest rings.
-   * 
+   *
    * @param {Array[]} c The candidates.
    * @param {Array[]} d The distance matrix.
    * @param {Array[]} adjacencyMatrix An adjacency matrix.
@@ -13721,7 +13719,7 @@ class SSSR {
   }
   /**
    * Returns the number of edges in a graph defined by an adjacency matrix.
-   * 
+   *
    * @param {Array[]} adjacencyMatrix An adjacency matrix.
    * @returns {Number} The number of edges in the graph defined by the adjacency matrix.
    */
@@ -13746,7 +13744,7 @@ class SSSR {
   }
   /**
    * Returns an edge list constructed form an adjacency matrix.
-   * 
+   *
    * @param {Array[]} adjacencyMatrix An adjacency matrix.
    * @returns {Array[]} An edge list. E.g. [ [ 0, 1 ], ..., [ 16, 2 ] ]
    */
@@ -13771,7 +13769,7 @@ class SSSR {
   }
   /**
    * Return a set of vertex indices contained in an array of bonds.
-   * 
+   *
    * @param {Array} bonds An array of bonds. A bond is defined as [ sourceVertexId, targetVertexId ].
    * @returns {Set<Number>} An array of vertices.
    */
@@ -13790,7 +13788,7 @@ class SSSR {
   }
   /**
   * Returns the number of bonds within a set of atoms.
-  * 
+  *
   * @param {Set<Number>} atoms An array of atom ids.
   * @param {Array[]} adjacencyMatrix An adjacency matrix.
   * @returns {Number} The number of bonds in a set of atoms.
@@ -13814,7 +13812,7 @@ class SSSR {
   }
   /**
    * Checks whether or not a given path already exists in an array of paths.
-   * 
+   *
    * @param {Set[]} pathSets An array of sets each representing a path.
    * @param {Set<Number>} pathSet A set representing a path.
    * @param {Array[]} bonds The bonds associated with the current path.
@@ -13888,7 +13886,7 @@ class SSSR {
   }
   /**
    * Checks whether or not two sets are equal (contain the same elements).
-   * 
+   *
    * @param {Set<Number>} setA A set.
    * @param {Set<Number>} setB A set.
    * @returns {Boolean} A boolean indicating whether or not the two sets are equal.
@@ -13910,7 +13908,7 @@ class SSSR {
   }
   /**
    * Checks whether or not a set (setA) is a superset of another set (setB).
-   * 
+   *
    * @param {Set<Number>} setA A set.
    * @param {Set<Number>} setB A set.
    * @returns {Boolean} A boolean indicating whether or not setB is a superset of setA.
@@ -13932,9 +13930,8 @@ class SSSR {
 module.exports = SSSR;
 
 },{"./Graph":11}],23:[function(require,module,exports){
-"use strict";
+"use strict"; // @ts-nocheck
 
-//@ts-check
 const Drawer = require('./Drawer');
 
 const Parser = require('./Parser');
@@ -14238,9 +14235,9 @@ class SmilesDrawer {
     return img;
   }
   /**
-   * 
-   * @param {HTMLImageElement|HTMLCanvasElement|SVGElement} element 
-   * @param {SVGElement} svg 
+   *
+   * @param {HTMLImageElement|HTMLCanvasElement|SVGElement} element
+   * @param {SVGElement} svg
    * @returns {{w: Number, h: Number}} The width and height.
    */
 
@@ -14281,10 +14278,10 @@ class SmilesDrawer {
 module.exports = SmilesDrawer;
 
 },{"./Drawer":6,"./Options":14,"./Parser":15,"./ReactionDrawer":18,"./ReactionParser":19,"./SvgDrawer":24,"./SvgWrapper":25}],24:[function(require,module,exports){
-"use strict";
-
+"use strict"; // @ts-nocheck
 // we use the drawer to do all the preprocessing. then we take over the drawing
 // portion to output to svg
+
 const ArrayHelper = require('./ArrayHelper');
 
 const Atom = require('./Atom');
@@ -14571,8 +14568,8 @@ class SvgDrawer {
   }
   /**
    * Draw the highlights for atoms to the canvas.
-   * 
-   * @param {Boolean} debug 
+   *
+   * @param {Boolean} debug
    */
 
 
@@ -14748,7 +14745,7 @@ class SvgDrawer {
 module.exports = SvgDrawer;
 
 },{"./ArrayHelper":3,"./Atom":4,"./DrawerBase":7,"./GaussDrawer":10,"./Graph":11,"./Line":12,"./SvgWrapper":25,"./ThemeManager":26,"./Vector2":28}],25:[function(require,module,exports){
-"use strict";
+"use strict"; // @ts-nocheck
 
 const {
   getChargeText
@@ -15095,7 +15092,7 @@ class SvgWrapper {
     this.paths.push(polygon);
   }
   /* Draw a highlight for an atom
-   * 
+   *
    *  @param {Number} x The x position of the highlight
    *  @param {Number} y The y position of the highlight
    *  @param {string} color The color of the highlight, default #03fc9d
@@ -15584,11 +15581,11 @@ class SvgWrapper {
   }
   /**
    * Convert an SVG to a canvas. Warning: This happens async!
-   * 
-   * @param {SVGElement} svg 
-   * @param {HTMLCanvasElement} canvas 
-   * @param {Number} width 
-   * @param {Number} height 
+   *
+   * @param {SVGElement} svg
+   * @param {HTMLCanvasElement} canvas
+   * @param {Number} width
+   * @param {Number} height
    * @param {CallableFunction} callback
    * @returns {HTMLCanvasElement} The input html canvas element after drawing to.
    */
@@ -15620,10 +15617,10 @@ class SvgWrapper {
   }
   /**
    * Convert an SVG to a canvas. Warning: This happens async!
-   * 
-   * @param {SVGElement} svg 
-   * @param {HTMLImageElement} canvas 
-   * @param {Number} width 
+   *
+   * @param {SVGElement} svg
+   * @param {HTMLImageElement} canvas
+   * @param {Number} width
    * @param {Number} height
    */
 
@@ -15636,9 +15633,9 @@ class SvgWrapper {
   }
   /**
    * Create an SVG element containing text.
-   * @param {String} text 
-   * @param {*} themeManager 
-   * @param {*} options 
+   * @param {String} text
+   * @param {*} themeManager
+   * @param {*} options
    * @returns {{svg: SVGElement, width: Number, height: Number}} The SVG element containing the text and its dimensions.
    */
 
@@ -15729,7 +15726,7 @@ class SvgWrapper {
 module.exports = SvgWrapper;
 
 },{"./Line":12,"./MathHelper":13,"./UtilityFunctions":27,"./Vector2":28}],26:[function(require,module,exports){
-"use strict";
+"use strict"; // @ts-nocheck
 
 class ThemeManager {
   constructor(colors, theme) {
@@ -15777,13 +15774,14 @@ class ThemeManager {
 module.exports = ThemeManager;
 
 },{}],27:[function(require,module,exports){
-"use strict";
+"use strict"; // @ts-nocheck
 
 /**
  * Translate the integer indicating the charge to the appropriate text.
  * @param {Number} charge The integer indicating the charge.
  * @returns {String} A string representing a charge.
  */
+
 function getChargeText(charge) {
   if (charge === 1) {
     return '+';
@@ -15803,16 +15801,16 @@ module.exports = {
 };
 
 },{}],28:[function(require,module,exports){
-"use strict";
-
+"use strict"; // @ts-nocheck
 //@ts-check
 
-/** 
+/**
  * A class representing a 2D vector.
- * 
+ *
  * @property {Number} x The x component of the vector.
  * @property {Number} y The y component of the vector.
  */
+
 class Vector2 {
   /**
    * The constructor of the class Vector2.
@@ -16062,7 +16060,7 @@ class Vector2 {
   }
   /**
    * Rotates the vector away from a specified vector around a center.
-   * 
+   *
    * @param {Vector2} vec The vector this one is rotated away from.
    * @param {Vector2} center The rotational center.
    * @param {Number} angle The angle by which to rotate.
@@ -16081,7 +16079,7 @@ class Vector2 {
   }
   /**
    * Returns the angle in radians used to rotate this vector away from a given vector.
-   * 
+   *
    * @param {Vector2} vec The vector this one is rotated away from.
    * @param {Vector2} center The rotational center.
    * @param {Number} angle The angle by which to rotate.
@@ -16104,7 +16102,7 @@ class Vector2 {
   }
   /**
    * Returns the angle in radians used to rotate this vector towards a given vector.
-   * 
+   *
    * @param {Vector2} vec The vector this one is rotated towards to.
    * @param {Vector2} center The rotational center.
    * @param {Number} angle The angle by which to rotate.
@@ -16430,9 +16428,9 @@ class Vector2 {
 module.exports = Vector2;
 
 },{}],29:[function(require,module,exports){
-"use strict";
-
+"use strict"; // @ts-nocheck
 //@ts-check
+
 const MathHelper = require('./MathHelper');
 
 const ArrayHelper = require('./ArrayHelper');
@@ -16440,9 +16438,9 @@ const ArrayHelper = require('./ArrayHelper');
 const Vector2 = require('./Vector2');
 
 const Atom = require('./Atom');
-/** 
+/**
  * A class representing a vertex.
- * 
+ *
  * @property {Number} id The id of this vertex.
  * @property {Atom} value The atom associated with this vertex.
  * @property {Vector2} position The position of this vertex.
@@ -16488,10 +16486,10 @@ class Vertex {
   }
   /**
    * Set the 2D coordinates of the vertex.
-   * 
+   *
    * @param {Number} x The x component of the coordinates.
    * @param {Number} y The y component of the coordinates.
-   * 
+   *
    */
 
 
@@ -16501,9 +16499,9 @@ class Vertex {
   }
   /**
    * Set the 2D coordinates of the vertex from a Vector2.
-   * 
+   *
    * @param {Vector2} v A 2D vector.
-   * 
+   *
    */
 
 
@@ -16575,7 +16573,7 @@ class Vertex {
   }
   /**
    * Set the vertex id of the parent.
-   * 
+   *
    * @param {Number} parentVertexId The parents vertex id.
    */
 
@@ -16729,7 +16727,7 @@ class Vertex {
   }
   /**
    * Returns an array of ids of neighbouring vertices that will be drawn (vertex.value.isDrawn === true).
-   * 
+   *
    * @param {Vertex[]} vertices An array containing the vertices associated with the current molecule.
    * @returns {Number[]} An array containing the ids of neighbouring vertices that will be drawn.
    */

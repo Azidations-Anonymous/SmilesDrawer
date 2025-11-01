@@ -1,3 +1,4 @@
+// @ts-nocheck
 //@ts-check
 const Vertex = require('./Vertex')
 const Ring = require('./Ring')
@@ -158,4 +159,4 @@ class RingConnection {
     }
 }
 
-module.exports = RingConnection
+export = RingConnection

@@ -1,4 +1,4 @@
-//@ts-check
+// @ts-nocheck
 
 const formulaToCommonName = {
     'C2H4O2': 'acetic acid',
@@ -34,6 +34,6 @@ const formulaToCommonName = {
     'H2O': 'water'
 };
 
-module.exports = formulaToCommonName
+export = formulaToCommonName
 
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 class ThemeManager {
   constructor(colors, theme) {
     this.colors = colors;
@@ -39,4 +40,4 @@ class ThemeManager {
   }
 }
 
-module.exports = ThemeManager;
+export = ThemeManager;

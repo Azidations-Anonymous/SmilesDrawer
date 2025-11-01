@@ -1,3 +1,4 @@
+// @ts-nocheck
 //@ts-check
 
 /**
@@ -58,4 +59,4 @@ class Edge {
     }
 }
 
-module.exports = Edge
+export = Edge

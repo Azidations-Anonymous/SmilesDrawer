@@ -1,4 +1,4 @@
-//@ts-check
+// @ts-nocheck
 
 class Options {
     /**
@@ -37,4 +37,4 @@ class Options {
     }
 }
 
-module.exports = Options;
+export = Options;

@@ -42,13 +42,14 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>//@ts-check
-const Vertex = require('./Vertex')
-const Ring = require('./Ring')
-
-/** 
+            <pre class="prettyprint source linenums"><code>"use strict";
+// @ts-nocheck
+//@ts-check
+const Vertex = require('./Vertex');
+const Ring = require('./Ring');
+/**
  * A class representing a ring connection.
- * 
+ *
  * @property {Number} id The id of this ring connection.
  * @property {Number} firstRingId A ring id.
  * @property {Number} secondRingId A ring id.
@@ -66,20 +67,16 @@ class RingConnection {
         this.firstRingId = firstRing.id;
         this.secondRingId = secondRing.id;
         this.vertices = new Set();
-
         for (var m = 0; m &lt; firstRing.members.length; m++) {
             let c = firstRing.members[m];
-
             for (let n = 0; n &lt; secondRing.members.length; n++) {
                 let d = secondRing.members[n];
-
                 if (c === d) {
                     this.addVertex(c);
                 }
             }
         }
     }
-
     /**
      * Adding a vertex to the ring connection.
      *
@@ -88,7 +85,6 @@ class RingConnection {
     addVertex(vertexId) {
         this.vertices.add(vertexId);
     }
-
     /**
      * Update the ring id of this ring connection that is not the ring id supplied as the second argument.
      *
@@ -98,21 +94,20 @@ class RingConnection {
     updateOther(ringId, otherRingId) {
         if (this.firstRingId === otherRingId) {
             this.secondRingId = ringId;
-        } else {
+        }
+        else {
             this.firstRingId = ringId;
         }
     }
-
     /**
      * Returns a boolean indicating whether or not a ring with a given id is participating in this ring connection.
-     * 
+     *
      * @param {Number} ringId A ring id.
      * @returns {Boolean} A boolean indicating whether or not a ring with a given id participates in this ring connection.
      */
     containsRing(ringId) {
         return this.firstRingId === ringId || this.secondRingId === ringId;
     }
-
     /**
      * Checks whether or not this ring connection is a bridge in a bridged ring.
      *
@@ -120,19 +115,16 @@ class RingConnection {
      * @returns {Boolean} A boolean indicating whether or not this ring connection is a bridge.
      */
     isBridge(vertices) {
-      if (this.vertices.size > 2) {
-          return true;
-      }
-
-      for (let vertexId of this.vertices) {
-          if(vertices[vertexId].value.rings.length > 2) {
-              return true;
-          }
-      }
-
-      return false;
+        if (this.vertices.size > 2) {
+            return true;
+        }
+        for (let vertexId of this.vertices) {
+            if (vertices[vertexId].value.rings.length > 2) {
+                return true;
+            }
+        }
+        return false;
     }
-
     /**
      * Checks whether or not two rings are connected by a bridged bond.
      *
@@ -144,20 +136,16 @@ class RingConnection {
      * @returns {Boolean} A boolean indicating whether or not two rings ar connected by a bridged bond.
      */
     static isBridge(ringConnections, vertices, firstRingId, secondRingId) {
-      let ringConnection = null;
-      
-      for (let i = 0; i &lt; ringConnections.length; i++) {
-          ringConnection = ringConnections[i];
-
-          if (ringConnection.firstRingId === firstRingId &amp;&amp; ringConnection.secondRingId === secondRingId ||
-              ringConnection.firstRingId === secondRingId &amp;&amp; ringConnection.secondRingId === firstRingId) {
-              return ringConnection.isBridge(vertices);
-          }
-      }
-
-      return false;
+        let ringConnection = null;
+        for (let i = 0; i &lt; ringConnections.length; i++) {
+            ringConnection = ringConnections[i];
+            if (ringConnection.firstRingId === firstRingId &amp;&amp; ringConnection.secondRingId === secondRingId ||
+                ringConnection.firstRingId === secondRingId &amp;&amp; ringConnection.secondRingId === firstRingId) {
+                return ringConnection.isBridge(vertices);
+            }
+        }
+        return false;
     }
-
     /**
      * Retruns the neighbouring rings of a given ring.
      *
@@ -168,20 +156,17 @@ class RingConnection {
      */
     static getNeighbours(ringConnections, ringId) {
         let neighbours = [];
-
         for (let i = 0; i &lt; ringConnections.length; i++) {
             let ringConnection = ringConnections[i];
-            
             if (ringConnection.firstRingId === ringId) {
                 neighbours.push(ringConnection.secondRingId);
-            } else if (ringConnection.secondRingId === ringId) {
+            }
+            else if (ringConnection.secondRingId === ringId) {
                 neighbours.push(ringConnection.firstRingId);
             }
         }
-
         return neighbours;
     }
-
     /**
      * Returns an array of vertex ids associated with a given ring connection.
      *
@@ -201,8 +186,8 @@ class RingConnection {
         }
     }
 }
-
-module.exports = RingConnection</code></pre>
+module.exports = RingConnection;
+//# sourceMappingURL=RingConnection.js.map</code></pre>
         </article>
     </section>
 
@@ -216,7 +201,7 @@ module.exports = RingConnection</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Sat Nov 01 2025 16:42:35 GMT+1100 (Australian Eastern Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Sat Nov 01 2025 17:13:14 GMT+1100 (Australian Eastern Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

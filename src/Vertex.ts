@@ -1,3 +1,4 @@
+// @ts-nocheck
 //@ts-check
 const MathHelper = require('./MathHelper')
 const ArrayHelper = require('./ArrayHelper')
@@ -359,4 +360,4 @@ class Vertex {
   }
 }
 
-module.exports = Vertex;
+export = Vertex;

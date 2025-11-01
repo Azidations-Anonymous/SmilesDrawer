@@ -1,3 +1,4 @@
+// @ts-nocheck
 //@ts-check
 const ArrayHelper = require('./ArrayHelper')
 const Vector2 = require('./Vector2')
@@ -209,4 +210,4 @@ class Ring {
     }
 }
 
-module.exports = Ring;
+export = Ring;

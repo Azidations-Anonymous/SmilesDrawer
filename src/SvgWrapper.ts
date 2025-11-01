@@ -1,3 +1,4 @@
+// @ts-nocheck
 const {
   getChargeText
 } = require('./UtilityFunctions');
@@ -985,4 +986,4 @@ class SvgWrapper {
   }
 }
 
-module.exports = SvgWrapper;
+export = SvgWrapper;

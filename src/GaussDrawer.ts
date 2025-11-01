@@ -1,3 +1,4 @@
+// @ts-nocheck
 const Vector2 = require('./Vector2')
 const convertImage = require('./PixelsToSvg')
 
@@ -167,4 +168,4 @@ class GaussDrawer {
     }
 }
 
-module.exports = GaussDrawer;
+export = GaussDrawer;

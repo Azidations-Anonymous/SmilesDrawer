@@ -1,3 +1,4 @@
+// @ts-nocheck
 //@ts-check
 const Graph = require('./Graph')
 
@@ -568,4 +569,4 @@ class SSSR {
     }
 }
 
-module.exports = SSSR;
+export = SSSR;

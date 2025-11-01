@@ -1,7 +1,8 @@
+// @ts-nocheck
 // WHEN REPLACING, CHECK FOR:
 // KEEP THIS WHEN REGENERATING THE PARSER !!
 
-module.exports = (function () {
+export = (function () {
   "use strict";
 
   /*

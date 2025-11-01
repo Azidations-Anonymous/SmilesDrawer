@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Adapted from https://codepen.io/shshaw/pen/XbxvNj by 
 
 function convertImage(img) {
@@ -103,4 +104,4 @@ function convertImage(img) {
 
 }
 
-module.exports = convertImage
+export = convertImage

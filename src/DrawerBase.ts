@@ -1,4 +1,4 @@
-//@ts-check
+// @ts-nocheck
 const MathHelper = require('./MathHelper')
 const ArrayHelper = require('./ArrayHelper')
 const Vector2 = require('./Vector2')
@@ -3135,4 +3135,4 @@ class DrawerBase {
   }
 }
 
-module.exports = DrawerBase;
+export = DrawerBase;

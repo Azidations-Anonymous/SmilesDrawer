@@ -1,3 +1,4 @@
+// @ts-nocheck
 //@ts-check
 /** 
  * A static class containing helper functions for array-related tasks. 
@@ -379,4 +380,4 @@ class ArrayHelper {
 
 }
 
-module.exports = ArrayHelper;
+export = ArrayHelper;

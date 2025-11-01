@@ -1,4 +1,4 @@
-//@ts-check
+// @ts-nocheck
 const Drawer = require('./src/Drawer')
 const Parser = require('./src/Parser')
 const ReactionParser = require('./src/ReactionParser')

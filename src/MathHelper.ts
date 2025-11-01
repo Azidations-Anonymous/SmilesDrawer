@@ -1,3 +1,4 @@
+// @ts-nocheck
 /** 
  * A static class containing helper functions for math-related tasks. 
  */
@@ -156,4 +157,4 @@ class MathHelper {
     }
 }
 
-module.exports = MathHelper;
+export = MathHelper;

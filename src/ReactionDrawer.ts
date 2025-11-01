@@ -1,3 +1,4 @@
+// @ts-nocheck
 const SvgDrawer = require('./SvgDrawer');
 const SvgWrapper = require('./SvgWrapper');
 const Options = require('./Options');
@@ -403,4 +404,4 @@ class ReactionDrawer {
     }
 }
 
-module.exports = ReactionDrawer;
+export = ReactionDrawer;

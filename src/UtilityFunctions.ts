@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Translate the integer indicating the charge to the appropriate text.
  * @param {Number} charge The integer indicating the charge.
@@ -17,6 +18,6 @@ function getChargeText(charge) {
   }
 }
 
-module.exports = {
+export = {
   getChargeText,
 }

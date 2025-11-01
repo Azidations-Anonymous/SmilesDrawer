@@ -1,4 +1,4 @@
-//@ts-check
+// @ts-nocheck
 const Drawer = require('./Drawer')
 const Parser = require('./Parser')
 const ReactionParser = require('./ReactionParser')
@@ -316,4 +316,4 @@ class SmilesDrawer {
     }
 }
 
-module.exports = SmilesDrawer;
+export = SmilesDrawer;

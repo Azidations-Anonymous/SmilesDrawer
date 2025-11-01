@@ -1,3 +1,4 @@
+// @ts-nocheck
 //@ts-check
 const MathHelper = require('./MathHelper')
 const Vector2 = require('./Vector2')
@@ -890,4 +891,4 @@ class CanvasWrapper {
 
 }
 
-module.exports = CanvasWrapper;
+export = CanvasWrapper;

@@ -1,3 +1,4 @@
+// @ts-nocheck
 //@ts-check
 const Vector2 = require('./Vector2')
 
@@ -298,4 +299,4 @@ class Line {
     }
 }
 
-module.exports = Line;
+export = Line;

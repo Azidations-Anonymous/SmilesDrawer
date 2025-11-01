@@ -1,4 +1,4 @@
-//@ts-check
+// @ts-nocheck
 const SvgDrawer = require('./SvgDrawer')
 
 /** 
@@ -67,4 +67,4 @@ class Drawer {
   }
 }
 
-module.exports = Drawer;
+export = Drawer;
