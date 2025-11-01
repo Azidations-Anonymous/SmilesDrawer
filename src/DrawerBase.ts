@@ -1712,7 +1712,7 @@ class DrawerBase {
 
       // If the molecule has less than 3 elements, always write the "C" for carbon
       // Likewise, if the carbon has a charge or an isotope, always draw it
-      if (charge || isotope || graph.vertices.length < 3) {
+      if (charge || isotope || this.graph.vertices.length < 3) {
         isCarbon = false;
       }
 

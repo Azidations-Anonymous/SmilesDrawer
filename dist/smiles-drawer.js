@@ -4142,14 +4142,9 @@ class ArrayHelper {
 module.exports = ArrayHelper;
 
 },{}],4:[function(require,module,exports){
-"use strict"; // @ts-nocheck
-//@ts-check
+"use strict";
 
-const ArrayHelper = require('./ArrayHelper');
-
-const Vertex = require('./Vertex');
-
-const Ring = require('./Ring');
+const ArrayHelper = require("./ArrayHelper");
 /**
  * A class representing an atom.
  *
@@ -4707,23 +4702,14 @@ class Atom {
 
 module.exports = Atom;
 
-},{"./ArrayHelper":3,"./Ring":20,"./Vertex":29}],5:[function(require,module,exports){
-"use strict"; // @ts-nocheck
-//@ts-check
+},{"./ArrayHelper":3}],5:[function(require,module,exports){
+"use strict"; //@ts-check
 
-const MathHelper = require('./MathHelper');
+const MathHelper = require("./MathHelper");
 
-const Vector2 = require('./Vector2');
+const Vector2 = require("./Vector2");
 
-const Line = require('./Line');
-
-const Vertex = require('./Vertex');
-
-const Ring = require('./Ring');
-
-const {
-  getChargeText
-} = require('./UtilityFunctions');
+const UtilityFunctions_1 = require("./UtilityFunctions");
 /**
  * A class wrapping a canvas element.
  *
@@ -5221,7 +5207,7 @@ class CanvasWrapper {
     let chargeWidth = 0;
 
     if (charge) {
-      chargeText = getChargeText(charge);
+      chargeText = (0, UtilityFunctions_1.getChargeText)(charge);
       ctx.font = this.fontSmall;
       chargeWidth = ctx.measureText(chargeText).width;
     }
@@ -5380,7 +5366,7 @@ class CanvasWrapper {
       }
 
       if (elementCharge !== 0) {
-        elementChargeText = getChargeText(elementCharge);
+        elementChargeText = (0, UtilityFunctions_1.getChargeText)(elementCharge);
         elementChargeWidth = ctx.measureText(elementChargeText).width;
       }
 
@@ -5539,10 +5525,10 @@ class CanvasWrapper {
 
 module.exports = CanvasWrapper;
 
-},{"./Line":12,"./MathHelper":13,"./Ring":20,"./UtilityFunctions":27,"./Vector2":28,"./Vertex":29}],6:[function(require,module,exports){
-"use strict"; // @ts-nocheck
+},{"./MathHelper":13,"./UtilityFunctions":27,"./Vector2":28}],6:[function(require,module,exports){
+"use strict";
 
-const SvgDrawer = require('./SvgDrawer');
+const SvgDrawer = require("./SvgDrawer");
 /**
  * The main class of the application representing the smiles drawer
  *
@@ -5611,7 +5597,7 @@ class Drawer {
 
 
   getMolecularFormula() {
-    this.svgDrawer.getMolecularFormula();
+    return this.svgDrawer.getMolecularFormula();
   }
 
 }
@@ -5619,35 +5605,33 @@ class Drawer {
 module.exports = Drawer;
 
 },{"./SvgDrawer":24}],7:[function(require,module,exports){
-"use strict"; // @ts-nocheck
+"use strict";
 
-const MathHelper = require('./MathHelper');
+const MathHelper = require("./MathHelper");
 
-const ArrayHelper = require('./ArrayHelper');
+const ArrayHelper = require("./ArrayHelper");
 
-const Vector2 = require('./Vector2');
+const Vector2 = require("./Vector2");
 
-const Line = require('./Line');
+const Line = require("./Line");
 
-const Vertex = require('./Vertex');
+const Edge = require("./Edge");
 
-const Edge = require('./Edge');
+const Atom = require("./Atom");
 
-const Atom = require('./Atom');
+const Ring = require("./Ring");
 
-const Ring = require('./Ring');
+const RingConnection = require("./RingConnection");
 
-const RingConnection = require('./RingConnection');
+const CanvasWrapper = require("./CanvasWrapper");
 
-const CanvasWrapper = require('./CanvasWrapper');
+const Graph = require("./Graph");
 
-const Graph = require('./Graph');
+const SSSR = require("./SSSR");
 
-const SSSR = require('./SSSR');
+const ThemeManager = require("./ThemeManager");
 
-const ThemeManager = require('./ThemeManager');
-
-const Options = require('./Options');
+const Options = require("./Options");
 /**
  * The main class of the application representing the smiles drawer
  *
@@ -7295,7 +7279,7 @@ class DrawerBase {
       // Likewise, if the carbon has a charge or an isotope, always draw it
 
 
-      if (charge || isotope || graph.vertices.length < 3) {
+      if (charge || isotope || this.graph.vertices.length < 3) {
         isCarbon = false;
       }
 
@@ -8674,7 +8658,7 @@ class DrawerBase {
 
 module.exports = DrawerBase;
 
-},{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Edge":8,"./Graph":11,"./Line":12,"./MathHelper":13,"./Options":14,"./Ring":20,"./RingConnection":21,"./SSSR":22,"./ThemeManager":26,"./Vector2":28,"./Vertex":29}],8:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Edge":8,"./Graph":11,"./Line":12,"./MathHelper":13,"./Options":14,"./Ring":20,"./RingConnection":21,"./SSSR":22,"./ThemeManager":26,"./Vector2":28}],8:[function(require,module,exports){
 "use strict";
 /**
  * A class representing an edge.
@@ -8779,13 +8763,65 @@ const formulaToCommonName = {
 module.exports = formulaToCommonName;
 
 },{}],10:[function(require,module,exports){
-"use strict"; // @ts-nocheck
+"use strict";
 
-const Vector2 = require('./Vector2');
+var __createBinding = undefined && undefined.__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  var desc = Object.getOwnPropertyDescriptor(m, k);
 
-const convertImage = require('./PixelsToSvg');
+  if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+    desc = {
+      enumerable: true,
+      get: function () {
+        return m[k];
+      }
+    };
+  }
 
-const chroma = require("chroma-js");
+  Object.defineProperty(o, k2, desc);
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = undefined && undefined.__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = undefined && undefined.__importStar || function () {
+  var ownKeys = function (o) {
+    ownKeys = Object.getOwnPropertyNames || function (o) {
+      var ar = [];
+
+      for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+
+      return ar;
+    };
+
+    return ownKeys(o);
+  };
+
+  return function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+
+    __setModuleDefault(result, mod);
+
+    return result;
+  };
+}();
+
+const Vector2 = require("./Vector2");
+
+const convertImage = require("./PixelsToSvg");
+
+const chroma = __importStar(require("chroma-js"));
 
 class GaussDrawer {
   /**
@@ -8957,20 +8993,15 @@ class GaussDrawer {
 module.exports = GaussDrawer;
 
 },{"./PixelsToSvg":16,"./Vector2":28,"chroma-js":2}],11:[function(require,module,exports){
-"use strict"; // @ts-nocheck
-//@ts-check
+"use strict";
 
-const MathHelper = require('./MathHelper');
+const MathHelper = require("./MathHelper");
 
-const Vector2 = require('./Vector2');
+const Vertex = require("./Vertex");
 
-const Vertex = require('./Vertex');
+const Edge = require("./Edge");
 
-const Edge = require('./Edge');
-
-const Ring = require('./Ring');
-
-const Atom = require('./Atom');
+const Atom = require("./Atom");
 /**
  * A class representing the molecular graph.
  *
@@ -9919,7 +9950,7 @@ class Graph {
 
 module.exports = Graph;
 
-},{"./Atom":4,"./Edge":8,"./MathHelper":13,"./Ring":20,"./Vector2":28,"./Vertex":29}],12:[function(require,module,exports){
+},{"./Atom":4,"./Edge":8,"./MathHelper":13,"./Vertex":29}],12:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -10401,21 +10432,25 @@ class MathHelper {
 module.exports = MathHelper;
 
 },{}],14:[function(require,module,exports){
-"use strict"; // @ts-nocheck
+"use strict";
 
 class Options {
   /**
    * A helper method to extend the default options with user supplied ones.
+   *
+   * @param deep - If true, performs deep merge of nested objects
+   * @param objects - Objects to merge together
+   * @returns The merged object
    */
-  static extend() {
+  static extend(...args) {
     let that = this;
     let extended = {};
     let deep = false;
     let i = 0;
-    let length = arguments.length;
+    let length = args.length;
 
-    if (Object.prototype.toString.call(arguments[0]) === '[object Boolean]') {
-      deep = arguments[0];
+    if (Object.prototype.toString.call(args[0]) === '[object Boolean]') {
+      deep = args[0];
       i++;
     }
 
@@ -10432,7 +10467,7 @@ class Options {
     };
 
     for (; i < length; i++) {
-      let obj = arguments[i];
+      let obj = args[i];
       merge(obj);
     }
 
@@ -10444,8 +10479,7 @@ class Options {
 module.exports = Options;
 
 },{}],15:[function(require,module,exports){
-"use strict"; // @ts-nocheck
-// WHEN REPLACING, CHECK FOR:
+"use strict"; // WHEN REPLACING, CHECK FOR:
 // KEEP THIS WHEN REGENERATING THE PARSER !!
 
 module.exports = function () {
@@ -12343,8 +12377,7 @@ module.exports = function () {
 }();
 
 },{}],16:[function(require,module,exports){
-"use strict"; // @ts-nocheck
-// Adapted from https://codepen.io/shshaw/pen/XbxvNj by 
+"use strict"; // Adapted from https://codepen.io/shshaw/pen/XbxvNj by
 
 function convertImage(img) {
   "use strict";
@@ -12522,17 +12555,17 @@ class Reaction {
 module.exports = Reaction;
 
 },{"./Parser":15}],18:[function(require,module,exports){
-"use strict"; // @ts-nocheck
+"use strict";
 
-const SvgDrawer = require('./SvgDrawer');
+const SvgDrawer = require("./SvgDrawer");
 
-const SvgWrapper = require('./SvgWrapper');
+const SvgWrapper = require("./SvgWrapper");
 
-const Options = require('./Options');
+const Options = require("./Options");
 
-const ThemeManager = require('./ThemeManager');
+const ThemeManager = require("./ThemeManager");
 
-const formulaToCommonName = require('./FormulaToCommonName');
+const formulaToCommonName = require("./FormulaToCommonName");
 
 class ReactionDrawer {
   /**
@@ -12894,13 +12927,13 @@ class ReactionDrawer {
 module.exports = ReactionDrawer;
 
 },{"./FormulaToCommonName":9,"./Options":14,"./SvgDrawer":24,"./SvgWrapper":25,"./ThemeManager":26}],19:[function(require,module,exports){
-"use strict"; // @ts-nocheck
+"use strict";
 
-const Reaction = require('./Reaction');
+const Reaction = require("./Reaction");
 
 class ReactionParser {
   /**
-   * Returns the hex code of a color associated with a key from the current theme.
+   * Parses a reaction SMILES string and returns a Reaction object.
    *
    * @param {String} reactionSmiles A reaction SMILES.
    * @returns {Reaction} A reaction object.
@@ -13302,10 +13335,9 @@ class RingConnection {
 module.exports = RingConnection;
 
 },{}],22:[function(require,module,exports){
-"use strict"; // @ts-nocheck
-//@ts-check
+"use strict";
 
-const Graph = require('./Graph');
+const Graph = require("./Graph");
 /** A class encapsulating the functionality to find the smallest set of smallest rings in a graph. */
 
 
@@ -13913,21 +13945,19 @@ class SSSR {
 module.exports = SSSR;
 
 },{"./Graph":11}],23:[function(require,module,exports){
-"use strict"; // @ts-nocheck
+"use strict";
 
-const Drawer = require('./Drawer');
+const Parser = require("./Parser");
 
-const Parser = require('./Parser');
+const ReactionParser = require("./ReactionParser");
 
-const ReactionParser = require('./ReactionParser');
+const SvgDrawer = require("./SvgDrawer");
 
-const SvgDrawer = require('./SvgDrawer');
+const ReactionDrawer = require("./ReactionDrawer");
 
-const ReactionDrawer = require('./ReactionDrawer');
+const SvgWrapper = require("./SvgWrapper");
 
-const SvgWrapper = require('./SvgWrapper');
-
-const Options = require('./Options');
+const Options = require("./Options");
 
 class SmilesDrawer {
   constructor(moleculeOptions = {}, reactionOptions = {}) {
@@ -14260,28 +14290,25 @@ class SmilesDrawer {
 
 module.exports = SmilesDrawer;
 
-},{"./Drawer":6,"./Options":14,"./Parser":15,"./ReactionDrawer":18,"./ReactionParser":19,"./SvgDrawer":24,"./SvgWrapper":25}],24:[function(require,module,exports){
-"use strict"; // @ts-nocheck
-// we use the drawer to do all the preprocessing. then we take over the drawing
+},{"./Options":14,"./Parser":15,"./ReactionDrawer":18,"./ReactionParser":19,"./SvgDrawer":24,"./SvgWrapper":25}],24:[function(require,module,exports){
+"use strict"; // we use the drawer to do all the preprocessing. then we take over the drawing
 // portion to output to svg
 
-const ArrayHelper = require('./ArrayHelper');
+const ArrayHelper = require("./ArrayHelper");
 
-const Atom = require('./Atom');
+const Atom = require("./Atom");
 
-const DrawerBase = require('./DrawerBase');
+const DrawerBase = require("./DrawerBase");
 
-const Graph = require('./Graph');
+const Line = require("./Line");
 
-const Line = require('./Line');
+const SvgWrapper = require("./SvgWrapper");
 
-const SvgWrapper = require('./SvgWrapper');
+const ThemeManager = require("./ThemeManager");
 
-const ThemeManager = require('./ThemeManager');
+const Vector2 = require("./Vector2");
 
-const Vector2 = require('./Vector2');
-
-const GaussDrawer = require('./GaussDrawer');
+const GaussDrawer = require("./GaussDrawer");
 
 class SvgDrawer {
   constructor(options, clear = true) {
@@ -14727,18 +14754,14 @@ class SvgDrawer {
 
 module.exports = SvgDrawer;
 
-},{"./ArrayHelper":3,"./Atom":4,"./DrawerBase":7,"./GaussDrawer":10,"./Graph":11,"./Line":12,"./SvgWrapper":25,"./ThemeManager":26,"./Vector2":28}],25:[function(require,module,exports){
-"use strict"; // @ts-nocheck
+},{"./ArrayHelper":3,"./Atom":4,"./DrawerBase":7,"./GaussDrawer":10,"./Line":12,"./SvgWrapper":25,"./ThemeManager":26,"./Vector2":28}],25:[function(require,module,exports){
+"use strict";
 
-const {
-  getChargeText
-} = require('./UtilityFunctions');
+const Line = require("./Line");
 
-const Line = require('./Line');
+const Vector2 = require("./Vector2");
 
-const Vector2 = require('./Vector2');
-
-const MathHelper = require('./MathHelper');
+const MathHelper = require("./MathHelper");
 
 function makeid(length) {
   var result = '';
@@ -14808,7 +14831,7 @@ class SvgWrapper {
       this.svg.appendChild(this.style);
     } else {
       this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      container.appendChild(this.style);
+      this.container.appendChild(this.style);
     }
   }
 
@@ -15708,8 +15731,8 @@ class SvgWrapper {
 
 module.exports = SvgWrapper;
 
-},{"./Line":12,"./MathHelper":13,"./UtilityFunctions":27,"./Vector2":28}],26:[function(require,module,exports){
-"use strict"; // @ts-nocheck
+},{"./Line":12,"./MathHelper":13,"./Vector2":28}],26:[function(require,module,exports){
+"use strict";
 
 class ThemeManager {
   constructor(colors, theme) {
@@ -16403,16 +16426,13 @@ class Vector2 {
 module.exports = Vector2;
 
 },{}],29:[function(require,module,exports){
-"use strict"; // @ts-nocheck
-//@ts-check
+"use strict";
 
-const MathHelper = require('./MathHelper');
+const MathHelper = require("./MathHelper");
 
-const ArrayHelper = require('./ArrayHelper');
+const ArrayHelper = require("./ArrayHelper");
 
-const Vector2 = require('./Vector2');
-
-const Atom = require('./Atom');
+const Vector2 = require("./Vector2");
 /**
  * A class representing a vertex.
  *
@@ -16782,5 +16802,5 @@ class Vertex {
 
 module.exports = Vertex;
 
-},{"./ArrayHelper":3,"./Atom":4,"./MathHelper":13,"./Vector2":28}]},{},[1])
+},{"./ArrayHelper":3,"./MathHelper":13,"./Vector2":28}]},{},[1])
 

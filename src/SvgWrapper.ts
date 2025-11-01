@@ -97,7 +97,7 @@ class SvgWrapper {
       this.svg.appendChild(this.style);
     } else {
       this.container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      container.appendChild(this.style);
+      this.container.appendChild(this.style);
     }
   }
 
