@@ -1,6 +1,5 @@
-// @ts-nocheck
-/** 
- * A static class containing helper functions for math-related tasks. 
+/**
+ * A static class containing helper functions for math-related tasks.
  */
 class MathHelper {
     /**
@@ -11,7 +10,7 @@ class MathHelper {
      * @param {Number} decimals The number of decimals.
      * @returns {Number} A number rounded to a given number of decimals.
      */
-    static round(value, decimals) {
+    static round(value: number, decimals?: number): number {
         decimals = decimals ? decimals : 1;
         return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
     }
@@ -23,10 +22,10 @@ class MathHelper {
      * @param {Number[]} arr An array containing angles (in radians).
      * @returns {Number} The mean angle in radians.
      */
-    static meanAngle(arr) {
+    static meanAngle(arr: number[]): number {
         let sin = 0.0;
         let cos = 0.0;
-        
+
         for (var i = 0; i < arr.length; i++) {
             sin += Math.sin(arr[i]);
             cos += Math.cos(arr[i]);
@@ -42,7 +41,7 @@ class MathHelper {
      * @param {Number} n Number of sides of a regular polygon.
      * @returns {Number} The inner angle of a given regular polygon.
      */
-    static innerAngle(n) {
+    static innerAngle(n: number): number {
         return MathHelper.toRad((n - 2) * 180 / n);
     }
 
@@ -54,7 +53,7 @@ class MathHelper {
      * @param {Number} n The number of sides.
      * @returns {Number} The circumradius of the regular polygon.
      */
-    static polyCircumradius(s, n) {
+    static polyCircumradius(s: number, n: number): number {
         return s / (2 * Math.sin(Math.PI / n));
     }
 
@@ -66,13 +65,13 @@ class MathHelper {
      * @param {Number} n The number of edges of the regular polygon.
      * @returns {Number} The apothem of a n-sided polygon based on its radius.
      */
-    static apothem(r, n) {
+    static apothem(r: number, n: number): number {
         return r * Math.cos(Math.PI / n);
     }
 
-    static apothemFromSideLength(s, n) {
+    static apothemFromSideLength(s: number, n: number): number {
         let r = MathHelper.polyCircumradius(s, n);
-        
+
         return MathHelper.apothem(r, n);
     }
 
@@ -83,7 +82,7 @@ class MathHelper {
      * @param {Number} n The number of sides of the regular polygon.
      * @returns {Number} The central angle of the n-sided polygon in radians.
      */
-    static centralAngle(n) {
+    static centralAngle(n: number): number {
         return MathHelper.toRad(360 / n);
     }
 
@@ -94,7 +93,7 @@ class MathHelper {
      * @param {Number} rad An angle in radians.
      * @returns {Number} The angle in degrees.
      */
-    static toDeg(rad) {
+    static toDeg(rad: number): number {
         return rad * MathHelper.degFactor;
     }
 
@@ -105,7 +104,7 @@ class MathHelper {
      * @param {Number} deg An angle in degrees.
      * @returns {Number} The angle in radians.
      */
-    static toRad(deg) {
+    static toRad(deg: number): number {
         return deg * MathHelper.radFactor;
     }
 
@@ -114,11 +113,11 @@ class MathHelper {
      * @param {(Array|Uint8Array)} arr An array containing the permutation.
      * @returns {Number} The parity of the permutation (1 or -1), where 1 means even and -1 means odd.
      */
-    static parityOfPermutation(arr) {
+    static parityOfPermutation(arr: number[] | Uint8Array): number {
         let visited = new Uint8Array(arr.length);
         let evenLengthCycleCount = 0;
 
-        let traverseCycle = function(i, cycleLength = 0) {
+        let traverseCycle = function(i: number, cycleLength: number = 0): number {
             if (visited[i] === 1) {
                 return cycleLength;
             }
@@ -142,17 +141,17 @@ class MathHelper {
     }
 
     /** The factor to convert degrees to radians. */
-    static get radFactor() {
+    static get radFactor(): number {
       return Math.PI / 180.0;
     }
 
     /** The factor to convert radians to degrees. */
-    static get degFactor() {
+    static get degFactor(): number {
       return 180.0 / Math.PI;
     }
 
     /** Two times PI. */
-    static get twoPI() {
+    static get twoPI(): number {
       return 2.0 * Math.PI;
     }
 }

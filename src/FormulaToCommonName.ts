@@ -1,6 +1,5 @@
-// @ts-nocheck
 
-const formulaToCommonName = {
+const formulaToCommonName: Record<string, string> = {
     'C2H4O2': 'acetic acid',
     'C3H6O': 'acetone',
     'C2H3N': 'acetonitrile',
@@ -34,6 +33,4 @@ const formulaToCommonName = {
     'H2O': 'water'
 };
 
-export = formulaToCommonName
-
-
+export = formulaToCommonName;

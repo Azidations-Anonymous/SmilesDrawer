@@ -3741,9 +3741,7 @@ module.exports = SmilesDrawer;
 }));
 
 },{}],3:[function(require,module,exports){
-"use strict"; // @ts-nocheck
-//@ts-check
-
+"use strict";
 /**
  * A static class containing helper functions for array-related tasks.
  */
@@ -8677,9 +8675,7 @@ class DrawerBase {
 module.exports = DrawerBase;
 
 },{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Edge":8,"./Graph":11,"./Line":12,"./MathHelper":13,"./Options":14,"./Ring":20,"./RingConnection":21,"./SSSR":22,"./ThemeManager":26,"./Vector2":28,"./Vertex":29}],8:[function(require,module,exports){
-"use strict"; // @ts-nocheck
-//@ts-check
-
+"use strict";
 /**
  * A class representing an edge.
  *
@@ -8745,7 +8741,7 @@ class Edge {
 module.exports = Edge;
 
 },{}],9:[function(require,module,exports){
-"use strict"; // @ts-nocheck
+"use strict";
 
 const formulaToCommonName = {
   'C2H4O2': 'acetic acid',
@@ -9924,10 +9920,9 @@ class Graph {
 module.exports = Graph;
 
 },{"./Atom":4,"./Edge":8,"./MathHelper":13,"./Ring":20,"./Vector2":28,"./Vertex":29}],12:[function(require,module,exports){
-"use strict"; // @ts-nocheck
-//@ts-check
+"use strict";
 
-const Vector2 = require('./Vector2');
+const Vector2 = require("./Vector2");
 /**
  * A class representing a line.
  *
@@ -10233,8 +10228,7 @@ class Line {
 module.exports = Line;
 
 },{"./Vector2":28}],13:[function(require,module,exports){
-"use strict"; // @ts-nocheck
-
+"use strict";
 /**
  * A static class containing helper functions for math-related tasks.
  */
@@ -15774,8 +15768,7 @@ class ThemeManager {
 module.exports = ThemeManager;
 
 },{}],27:[function(require,module,exports){
-"use strict"; // @ts-nocheck
-
+"use strict";
 /**
  * Translate the integer indicating the charge to the appropriate text.
  * @param {Number} charge The integer indicating the charge.
@@ -15801,9 +15794,7 @@ module.exports = {
 };
 
 },{}],28:[function(require,module,exports){
-"use strict"; // @ts-nocheck
-//@ts-check
-
+"use strict";
 /**
  * A class representing a 2D vector.
  *
@@ -15812,19 +15803,14 @@ module.exports = {
  */
 
 class Vector2 {
-  /**
-   * The constructor of the class Vector2.
-   *
-   * @param {(Number|Vector2)} x The initial x coordinate value or, if the single argument, a Vector2 object.
-   * @param {Number} y The initial y coordinate value.
-   */
   constructor(x, y) {
-    if (arguments.length == 0) {
+    if (arguments.length === 0) {
       this.x = 0;
       this.y = 0;
-    } else if (arguments.length == 1) {
-      this.x = x.x;
-      this.y = x.y;
+    } else if (arguments.length === 1) {
+      const vec = x;
+      this.x = vec.x;
+      this.y = vec.y;
     } else {
       this.x = x;
       this.y = y;

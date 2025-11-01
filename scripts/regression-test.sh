@@ -51,12 +51,14 @@ echo "✓ Dependencies installed"
 echo ""
 
 echo "Step 3: Building baseline library..."
+npx tsc || true  # Allow TS errors during migration
 npx gulp
 echo "✓ Baseline build complete"
 echo ""
 
 echo "Step 4: Building current library..."
 cd "${CURRENT_DIR}"
+npx tsc || true  # Allow TS errors during migration
 npx gulp
 echo "✓ Current build complete"
 echo ""

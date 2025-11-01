@@ -1,7 +1,5 @@
-// @ts-nocheck
-//@ts-check
-/** 
- * A static class containing helper functions for array-related tasks. 
+/**
+ * A static class containing helper functions for array-related tasks.
  */
 class ArrayHelper {
     /**
@@ -11,8 +9,8 @@ class ArrayHelper {
      * @param {*} arr The array or object to be cloned.
      * @returns {*} A clone of the array or object.
      */
-    static clone(arr) {
-        let out = Array.isArray(arr) ? Array() : {};
+    static clone<T>(arr: T[] | Record<string, any>): T[] | Record<string, any> {
+        let out: any = Array.isArray(arr) ? Array() : {};
 
         for (let key in arr) {
             let value = arr[key];
@@ -37,7 +35,7 @@ class ArrayHelper {
      * @param {Array} arrB An array.
      * @returns {Boolean} A boolean indicating whether or not the two arrays contain the same elements.
      */
-    static equals(arrA, arrB) {
+    static equals(arrA: any[], arrB: any[]): boolean {
         if (arrA.length !== arrB.length) {
             return false;
         }
@@ -62,7 +60,7 @@ class ArrayHelper {
      * @param {*} arr[].id If the array contains an object with the property 'id', the properties value is printed. Else, the array elements value is printend.
      * @returns {String} A string representation of the array.
      */
-    static print(arr) {
+    static print(arr: any[]): string {
         if (arr.length == 0) {
             return '';
         }
@@ -85,7 +83,7 @@ class ArrayHelper {
      * @param {Array} arr An array.
      * @param {Function} callback The callback function that is called for each element.
      */
-    static each(arr, callback) {
+    static each<T>(arr: T[], callback: (element: T) => void): void {
         for (let i = 0; i < arr.length; i++) {
             callback(arr[i]);
         }
@@ -100,7 +98,7 @@ class ArrayHelper {
      * @param {(String|Number)} value The value of the property.
      * @returns {*} The array element matching the value.
      */
-    static get(arr, property, value) {
+    static get(arr: any[], property: string | number, value: string | number): any {
         for (let i = 0; i < arr.length; i++) {
             if (arr[i][property] == value) {
                 return arr[i];
@@ -119,7 +117,7 @@ class ArrayHelper {
      * @param {Function} [options.func=undefined] A custom property function.
      * @returns {Boolean} A boolean whether or not the array contains a value.
      */
-    static contains(arr, options) {
+    static contains(arr: any[], options: { value?: any; property?: string; func?: (element: any) => boolean }): boolean {
         if (!options.property && !options.func) {
             for (let i = 0; i < arr.length; i++) {
                 if (arr[i] == options.value) {
@@ -134,7 +132,7 @@ class ArrayHelper {
             }
         } else {
             for (let i = 0; i < arr.length; i++) {
-                if (arr[i][options.property] == options.value) {
+                if (arr[i][options.property!] == options.value) {
                     return true;
                 }
             }
@@ -151,8 +149,8 @@ class ArrayHelper {
      * @param {Array} arrB An array.
      * @returns {Array} The intersecting vlaues.
      */
-    static intersection(arrA, arrB) {
-        let intersection = new Array();
+    static intersection<T>(arrA: T[], arrB: T[]): T[] {
+        let intersection = new Array<T>();
 
         for (let i = 0; i < arrA.length; i++) {
             for (let j = 0; j < arrB.length; j++) {
@@ -172,9 +170,9 @@ class ArrayHelper {
      * @param {Array} arr An array.
      * @returns {Array} An array of unique elements contained within the array supplied as an argument.
      */
-    static unique(arr) {
-        let contains = {};
-        return arr.filter(function (i) {
+    static unique<T>(arr: T[]): T[] {
+        let contains: Record<string, boolean> = {};
+        return arr.filter(function (i: any) {
             // using !== instead of hasOwnProperty (http://andrew.hedges.name/experiments/in/)
             return contains[i] !== undefined ? false : (contains[i] = true);
         });
@@ -188,7 +186,7 @@ class ArrayHelper {
      * @param {*} value A value to be counted.
      * @returns {Number} The number of occurences of a value in the array.
      */
-    static count(arr, value) {
+    static count<T>(arr: T[], value: T): number {
         let count = 0;
 
         for (let i = 0; i < arr.length; i++) {
@@ -208,8 +206,8 @@ class ArrayHelper {
      * @param {*} value A value to be toggled.
      * @returns {Array} The toggled array.
      */
-    static toggle(arr, value) {
-        let newArr = Array();
+    static toggle<T>(arr: T[], value: T): T[] {
+        let newArr = Array<T>();
 
         let removed = false;
         for (let i = 0; i < arr.length; i++) {
@@ -240,8 +238,8 @@ class ArrayHelper {
      * @param {*} value A value to be removed.
      * @returns {Array} A new array with the element with a given value removed.
      */
-    static remove(arr, value) {
-        let tmp = Array();
+    static remove<T>(arr: T[], value: T): T[] {
+        let tmp = Array<T>();
 
         for (let i = 0; i < arr.length; i++) {
             if (arr[i] !== value) {
@@ -260,7 +258,7 @@ class ArrayHelper {
      * @param {*} value A value to be removed.
      * @returns {Array} An array with the element with a given value removed.
      */
-    static removeUnique(arr, value) {
+    static removeUnique<T>(arr: T[], value: T): T[] {
         let index = arr.indexOf(value);
 
         if (index > -1) {
@@ -278,7 +276,7 @@ class ArrayHelper {
      * @param {Array} arrB The array containing elements that will be removed from the other array.
      * @returns {Array} The filtered array.
      */
-    static removeAll(arrA, arrB) {
+    static removeAll<T>(arrA: T[], arrB: T[]): T[] {
         return arrA.filter(function (item) {
             return arrB.indexOf(item) === -1;
         });
@@ -292,8 +290,8 @@ class ArrayHelper {
      * @param {Array} arrB An array.
      * @returns {Array} The merged array.
      */
-    static merge(arrA, arrB) {
-        let arr = new Array(arrA.length + arrB.length);
+    static merge<T>(arrA: T[], arrB: T[]): T[] {
+        let arr = new Array<T>(arrA.length + arrB.length);
 
         for (let i = 0; i < arrA.length; i++) {
             arr[i] = arrA[i];
@@ -314,7 +312,7 @@ class ArrayHelper {
      * @param {Array} arrB An array.
      * @returns {Boolean} A boolean indicating whether or not both array contain the same elements.
      */
-    static containsAll(arrA, arrB) {
+    static containsAll<T>(arrA: T[], arrB: T[]): boolean {
         let containing = 0;
         for (let i = 0; i < arrA.length; i++) {
             for (let j = 0; j < arrB.length; j++) {
@@ -335,7 +333,7 @@ class ArrayHelper {
      * @param {String} arr[].atomicNumber The atomic number associated with the vertex id.
      * @returns {Object[]} The array sorted by atomic number. Example of an array entry: { atomicNumber: 2, vertexId: 5 }.
      */
-    static sortByAtomicNumberDesc(arr) {
+    static sortByAtomicNumberDesc(arr: { vertexId: number; atomicNumber: string }[]): { vertexId: number; atomicNumber: string }[] {
         let map = arr.map(function (e, i) {
             return { index: i, value: e.atomicNumber.split('.').map(Number) };
         });
@@ -358,18 +356,18 @@ class ArrayHelper {
 
     /**
      * Copies a an n-dimensional array.
-     * 
+     *
      * @param {Array} arr The array to be copied.
      * @returns {Array} The copy.
      */
-    static deepCopy(arr) {
-        let newArr = Array();
+    static deepCopy<T>(arr: T[]): T[] {
+        let newArr = Array<T>();
 
         for (let i = 0; i < arr.length; i++) {
             let item = arr[i];
 
             if (item instanceof Array) {
-                newArr[i] = ArrayHelper.deepCopy(item);
+                newArr[i] = ArrayHelper.deepCopy(item) as any;
             } else {
                 newArr[i] = item;
             }

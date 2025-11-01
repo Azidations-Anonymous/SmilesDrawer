@@ -1,10 +1,8 @@
-// @ts-nocheck
-//@ts-check
-const Vector2 = require('./Vector2')
+import Vector2 = require('./Vector2');
 
-/** 
+/**
  * A class representing a line.
- * 
+ *
  * @property {Vector2} from The Vector2 defining the start of the line.
  * @property {Vector2} to The Vector2 defining the end of the line.
  * @property {String} elementFrom The element symbol associated with the start of the line.
@@ -13,6 +11,13 @@ const Vector2 = require('./Vector2')
  * @property {Boolean} chiralTo A boolean indicating whether or tno the target atom is a chiral center.
  */
 class Line {
+    from: Vector2;
+    to: Vector2;
+    elementFrom: string | null;
+    elementTo: string | null;
+    chiralFrom: boolean;
+    chiralTo: boolean;
+
     /**
      * The constructor for the class Line.
      *
@@ -23,7 +28,7 @@ class Line {
      * @param {Boolean} [chiralFrom=false] Whether or not the from atom is a chiral center.
      * @param {Boolean} [chiralTo=false] Whether or not the to atom is a chiral center.
      */
-    constructor(from = new Vector2(0,0), to = new Vector2(0, 0), elementFrom = null, elementTo = null, chiralFrom = false, chiralTo = false) {
+    constructor(from: Vector2 = new Vector2(0,0), to: Vector2 = new Vector2(0, 0), elementFrom: string | null = null, elementTo: string | null = null, chiralFrom: boolean = false, chiralTo: boolean = false) {
         this.from = from;
         this.to = to;
         this.elementFrom = elementFrom;
@@ -37,7 +42,7 @@ class Line {
      *
      * @returns {Line} A clone of this line.
      */
-    clone() {
+    clone(): Line {
         return new Line(this.from.clone(), this.to.clone(), this.elementFrom, this.elementTo);
     }
 
@@ -46,8 +51,8 @@ class Line {
      *
      * @returns {Number} The length of this line.
      */
-    getLength() {
-        return Math.sqrt(Math.pow(this.to.x - this.from.x, 2) + 
+    getLength(): number {
+        return Math.sqrt(Math.pow(this.to.x - this.from.x, 2) +
                          Math.pow(this.to.y - this.from.y, 2));
     }
 
@@ -57,7 +62,7 @@ class Line {
      *
      * @returns {Number} The angle in radians.
      */
-    getAngle() {
+    getAngle(): number {
         // Get the angle between the line and the x-axis
         let diff = Vector2.subtract(this.getRightVector(), this.getLeftVector());
         return diff.angle();
@@ -68,7 +73,7 @@ class Line {
      *
      * @returns {Vector2} The right vector.
      */
-    getRightVector() {
+    getRightVector(): Vector2 {
         // Return the vector with the larger x value (the right one)
         if (this.from.x < this.to.x) {
             return this.to;
@@ -76,13 +81,13 @@ class Line {
             return this.from;
         }
     }
-    
+
     /**
      * Returns the left vector (the vector with the smaller x value).
      *
      * @returns {Vector2} The left vector.
      */
-    getLeftVector() {
+    getLeftVector(): Vector2 {
         // Return the vector with the smaller x value (the left one)
         if (this.from.x < this.to.x) {
             return this.from;
@@ -96,7 +101,7 @@ class Line {
      *
      * @returns {String} The element associated with the right vector.
      */
-    getRightElement() {
+    getRightElement(): string | null {
         if (this.from.x < this.to.x) {
             return this.elementTo;
         } else {
@@ -109,7 +114,7 @@ class Line {
      *
      * @returns {String} The element associated with the left vector.
      */
-    getLeftElement() {
+    getLeftElement(): string | null {
         if (this.from.x < this.to.x) {
             return this.elementFrom;
         } else {
@@ -122,7 +127,7 @@ class Line {
      *
      * @returns {Boolean} Whether or not the atom associated with the right vector is a chiral center.
      */
-    getRightChiral() {
+    getRightChiral(): boolean {
         if (this.from.x < this.to.x) {
             return this.chiralTo;
         } else {
@@ -135,7 +140,7 @@ class Line {
      *
      * @returns {Boolean} Whether or not the atom  associated with the left vector is a chiral center.
      */
-    getLeftChiral() {
+    getLeftChiral(): boolean {
         if (this.from.x < this.to.x) {
             return this.chiralFrom;
         } else {
@@ -150,7 +155,7 @@ class Line {
      * @param {Number} y The y value.
      * @returns {Line} This line.
      */
-    setRightVector(x, y) {
+    setRightVector(x: number, y: number): Line {
         if (this.from.x < this.to.x) {
             this.to.x = x;
             this.to.y = y;
@@ -169,7 +174,7 @@ class Line {
      * @param {Number} y The y value.
      * @returns {Line} This line.
      */
-    setLeftVector(x, y) {
+    setLeftVector(x: number, y: number): Line {
         if (this.from.x < this.to.x) {
             this.from.x = x;
             this.from.y = y;
@@ -186,11 +191,11 @@ class Line {
      *
      * @returns {Line} This line.
      */
-    rotateToXAxis() {
+    rotateToXAxis(): Line {
         let left = this.getLeftVector();
-        
+
         this.setRightVector(left.x + this.getLength(), left.y);
-        
+
         return this;
     }
 
@@ -200,7 +205,7 @@ class Line {
      * @param {Number} theta The angle (in radians) to rotate the line.
      * @returns {Line} This line.
      */
-    rotate(theta) {
+    rotate(theta: number): Line {
         let l = this.getLeftVector();
         let r = this.getRightVector();
         let sinTheta = Math.sin(theta);
@@ -208,7 +213,7 @@ class Line {
 
         let x = cosTheta * (r.x - l.x) - sinTheta * (r.y - l.y) + l.x;
         let y = sinTheta * (r.x - l.x) - cosTheta * (r.y - l.y) + l.y;
-        
+
         this.setRightVector(x, y);
 
         return this;
@@ -220,12 +225,12 @@ class Line {
      * @param {Number} by The length in pixels to shorten the vector by.
      * @returns {Line} This line.
      */
-    shortenFrom(by) {
+    shortenFrom(by: number): Line {
         let f = Vector2.subtract(this.to, this.from);
-        
+
         f.normalize();
         f.multiplyScalar(by);
-        
+
         this.from.add(f);
 
         return this;
@@ -237,12 +242,12 @@ class Line {
      * @param {Number} by The length in pixels to shorten the vector by.
      * @returns {Line} This line.
      */
-    shortenTo(by) {
+    shortenTo(by: number): Line {
         let f = Vector2.subtract(this.from, this.to);
-        
+
         f.normalize();
         f.multiplyScalar(by);
-        
+
         this.to.add(f);
 
         return this;
@@ -254,7 +259,7 @@ class Line {
      * @param {Number} by The length in pixels to shorten the vector by.
      * @returns {Line} Returns itself.
      */
-    shortenRight(by) {
+    shortenRight(by: number): Line {
         if (this.from.x < this.to.x) {
             this.shortenTo(by);
         } else {
@@ -263,14 +268,14 @@ class Line {
 
         return this;
     }
-    
+
     /**
      * Shorten the left side.
-     * 
+     *
      * @param {Number} by The length in pixels to shorten the vector by.
      * @returns {Line} Returns itself.
      */
-    shortenLeft(by) {
+    shortenLeft(by: number): Line {
         if (this.from.x < this.to.x) {
             this.shortenFrom(by);
         } else {
@@ -286,12 +291,12 @@ class Line {
      * @param {Number} by The length in pixels to shorten the vector by.
      * @returns {Line} This line.
      */
-    shorten(by) {
+    shorten(by: number): Line {
         let f = Vector2.subtract(this.from, this.to);
-        
+
         f.normalize();
         f.multiplyScalar(by / 2.0);
-        
+
         this.to.add(f);
         this.from.subtract(f);
 

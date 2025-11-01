@@ -1,6 +1,3 @@
-// @ts-nocheck
-//@ts-check
-
 /**
  * A class representing an edge.
  *
@@ -14,6 +11,15 @@
  * @property {String} [wedge=''] Wedge direction. Either '', 'up' or 'down'
  */
 class Edge {
+    id: number | null;
+    sourceId: number;
+    targetId: number;
+    weight: number;
+    bondType: string;
+    isPartOfAromaticRing: boolean;
+    center: boolean;
+    wedge: string;
+
     /**
      * The constructor for the class Edge.
      *
@@ -21,7 +27,7 @@ class Edge {
      * @param {Number} targetId A vertex id.
      * @param {Number} [weight=1] The weight of the edge.
      */
-    constructor(sourceId, targetId, weight = 1) {
+    constructor(sourceId: number, targetId: number, weight: number = 1) {
         this.id = null;
         this.sourceId = sourceId;
         this.targetId = targetId;
@@ -36,7 +42,7 @@ class Edge {
      * Set the bond type of this edge. This also sets the edge weight.
      * @param {String} bondType
      */
-    setBondType(bondType) {
+    setBondType(bondType: string): void {
       this.bondType = bondType;
       this.weight = Edge.bonds[bondType];
     }
@@ -46,7 +52,7 @@ class Edge {
      *
      * @returns {Object} The object containing the map.
      */
-    static get bonds() {
+    static get bonds(): Record<string, number> {
         return {
             '.': 0,
             '-': 1,
@@ -59,4 +65,4 @@ class Edge {
     }
 }
 
-export = Edge
+export = Edge;
