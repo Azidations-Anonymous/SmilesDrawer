@@ -1,13 +1,9 @@
-// @ts-nocheck
-const {
-  getChargeText
-} = require('./UtilityFunctions');
+import { getChargeText } from './UtilityFunctions';
+import Line = require('./Line');
+import Vector2 = require('./Vector2');
+import MathHelper = require('./MathHelper');
 
-const Line = require('./Line');
-const Vector2 = require('./Vector2');
-const MathHelper = require('./MathHelper');
-
-function makeid(length) {
+function makeid(length: number): string {
   var result = '';
   var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   var charactersLength = characters.length;
@@ -18,7 +14,28 @@ function makeid(length) {
 }
 
 class SvgWrapper {
-  constructor(themeManager, target, options, clear = true) {
+  svg: SVGElement;
+  container: SVGElement | null;
+  opts: any;
+  uid: string;
+  gradientId: number;
+  backgroundItems: any[];
+  paths: any[];
+  vertices: any[];
+  gradients: any[];
+  highlights: any[];
+  drawingWidth: number;
+  drawingHeight: number;
+  halfBondThickness: number;
+  themeManager: any;
+  maskElements: any[];
+  maxX: number;
+  maxY: number;
+  minX: number;
+  minY: number;
+  style: SVGStyleElement;
+
+  constructor(themeManager: any, target: string | SVGElement, options: any, clear: boolean = true) {
     if (typeof target === 'string' || target instanceof String) {
       this.svg = document.getElementById(target);
     } else {
@@ -84,7 +101,7 @@ class SvgWrapper {
     }
   }
 
-  constructSvg() {
+  constructSvg(): SVGElement | null {
     // TODO: add the defs element to put gradients in
     let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs'),
       masks = document.createElementNS('http://www.w3.org/2000/svg', 'mask'),
@@ -154,7 +171,7 @@ class SvgWrapper {
   /**
    * Add a background to the svg.
    */
-  addLayer(svg) {
+  addLayer(svg: any): void {
     this.backgroundItems.push(svg.firstChild);
   }
 
@@ -163,7 +180,7 @@ class SvgWrapper {
    *
    * @param {Line} line the line to apply the gradiation to.
    */
-  createGradient(line) {
+  createGradient(line: any): string {
     // create the gradient and add it
     let gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient'),
       gradientUrl = this.uid + `-line-${this.gradientId++}`,
@@ -204,7 +221,7 @@ class SvgWrapper {
    * @param {String} text the actual text
    * @param {String} shift the type of text, either 'sub', or 'super'
    */
-  createSubSuperScripts(text, shift) {
+  createSubSuperScripts(text: string, shift: string): SVGElement {
     let elem = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
     elem.setAttributeNS(null, 'baseline-shift', shift);
     elem.appendChild(document.createTextNode(text));
@@ -213,7 +230,7 @@ class SvgWrapper {
     return elem;
   }
 
-  static createUnicodeCharge(n) {
+  static createUnicodeCharge(n: number): string {
     if (n === 1) {
       return '⁺';
     }
@@ -238,7 +255,7 @@ class SvgWrapper {
    *
    * @param {Vertex[]} vertices An array of vertices containing the vertices associated with the current molecule.
    */
-  determineDimensions(vertices) {
+  determineDimensions(vertices: any[]): void {
     for (var i = 0; i < vertices.length; i++) {
       if (!vertices[i].value.isDrawn) {
         continue;
@@ -263,7 +280,7 @@ class SvgWrapper {
     this.drawingHeight = this.maxY - this.minY;
   }
 
-  updateViewbox(scale) {
+  updateViewbox(scale: number): void {
     let x = this.minX;
     let y = this.minY;
     let width = this.maxX - this.minX;
@@ -296,7 +313,7 @@ class SvgWrapper {
    * @param {Number} y The y position of the text.
    * @param {String} elementName The name of the element (single-letter).
    */
-  drawBall(x, y, elementName) {
+  drawBall(x: number, y: number, elementName: string): void {
     let r = this.opts.bondLength / 4.5;
 
     if (x - r < this.minX) {
@@ -327,7 +344,7 @@ class SvgWrapper {
   /**
    * @param {Line} line the line object to create the wedge from
    */
-  drawWedge(line) {
+  drawWedge(line: any): void {
     let l = line.getLeftVector().clone(),
       r = line.getRightVector().clone();
 
@@ -359,12 +376,12 @@ class SvgWrapper {
   }
 
   /* Draw a highlight for an atom
-   * 
+   *
    *  @param {Number} x The x position of the highlight
    *  @param {Number} y The y position of the highlight
    *  @param {string} color The color of the highlight, default #03fc9d
    */
-  drawAtomHighlight(x, y, color = "#03fc9d") {
+  drawAtomHighlight(x: number, y: number, color: string = "#03fc9d"): void {
     let ball = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     ball.setAttributeNS(null, 'cx', x);
     ball.setAttributeNS(null, 'cy', y);
@@ -379,7 +396,7 @@ class SvgWrapper {
    *
    * @param {Line} line A line.
    */
-  drawDashedWedge(line) {
+  drawDashedWedge(line: any): void {
     if (isNaN(line.from.x) || isNaN(line.from.y) ||
       isNaN(line.to.x) || isNaN(line.to.y)) {
       return;
@@ -433,7 +450,7 @@ class SvgWrapper {
    * @param {String} [debugText=''] A string.
    * @param {String} [color='#f00'] A color in hex form.
    */
-  drawDebugPoint(x, y, debugText = '', color = '#f00') {
+  drawDebugPoint(x: number, y: number, debugText: string = '', color: string = '#f00'): void {
     let point = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     point.setAttributeNS(null, 'cx', x);
     point.setAttributeNS(null, 'cy', y);
@@ -450,7 +467,7 @@ class SvgWrapper {
    * @param {Number} y The y coordinate.
    * @param {String} text The debug text.
    */
-  drawDebugText(x, y, text) {
+  drawDebugText(x: number, y: number, text: string): void {
     let textElem = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     textElem.setAttributeNS(null, 'x', x);
     textElem.setAttributeNS(null, 'y', y);
@@ -472,7 +489,7 @@ class SvgWrapper {
    * @param {y} r The y coordinate of the ring.
    * @param {s} s The size of the ring.
    */
-  drawRing(x, y, s) {
+  drawRing(x: number, y: number, s: number): void {
     let circleElem = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     let radius = MathHelper.apothemFromSideLength(this.opts.bondLength, s);
     circleElem.setAttributeNS(null, 'cx', x);
@@ -492,7 +509,7 @@ class SvgWrapper {
    * @param {Boolean} dashed defaults to false.
    * @param {String} gradient gradient url. Defaults to null.
    */
-  drawLine(line, dashed = false, gradient = null, linecap = 'round') {
+  drawLine(line: any, dashed: boolean = false, gradient: string | null = null, linecap: string = 'round'): void {
     let opts = this.opts,
       stylesArr = [
         ['stroke-width', this.opts.bondThickness],
@@ -529,7 +546,7 @@ class SvgWrapper {
    * @param {Number} y The y position of the point.
    * @param {String} elementName The name of the element (single-letter).
    */
-  drawPoint(x, y, elementName) {
+  drawPoint(x: number, y: number, elementName: string): void {
     let r = 0.75;
 
     if (x - r < this.minX) {
@@ -582,7 +599,7 @@ class SvgWrapper {
    * @param {Number} attachedPseudoElement.count The number of occurences that match the key.
    * @param {Number} attachedPseudoElement.hyrogenCount The number of hydrogens attached to each atom matching the key.
    */
-  drawText(x, y, elementName, hydrogens, direction, isTerminal, charge, isotope, totalVertices, attachedPseudoElement = {}) {
+  drawText(x: number, y: number, elementName: string, hydrogens: number, direction: string, isTerminal: boolean, charge: number, isotope: number, totalVertices: number, attachedPseudoElement: any = {}): void {
     let text = [];
     let display = elementName;
 
@@ -638,7 +655,7 @@ class SvgWrapper {
     this.write(text, direction, x, y, totalVertices === 1);
   }
 
-  write(text, direction, x, y, singleVertex) {
+  write(text: any[], direction: string, x: number, y: number, singleVertex: boolean): void {
     // Measure element name only, without charge or isotope ...
     let bbox = SvgWrapper.measureText(text[0][1], this.opts.fontSizeLarge, this.opts.fontFamily);
 
@@ -778,7 +795,7 @@ class SvgWrapper {
    * Draw the wrapped SVG to a canvas.
    * @param {HTMLCanvasElement} canvas The canvas element to draw the svg to.
    */
-  toCanvas(canvas, width, height) {
+  toCanvas(canvas: string | HTMLCanvasElement, width: number, height: number): void {
     if (typeof canvas === 'string' || canvas instanceof String) {
       canvas = document.getElementById(canvas);
     }
@@ -794,7 +811,7 @@ class SvgWrapper {
     image.src = 'data:image/svg+xml;charset-utf-8,' + encodeURIComponent(this.svg.outerHTML);
   }
 
-  static createUnicodeSubscript(n) {
+  static createUnicodeSubscript(n: number): string {
     let result = '';
 
     n.toString().split('').forEach(d => {
@@ -804,7 +821,7 @@ class SvgWrapper {
     return result
   }
 
-  static createUnicodeSuperscript(n) {
+  static createUnicodeSuperscript(n: number): string {
     let result = '';
 
     n.toString().split('').forEach(d => {
@@ -817,7 +834,7 @@ class SvgWrapper {
     return result
   }
 
-  static replaceNumbersWithSubscript(text) {
+  static replaceNumbersWithSubscript(text: string): string {
     let subscriptNumbers = {
       '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄',
       '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉'
@@ -830,7 +847,7 @@ class SvgWrapper {
     return text;
   }
 
-  static measureText(text, fontSize, fontFamily, lineHeight = 0.9) {
+  static measureText(text: string, fontSize: number, fontFamily: string, lineHeight: number = 0.9): {width: number, height: number} {
     const element = document.createElement('canvas');
     const ctx = element.getContext("2d");
     ctx.font = `${fontSize}pt ${fontFamily}`
@@ -845,15 +862,15 @@ class SvgWrapper {
 
   /**
    * Convert an SVG to a canvas. Warning: This happens async!
-   * 
-   * @param {SVGElement} svg 
-   * @param {HTMLCanvasElement} canvas 
-   * @param {Number} width 
-   * @param {Number} height 
+   *
+   * @param {SVGElement} svg
+   * @param {HTMLCanvasElement} canvas
+   * @param {Number} width
+   * @param {Number} height
    * @param {CallableFunction} callback
    * @returns {HTMLCanvasElement} The input html canvas element after drawing to.
    */
-  static svgToCanvas(svg, canvas, width, height, callback = null) {
+  static svgToCanvas(svg: SVGElement, canvas: HTMLCanvasElement, width: number, height: number, callback: ((canvas: HTMLCanvasElement) => void) | null = null): HTMLCanvasElement {
     svg.setAttributeNS(null, 'width', width);
     svg.setAttributeNS(null, 'height', height);
 
@@ -881,13 +898,13 @@ class SvgWrapper {
 
   /**
    * Convert an SVG to a canvas. Warning: This happens async!
-   * 
-   * @param {SVGElement} svg 
-   * @param {HTMLImageElement} canvas 
-   * @param {Number} width 
+   *
+   * @param {SVGElement} svg
+   * @param {HTMLImageElement} canvas
+   * @param {Number} width
    * @param {Number} height
    */
-  static svgToImg(svg, img, width, height) {
+  static svgToImg(svg: SVGElement, img: HTMLImageElement, width: number, height: number): void {
     let canvas = document.createElement('canvas');
     this.svgToCanvas(svg, canvas, width, height, result => {
       img.src = canvas.toDataURL("image/png");
@@ -896,12 +913,12 @@ class SvgWrapper {
 
   /**
    * Create an SVG element containing text.
-   * @param {String} text 
-   * @param {*} themeManager 
-   * @param {*} options 
+   * @param {String} text
+   * @param {*} themeManager
+   * @param {*} options
    * @returns {{svg: SVGElement, width: Number, height: Number}} The SVG element containing the text and its dimensions.
    */
-  static writeText(text, themeManager, fontSize, fontFamily, maxWidth = Number.MAX_SAFE_INTEGER) {
+  static writeText(text: string, themeManager: any, fontSize: number, fontFamily: string, maxWidth: number = Number.MAX_SAFE_INTEGER): {svg: SVGElement, width: number, height: number} {
     let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     let style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
     style.appendChild(document.createTextNode(`

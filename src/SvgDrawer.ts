@@ -1,18 +1,24 @@
-// @ts-nocheck
 // we use the drawer to do all the preprocessing. then we take over the drawing
 // portion to output to svg
-const ArrayHelper = require('./ArrayHelper');
-const Atom = require('./Atom');
-const DrawerBase = require('./DrawerBase');
-const Graph = require('./Graph');
-const Line = require('./Line');
-const SvgWrapper = require('./SvgWrapper');
-const ThemeManager = require('./ThemeManager');
-const Vector2 = require('./Vector2');
-const GaussDrawer = require('./GaussDrawer')
+import ArrayHelper = require('./ArrayHelper');
+import Atom = require('./Atom');
+import DrawerBase = require('./DrawerBase');
+import Graph = require('./Graph');
+import Line = require('./Line');
+import SvgWrapper = require('./SvgWrapper');
+import ThemeManager = require('./ThemeManager');
+import Vector2 = require('./Vector2');
+import GaussDrawer = require('./GaussDrawer');
 
 class SvgDrawer {
-  constructor(options, clear = true) {
+  preprocessor: any;
+  opts: any;
+  clear: boolean;
+  svgWrapper: any;
+  themeManager: any;
+  bridgedRing: boolean;
+
+  constructor(options: any, clear: boolean = true) {
     this.preprocessor = new DrawerBase(options);
     this.opts = this.preprocessor.opts;
     this.clear = clear;
@@ -29,7 +35,7 @@ class SvgDrawer {
    *
    * @returns {SVGElement} The svg element
    */
-  draw(data, target, themeName = 'light', weights = null, infoOnly = false, highlight_atoms = [], weightsNormalized = false) {
+  draw(data: any, target: string | SVGElement | null, themeName: string = 'light', weights: any = null, infoOnly: boolean = false, highlight_atoms: any[] = [], weightsNormalized: boolean = false): SVGElement {
     if (target === null || target === 'svg') {
       target = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       target.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
@@ -101,7 +107,7 @@ class SvgDrawer {
  * @param {String} themeName='dark' The name of the theme to use. Built-in themes are 'light' and 'dark'.
  * @param {Boolean} infoOnly=false Only output info on the molecule without drawing anything to the canvas.
  */
-  drawCanvas(data, target, themeName = 'light', infoOnly = false) {
+  drawCanvas(data: any, target: string | HTMLCanvasElement, themeName: string = 'light', infoOnly: boolean = false): string | HTMLCanvasElement {
     let canvas = null;
     if (typeof target === 'string' || target instanceof String) {
       canvas = document.getElementById(target);
@@ -128,7 +134,7 @@ class SvgDrawer {
    *
    * @param {Ring} ring A ring.
    */
-  drawAromaticityRing(ring) {
+  drawAromaticityRing(ring: any): void {
     let svgWrapper = this.svgWrapper;
     svgWrapper.drawRing(ring.center.x, ring.center.y, ring.getSize());
   }
@@ -138,7 +144,7 @@ class SvgDrawer {
    *
    * @param {Boolean} debug A boolean indicating whether or not to draw debug helpers.
    */
-  drawEdges(debug) {
+  drawEdges(debug: boolean): void {
     let preprocessor = this.preprocessor,
       graph = preprocessor.graph,
       rings = preprocessor.rings,
@@ -176,7 +182,7 @@ class SvgDrawer {
    * @param {Number} edgeId An edge id.
    * @param {Boolean} debug A boolean indicating whether or not to draw debug helpers.
    */
-  drawEdge(edgeId, debug) {
+  drawEdge(edgeId: number, debug: boolean): void {
     let preprocessor = this.preprocessor,
       opts = preprocessor.opts,
       svgWrapper = this.svgWrapper,
@@ -298,10 +304,10 @@ class SvgDrawer {
 
   /**
    * Draw the highlights for atoms to the canvas.
-   * 
-   * @param {Boolean} debug 
+   *
+   * @param {Boolean} debug
    */
-  drawAtomHighlights(debug) {
+  drawAtomHighlights(debug: boolean): void {
     let preprocessor = this.preprocessor;
     let opts = preprocessor.opts;
     let graph = preprocessor.graph;
@@ -326,7 +332,7 @@ class SvgDrawer {
    *
    * @param {Boolean} debug A boolean indicating whether or not to draw debug messages to the canvas.
    */
-  drawVertices(debug) {
+  drawVertices(debug: boolean): void {
     let preprocessor = this.preprocessor,
       opts = preprocessor.opts,
       graph = preprocessor.graph,
@@ -413,7 +419,7 @@ class SvgDrawer {
    * Draw the weights on a background image.
    * @param {Number[]} weights The weights assigned to each atom.
    */
-  drawWeights(weights, weightsNormalized) {
+  drawWeights(weights: number[], weightsNormalized: boolean): void {
 
     if (!weights) {
       return;
@@ -452,7 +458,7 @@ class SvgDrawer {
    *
    * @returns {Number} The overlap score.
    */
-  getTotalOverlapScore() {
+  getTotalOverlapScore(): number {
     return this.preprocessor.getTotalOverlapScore();
   }
 
@@ -461,7 +467,7 @@ class SvgDrawer {
    *
    * @returns {String} The molecular formula.
    */
-  getMolecularFormula(graph = null) {
+  getMolecularFormula(graph: any = null): string {
     return this.preprocessor.getMolecularFormula(graph);
   }
 
@@ -469,7 +475,7 @@ class SvgDrawer {
    * @param {Array} normals list of normals to multiply
    * @param {Number} spacing value to multiply normals by
    */
-  multiplyNormals(normals, spacing) {
+  multiplyNormals(normals: any[], spacing: number): void {
     normals[0].multiplyScalar(spacing);
     normals[1].multiplyScalar(spacing);
   }

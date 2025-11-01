@@ -1,15 +1,14 @@
-// @ts-nocheck
 //@ts-check
-const MathHelper = require('./MathHelper')
-const Vector2 = require('./Vector2')
-const Line = require('./Line')
-const Vertex = require('./Vertex')
-const Ring = require('./Ring')
-const { getChargeText } = require('./UtilityFunctions')
+import MathHelper = require('./MathHelper');
+import Vector2 = require('./Vector2');
+import Line = require('./Line');
+import Vertex = require('./Vertex');
+import Ring = require('./Ring');
+import { getChargeText } from './UtilityFunctions';
 
-/** 
+/**
  * A class wrapping a canvas element.
- * 
+ *
  * @property {HTMLElement} canvas The HTML element for the canvas associated with this CanvasWrapper instance.
  * @property {CanvasRenderingContext2D} ctx The CanvasRenderingContext2D of the canvas associated with this CanvasWrapper instance.
  * @property {Object} colors The colors object as defined in the SmilesDrawer options.
@@ -22,6 +21,24 @@ const { getChargeText } = require('./UtilityFunctions')
  * @property {Number} fontSmall The small font size in pt.
  */
 class CanvasWrapper {
+    canvas: HTMLCanvasElement;
+    ctx: CanvasRenderingContext2D | null;
+    themeManager: any;
+    opts: any;
+    drawingWidth: number;
+    drawingHeight: number;
+    offsetX: number;
+    offsetY: number;
+    fontLarge: string;
+    fontSmall: string;
+    hydrogenWidth: number;
+    halfHydrogenWidth: number;
+    halfBondThickness: number;
+    devicePixelRatio: number;
+    backingStoreRatio: number;
+    ratio: number;
+    colors: any;
+
     /**
      * The constructor for the class CanvasWrapper.
      *
@@ -29,7 +46,7 @@ class CanvasWrapper {
      * @param {ThemeManager} themeManager Theme manager for setting proper colors.
      * @param {Object} options The smiles drawer options object.
      */
-    constructor(target, themeManager, options) {
+    constructor(target: string | HTMLCanvasElement, themeManager: any, options: any) {
         if (typeof target === 'string' || target instanceof String) {
             this.canvas = document.getElementById(target);
         } else {
@@ -60,11 +77,11 @@ class CanvasWrapper {
 
     /**
      * Update the width and height of the canvas
-     * 
-     * @param {Number} width 
-     * @param {Number} height 
+     *
+     * @param {Number} width
+     * @param {Number} height
      */
-    updateSize(width, height) {
+    updateSize(width: number, height: number): void {
         this.devicePixelRatio = window.devicePixelRatio || 1;
         this.backingStoreRatio = this.ctx.webkitBackingStorePixelRatio || this.ctx.mozBackingStorePixelRatio ||
             this.ctx.msBackingStorePixelRatio || this.ctx.oBackingStorePixelRatio ||
@@ -88,7 +105,7 @@ class CanvasWrapper {
      *
      * @param {Object} theme A theme from the smiles drawer options.
      */
-    setTheme(theme) {
+    setTheme(theme: any): void {
         this.colors = theme;
     }
 
@@ -97,7 +114,7 @@ class CanvasWrapper {
      *
      * @param {Vertex[]} vertices An array of vertices containing the vertices associated with the current molecule.
      */
-    scale(vertices) {
+    scale(vertices: any[]): void {
         // Figure out the final size of the image
         let maxX = -Number.MAX_VALUE;
         let maxY = -Number.MAX_VALUE;
@@ -148,7 +165,7 @@ class CanvasWrapper {
     /**
      * Resets the transform of the canvas.
      */
-    reset() {
+    reset(): void {
         this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     }
 
@@ -158,7 +175,7 @@ class CanvasWrapper {
      * @param {String} key The color key in the theme (e.g. C, N, BACKGROUND, ...).
      * @returns {String} A color hex value.
      */
-    getColor(key) {
+    getColor(key: string): string {
         key = key.toUpperCase();
 
         if (key in this.colors) {
@@ -178,7 +195,7 @@ class CanvasWrapper {
      * @param {Boolean} [debug=false] Draw in debug mode.
      * @param {String} [debugText=''] A debug message.
      */
-    drawCircle(x, y, radius, color, fill = true, debug = false, debugText = '') {
+    drawCircle(x: number, y: number, radius: number, color: string, fill: boolean = true, debug: boolean = false, debugText: string = ''): void {
         let ctx = this.ctx;
         let offsetX = this.offsetX;
         let offsetY = this.offsetY;
@@ -219,7 +236,7 @@ class CanvasWrapper {
      * @param {Boolean} [dashed=false] Whether or not the line is dashed.
      * @param {Number} [alpha=1.0] The alpha value of the color.
      */
-    drawLine(line, dashed = false, alpha = 1.0) {
+    drawLine(line: any, dashed: boolean = false, alpha: number = 1.0): void {
         let ctx = this.ctx;
         let offsetX = this.offsetX;
         let offsetY = this.offsetY;
@@ -294,7 +311,7 @@ class CanvasWrapper {
      * @param {Line} line A line.
      * @param {Number} width The wedge width.
      */
-    drawWedge(line, width = 1.0) {
+    drawWedge(line: any, width: number = 1.0): void {
         if (isNaN(line.from.x) || isNaN(line.from.y) ||
             isNaN(line.to.x) || isNaN(line.to.y)) {
             return;
@@ -370,7 +387,7 @@ class CanvasWrapper {
      *
      * @param {Line} line A line.
      */
-    drawDashedWedge(line) {
+    drawDashedWedge(line: any): void {
         if (isNaN(line.from.x) || isNaN(line.from.y) ||
             isNaN(line.to.x) || isNaN(line.to.y)) {
             return;
@@ -468,7 +485,7 @@ class CanvasWrapper {
      * @param {Number} y The y coordinate.
      * @param {String} text The debug text.
      */
-    drawDebugText(x, y, text) {
+    drawDebugText(x: number, y: number, text: string): void {
         let ctx = this.ctx;
 
         ctx.save();
@@ -487,7 +504,7 @@ class CanvasWrapper {
      * @param {Number} y The y position of the text.
      * @param {String} elementName The name of the element (single-letter).
      */
-    drawBall(x, y, elementName) {
+    drawBall(x: number, y: number, elementName: string): void {
         let ctx = this.ctx;
 
         ctx.save();
@@ -505,7 +522,7 @@ class CanvasWrapper {
      * @param {Number} y The y position of the point.
      * @param {String} elementName The name of the element (single-letter).
      */
-    drawPoint(x, y, elementName) {
+    drawPoint(x: number, y: number, elementName: string): void {
         let ctx = this.ctx;
         let offsetX = this.offsetX;
         let offsetY = this.offsetY;
@@ -542,7 +559,7 @@ class CanvasWrapper {
      * @param {Number} attachedPseudoElement.count The number of occurences that match the key.
      * @param {Number} attachedPseudoElement.hyrogenCount The number of hydrogens attached to each atom matching the key.
      */
-    drawText(x, y, elementName, hydrogens, direction, isTerminal, charge, isotope, vertexCount, attachedPseudoElement = {}) {
+    drawText(x: number, y: number, elementName: string, hydrogens: number, direction: string, isTerminal: boolean, charge: number, isotope: number, vertexCount: number, attachedPseudoElement: any = {}): void {
         let ctx = this.ctx;
         let offsetX = this.offsetX;
         let offsetY = this.offsetY;
@@ -835,7 +852,7 @@ class CanvasWrapper {
      * @param {Number} charge The integer indicating the charge.
      * @returns {String} A string representing a charge.
      */
-    getChargeText(charge) {
+    getChargeText(charge: number): string {
         if (charge === 1) {
             return '+'
         } else if (charge === 2) {
@@ -857,7 +874,7 @@ class CanvasWrapper {
      * @param {String} [debugText=''] A string.
      * @param {String} [color='#f00'] A color in hex form.
      */
-    drawDebugPoint(x, y, debugText = '', color = '#f00') {
+    drawDebugPoint(x: number, y: number, debugText: string = '', color: string = '#f00'): void {
         this.drawCircle(x, y, 2, color, true, true, debugText);
     }
 
@@ -866,7 +883,7 @@ class CanvasWrapper {
      *
      * @param {Ring} ring A ring.
      */
-    drawAromaticityRing(ring) {
+    drawAromaticityRing(ring: any): void {
         let ctx = this.ctx;
         let radius = MathHelper.apothemFromSideLength(this.opts.bondLength, ring.getSize());
 
@@ -885,7 +902,7 @@ class CanvasWrapper {
      * Clear the canvas.
      *
      */
-    clear() {
+    clear(): void {
         this.ctx.clearRect(0, 0, this.canvas.offsetWidth, this.canvas.offsetHeight);
     }
 
