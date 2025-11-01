@@ -1,12 +1,29 @@
-// @ts-nocheck
-//@ts-check
-const ArrayHelper = require('./ArrayHelper')
-const Vertex = require('./Vertex')
-const Ring = require('./Ring')
+import ArrayHelper = require('./ArrayHelper');
+import Vertex = require('./Vertex');
+import Ring = require('./Ring');
 
-/** 
+interface Ringbond {
+  id: number;
+  bondType: string;
+}
+
+interface BracketInfo {
+  hcount: number | null;
+  charge: string;
+  isotope: number;
+}
+
+interface AttachedPseudoElement {
+  element: string;
+  count: number;
+  hydrogenCount: number;
+  previousElement: string;
+  charge: number;
+}
+
+/**
  * A class representing an atom.
- * 
+ *
  * @property {String} element The element symbol of this atom. Single-letter symbols are always uppercase. Examples: H, C, F, Br, Si, ...
  * @property {Boolean} drawExplicit A boolean indicating whether or not this atom is drawn explicitly (for example, a carbon atom). This overrides the default behaviour.
  * @property {Object[]} ringbonds An array containing the ringbond ids and bond types as specified in the original SMILE.
@@ -40,13 +57,43 @@ const Ring = require('./Ring')
  * @property {Number} class
  */
 class Atom {
+  idx: number | null;
+  element: string;
+  drawExplicit: boolean;
+  ringbonds: Ringbond[];
+  rings: number[];
+  bondType: string;
+  branchBond: string | null;
+  isBridge: boolean;
+  isBridgeNode: boolean;
+  originalRings: number[];
+  bridgedRing: number | null;
+  anchoredRings: number[];
+  bracket: BracketInfo | null;
+  plane: number;
+  attachedPseudoElements: Record<string, AttachedPseudoElement>;
+  hasAttachedPseudoElements: boolean;
+  isDrawn: boolean;
+  isConnectedToRing: boolean;
+  neighbouringElements: string[];
+  isPartOfAromaticRing: boolean;
+  bondCount: number;
+  chirality: string;
+  isStereoCenter: boolean;
+  priority: number;
+  mainChain: boolean;
+  hydrogenDirection: string;
+  subtreeDepth: number;
+  hasHydrogen: boolean;
+  class: number | undefined;
+
   /**
    * The constructor of the class Atom.
    *
    * @param {String} element The one-letter code of the element.
    * @param {String} [bondType='-'] The type of the bond associated with this atom.
    */
-  constructor(element, bondType = '-') {
+  constructor(element: string, bondType: string = '-') {
     this.idx = null;
     this.element = element.length === 1 ? element.toUpperCase() : element;
     this.drawExplicit = false;
@@ -80,10 +127,10 @@ class Atom {
 
   /**
    * Adds a neighbouring element to this atom.
-   * 
+   *
    * @param {String} element A string representing an element.
    */
-  addNeighbouringElement(element) {
+  addNeighbouringElement(element: string): void {
     this.neighbouringElements.push(element);
   }
 
@@ -94,7 +141,7 @@ class Atom {
    * @param {Number} [hydrogenCount=0] The number of hydrogens for the element.
    * @param {Number} [charge=0] The charge for the element.
    */
-  attachPseudoElement(element, previousElement, hydrogenCount = 0, charge = 0) {
+  attachPseudoElement(element: string, previousElement: string, hydrogenCount: number = 0, charge: number = 0): void {
     if (hydrogenCount === null) {
       hydrogenCount = 0;
     }
@@ -125,8 +172,8 @@ class Atom {
    *
    * @returns {Object} The sorted attached pseudo elements.
    */
-  getAttachedPseudoElements() {
-    let ordered = {};
+  getAttachedPseudoElements(): Record<string, AttachedPseudoElement> {
+    let ordered: Record<string, AttachedPseudoElement> = {};
     let that = this;
 
     Object.keys(this.attachedPseudoElements).sort().forEach(function (key) {
@@ -141,7 +188,7 @@ class Atom {
    *
    * @returns {Number} The number of attached pseudo elements.
    */
-  getAttachedPseudoElementsCount() {
+  getAttachedPseudoElementsCount(): number {
     return Object.keys(this.attachedPseudoElements).length;
   }
 
@@ -150,7 +197,7 @@ class Atom {
    *
    * @returns {Boolean} A boolean indicating whether this atom is a heteroatom.
    */
-  isHeteroAtom() {
+  isHeteroAtom(): boolean {
     return this.element !== 'C' && this.element !== 'H';
   }
 
@@ -159,7 +206,7 @@ class Atom {
    *
    * @param {Number} ringId A ring id.
    */
-  addAnchoredRing(ringId) {
+  addAnchoredRing(ringId: number): void {
     if (!ArrayHelper.contains(this.anchoredRings, {
       value: ringId
     })) {
@@ -172,14 +219,14 @@ class Atom {
    *
    * @returns {Number} The number of ringbonds this atom is connected to.
    */
-  getRingbondCount() {
+  getRingbondCount(): number {
     return this.ringbonds.length;
   }
 
   /**
    * Backs up the current rings.
    */
-  backupRings() {
+  backupRings(): void {
     this.originalRings = Array(this.rings.length);
 
     for (let i = 0; i < this.rings.length; i++) {
@@ -190,7 +237,7 @@ class Atom {
   /**
    * Restores the most recent backed up rings.
    */
-  restoreRings() {
+  restoreRings(): void {
     this.rings = Array(this.originalRings.length);
 
     for (let i = 0; i < this.originalRings.length; i++) {
@@ -205,7 +252,7 @@ class Atom {
    * @param {Atom} atomB An atom.
    * @returns {Boolean} A boolean indicating whether or not two atoms share a common ringbond.
    */
-  haveCommonRingbond(atomA, atomB) {
+  haveCommonRingbond(atomA: any, atomB: any): boolean {
     for (let i = 0; i < atomA.ringbonds.length; i++) {
       for (let j = 0; j < atomB.ringbonds.length; j++) {
         if (atomA.ringbonds[i].id == atomB.ringbonds[j].id) {
@@ -219,11 +266,11 @@ class Atom {
 
   /**
    * Check whether or not the neighbouring elements of this atom equal the supplied array.
-   * 
+   *
    * @param {String[]} arr An array containing all the elements that are neighbouring this atom. E.g. ['C', 'O', 'O', 'N']
    * @returns {Boolean} A boolean indicating whether or not the neighbours match the supplied array of elements.
    */
-  neighbouringElementsEqual(arr) {
+  neighbouringElementsEqual(arr: string[]): boolean {
     if (arr.length !== this.neighbouringElements.length) {
       return false;
     }
@@ -242,26 +289,26 @@ class Atom {
 
   /**
    * Get the atomic number of this atom.
-   * 
+   *
    * @returns {Number} The atomic number of this atom.
    */
-  getAtomicNumber() {
+  getAtomicNumber(): number {
     return Atom.atomicNumbers[this.element];
   }
 
   /**
    * Get the maximum number of bonds for this atom.
-   * 
+   *
    * @returns {Number} The maximum number of bonds of this atom.
    */
-  getMaxBonds() {
+  getMaxBonds(): number {
     return Atom.maxBonds[this.element];
   }
 
   /**
    * A map mapping element symbols to their maximum bonds.
    */
-  static get maxBonds() {
+  static get maxBonds(): Record<string, number> {
     return {
       'H': 1,
       'C': 4,
@@ -280,7 +327,7 @@ class Atom {
   /**
    * A map mapping element symbols to the atomic number.
    */
-  static get atomicNumbers() {
+  static get atomicNumbers(): Record<string, number> {
     return {
       'H': 1,
       'He': 2,
@@ -412,7 +459,7 @@ class Atom {
   /**
    * A map mapping element symbols to the atomic mass.
    */
-  static get mass() {
+  static get mass(): Record<string, number> {
     return {
       'H': 1,
       'He': 2,
