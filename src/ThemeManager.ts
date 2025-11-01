@@ -1,6 +1,8 @@
-// @ts-nocheck
 class ThemeManager {
-  constructor(colors, theme) {
+  colors: any;
+  theme: any;
+
+  constructor(colors: any, theme: string) {
     this.colors = colors;
     this.theme = this.colors[theme];
   }
@@ -11,7 +13,7 @@ class ThemeManager {
    * @param {String} key The color key in the theme (e.g. C, N, BACKGROUND, ...).
    * @returns {String} A color hex value.
    */
-  getColor(key) {
+  getColor(key: string | null | undefined): string {
     if (key) {
       key = key.toUpperCase();
 
@@ -29,7 +31,7 @@ class ThemeManager {
    *
    * @param {String} theme the name of the theme to switch to
    */
-  setTheme(theme) {
+  setTheme(theme: string): void {
     if (this.colors.hasOwnProperty(theme)) {
       this.theme = this.colors[theme];
     }

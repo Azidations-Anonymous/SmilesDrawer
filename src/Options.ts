@@ -1,22 +1,24 @@
-// @ts-nocheck
-
 class Options {
     /**
      * A helper method to extend the default options with user supplied ones.
+     *
+     * @param deep - If true, performs deep merge of nested objects
+     * @param objects - Objects to merge together
+     * @returns The merged object
      */
-    static extend() {
+    static extend(...args: any[]): any {
         let that = this;
-        let extended = {};
+        let extended: any = {};
         let deep = false;
         let i = 0;
-        let length = arguments.length;
+        let length = args.length;
 
-        if (Object.prototype.toString.call(arguments[0]) === '[object Boolean]') {
-            deep = arguments[0];
+        if (Object.prototype.toString.call(args[0]) === '[object Boolean]') {
+            deep = args[0];
             i++;
         }
 
-        let merge = function (obj) {
+        let merge = function (obj: any): void {
             for (var prop in obj) {
                 if (Object.prototype.hasOwnProperty.call(obj, prop)) {
                     if (deep && Object.prototype.toString.call(obj[prop]) === '[object Object]') {
@@ -29,7 +31,7 @@ class Options {
         };
 
         for (; i < length; i++) {
-            let obj = arguments[i];
+            let obj = args[i];
             merge(obj);
         }
 
