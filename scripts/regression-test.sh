@@ -2,6 +2,8 @@
 
 set -e
 
+BASELINE_COMMIT="${1:-HEAD}"
+
 echo "================================================================================"
 echo "SMILES DRAWER REGRESSION TEST"
 echo "================================================================================"
@@ -13,11 +15,19 @@ BASELINE_DIR="${TEMP_DIR}/smiles-drawer-baseline"
 echo "Current directory: ${CURRENT_DIR}"
 echo "Temporary directory: ${TEMP_DIR}"
 echo "Baseline clone directory: ${BASELINE_DIR}"
+echo "Baseline commit/branch: ${BASELINE_COMMIT}"
 echo ""
 
 echo "Step 1: Cloning current repository to temporary location..."
 git clone "${CURRENT_DIR}" "${BASELINE_DIR}"
 echo "✓ Clone complete"
+echo ""
+
+echo "Step 1b: Checking out baseline commit..."
+cd "${BASELINE_DIR}"
+git checkout "${BASELINE_COMMIT}"
+echo "✓ Checked out ${BASELINE_COMMIT}"
+cd "${CURRENT_DIR}"
 echo ""
 
 echo "Step 2: Installing dependencies in baseline..."

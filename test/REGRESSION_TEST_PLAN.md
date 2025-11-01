@@ -64,14 +64,27 @@ Node.js script that:
 ## Usage
 
 ```bash
-# Run full regression test suite
+# Run regression test against HEAD (default)
 npm run test:regression
 
-# Or directly:
-./scripts/regression-test.sh
+# Compare against a specific commit
+./scripts/regression-test.sh abc123
+
+# Compare against a branch
+./scripts/regression-test.sh main
+
+# Compare against previous commit
+./scripts/regression-test.sh HEAD^
 ```
 
 ## Exit Codes
 - `0` - All tests passed (no regressions)
 - `1` - Regression detected (outputs failing SMILES and diff)
 - `2` - Test setup/infrastructure error
+
+## Typical Workflow
+
+1. Make changes to drawing code in your working directory
+2. Run `npm run test:regression` to compare against HEAD
+3. If tests pass, commit your changes
+4. To compare against an older version: `./scripts/regression-test.sh <commit-hash>`
