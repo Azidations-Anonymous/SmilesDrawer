@@ -1,24 +1,27 @@
-// @ts-nocheck
-//@ts-check
-const Vertex = require('./Vertex')
-const Ring = require('./Ring')
+import Vertex = require('./Vertex');
+import Ring = require('./Ring');
 
-/** 
+/**
  * A class representing a ring connection.
- * 
+ *
  * @property {Number} id The id of this ring connection.
  * @property {Number} firstRingId A ring id.
  * @property {Number} secondRingId A ring id.
  * @property {Set<Number>} vertices A set containing the vertex ids participating in the ring connection.
  */
 class RingConnection {
+    id: number | null;
+    firstRingId: number | null;
+    secondRingId: number | null;
+    vertices: Set<number>;
+
     /**
      * The constructor for the class RingConnection.
      *
      * @param {Ring} firstRing A ring.
      * @param {Ring} secondRing A ring.
      */
-    constructor(firstRing, secondRing) {
+    constructor(firstRing: any, secondRing: any) {
         this.id = null;
         this.firstRingId = firstRing.id;
         this.secondRingId = secondRing.id;
@@ -42,7 +45,7 @@ class RingConnection {
      *
      * @param {Number} vertexId A vertex id.
      */
-    addVertex(vertexId) {
+    addVertex(vertexId: number): void {
         this.vertices.add(vertexId);
     }
 
@@ -52,7 +55,7 @@ class RingConnection {
      * @param {Number} ringId A ring id. The new ring id to be set.
      * @param {Number} otherRingId A ring id. The id that is NOT to be updated.
      */
-    updateOther(ringId, otherRingId) {
+    updateOther(ringId: number, otherRingId: number): void {
         if (this.firstRingId === otherRingId) {
             this.secondRingId = ringId;
         } else {
@@ -62,11 +65,11 @@ class RingConnection {
 
     /**
      * Returns a boolean indicating whether or not a ring with a given id is participating in this ring connection.
-     * 
+     *
      * @param {Number} ringId A ring id.
      * @returns {Boolean} A boolean indicating whether or not a ring with a given id participates in this ring connection.
      */
-    containsRing(ringId) {
+    containsRing(ringId: number): boolean {
         return this.firstRingId === ringId || this.secondRingId === ringId;
     }
 
@@ -76,7 +79,7 @@ class RingConnection {
      * @param {Vertex[]} vertices The array of vertices associated with the current molecule.
      * @returns {Boolean} A boolean indicating whether or not this ring connection is a bridge.
      */
-    isBridge(vertices) {
+    isBridge(vertices: any[]): boolean {
       if (this.vertices.size > 2) {
           return true;
       }
@@ -100,7 +103,7 @@ class RingConnection {
      * @param {Number} secondRingId A ring id.
      * @returns {Boolean} A boolean indicating whether or not two rings ar connected by a bridged bond.
      */
-    static isBridge(ringConnections, vertices, firstRingId, secondRingId) {
+    static isBridge(ringConnections: any[], vertices: any[], firstRingId: number, secondRingId: number): boolean {
       let ringConnection = null;
       
       for (let i = 0; i < ringConnections.length; i++) {
@@ -123,7 +126,7 @@ class RingConnection {
      * @param {Number} ringId A ring id.
      * @returns {Number[]} An array of ring ids of neighbouring rings.
      */
-    static getNeighbours(ringConnections, ringId) {
+    static getNeighbours(ringConnections: any[], ringId: number): number[] {
         let neighbours = [];
 
         for (let i = 0; i < ringConnections.length; i++) {
@@ -148,7 +151,7 @@ class RingConnection {
      * @param {Number} secondRingId A ring id.
      * @returns {Number[]} An array of vertex ids associated with the ring connection.
      */
-    static getVertices(ringConnections, firstRingId, secondRingId) {
+    static getVertices(ringConnections: any[], firstRingId: number, secondRingId: number): number[] | undefined {
         for (let i = 0; i < ringConnections.length; i++) {
             let ringConnection = ringConnections[i];
             if (ringConnection.firstRingId === firstRingId && ringConnection.secondRingId === secondRingId ||

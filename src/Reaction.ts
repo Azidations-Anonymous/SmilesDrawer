@@ -1,14 +1,22 @@
-// @ts-nocheck
-4//@ts-check
-const Parser = require('./Parser')
+import Parser = require('./Parser');
 
 class Reaction {
+    reactantsSmiles: string[];
+    reagentsSmiles: string[];
+    productsSmiles: string[];
+    reactantsWeights: any[];
+    reagentsWeights: any[];
+    productsWeights: any[];
+    reactants: any[];
+    reagents: any[];
+    products: any[];
+
     /**
      * The constructor for the class Reaction.
      *
      * @param {string} reactionSmiles A reaction SMILES.
      */
-    constructor(reactionSmiles) {
+    constructor(reactionSmiles: string) {
         this.reactantsSmiles = [];
         this.reagentsSmiles = [];
         this.productsSmiles = [];

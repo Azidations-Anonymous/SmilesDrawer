@@ -12466,11 +12466,9 @@ function convertImage(img) {
 module.exports = convertImage;
 
 },{}],17:[function(require,module,exports){
-"use strict"; // @ts-nocheck
+"use strict";
 
-4; //@ts-check
-
-const Parser = require('./Parser');
+const Parser = require("./Parser");
 
 class Reaction {
   /**
@@ -12917,16 +12915,13 @@ class ReactionParser {
 module.exports = ReactionParser;
 
 },{"./Reaction":17}],20:[function(require,module,exports){
-"use strict"; // @ts-nocheck
-//@ts-check
+"use strict";
 
-const ArrayHelper = require('./ArrayHelper');
+const ArrayHelper = require("./ArrayHelper");
 
-const Vector2 = require('./Vector2');
+const Vector2 = require("./Vector2");
 
-const Vertex = require('./Vertex');
-
-const RingConnection = require('./RingConnection');
+const RingConnection = require("./RingConnection");
 /**
  * A class representing a ring.
  *
@@ -13138,13 +13133,8 @@ class Ring {
 
 module.exports = Ring;
 
-},{"./ArrayHelper":3,"./RingConnection":21,"./Vector2":28,"./Vertex":29}],21:[function(require,module,exports){
-"use strict"; // @ts-nocheck
-//@ts-check
-
-const Vertex = require('./Vertex');
-
-const Ring = require('./Ring');
+},{"./ArrayHelper":3,"./RingConnection":21,"./Vector2":28}],21:[function(require,module,exports){
+"use strict";
 /**
  * A class representing a ring connection.
  *
@@ -13153,7 +13143,6 @@ const Ring = require('./Ring');
  * @property {Number} secondRingId A ring id.
  * @property {Set<Number>} vertices A set containing the vertex ids participating in the ring connection.
  */
-
 
 class RingConnection {
   /**
@@ -13312,7 +13301,7 @@ class RingConnection {
 
 module.exports = RingConnection;
 
-},{"./Ring":20,"./Vertex":29}],22:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 "use strict"; // @ts-nocheck
 //@ts-check
 
