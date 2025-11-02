@@ -126,6 +126,58 @@ npm install
 gulp
 ```
 
+### Testing
+
+SmilesDrawer includes comprehensive regression testing to ensure changes don't break existing functionality.
+
+#### Regression Testing
+
+Run fail-early regression tests that stop at the first difference:
+
+```bash
+npm run test:regression
+```
+
+Compare against a specific commit or branch:
+
+```bash
+npm run test:regression <commit/branch>
+```
+
+Run full regression suite without stopping at first failure:
+
+```bash
+npm run test:regression -- --full
+```
+
+Or compare against a specific commit with full output:
+
+```bash
+npm run test:regression <commit/branch> -- --full
+```
+
+#### Visual Regression Testing
+
+Create side-by-side comparisons of molecules that render differently (non fail-early):
+
+```bash
+npm run test:visual
+```
+
+Compare against a specific commit or branch:
+
+```bash
+npm run test:visual <commit/branch>
+```
+
+Run with full output:
+
+```bash
+npm run test:visual -- --full
+```
+
+Visual regression tests generate comparison images showing differences between versions, making it easy to spot rendering changes.
+
 ### Getting Started
 
 To get a simple input box which lets the user enter a SMILES and then display it in a canvas, the following minimal example is sufficient.
