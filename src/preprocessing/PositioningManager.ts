@@ -355,12 +355,7 @@ class PositioningManager {
 
             // This puts all the longest subtrees on the far side...
             // TODO: Maybe try to balance this better?
-            // KNOWN BUG: Sort comparator returns boolean instead of number.
-            // JavaScript coerces false->0, true->1, effectively sorting in ascending order
-            // (shortest subtrees first), opposite of what the comment suggests.
-            // Correct would be: (a, b) => b.value.subtreeDepth - a.value.subtreeDepth
-            // Preserving buggy behavior for backward compatibility during TypeScript migration.
-            vertices.sort((a, b) => (a.value.subtreeDepth < b.value.subtreeDepth) as any)
+            vertices.sort((a, b) => b.value.subtreeDepth - a.value.subtreeDepth)
 
             if (neighbours.length === 3 &&
               previousVertex &&

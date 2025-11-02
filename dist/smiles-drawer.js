@@ -15410,13 +15410,8 @@ class PositioningManager {
           return newvertex;
         }); // This puts all the longest subtrees on the far side...
         // TODO: Maybe try to balance this better?
-        // KNOWN BUG: Sort comparator returns boolean instead of number.
-        // JavaScript coerces false->0, true->1, effectively sorting in ascending order
-        // (shortest subtrees first), opposite of what the comment suggests.
-        // Correct would be: (a, b) => b.value.subtreeDepth - a.value.subtreeDepth
-        // Preserving buggy behavior for backward compatibility during TypeScript migration.
 
-        vertices.sort((a, b) => a.value.subtreeDepth < b.value.subtreeDepth);
+        vertices.sort((a, b) => b.value.subtreeDepth - a.value.subtreeDepth);
 
         if (neighbours.length === 3 && previousVertex && previousVertex.value.rings.length < 1 && vertices[2].value.rings.length < 1 && vertices[1].value.rings.length < 1 && vertices[0].value.rings.length < 1 && vertices[2].value.subtreeDepth === 1 && vertices[1].value.subtreeDepth === 1 && vertices[0].value.subtreeDepth > 1) {
           // Special logic for adding pinched crosses...
