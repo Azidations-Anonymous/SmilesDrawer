@@ -9,7 +9,6 @@
   "private": false,
   "scripts": {
     "test:regression": "./scripts/regression-test.sh",
-    "test:visual": "./scripts/regression-test.sh",
     "type-check": "tsc",
     "type-check:watch": "tsc --watch"
   },

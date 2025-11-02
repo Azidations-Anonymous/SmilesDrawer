@@ -171,9 +171,6 @@ Results are saved to `regression-results/`:
 
 The JSON format enables both visual inspection (HTML) and programmatic diff analysis (JSON).
 
-**Aliases:**
-- `npm run test:visual` is an alias for `test:regression`
-
 ### Getting Started
 
 To get a simple input box which lets the user enter a SMILES and then display it in a canvas, the following minimal example is sufficient.
