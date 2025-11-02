@@ -155,7 +155,7 @@ if (!Array.prototype.fill) {
 
 module.exports = SmilesDrawer;
 
-},{"./src/Drawer":6,"./src/GaussDrawer":10,"./src/Parser":15,"./src/ReactionDrawer":18,"./src/ReactionParser":19,"./src/SmilesDrawer":24,"./src/SvgDrawer":25}],2:[function(require,module,exports){
+},{"./src/Drawer":6,"./src/GaussDrawer":10,"./src/Parser":15,"./src/ReactionDrawer":18,"./src/ReactionParser":19,"./src/SmilesDrawer":24,"./src/SvgDrawer":26}],2:[function(require,module,exports){
 /**
  * chroma.js - JavaScript library for color conversions
  *
@@ -5526,7 +5526,7 @@ class CanvasWrapper {
 
 module.exports = CanvasWrapper;
 
-},{"./MathHelper":13,"./Vector2":28}],6:[function(require,module,exports){
+},{"./MathHelper":13,"./Vector2":29}],6:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -5605,8 +5605,16 @@ class Drawer {
 
 module.exports = Drawer;
 
-},{"./SvgDrawer":25}],7:[function(require,module,exports){
+},{"./SvgDrawer":26}],7:[function(require,module,exports){
 "use strict";
+
+var __importDefault = undefined && undefined.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+const StereochemistryManager_1 = __importDefault(require("./StereochemistryManager"));
 
 const RingManager = require("./RingManager");
 
@@ -5649,6 +5657,7 @@ class DrawerBase {
    */
   constructor(options) {
     this.ringManager = new RingManager(this);
+    this.stereochemistryManager = new StereochemistryManager_1.default(this);
     this.graph = null;
     this.doubleBondConfigCount = 0;
     this.doubleBondConfig = null;
@@ -7689,174 +7698,7 @@ class DrawerBase {
 
 
   annotateStereochemistry() {
-    let maxDepth = 10; // For each stereo-center
-
-    for (var i = 0; i < this.graph.vertices.length; i++) {
-      let vertex = this.graph.vertices[i];
-
-      if (!vertex.value.isStereoCenter) {
-        continue;
-      }
-
-      let neighbours = vertex.getNeighbours();
-      let nNeighbours = neighbours.length;
-      let priorities = Array(nNeighbours);
-
-      for (var j = 0; j < nNeighbours; j++) {
-        let visited = new Uint8Array(this.graph.vertices.length);
-        let priority = Array(Array());
-        visited[vertex.id] = 1;
-        this.visitStereochemistry(neighbours[j], vertex.id, visited, priority, maxDepth, 0); // Sort each level according to atomic number
-
-        for (var k = 0; k < priority.length; k++) {
-          priority[k].sort(function (a, b) {
-            return b - a;
-          });
-        }
-
-        priorities[j] = [j, priority];
-      }
-
-      let maxLevels = 0;
-      let maxEntries = 0;
-
-      for (var j = 0; j < priorities.length; j++) {
-        if (priorities[j][1].length > maxLevels) {
-          maxLevels = priorities[j][1].length;
-        }
-
-        for (var k = 0; k < priorities[j][1].length; k++) {
-          if (priorities[j][1][k].length > maxEntries) {
-            maxEntries = priorities[j][1][k].length;
-          }
-        }
-      }
-
-      for (var j = 0; j < priorities.length; j++) {
-        let diff = maxLevels - priorities[j][1].length;
-
-        for (var k = 0; k < diff; k++) {
-          priorities[j][1].push([]);
-        } // Break ties by the position in the SMILES string as per specification
-
-
-        priorities[j][1].push([neighbours[j]]); // Make all same length. Fill with zeroes.
-
-        for (var k = 0; k < priorities[j][1].length; k++) {
-          let diff = maxEntries - priorities[j][1][k].length;
-
-          for (var l = 0; l < diff; l++) {
-            priorities[j][1][k].push(0);
-          }
-        }
-      }
-
-      priorities.sort(function (a, b) {
-        for (var j = 0; j < a[1].length; j++) {
-          for (var k = 0; k < a[1][j].length; k++) {
-            if (a[1][j][k] > b[1][j][k]) {
-              return -1;
-            } else if (a[1][j][k] < b[1][j][k]) {
-              return 1;
-            }
-          }
-        }
-
-        return 0;
-      });
-      let order = new Uint8Array(nNeighbours);
-
-      for (var j = 0; j < nNeighbours; j++) {
-        order[j] = priorities[j][0];
-        vertex.value.priority = j;
-      } // Check the angles between elements 0 and 1, and 0 and 2 to determine whether they are
-      // drawn cw or ccw
-      // TODO: OC(Cl)=[C@]=C(C)F currently fails here, however this is, IMHO, not a valid SMILES.
-
-
-      let posA = this.graph.vertices[neighbours[order[0]]].position;
-      let posB = this.graph.vertices[neighbours[order[1]]].position;
-      let posC = this.graph.vertices[neighbours[order[2]]].position;
-      let cwA = posA.relativeClockwise(posB, vertex.position);
-      let cwB = posA.relativeClockwise(posC, vertex.position); // If the second priority is clockwise from the first, the ligands are drawn clockwise, since
-      // The hydrogen can be drawn on either side
-
-      let isCw = cwA === -1;
-      let rotation = vertex.value.bracket.chirality === '@' ? -1 : 1;
-      let rs = MathHelper.parityOfPermutation(order) * rotation === 1 ? 'R' : 'S'; // Flip the hydrogen direction when the drawing doesn't match the chirality.
-
-      let wedgeA = 'down';
-      let wedgeB = 'up';
-
-      if (isCw && rs !== 'R' || !isCw && rs !== 'S') {
-        vertex.value.hydrogenDirection = 'up';
-        wedgeA = 'up';
-        wedgeB = 'down';
-      }
-
-      if (vertex.value.hasHydrogen) {
-        this.graph.getEdge(vertex.id, neighbours[order[order.length - 1]]).wedge = wedgeA;
-      } // Get the shortest subtree to flip up / down. Ignore lowest priority
-      // The rules are following:
-      // 1. Do not draw wedge between two stereocenters
-      // 2. Heteroatoms
-      // 3. Draw outside ring
-      // 4. Shortest subtree
-
-
-      let wedgeOrder = new Array(neighbours.length - 1);
-      let showHydrogen = vertex.value.rings.length > 1 && vertex.value.hasHydrogen;
-      let offset = vertex.value.hasHydrogen ? 1 : 0;
-
-      for (var j = 0; j < order.length - offset; j++) {
-        wedgeOrder[j] = new Uint32Array(2);
-        let neighbour = this.graph.vertices[neighbours[order[j]]];
-        wedgeOrder[j][0] += neighbour.value.isStereoCenter ? 0 : 100000; // wedgeOrder[j][0] += neighbour.value.rings.length > 0 ? 0 : 10000;
-        // Only add if in same ring, unlike above
-
-        wedgeOrder[j][0] += this.areVerticesInSameRing(neighbour, vertex) ? 0 : 10000;
-        wedgeOrder[j][0] += neighbour.value.isHeteroAtom() ? 1000 : 0;
-        wedgeOrder[j][0] -= neighbour.value.subtreeDepth === 0 ? 1000 : 0;
-        wedgeOrder[j][0] += 1000 - neighbour.value.subtreeDepth;
-        wedgeOrder[j][1] = neighbours[order[j]];
-      }
-
-      wedgeOrder.sort(function (a, b) {
-        if (a[0] > b[0]) {
-          return -1;
-        } else if (a[0] < b[0]) {
-          return 1;
-        }
-
-        return 0;
-      }); // If all neighbours are in a ring, do not draw wedge, the hydrogen will be drawn.
-
-      if (!showHydrogen) {
-        let wedgeId = wedgeOrder[0][1];
-
-        if (vertex.value.hasHydrogen) {
-          this.graph.getEdge(vertex.id, wedgeId).wedge = wedgeB;
-        } else {
-          let wedge = wedgeB;
-
-          for (var j = order.length - 1; j >= 0; j--) {
-            if (wedge === wedgeA) {
-              wedge = wedgeB;
-            } else {
-              wedge = wedgeA;
-            }
-
-            if (neighbours[order[j]] === wedgeId) {
-              break;
-            }
-          }
-
-          this.graph.getEdge(vertex.id, wedgeId).wedge = wedge;
-        }
-      }
-
-      vertex.value.chirality = rs;
-    }
+    this.stereochemistryManager.annotateStereochemistry();
   }
   /**
    *
@@ -7871,42 +7713,7 @@ class DrawerBase {
 
 
   visitStereochemistry(vertexId, previousVertexId, visited, priority, maxDepth, depth, parentAtomicNumber = 0) {
-    visited[vertexId] = 1;
-    let vertex = this.graph.vertices[vertexId];
-    let atomicNumber = vertex.value.getAtomicNumber();
-
-    if (priority.length <= depth) {
-      priority.push(Array());
-    }
-
-    for (var i = 0; i < this.graph.getEdge(vertexId, previousVertexId).weight; i++) {
-      priority[depth].push(parentAtomicNumber * 1000 + atomicNumber);
-    }
-
-    let neighbours = this.graph.vertices[vertexId].neighbours;
-
-    for (var i = 0; i < neighbours.length; i++) {
-      if (visited[neighbours[i]] !== 1 && depth < maxDepth - 1) {
-        this.visitStereochemistry(neighbours[i], vertexId, visited.slice(), priority, maxDepth, depth + 1, atomicNumber);
-      }
-    } // Valences are filled with hydrogens and passed to the next level.
-
-
-    if (depth < maxDepth - 1) {
-      let bonds = 0;
-
-      for (var i = 0; i < neighbours.length; i++) {
-        bonds += this.graph.getEdge(vertexId, neighbours[i]).weight;
-      }
-
-      for (var i = 0; i < vertex.value.getMaxBonds() - bonds; i++) {
-        if (priority.length <= depth + 1) {
-          priority.push(Array());
-        }
-
-        priority[depth + 1].push(atomicNumber * 1000 + 1);
-      }
-    }
+    this.stereochemistryManager.visitStereochemistry(vertexId, previousVertexId, visited, priority, maxDepth, depth, parentAtomicNumber);
   }
   /**
    * Creates pseudo-elements (such as Et, Me, Ac, Bz, ...) at the position of the carbon sets
@@ -8089,7 +7896,7 @@ class DrawerBase {
 
 module.exports = DrawerBase;
 
-},{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Graph":11,"./Line":12,"./MathHelper":13,"./Options":14,"./RingManager":22,"./ThemeManager":27,"./Vector2":28}],8:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Graph":11,"./Line":12,"./MathHelper":13,"./Options":14,"./RingManager":22,"./StereochemistryManager":25,"./ThemeManager":28,"./Vector2":29}],8:[function(require,module,exports){
 "use strict";
 /**
  * A class representing an edge.
@@ -8377,7 +8184,7 @@ class GaussDrawer {
 
 module.exports = GaussDrawer;
 
-},{"./PixelsToSvg":16,"./Vector2":28,"chroma-js":2}],11:[function(require,module,exports){
+},{"./PixelsToSvg":16,"./Vector2":29,"chroma-js":2}],11:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -9335,7 +9142,7 @@ class Graph {
 
 module.exports = Graph;
 
-},{"./Atom":4,"./Edge":8,"./MathHelper":13,"./Vertex":29}],12:[function(require,module,exports){
+},{"./Atom":4,"./Edge":8,"./MathHelper":13,"./Vertex":30}],12:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -9643,7 +9450,7 @@ class Line {
 
 module.exports = Line;
 
-},{"./Vector2":28}],13:[function(require,module,exports){
+},{"./Vector2":29}],13:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for math-related tasks.
@@ -12311,7 +12118,7 @@ class ReactionDrawer {
 
 module.exports = ReactionDrawer;
 
-},{"./FormulaToCommonName":9,"./Options":14,"./SvgDrawer":25,"./SvgWrapper":26,"./ThemeManager":27}],19:[function(require,module,exports){
+},{"./FormulaToCommonName":9,"./Options":14,"./SvgDrawer":26,"./SvgWrapper":27,"./ThemeManager":28}],19:[function(require,module,exports){
 "use strict";
 
 const Reaction = require("./Reaction");
@@ -12551,7 +12358,7 @@ class Ring {
 
 module.exports = Ring;
 
-},{"./ArrayHelper":3,"./RingConnection":21,"./Vector2":28}],21:[function(require,module,exports){
+},{"./ArrayHelper":3,"./RingConnection":21,"./Vector2":29}],21:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a ring connection.
@@ -13504,7 +13311,7 @@ class RingManager {
 
 module.exports = RingManager;
 
-},{"./ArrayHelper":3,"./Edge":8,"./MathHelper":13,"./Ring":20,"./RingConnection":21,"./SSSR":23,"./Vector2":28}],23:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Edge":8,"./MathHelper":13,"./Ring":20,"./RingConnection":21,"./SSSR":23,"./Vector2":29}],23:[function(require,module,exports){
 "use strict";
 
 const Graph = require("./Graph");
@@ -14460,7 +14267,231 @@ class SmilesDrawer {
 
 module.exports = SmilesDrawer;
 
-},{"./Options":14,"./Parser":15,"./ReactionDrawer":18,"./ReactionParser":19,"./SvgDrawer":25,"./SvgWrapper":26}],25:[function(require,module,exports){
+},{"./Options":14,"./Parser":15,"./ReactionDrawer":18,"./ReactionParser":19,"./SvgDrawer":26,"./SvgWrapper":27}],25:[function(require,module,exports){
+"use strict";
+
+const MathHelper = require("./MathHelper");
+
+class StereochemistryManager {
+  constructor(drawer) {
+    this.drawer = drawer;
+  }
+
+  annotateStereochemistry() {
+    let maxDepth = 10; // For each stereo-center
+
+    for (var i = 0; i < this.drawer.graph.vertices.length; i++) {
+      let vertex = this.drawer.graph.vertices[i];
+
+      if (!vertex.value.isStereoCenter) {
+        continue;
+      }
+
+      let neighbours = vertex.getNeighbours();
+      let nNeighbours = neighbours.length;
+      let priorities = Array(nNeighbours);
+
+      for (var j = 0; j < nNeighbours; j++) {
+        let visited = new Uint8Array(this.drawer.graph.vertices.length);
+        let priority = Array(Array());
+        visited[vertex.id] = 1;
+        this.visitStereochemistry(neighbours[j], vertex.id, visited, priority, maxDepth, 0); // Sort each level according to atomic number
+
+        for (var k = 0; k < priority.length; k++) {
+          priority[k].sort(function (a, b) {
+            return b - a;
+          });
+        }
+
+        priorities[j] = [j, priority];
+      }
+
+      let maxLevels = 0;
+      let maxEntries = 0;
+
+      for (var j = 0; j < priorities.length; j++) {
+        if (priorities[j][1].length > maxLevels) {
+          maxLevels = priorities[j][1].length;
+        }
+
+        for (var k = 0; k < priorities[j][1].length; k++) {
+          if (priorities[j][1][k].length > maxEntries) {
+            maxEntries = priorities[j][1][k].length;
+          }
+        }
+      }
+
+      for (var j = 0; j < priorities.length; j++) {
+        let diff = maxLevels - priorities[j][1].length;
+
+        for (var k = 0; k < diff; k++) {
+          priorities[j][1].push([]);
+        } // Break ties by the position in the SMILES string as per specification
+
+
+        priorities[j][1].push([neighbours[j]]); // Make all same length. Fill with zeroes.
+
+        for (var k = 0; k < priorities[j][1].length; k++) {
+          let diff = maxEntries - priorities[j][1][k].length;
+
+          for (var l = 0; l < diff; l++) {
+            priorities[j][1][k].push(0);
+          }
+        }
+      }
+
+      priorities.sort(function (a, b) {
+        for (var j = 0; j < a[1].length; j++) {
+          for (var k = 0; k < a[1][j].length; k++) {
+            if (a[1][j][k] > b[1][j][k]) {
+              return -1;
+            } else if (a[1][j][k] < b[1][j][k]) {
+              return 1;
+            }
+          }
+        }
+
+        return 0;
+      });
+      let order = new Uint8Array(nNeighbours);
+
+      for (var j = 0; j < nNeighbours; j++) {
+        order[j] = priorities[j][0];
+        vertex.value.priority = j;
+      } // Check the angles between elements 0 and 1, and 0 and 2 to determine whether they are
+      // drawn cw or ccw
+      // TODO: OC(Cl)=[C@]=C(C)F currently fails here, however this is, IMHO, not a valid SMILES.
+
+
+      let posA = this.drawer.graph.vertices[neighbours[order[0]]].position;
+      let posB = this.drawer.graph.vertices[neighbours[order[1]]].position;
+      let posC = this.drawer.graph.vertices[neighbours[order[2]]].position;
+      let cwA = posA.relativeClockwise(posB, vertex.position);
+      let cwB = posA.relativeClockwise(posC, vertex.position); // If the second priority is clockwise from the first, the ligands are drawn clockwise, since
+      // The hydrogen can be drawn on either side
+
+      let isCw = cwA === -1;
+      let rotation = vertex.value.bracket.chirality === '@' ? -1 : 1;
+      let rs = MathHelper.parityOfPermutation(order) * rotation === 1 ? 'R' : 'S'; // Flip the hydrogen direction when the drawing doesn't match the chirality.
+
+      let wedgeA = 'down';
+      let wedgeB = 'up';
+
+      if (isCw && rs !== 'R' || !isCw && rs !== 'S') {
+        vertex.value.hydrogenDirection = 'up';
+        wedgeA = 'up';
+        wedgeB = 'down';
+      }
+
+      if (vertex.value.hasHydrogen) {
+        this.drawer.graph.getEdge(vertex.id, neighbours[order[order.length - 1]]).wedge = wedgeA;
+      } // Get the shortest subtree to flip up / down. Ignore lowest priority
+      // The rules are following:
+      // 1. Do not draw wedge between two stereocenters
+      // 2. Heteroatoms
+      // 3. Draw outside ring
+      // 4. Shortest subtree
+
+
+      let wedgeOrder = new Array(neighbours.length - 1);
+      let showHydrogen = vertex.value.rings.length > 1 && vertex.value.hasHydrogen;
+      let offset = vertex.value.hasHydrogen ? 1 : 0;
+
+      for (var j = 0; j < order.length - offset; j++) {
+        wedgeOrder[j] = new Uint32Array(2);
+        let neighbour = this.drawer.graph.vertices[neighbours[order[j]]];
+        wedgeOrder[j][0] += neighbour.value.isStereoCenter ? 0 : 100000; // wedgeOrder[j][0] += neighbour.value.rings.length > 0 ? 0 : 10000;
+        // Only add if in same ring, unlike above
+
+        wedgeOrder[j][0] += this.drawer.areVerticesInSameRing(neighbour, vertex) ? 0 : 10000;
+        wedgeOrder[j][0] += neighbour.value.isHeteroAtom() ? 1000 : 0;
+        wedgeOrder[j][0] -= neighbour.value.subtreeDepth === 0 ? 1000 : 0;
+        wedgeOrder[j][0] += 1000 - neighbour.value.subtreeDepth;
+        wedgeOrder[j][1] = neighbours[order[j]];
+      }
+
+      wedgeOrder.sort(function (a, b) {
+        if (a[0] > b[0]) {
+          return -1;
+        } else if (a[0] < b[0]) {
+          return 1;
+        }
+
+        return 0;
+      }); // If all neighbours are in a ring, do not draw wedge, the hydrogen will be drawn.
+
+      if (!showHydrogen) {
+        let wedgeId = wedgeOrder[0][1];
+
+        if (vertex.value.hasHydrogen) {
+          this.drawer.graph.getEdge(vertex.id, wedgeId).wedge = wedgeB;
+        } else {
+          let wedge = wedgeB;
+
+          for (var j = order.length - 1; j >= 0; j--) {
+            if (wedge === wedgeA) {
+              wedge = wedgeB;
+            } else {
+              wedge = wedgeA;
+            }
+
+            if (neighbours[order[j]] === wedgeId) {
+              break;
+            }
+          }
+
+          this.drawer.graph.getEdge(vertex.id, wedgeId).wedge = wedge;
+        }
+      }
+
+      vertex.value.chirality = rs;
+    }
+  }
+
+  visitStereochemistry(vertexId, previousVertexId, visited, priority, maxDepth, depth, parentAtomicNumber = 0) {
+    visited[vertexId] = 1;
+    let vertex = this.drawer.graph.vertices[vertexId];
+    let atomicNumber = vertex.value.getAtomicNumber();
+
+    if (priority.length <= depth) {
+      priority.push(Array());
+    }
+
+    for (var i = 0; i < this.drawer.graph.getEdge(vertexId, previousVertexId).weight; i++) {
+      priority[depth].push(parentAtomicNumber * 1000 + atomicNumber);
+    }
+
+    let neighbours = this.drawer.graph.vertices[vertexId].neighbours;
+
+    for (var i = 0; i < neighbours.length; i++) {
+      if (visited[neighbours[i]] !== 1 && depth < maxDepth - 1) {
+        this.visitStereochemistry(neighbours[i], vertexId, visited.slice(), priority, maxDepth, depth + 1, atomicNumber);
+      }
+    } // Valences are filled with hydrogens and passed to the next level.
+
+
+    if (depth < maxDepth - 1) {
+      let bonds = 0;
+
+      for (var i = 0; i < neighbours.length; i++) {
+        bonds += this.drawer.graph.getEdge(vertexId, neighbours[i]).weight;
+      }
+
+      for (var i = 0; i < vertex.value.getMaxBonds() - bonds; i++) {
+        if (priority.length <= depth + 1) {
+          priority.push(Array());
+        }
+
+        priority[depth + 1].push(atomicNumber * 1000 + 1);
+      }
+    }
+  }
+
+}
+
+module.exports = StereochemistryManager;
+
+},{"./MathHelper":13}],26:[function(require,module,exports){
 "use strict"; // we use the drawer to do all the preprocessing. then we take over the drawing
 // portion to output to svg
 
@@ -14928,7 +14959,7 @@ class SvgDrawer {
 
 module.exports = SvgDrawer;
 
-},{"./ArrayHelper":3,"./Atom":4,"./DrawerBase":7,"./GaussDrawer":10,"./Line":12,"./SvgWrapper":26,"./ThemeManager":27,"./Vector2":28}],26:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Atom":4,"./DrawerBase":7,"./GaussDrawer":10,"./Line":12,"./SvgWrapper":27,"./ThemeManager":28,"./Vector2":29}],27:[function(require,module,exports){
 "use strict";
 
 const Line = require("./Line");
@@ -15905,7 +15936,7 @@ class SvgWrapper {
 
 module.exports = SvgWrapper;
 
-},{"./Line":12,"./MathHelper":13,"./Vector2":28}],27:[function(require,module,exports){
+},{"./Line":12,"./MathHelper":13,"./Vector2":29}],28:[function(require,module,exports){
 "use strict";
 
 class ThemeManager {
@@ -15953,7 +15984,7 @@ class ThemeManager {
 
 module.exports = ThemeManager;
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a 2D vector.
@@ -16573,7 +16604,7 @@ class Vector2 {
 
 module.exports = Vector2;
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -16950,5 +16981,5 @@ class Vertex {
 
 module.exports = Vertex;
 
-},{"./ArrayHelper":3,"./MathHelper":13,"./Vector2":28}]},{},[1])
+},{"./ArrayHelper":3,"./MathHelper":13,"./Vector2":29}]},{},[1])
 
