@@ -24,9 +24,9 @@ import SSSR = require('./SSSR');
 import ThemeManager = require('./ThemeManager');
 import Options = require('./Options');
 
-/** 
- * The main class of the application representing the smiles drawer 
- * 
+/**
+ * The molecular structure preprocessor and coordinator 
+ *
  * @property {Graph} graph The graph associated with this SmilesDrawer.Drawer instance.
  * @property {Number} ringIdCounter An internal counter to keep track of ring ids.
  * @property {Number} ringConnectionIdCounter An internal counter to keep track of ring connection ids.
@@ -36,7 +36,7 @@ import Options = require('./Options');
  * @property {Object} opts The merged options.
  * @property {Object} theme The current theme.
  */
-class DrawerBase {
+class MolecularPreprocessor {
   graph: any;
   doubleBondConfigCount: number | null;
   doubleBondConfig: any;
@@ -745,4 +745,4 @@ class DrawerBase {
     private graphProcessingManager: GraphProcessingManager;
 }
 
-export = DrawerBase;
+export = MolecularPreprocessor;

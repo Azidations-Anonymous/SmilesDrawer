@@ -53,9 +53,9 @@ const DrawingManager_1 = __importDefault(require("./DrawingManager"));
 const PseudoElementManager_1 = __importDefault(require("./PseudoElementManager"));
 const MolecularInfoManager_1 = __importDefault(require("./MolecularInfoManager"));
 const InitializationManager_1 = __importDefault(require("./InitializationManager"));
+const GraphProcessingManager_1 = __importDefault(require("./GraphProcessingManager"));
+const OptionsManager_1 = __importDefault(require("./OptionsManager"));
 const RingManager = require("./RingManager");
-const MathHelper = require("./MathHelper");
-const Options = require("./Options");
 /**
  * The main class of the application representing the smiles drawer
  *
@@ -83,6 +83,7 @@ class DrawerBase {
         this.pseudoElementManager = new PseudoElementManager_1.default(this);
         this.molecularInfoManager = new MolecularInfoManager_1.default(this);
         this.initializationManager = new InitializationManager_1.default(this);
+        this.graphProcessingManager = new GraphProcessingManager_1.default(this);
         this.graph = null;
         this.doubleBondConfigCount = 0;
         this.doubleBondConfig = null;
@@ -90,230 +91,9 @@ class DrawerBase {
         this.ringConnectionIdCounter = 0;
         this.canvasWrapper = null;
         this.totalOverlapScore = 0;
-        this.defaultOptions = {
-            width: 500,
-            height: 500,
-            scale: 0.0,
-            bondThickness: 1.0,
-            bondLength: 30,
-            shortBondLength: 0.8,
-            bondSpacing: 0.17 * 30,
-            atomVisualization: 'default',
-            isomeric: true,
-            debug: false,
-            terminalCarbons: false,
-            explicitHydrogens: true,
-            overlapSensitivity: 0.42,
-            overlapResolutionIterations: 1,
-            compactDrawing: true,
-            fontFamily: 'Arial, Helvetica, sans-serif',
-            fontSizeLarge: 11,
-            fontSizeSmall: 3,
-            padding: 10.0,
-            experimentalSSSR: false,
-            kkThreshold: 0.1,
-            kkInnerThreshold: 0.1,
-            kkMaxIteration: 20000,
-            kkMaxInnerIteration: 50,
-            kkMaxEnergy: 1e9,
-            weights: {
-                colormap: null,
-                additionalPadding: 20.0,
-                sigma: 10,
-                interval: 0.0,
-                opacity: 1.0,
-            },
-            themes: {
-                dark: {
-                    C: '#fff',
-                    O: '#e74c3c',
-                    N: '#3498db',
-                    F: '#27ae60',
-                    CL: '#16a085',
-                    BR: '#d35400',
-                    I: '#8e44ad',
-                    P: '#d35400',
-                    S: '#f1c40f',
-                    B: '#e67e22',
-                    SI: '#e67e22',
-                    H: '#aaa',
-                    BACKGROUND: '#141414'
-                },
-                light: {
-                    C: '#222',
-                    O: '#e74c3c',
-                    N: '#3498db',
-                    F: '#27ae60',
-                    CL: '#16a085',
-                    BR: '#d35400',
-                    I: '#8e44ad',
-                    P: '#d35400',
-                    S: '#f1c40f',
-                    B: '#e67e22',
-                    SI: '#e67e22',
-                    H: '#666',
-                    BACKGROUND: '#fff'
-                },
-                oldschool: {
-                    C: '#000',
-                    O: '#000',
-                    N: '#000',
-                    F: '#000',
-                    CL: '#000',
-                    BR: '#000',
-                    I: '#000',
-                    P: '#000',
-                    S: '#000',
-                    B: '#000',
-                    SI: '#000',
-                    H: '#000',
-                    BACKGROUND: '#fff'
-                },
-                "solarized": {
-                    C: "#586e75",
-                    O: "#dc322f",
-                    N: "#268bd2",
-                    F: "#859900",
-                    CL: "#16a085",
-                    BR: "#cb4b16",
-                    I: "#6c71c4",
-                    P: "#d33682",
-                    S: "#b58900",
-                    B: "#2aa198",
-                    SI: "#2aa198",
-                    H: "#657b83",
-                    BACKGROUND: "#fff"
-                },
-                "solarized-dark": {
-                    C: "#93a1a1",
-                    O: "#dc322f",
-                    N: "#268bd2",
-                    F: "#859900",
-                    CL: "#16a085",
-                    BR: "#cb4b16",
-                    I: "#6c71c4",
-                    P: "#d33682",
-                    S: "#b58900",
-                    B: "#2aa198",
-                    SI: "#2aa198",
-                    H: "#839496",
-                    BACKGROUND: "#fff"
-                },
-                "matrix": {
-                    C: "#678c61",
-                    O: "#2fc079",
-                    N: "#4f7e7e",
-                    F: "#90d762",
-                    CL: "#82d967",
-                    BR: "#23755a",
-                    I: "#409931",
-                    P: "#c1ff8a",
-                    S: "#faff00",
-                    B: "#50b45a",
-                    SI: "#409931",
-                    H: "#426644",
-                    BACKGROUND: "#fff"
-                },
-                "github": {
-                    C: "#24292f",
-                    O: "#cf222e",
-                    N: "#0969da",
-                    F: "#2da44e",
-                    CL: "#6fdd8b",
-                    BR: "#bc4c00",
-                    I: "#8250df",
-                    P: "#bf3989",
-                    S: "#d4a72c",
-                    B: "#fb8f44",
-                    SI: "#bc4c00",
-                    H: "#57606a",
-                    BACKGROUND: "#fff"
-                },
-                "carbon": {
-                    C: "#161616",
-                    O: "#da1e28",
-                    N: "#0f62fe",
-                    F: "#198038",
-                    CL: "#007d79",
-                    BR: "#fa4d56",
-                    I: "#8a3ffc",
-                    P: "#ff832b",
-                    S: "#f1c21b",
-                    B: "#8a3800",
-                    SI: "#e67e22",
-                    H: "#525252",
-                    BACKGROUND: "#fff"
-                },
-                "cyberpunk": {
-                    C: "#ea00d9",
-                    O: "#ff3131",
-                    N: "#0abdc6",
-                    F: "#00ff9f",
-                    CL: "#00fe00",
-                    BR: "#fe9f20",
-                    I: "#ff00ff",
-                    P: "#fe7f00",
-                    S: "#fcee0c",
-                    B: "#ff00ff",
-                    SI: "#ffffff",
-                    H: "#913cb1",
-                    BACKGROUND: "#fff"
-                },
-                "gruvbox": {
-                    C: "#665c54",
-                    O: "#cc241d",
-                    N: "#458588",
-                    F: "#98971a",
-                    CL: "#79740e",
-                    BR: "#d65d0e",
-                    I: "#b16286",
-                    P: "#af3a03",
-                    S: "#d79921",
-                    B: "#689d6a",
-                    SI: "#427b58",
-                    H: "#7c6f64",
-                    BACKGROUND: "#fbf1c7"
-                },
-                "gruvbox-dark": {
-                    C: "#ebdbb2",
-                    O: "#cc241d",
-                    N: "#458588",
-                    F: "#98971a",
-                    CL: "#b8bb26",
-                    BR: "#d65d0e",
-                    I: "#b16286",
-                    P: "#fe8019",
-                    S: "#d79921",
-                    B: "#8ec07c",
-                    SI: "#83a598",
-                    H: "#bdae93",
-                    BACKGROUND: "#282828"
-                },
-                custom: {
-                    C: '#222',
-                    O: '#e74c3c',
-                    N: '#3498db',
-                    F: '#27ae60',
-                    CL: '#16a085',
-                    BR: '#d35400',
-                    I: '#8e44ad',
-                    P: '#d35400',
-                    S: '#f1c40f',
-                    B: '#e67e22',
-                    SI: '#e67e22',
-                    H: '#666',
-                    BACKGROUND: '#fff'
-                },
-            }
-        };
-        this.opts = Options.extend(true, this.defaultOptions, options);
-        this.opts.halfBondSpacing = this.opts.bondSpacing / 2.0;
-        this.opts.bondLengthSq = this.opts.bondLength * this.opts.bondLength;
-        this.opts.halfFontSizeLarge = this.opts.fontSizeLarge / 2.0;
-        this.opts.quarterFontSizeLarge = this.opts.fontSizeLarge / 4.0;
-        this.opts.fifthFontSizeSmall = this.opts.fontSizeSmall / 5.0;
-        // Set the default theme.
-        this.theme = this.opts.themes.dark;
+        const optionsManager = new OptionsManager_1.default(options);
+        this.opts = optionsManager.opts;
+        this.theme = optionsManager.theme;
     }
     /**
      * Draws the parsed smiles data to a canvas element.
@@ -427,91 +207,7 @@ class DrawerBase {
         this.initializationManager.initDraw(data, themeName, infoOnly, highlight_atoms);
     }
     processGraph() {
-        this.position();
-        // Restore the ring information (removes bridged rings and replaces them with the original, multiple, rings)
-        this.restoreRingInformation();
-        // Atoms bonded to the same ring atom
-        this.resolvePrimaryOverlaps();
-        let overlapScore = this.getOverlapScore();
-        this.totalOverlapScore = this.getOverlapScore().total;
-        for (var o = 0; o &lt; this.opts.overlapResolutionIterations; o++) {
-            for (var i = 0; i &lt; this.graph.edges.length; i++) {
-                let edge = this.graph.edges[i];
-                if (this.isEdgeRotatable(edge)) {
-                    let subTreeDepthA = this.graph.getTreeDepth(edge.sourceId, edge.targetId);
-                    let subTreeDepthB = this.graph.getTreeDepth(edge.targetId, edge.sourceId);
-                    // Only rotate the shorter subtree
-                    let a = edge.targetId;
-                    let b = edge.sourceId;
-                    if (subTreeDepthA > subTreeDepthB) {
-                        a = edge.sourceId;
-                        b = edge.targetId;
-                    }
-                    let subTreeOverlap = this.getSubtreeOverlapScore(b, a, overlapScore.vertexScores);
-                    if (subTreeOverlap.value > this.opts.overlapSensitivity) {
-                        let vertexA = this.graph.vertices[a];
-                        let vertexB = this.graph.vertices[b];
-                        let neighboursB = vertexB.getNeighbours(a);
-                        if (neighboursB.length === 1) {
-                            let neighbour = this.graph.vertices[neighboursB[0]];
-                            let angle = neighbour.position.getRotateAwayFromAngle(vertexA.position, vertexB.position, MathHelper.toRad(120));
-                            this.rotateSubtree(neighbour.id, vertexB.id, angle, vertexB.position);
-                            // If the new overlap is bigger, undo change
-                            let newTotalOverlapScore = this.getOverlapScore().total;
-                            if (newTotalOverlapScore > this.totalOverlapScore) {
-                                this.rotateSubtree(neighbour.id, vertexB.id, -angle, vertexB.position);
-                            }
-                            else {
-                                this.totalOverlapScore = newTotalOverlapScore;
-                            }
-                        }
-                        else if (neighboursB.length === 2) {
-                            // Switch places / sides
-                            // If vertex a is in a ring, do nothing
-                            if (vertexB.value.rings.length !== 0 &amp;&amp; vertexA.value.rings.length !== 0) {
-                                continue;
-                            }
-                            let neighbourA = this.graph.vertices[neighboursB[0]];
-                            let neighbourB = this.graph.vertices[neighboursB[1]];
-                            if (neighbourA.value.rings.length === 1 &amp;&amp; neighbourB.value.rings.length === 1) {
-                                // Both neighbours in same ring. TODO: does this create problems with wedges? (up = down and vice versa?)
-                                if (neighbourA.value.rings[0] !== neighbourB.value.rings[0]) {
-                                    continue;
-                                }
-                                // TODO: Rotate circle
-                            }
-                            else if (neighbourA.value.rings.length !== 0 || neighbourB.value.rings.length !== 0) {
-                                continue;
-                            }
-                            else {
-                                let angleA = neighbourA.position.getRotateAwayFromAngle(vertexA.position, vertexB.position, MathHelper.toRad(120));
-                                let angleB = neighbourB.position.getRotateAwayFromAngle(vertexA.position, vertexB.position, MathHelper.toRad(120));
-                                this.rotateSubtree(neighbourA.id, vertexB.id, angleA, vertexB.position);
-                                this.rotateSubtree(neighbourB.id, vertexB.id, angleB, vertexB.position);
-                                let newTotalOverlapScore = this.getOverlapScore().total;
-                                if (newTotalOverlapScore > this.totalOverlapScore) {
-                                    this.rotateSubtree(neighbourA.id, vertexB.id, -angleA, vertexB.position);
-                                    this.rotateSubtree(neighbourB.id, vertexB.id, -angleB, vertexB.position);
-                                }
-                                else {
-                                    this.totalOverlapScore = newTotalOverlapScore;
-                                }
-                            }
-                        }
-                        overlapScore = this.getOverlapScore();
-                    }
-                }
-            }
-        }
-        this.resolveSecondaryOverlaps(overlapScore.scores);
-        if (this.opts.isomeric) {
-            this.annotateStereochemistry();
-        }
-        // Initialize pseudo elements or shortcuts
-        if (this.opts.compactDrawing &amp;&amp; this.opts.atomVisualization === 'default') {
-            this.initPseudoElements();
-        }
-        this.rotateDrawing();
+        this.graphProcessingManager.processGraph();
     }
     /**
      * Initializes rings and ringbonds for the current molecule.
@@ -881,26 +577,7 @@ class DrawerBase {
      * @returns {Boolean} A boolean indicating whether or not the edge is rotatable.
      */
     isEdgeRotatable(edge) {
-        let vertexA = this.graph.vertices[edge.sourceId];
-        let vertexB = this.graph.vertices[edge.targetId];
-        // Only single bonds are rotatable
-        if (edge.bondType !== '-') {
-            return false;
-        }
-        // Do not rotate edges that have a further single bond to each side - do that!
-        // If the bond is terminal, it doesn't make sense to rotate it
-        // if (vertexA.getNeighbourCount() + vertexB.getNeighbourCount() &lt; 5) {
-        //   return false;
-        // }
-        if (vertexA.isTerminal() || vertexB.isTerminal()) {
-            return false;
-        }
-        // Ringbonds are not rotatable
-        if (vertexA.value.rings.length > 0 &amp;&amp; vertexB.value.rings.length > 0 &amp;&amp;
-            this.areVerticesInSameRing(vertexA, vertexB)) {
-            return false;
-        }
-        return true;
+        return this.graphProcessingManager.isEdgeRotatable(edge);
     }
     /**
      * Check whether or not a ring is an implicitly defined aromatic ring (lower case smiles).
@@ -1013,7 +690,7 @@ module.exports = DrawerBase;
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Sun Nov 02 2025 15:08:10 GMT+1100 (Australian Eastern Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Sun Nov 02 2025 15:47:42 GMT+1100 (Australian Eastern Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

@@ -1,12 +1,12 @@
-import DrawerBase from "./DrawerBase";
+import MolecularPreprocessor from "./MolecularPreprocessor";
 
 import Vector2 = require("./Vector2");
 import ArrayHelper = require("./ArrayHelper");
 import MathHelper = require("./MathHelper");
 class PositioningManager {
-    private drawer: DrawerBase;
+    private drawer: MolecularPreprocessor;
 
-    constructor(drawer: DrawerBase) {
+    constructor(drawer: MolecularPreprocessor) {
         this.drawer = drawer;
     }
 

@@ -1,4 +1,4 @@
-import DrawerBase from "./DrawerBase";
+import MolecularPreprocessor from "./MolecularPreprocessor";
 
 import Vector2 = require("./Vector2");
 import ArrayHelper = require("./ArrayHelper");
@@ -8,9 +8,9 @@ import ThemeManager = require("./ThemeManager");
 import CanvasWrapper = require("./CanvasWrapper");
 import Atom = require("./Atom");
 class DrawingManager {
-    private drawer: DrawerBase;
+    private drawer: MolecularPreprocessor;
 
-    constructor(drawer: DrawerBase) {
+    constructor(drawer: MolecularPreprocessor) {
         this.drawer = drawer;
     }
 

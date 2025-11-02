@@ -1,11 +1,11 @@
-import DrawerBase from "./DrawerBase";
+import MolecularPreprocessor from "./MolecularPreprocessor";
 import Graph = require("./Graph");
 import Atom = require("./Atom");
 
 class MolecularInfoManager {
-    private drawer: DrawerBase;
+    private drawer: MolecularPreprocessor;
 
-    constructor(drawer: DrawerBase) {
+    constructor(drawer: MolecularPreprocessor) {
         this.drawer = drawer;
     }
 

@@ -2,7 +2,7 @@
 // portion to output to svg
 import ArrayHelper = require('./ArrayHelper');
 import Atom = require('./Atom');
-import DrawerBase = require('./DrawerBase');
+import MolecularPreprocessor = require('./MolecularPreprocessor');
 import Graph = require('./Graph');
 import Line = require('./Line');
 import SvgWrapper = require('./SvgWrapper');
@@ -19,7 +19,7 @@ class SvgDrawer {
   bridgedRing: boolean;
 
   constructor(options: any, clear: boolean = true) {
-    this.preprocessor = new DrawerBase(options);
+    this.preprocessor = new MolecularPreprocessor(options);
     this.opts = this.preprocessor.opts;
     this.clear = clear;
     this.svgWrapper = null;

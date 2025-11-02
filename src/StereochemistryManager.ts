@@ -1,10 +1,10 @@
-import DrawerBase from "./DrawerBase";
+import MolecularPreprocessor from "./MolecularPreprocessor";
 import MathHelper = require("./MathHelper");
 
 class StereochemistryManager {
-    private drawer: DrawerBase;
+    private drawer: MolecularPreprocessor;
 
-    constructor(drawer: DrawerBase) {
+    constructor(drawer: MolecularPreprocessor) {
         this.drawer = drawer;
     }
 

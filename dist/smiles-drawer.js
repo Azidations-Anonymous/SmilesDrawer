@@ -155,7 +155,7 @@ if (!Array.prototype.fill) {
 
 module.exports = SmilesDrawer;
 
-},{"./src/Drawer":6,"./src/GaussDrawer":11,"./src/Parser":19,"./src/ReactionDrawer":24,"./src/ReactionParser":25,"./src/SmilesDrawer":30,"./src/SvgDrawer":32}],2:[function(require,module,exports){
+},{"./src/Drawer":7,"./src/GaussDrawer":11,"./src/Parser":22,"./src/ReactionDrawer":27,"./src/ReactionParser":28,"./src/SmilesDrawer":33,"./src/SvgDrawer":35}],2:[function(require,module,exports){
 /**
  * chroma.js - JavaScript library for color conversions
  *
@@ -5526,7 +5526,231 @@ class CanvasWrapper {
 
 module.exports = CanvasWrapper;
 
-},{"./MathHelper":15,"./Vector2":35}],6:[function(require,module,exports){
+},{"./MathHelper":16,"./Vector2":38}],6:[function(require,module,exports){
+"use strict";
+
+function getDefaultOptions() {
+  return {
+    width: 500,
+    height: 500,
+    scale: 0.0,
+    bondThickness: 1.0,
+    bondLength: 30,
+    shortBondLength: 0.8,
+    bondSpacing: 0.17 * 30,
+    atomVisualization: 'default',
+    isomeric: true,
+    debug: false,
+    terminalCarbons: false,
+    explicitHydrogens: true,
+    overlapSensitivity: 0.42,
+    overlapResolutionIterations: 1,
+    compactDrawing: true,
+    fontFamily: 'Arial, Helvetica, sans-serif',
+    fontSizeLarge: 11,
+    fontSizeSmall: 3,
+    padding: 10.0,
+    experimentalSSSR: false,
+    kkThreshold: 0.1,
+    kkInnerThreshold: 0.1,
+    kkMaxIteration: 20000,
+    kkMaxInnerIteration: 50,
+    kkMaxEnergy: 1e9,
+    weights: {
+      colormap: null,
+      additionalPadding: 20.0,
+      sigma: 10,
+      interval: 0.0,
+      opacity: 1.0
+    },
+    themes: {
+      dark: {
+        C: '#fff',
+        O: '#e74c3c',
+        N: '#3498db',
+        F: '#27ae60',
+        CL: '#16a085',
+        BR: '#d35400',
+        I: '#8e44ad',
+        P: '#d35400',
+        S: '#f1c40f',
+        B: '#e67e22',
+        SI: '#e67e22',
+        H: '#aaa',
+        BACKGROUND: '#141414'
+      },
+      light: {
+        C: '#222',
+        O: '#e74c3c',
+        N: '#3498db',
+        F: '#27ae60',
+        CL: '#16a085',
+        BR: '#d35400',
+        I: '#8e44ad',
+        P: '#d35400',
+        S: '#f1c40f',
+        B: '#e67e22',
+        SI: '#e67e22',
+        H: '#666',
+        BACKGROUND: '#fff'
+      },
+      oldschool: {
+        C: '#000',
+        O: '#000',
+        N: '#000',
+        F: '#000',
+        CL: '#000',
+        BR: '#000',
+        I: '#000',
+        P: '#000',
+        S: '#000',
+        B: '#000',
+        SI: '#000',
+        H: '#000',
+        BACKGROUND: '#fff'
+      },
+      "solarized": {
+        C: "#586e75",
+        O: "#dc322f",
+        N: "#268bd2",
+        F: "#859900",
+        CL: "#16a085",
+        BR: "#cb4b16",
+        I: "#6c71c4",
+        P: "#d33682",
+        S: "#b58900",
+        B: "#2aa198",
+        SI: "#2aa198",
+        H: "#657b83",
+        BACKGROUND: "#fff"
+      },
+      "solarized-dark": {
+        C: "#93a1a1",
+        O: "#dc322f",
+        N: "#268bd2",
+        F: "#859900",
+        CL: "#16a085",
+        BR: "#cb4b16",
+        I: "#6c71c4",
+        P: "#d33682",
+        S: "#b58900",
+        B: "#2aa198",
+        SI: "#2aa198",
+        H: "#839496",
+        BACKGROUND: "#fff"
+      },
+      "matrix": {
+        C: "#678c61",
+        O: "#2fc079",
+        N: "#4f7e7e",
+        F: "#90d762",
+        CL: "#82d967",
+        BR: "#23755a",
+        I: "#409931",
+        P: "#c1ff8a",
+        S: "#faff00",
+        B: "#50b45a",
+        SI: "#409931",
+        H: "#426644",
+        BACKGROUND: "#fff"
+      },
+      "github": {
+        C: "#24292f",
+        O: "#cf222e",
+        N: "#0969da",
+        F: "#2da44e",
+        CL: "#6fdd8b",
+        BR: "#bc4c00",
+        I: "#8250df",
+        P: "#bf3989",
+        S: "#d4a72c",
+        B: "#fb8f44",
+        SI: "#bc4c00",
+        H: "#57606a",
+        BACKGROUND: "#fff"
+      },
+      "carbon": {
+        C: "#161616",
+        O: "#da1e28",
+        N: "#0f62fe",
+        F: "#198038",
+        CL: "#007d79",
+        BR: "#fa4d56",
+        I: "#8a3ffc",
+        P: "#ff832b",
+        S: "#f1c21b",
+        B: "#8a3800",
+        SI: "#e67e22",
+        H: "#525252",
+        BACKGROUND: "#fff"
+      },
+      "cyberpunk": {
+        C: "#ea00d9",
+        O: "#ff3131",
+        N: "#0abdc6",
+        F: "#00ff9f",
+        CL: "#00fe00",
+        BR: "#fe9f20",
+        I: "#ff00ff",
+        P: "#fe7f00",
+        S: "#fcee0c",
+        B: "#ff00ff",
+        SI: "#ffffff",
+        H: "#913cb1",
+        BACKGROUND: "#fff"
+      },
+      "gruvbox": {
+        C: "#665c54",
+        O: "#cc241d",
+        N: "#458588",
+        F: "#98971a",
+        CL: "#79740e",
+        BR: "#d65d0e",
+        I: "#b16286",
+        P: "#af3a03",
+        S: "#d79921",
+        B: "#689d6a",
+        SI: "#427b58",
+        H: "#7c6f64",
+        BACKGROUND: "#fbf1c7"
+      },
+      "gruvbox-dark": {
+        C: "#ebdbb2",
+        O: "#cc241d",
+        N: "#458588",
+        F: "#98971a",
+        CL: "#b8bb26",
+        BR: "#d65d0e",
+        I: "#b16286",
+        P: "#fe8019",
+        S: "#d79921",
+        B: "#8ec07c",
+        SI: "#83a598",
+        H: "#bdae93",
+        BACKGROUND: "#282828"
+      },
+      custom: {
+        C: '#222',
+        O: '#e74c3c',
+        N: '#3498db',
+        F: '#27ae60',
+        CL: '#16a085',
+        BR: '#d35400',
+        I: '#8e44ad',
+        P: '#d35400',
+        S: '#f1c40f',
+        B: '#e67e22',
+        SI: '#e67e22',
+        H: '#666',
+        BACKGROUND: '#fff'
+      }
+    }
+  };
+}
+
+module.exports = getDefaultOptions;
+
+},{}],7:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -5605,1130 +5829,7 @@ class Drawer {
 
 module.exports = Drawer;
 
-},{"./SvgDrawer":32}],7:[function(require,module,exports){
-"use strict";
-
-var __importDefault = undefined && undefined.__importDefault || function (mod) {
-  return mod && mod.__esModule ? mod : {
-    "default": mod
-  };
-};
-
-const StereochemistryManager_1 = __importDefault(require("./StereochemistryManager"));
-
-const OverlapResolutionManager_1 = __importDefault(require("./OverlapResolutionManager"));
-
-const PositioningManager_1 = __importDefault(require("./PositioningManager"));
-
-const DrawingManager_1 = __importDefault(require("./DrawingManager"));
-
-const PseudoElementManager_1 = __importDefault(require("./PseudoElementManager"));
-
-const MolecularInfoManager_1 = __importDefault(require("./MolecularInfoManager"));
-
-const InitializationManager_1 = __importDefault(require("./InitializationManager"));
-
-const RingManager = require("./RingManager");
-
-const MathHelper = require("./MathHelper");
-
-const Options = require("./Options");
-/**
- * The main class of the application representing the smiles drawer
- *
- * @property {Graph} graph The graph associated with this SmilesDrawer.Drawer instance.
- * @property {Number} ringIdCounter An internal counter to keep track of ring ids.
- * @property {Number} ringConnectionIdCounter An internal counter to keep track of ring connection ids.
- * @property {CanvasWrapper} canvasWrapper The CanvasWrapper associated with this SmilesDrawer.Drawer instance.
- * @property {Number} totalOverlapScore The current internal total overlap score.
- * @property {Object} defaultOptions The default options.
- * @property {Object} opts The merged options.
- * @property {Object} theme The current theme.
- */
-
-
-class DrawerBase {
-  /**
-   * The constructor for the class SmilesDrawer.
-   *
-   * @param {Object} options An object containing custom values for different options. It is merged with the default options.
-   */
-  constructor(options) {
-    this.ringManager = new RingManager(this);
-    this.stereochemistryManager = new StereochemistryManager_1.default(this);
-    this.overlapResolver = new OverlapResolutionManager_1.default(this);
-    this.positioningManager = new PositioningManager_1.default(this);
-    this.drawingManager = new DrawingManager_1.default(this);
-    this.pseudoElementManager = new PseudoElementManager_1.default(this);
-    this.molecularInfoManager = new MolecularInfoManager_1.default(this);
-    this.initializationManager = new InitializationManager_1.default(this);
-    this.graph = null;
-    this.doubleBondConfigCount = 0;
-    this.doubleBondConfig = null;
-    this.ringIdCounter = 0;
-    this.ringConnectionIdCounter = 0;
-    this.canvasWrapper = null;
-    this.totalOverlapScore = 0;
-    this.defaultOptions = {
-      width: 500,
-      height: 500,
-      scale: 0.0,
-      bondThickness: 1.0,
-      bondLength: 30,
-      shortBondLength: 0.8,
-      bondSpacing: 0.17 * 30,
-      atomVisualization: 'default',
-      isomeric: true,
-      debug: false,
-      terminalCarbons: false,
-      explicitHydrogens: true,
-      overlapSensitivity: 0.42,
-      overlapResolutionIterations: 1,
-      compactDrawing: true,
-      fontFamily: 'Arial, Helvetica, sans-serif',
-      fontSizeLarge: 11,
-      fontSizeSmall: 3,
-      padding: 10.0,
-      experimentalSSSR: false,
-      kkThreshold: 0.1,
-      kkInnerThreshold: 0.1,
-      kkMaxIteration: 20000,
-      kkMaxInnerIteration: 50,
-      kkMaxEnergy: 1e9,
-      weights: {
-        colormap: null,
-        additionalPadding: 20.0,
-        sigma: 10,
-        interval: 0.0,
-        opacity: 1.0
-      },
-      themes: {
-        dark: {
-          C: '#fff',
-          O: '#e74c3c',
-          N: '#3498db',
-          F: '#27ae60',
-          CL: '#16a085',
-          BR: '#d35400',
-          I: '#8e44ad',
-          P: '#d35400',
-          S: '#f1c40f',
-          B: '#e67e22',
-          SI: '#e67e22',
-          H: '#aaa',
-          BACKGROUND: '#141414'
-        },
-        light: {
-          C: '#222',
-          O: '#e74c3c',
-          N: '#3498db',
-          F: '#27ae60',
-          CL: '#16a085',
-          BR: '#d35400',
-          I: '#8e44ad',
-          P: '#d35400',
-          S: '#f1c40f',
-          B: '#e67e22',
-          SI: '#e67e22',
-          H: '#666',
-          BACKGROUND: '#fff'
-        },
-        oldschool: {
-          C: '#000',
-          O: '#000',
-          N: '#000',
-          F: '#000',
-          CL: '#000',
-          BR: '#000',
-          I: '#000',
-          P: '#000',
-          S: '#000',
-          B: '#000',
-          SI: '#000',
-          H: '#000',
-          BACKGROUND: '#fff'
-        },
-        "solarized": {
-          C: "#586e75",
-          O: "#dc322f",
-          N: "#268bd2",
-          F: "#859900",
-          CL: "#16a085",
-          BR: "#cb4b16",
-          I: "#6c71c4",
-          P: "#d33682",
-          S: "#b58900",
-          B: "#2aa198",
-          SI: "#2aa198",
-          H: "#657b83",
-          BACKGROUND: "#fff"
-        },
-        "solarized-dark": {
-          C: "#93a1a1",
-          O: "#dc322f",
-          N: "#268bd2",
-          F: "#859900",
-          CL: "#16a085",
-          BR: "#cb4b16",
-          I: "#6c71c4",
-          P: "#d33682",
-          S: "#b58900",
-          B: "#2aa198",
-          SI: "#2aa198",
-          H: "#839496",
-          BACKGROUND: "#fff"
-        },
-        "matrix": {
-          C: "#678c61",
-          O: "#2fc079",
-          N: "#4f7e7e",
-          F: "#90d762",
-          CL: "#82d967",
-          BR: "#23755a",
-          I: "#409931",
-          P: "#c1ff8a",
-          S: "#faff00",
-          B: "#50b45a",
-          SI: "#409931",
-          H: "#426644",
-          BACKGROUND: "#fff"
-        },
-        "github": {
-          C: "#24292f",
-          O: "#cf222e",
-          N: "#0969da",
-          F: "#2da44e",
-          CL: "#6fdd8b",
-          BR: "#bc4c00",
-          I: "#8250df",
-          P: "#bf3989",
-          S: "#d4a72c",
-          B: "#fb8f44",
-          SI: "#bc4c00",
-          H: "#57606a",
-          BACKGROUND: "#fff"
-        },
-        "carbon": {
-          C: "#161616",
-          O: "#da1e28",
-          N: "#0f62fe",
-          F: "#198038",
-          CL: "#007d79",
-          BR: "#fa4d56",
-          I: "#8a3ffc",
-          P: "#ff832b",
-          S: "#f1c21b",
-          B: "#8a3800",
-          SI: "#e67e22",
-          H: "#525252",
-          BACKGROUND: "#fff"
-        },
-        "cyberpunk": {
-          C: "#ea00d9",
-          O: "#ff3131",
-          N: "#0abdc6",
-          F: "#00ff9f",
-          CL: "#00fe00",
-          BR: "#fe9f20",
-          I: "#ff00ff",
-          P: "#fe7f00",
-          S: "#fcee0c",
-          B: "#ff00ff",
-          SI: "#ffffff",
-          H: "#913cb1",
-          BACKGROUND: "#fff"
-        },
-        "gruvbox": {
-          C: "#665c54",
-          O: "#cc241d",
-          N: "#458588",
-          F: "#98971a",
-          CL: "#79740e",
-          BR: "#d65d0e",
-          I: "#b16286",
-          P: "#af3a03",
-          S: "#d79921",
-          B: "#689d6a",
-          SI: "#427b58",
-          H: "#7c6f64",
-          BACKGROUND: "#fbf1c7"
-        },
-        "gruvbox-dark": {
-          C: "#ebdbb2",
-          O: "#cc241d",
-          N: "#458588",
-          F: "#98971a",
-          CL: "#b8bb26",
-          BR: "#d65d0e",
-          I: "#b16286",
-          P: "#fe8019",
-          S: "#d79921",
-          B: "#8ec07c",
-          SI: "#83a598",
-          H: "#bdae93",
-          BACKGROUND: "#282828"
-        },
-        custom: {
-          C: '#222',
-          O: '#e74c3c',
-          N: '#3498db',
-          F: '#27ae60',
-          CL: '#16a085',
-          BR: '#d35400',
-          I: '#8e44ad',
-          P: '#d35400',
-          S: '#f1c40f',
-          B: '#e67e22',
-          SI: '#e67e22',
-          H: '#666',
-          BACKGROUND: '#fff'
-        }
-      }
-    };
-    this.opts = Options.extend(true, this.defaultOptions, options);
-    this.opts.halfBondSpacing = this.opts.bondSpacing / 2.0;
-    this.opts.bondLengthSq = this.opts.bondLength * this.opts.bondLength;
-    this.opts.halfFontSizeLarge = this.opts.fontSizeLarge / 2.0;
-    this.opts.quarterFontSizeLarge = this.opts.fontSizeLarge / 4.0;
-    this.opts.fifthFontSizeSmall = this.opts.fontSizeSmall / 5.0; // Set the default theme.
-
-    this.theme = this.opts.themes.dark;
-  }
-  /**
-   * Draws the parsed smiles data to a canvas element.
-   *
-   * @param {Object} data The tree returned by the smiles parser.
-   * @param {(String|HTMLCanvasElement)} target The id of the HTML canvas element the structure is drawn to - or the element itself.
-   * @param {String} themeName='dark' The name of the theme to use. Built-in themes are 'light' and 'dark'.
-   * @param {Boolean} infoOnly=false Only output info on the molecule without drawing anything to the canvas.
-   */
-
-
-  draw(data, target, themeName = 'light', infoOnly = false) {
-    this.drawingManager.draw(data, target, themeName, infoOnly);
-  }
-  /**
-   * Returns the number of rings this edge is a part of.
-   *
-   * @param {Number} edgeId The id of an edge.
-   * @returns {Number} The number of rings the provided edge is part of.
-   */
-
-
-  edgeRingCount(edgeId) {
-    return this.ringManager.edgeRingCount(edgeId);
-  }
-  /**
-   * Returns an array containing the bridged rings associated with this  molecule.
-   *
-   * @returns {Ring[]} An array containing all bridged rings associated with this molecule.
-   */
-
-
-  getBridgedRings() {
-    return this.ringManager.getBridgedRings();
-  }
-  /**
-   * Returns an array containing all fused rings associated with this molecule.
-   *
-   * @returns {Ring[]} An array containing all fused rings associated with this molecule.
-   */
-
-
-  getFusedRings() {
-    return this.ringManager.getFusedRings();
-  }
-  /**
-   * Returns an array containing all spiros associated with this molecule.
-   *
-   * @returns {Ring[]} An array containing all spiros associated with this molecule.
-   */
-
-
-  getSpiros() {
-    return this.ringManager.getSpiros();
-  }
-  /**
-   * Returns a string containing a semicolon and new-line separated list of ring properties: Id; Members Count; Neighbours Count; IsSpiro; IsFused; IsBridged; Ring Count (subrings of bridged rings)
-   *
-   * @returns {String} A string as described in the method description.
-   */
-
-
-  printRingInfo() {
-    return this.ringManager.printRingInfo();
-  }
-  /**
-   * Rotates the drawing to make the widest dimension horizontal.
-   */
-
-
-  rotateDrawing() {
-    this.drawingManager.rotateDrawing();
-  }
-  /**
-   * Returns the total overlap score of the current molecule.
-   *
-   * @returns {Number} The overlap score.
-   */
-
-
-  getTotalOverlapScore() {
-    return this.totalOverlapScore;
-  }
-  /**
-   * Returns the ring count of the current molecule.
-   *
-   * @returns {Number} The ring count.
-   */
-
-
-  getRingCount() {
-    return this.ringManager.getRingCount();
-  }
-  /**
-   * Checks whether or not the current molecule  a bridged ring.
-   *
-   * @returns {Boolean} A boolean indicating whether or not the current molecule  a bridged ring.
-   */
-
-
-  hasBridgedRing() {
-    return this.ringManager.hasBridgedRing();
-  }
-  /**
-   * Returns the number of heavy atoms (non-hydrogen) in the current molecule.
-   *
-   * @returns {Number} The heavy atom count.
-   */
-
-
-  getHeavyAtomCount() {
-    return this.molecularInfoManager.getHeavyAtomCount();
-  }
-  /**
-   * Returns the molecular formula of the loaded molecule as a string.
-   *
-   * @returns {String} The molecular formula.
-   */
-
-
-  getMolecularFormula(data = null) {
-    return this.molecularInfoManager.getMolecularFormula(data);
-  }
-  /**
-   * Returns the type of the ringbond (e.g. '=' for a double bond). The ringbond represents the break in a ring introduced when creating the MST. If the two vertices supplied as arguments are not part of a common ringbond, the method returns null.
-   *
-   * @param {Vertex} vertexA A vertex.
-   * @param {Vertex} vertexB A vertex.
-   * @returns {(String|null)} Returns the ringbond type or null, if the two supplied vertices are not connected by a ringbond.
-   */
-
-
-  getRingbondType(vertexA, vertexB) {
-    return this.ringManager.getRingbondType(vertexA, vertexB);
-  }
-
-  initDraw(data, themeName, infoOnly, highlight_atoms) {
-    this.initializationManager.initDraw(data, themeName, infoOnly, highlight_atoms);
-  }
-
-  processGraph() {
-    this.position(); // Restore the ring information (removes bridged rings and replaces them with the original, multiple, rings)
-
-    this.restoreRingInformation(); // Atoms bonded to the same ring atom
-
-    this.resolvePrimaryOverlaps();
-    let overlapScore = this.getOverlapScore();
-    this.totalOverlapScore = this.getOverlapScore().total;
-
-    for (var o = 0; o < this.opts.overlapResolutionIterations; o++) {
-      for (var i = 0; i < this.graph.edges.length; i++) {
-        let edge = this.graph.edges[i];
-
-        if (this.isEdgeRotatable(edge)) {
-          let subTreeDepthA = this.graph.getTreeDepth(edge.sourceId, edge.targetId);
-          let subTreeDepthB = this.graph.getTreeDepth(edge.targetId, edge.sourceId); // Only rotate the shorter subtree
-
-          let a = edge.targetId;
-          let b = edge.sourceId;
-
-          if (subTreeDepthA > subTreeDepthB) {
-            a = edge.sourceId;
-            b = edge.targetId;
-          }
-
-          let subTreeOverlap = this.getSubtreeOverlapScore(b, a, overlapScore.vertexScores);
-
-          if (subTreeOverlap.value > this.opts.overlapSensitivity) {
-            let vertexA = this.graph.vertices[a];
-            let vertexB = this.graph.vertices[b];
-            let neighboursB = vertexB.getNeighbours(a);
-
-            if (neighboursB.length === 1) {
-              let neighbour = this.graph.vertices[neighboursB[0]];
-              let angle = neighbour.position.getRotateAwayFromAngle(vertexA.position, vertexB.position, MathHelper.toRad(120));
-              this.rotateSubtree(neighbour.id, vertexB.id, angle, vertexB.position); // If the new overlap is bigger, undo change
-
-              let newTotalOverlapScore = this.getOverlapScore().total;
-
-              if (newTotalOverlapScore > this.totalOverlapScore) {
-                this.rotateSubtree(neighbour.id, vertexB.id, -angle, vertexB.position);
-              } else {
-                this.totalOverlapScore = newTotalOverlapScore;
-              }
-            } else if (neighboursB.length === 2) {
-              // Switch places / sides
-              // If vertex a is in a ring, do nothing
-              if (vertexB.value.rings.length !== 0 && vertexA.value.rings.length !== 0) {
-                continue;
-              }
-
-              let neighbourA = this.graph.vertices[neighboursB[0]];
-              let neighbourB = this.graph.vertices[neighboursB[1]];
-
-              if (neighbourA.value.rings.length === 1 && neighbourB.value.rings.length === 1) {
-                // Both neighbours in same ring. TODO: does this create problems with wedges? (up = down and vice versa?)
-                if (neighbourA.value.rings[0] !== neighbourB.value.rings[0]) {
-                  continue;
-                } // TODO: Rotate circle
-
-              } else if (neighbourA.value.rings.length !== 0 || neighbourB.value.rings.length !== 0) {
-                continue;
-              } else {
-                let angleA = neighbourA.position.getRotateAwayFromAngle(vertexA.position, vertexB.position, MathHelper.toRad(120));
-                let angleB = neighbourB.position.getRotateAwayFromAngle(vertexA.position, vertexB.position, MathHelper.toRad(120));
-                this.rotateSubtree(neighbourA.id, vertexB.id, angleA, vertexB.position);
-                this.rotateSubtree(neighbourB.id, vertexB.id, angleB, vertexB.position);
-                let newTotalOverlapScore = this.getOverlapScore().total;
-
-                if (newTotalOverlapScore > this.totalOverlapScore) {
-                  this.rotateSubtree(neighbourA.id, vertexB.id, -angleA, vertexB.position);
-                  this.rotateSubtree(neighbourB.id, vertexB.id, -angleB, vertexB.position);
-                } else {
-                  this.totalOverlapScore = newTotalOverlapScore;
-                }
-              }
-            }
-
-            overlapScore = this.getOverlapScore();
-          }
-        }
-      }
-    }
-
-    this.resolveSecondaryOverlaps(overlapScore.scores);
-
-    if (this.opts.isomeric) {
-      this.annotateStereochemistry();
-    } // Initialize pseudo elements or shortcuts
-
-
-    if (this.opts.compactDrawing && this.opts.atomVisualization === 'default') {
-      this.initPseudoElements();
-    }
-
-    this.rotateDrawing();
-  }
-  /**
-   * Initializes rings and ringbonds for the current molecule.
-   */
-
-
-  initRings() {
-    this.ringManager.initRings();
-  }
-
-  initHydrogens() {
-    this.initializationManager.initHydrogens();
-  }
-  /**
-   * Returns all rings connected by bridged bonds starting from the ring with the supplied ring id.
-   *
-   * @param {Number} ringId A ring id.
-   * @returns {Number[]} An array containing all ring ids of rings part of a bridged ring system.
-   */
-
-
-  getBridgedRingRings(ringId) {
-    return this.ringManager.getBridgedRingRings(ringId);
-  }
-  /**
-   * Checks whether or not a ring is part of a bridged ring.
-   *
-   * @param {Number} ringId A ring id.
-   * @returns {Boolean} A boolean indicating whether or not the supplied ring (by id) is part of a bridged ring system.
-   */
-
-
-  isPartOfBridgedRing(ringId) {
-    return this.ringManager.isPartOfBridgedRing(ringId);
-  }
-  /**
-   * Creates a bridged ring.
-   *
-   * @param {Number[]} ringIds An array of ids of rings involved in the bridged ring.
-   * @param {Number} sourceVertexId The vertex id to start the bridged ring discovery from.
-   * @returns {Ring} The bridged ring.
-   */
-
-
-  createBridgedRing(ringIds, sourceVertexId) {
-    return this.ringManager.createBridgedRing(ringIds, sourceVertexId);
-  }
-  /**
-   * Checks whether or not two vertices are in the same ring.
-   *
-   * @param {Vertex} vertexA A vertex.
-   * @param {Vertex} vertexB A vertex.
-   * @returns {Boolean} A boolean indicating whether or not the two vertices are in the same ring.
-   */
-
-
-  areVerticesInSameRing(vertexA, vertexB) {
-    return this.ringManager.areVerticesInSameRing(vertexA, vertexB);
-  }
-  /**
-   * Returns an array of ring ids shared by both vertices.
-   *
-   * @param {Vertex} vertexA A vertex.
-   * @param {Vertex} vertexB A vertex.
-   * @returns {Number[]} An array of ids of rings shared by the two vertices.
-   */
-
-
-  getCommonRings(vertexA, vertexB) {
-    return this.ringManager.getCommonRings(vertexA, vertexB);
-  }
-  /**
-   * Returns the aromatic or largest ring shared by the two vertices.
-   *
-   * @param {Vertex} vertexA A vertex.
-   * @param {Vertex} vertexB A vertex.
-   * @returns {(Ring|null)} If an aromatic common ring exists, that ring, else the largest (non-aromatic) ring, else null.
-   */
-
-
-  getLargestOrAromaticCommonRing(vertexA, vertexB) {
-    return this.ringManager.getLargestOrAromaticCommonRing(vertexA, vertexB);
-  }
-  /**
-   * Returns an array of vertices positioned at a specified location.
-   *
-   * @param {Vector2} position The position to search for vertices.
-   * @param {Number} radius The radius within to search.
-   * @param {Number} excludeVertexId A vertex id to be excluded from the search results.
-   * @returns {Number[]} An array containing vertex ids in a given location.
-   */
-
-
-  getVerticesAt(position, radius, excludeVertexId) {
-    return this.positioningManager.getVerticesAt(position, radius, excludeVertexId);
-  }
-  /**
-   * Returns the closest vertex (connected as well as unconnected).
-   *
-   * @param {Vertex} vertex The vertex of which to find the closest other vertex.
-   * @returns {Vertex} The closest vertex.
-   */
-
-
-  getClosestVertex(vertex) {
-    return this.positioningManager.getClosestVertex(vertex);
-  }
-  /**
-   * Add a ring to this representation of a molecule.
-   *
-   * @param {Ring} ring A new ring.
-   * @returns {Number} The ring id of the new ring.
-   */
-
-
-  addRing(ring) {
-    return this.ringManager.addRing(ring);
-  }
-  /**
-   * Removes a ring from the array of rings associated with the current molecule.
-   *
-   * @param {Number} ringId A ring id.
-   */
-
-
-  removeRing(ringId) {
-    this.ringManager.removeRing(ringId);
-  }
-  /**
-   * Gets a ring object from the array of rings associated with the current molecule by its id. The ring id is not equal to the index, since rings can be added and removed when processing bridged rings.
-   *
-   * @param {Number} ringId A ring id.
-   * @returns {Ring} A ring associated with the current molecule.
-   */
-
-
-  getRing(ringId) {
-    return this.ringManager.getRing(ringId);
-  }
-  /**
-   * Add a ring connection to this representation of a molecule.
-   *
-   * @param {RingConnection} ringConnection A new ringConnection.
-   * @returns {Number} The ring connection id of the new ring connection.
-   */
-
-
-  addRingConnection(ringConnection) {
-    return this.ringManager.addRingConnection(ringConnection);
-  }
-  /**
-   * Removes a ring connection from the array of rings connections associated with the current molecule.
-   *
-   * @param {Number} ringConnectionId A ring connection id.
-   */
-
-
-  removeRingConnection(ringConnectionId) {
-    this.ringManager.removeRingConnection(ringConnectionId);
-  }
-  /**
-   * Removes all ring connections between two vertices.
-   *
-   * @param {Number} vertexIdA A vertex id.
-   * @param {Number} vertexIdB A vertex id.
-   */
-
-
-  removeRingConnectionsBetween(vertexIdA, vertexIdB) {
-    this.ringManager.removeRingConnectionsBetween(vertexIdA, vertexIdB);
-  }
-  /**
-   * Get a ring connection with a given id.
-   *
-   * @param {Number} id
-   * @returns {RingConnection} The ring connection with the specified id.
-   */
-
-
-  getRingConnection(id) {
-    return this.ringManager.getRingConnection(id);
-  }
-  /**
-   * Get the ring connections between a ring and a set of rings.
-   *
-   * @param {Number} ringId A ring id.
-   * @param {Number[]} ringIds An array of ring ids.
-   * @returns {Number[]} An array of ring connection ids.
-   */
-
-
-  getRingConnections(ringId, ringIds) {
-    return this.ringManager.getRingConnections(ringId, ringIds);
-  }
-  /**
-   * Returns the overlap score of the current molecule based on its positioned vertices. The higher the score, the more overlaps occur in the structure drawing.
-   *
-   * @returns {Object} Returns the total overlap score and the overlap score of each vertex sorted by score (higher to lower). Example: { total: 99, scores: [ { id: 0, score: 22 }, ... ]  }
-   */
-
-
-  getOverlapScore() {
-    return this.overlapResolver.getOverlapScore();
-  }
-  /**
-   * When drawing a double bond, choose the side to place the double bond. E.g. a double bond should always been drawn inside a ring.
-   *
-   * @param {Vertex} vertexA A vertex.
-   * @param {Vertex} vertexB A vertex.
-   * @param {Vector2[]} sides An array containing the two normals of the line spanned by the two provided vertices.
-   * @returns {Object} Returns an object containing the following information: {
-          totalSideCount: Counts the sides of each vertex in the molecule, is an array [ a, b ],
-          totalPosition: Same as position, but based on entire molecule,
-          sideCount: Counts the sides of each neighbour, is an array [ a, b ],
-          position: which side to position the second bond, is 0 or 1, represents the index in the normal array. This is based on only the neighbours
-          anCount: the number of neighbours of vertexA,
-          bnCount: the number of neighbours of vertexB
-      }
-   */
-
-
-  chooseSide(vertexA, vertexB, sides) {
-    return this.overlapResolver.chooseSide(vertexA, vertexB, sides);
-  }
-  /**
-   * Sets the center for a ring.
-   *
-   * @param {Ring} ring A ring.
-   */
-
-
-  setRingCenter(ring) {
-    this.ringManager.setRingCenter(ring);
-  }
-  /**
-   * Gets the center of a ring contained within a bridged ring and containing a given vertex.
-   *
-   * @param {Ring} ring A bridged ring.
-   * @param {Vertex} vertex A vertex.
-   * @returns {Vector2} The center of the subring that containing the vertex.
-   */
-
-
-  getSubringCenter(ring, vertex) {
-    return this.ringManager.getSubringCenter(ring, vertex);
-  }
-  /**
-   * Draw the actual edges as bonds to the canvas.
-   *
-   * @param {Boolean} debug A boolean indicating whether or not to draw debug helpers.
-   */
-
-
-  drawEdges(debug) {
-    this.drawingManager.drawEdges(debug);
-  }
-  /**
-   * Draw the an edge as a bonds to the canvas.
-   *
-   * @param {Number} edgeId An edge id.
-   * @param {Boolean} debug A boolean indicating whether or not to draw debug helpers.
-   */
-
-
-  drawEdge(edgeId, debug) {
-    this.drawingManager.drawEdge(edgeId, debug);
-  }
-  /**
-   * Draws the vertices representing atoms to the canvas.
-   *
-   * @param {Boolean} debug A boolean indicating whether or not to draw debug messages to the canvas.
-   */
-
-
-  drawVertices(debug) {
-    this.drawingManager.drawVertices(debug);
-  }
-  /**
-   * Position the vertices according to their bonds and properties.
-   */
-
-
-  position() {
-    this.positioningManager.position();
-  }
-  /**
-   * Stores the current information associated with rings.
-   */
-
-
-  backupRingInformation() {
-    this.ringManager.backupRingInformation();
-  }
-  /**
-   * Restores the most recently backed up information associated with rings.
-   */
-
-
-  restoreRingInformation() {
-    this.ringManager.restoreRingInformation();
-  } // TODO: This needs some cleaning up
-
-  /**
-   * Creates a new ring, that is, positiones all the vertices inside a ring.
-   *
-   * @param {Ring} ring The ring to position.
-   * @param {(Vector2|null)} [center=null] The center of the ring to be created.
-   * @param {(Vertex|null)} [startVertex=null] The first vertex to be positioned inside the ring.
-   * @param {(Vertex|null)} [previousVertex=null] The last vertex that was positioned.
-   * @param {Boolean} [previousVertex=false] A boolean indicating whether or not this ring was force positioned already - this is needed after force layouting a ring, in order to draw rings connected to it.
-   */
-
-
-  createRing(ring, center = null, startVertex = null, previousVertex = null) {
-    this.ringManager.createRing(ring, center, startVertex, previousVertex);
-  }
-  /**
-   * Rotate an entire subtree by an angle around a center.
-   *
-   * @param {Number} vertexId A vertex id (the root of the sub-tree).
-   * @param {Number} parentVertexId A vertex id in the previous direction of the subtree that is to rotate.
-   * @param {Number} angle An angle in randians.
-   * @param {Vector2} center The rotational center.
-   */
-
-
-  rotateSubtree(vertexId, parentVertexId, angle, center) {
-    this.overlapResolver.rotateSubtree(vertexId, parentVertexId, angle, center);
-  }
-  /**
-   * Gets the overlap score of a subtree.
-   *
-   * @param {Number} vertexId A vertex id (the root of the sub-tree).
-   * @param {Number} parentVertexId A vertex id in the previous direction of the subtree.
-   * @param {Number[]} vertexOverlapScores An array containing the vertex overlap scores indexed by vertex id.
-   * @returns {Object} An object containing the total overlap score and the center of mass of the subtree weighted by overlap score { value: 0.2, center: new Vector2() }.
-   */
-
-
-  getSubtreeOverlapScore(vertexId, parentVertexId, vertexOverlapScores) {
-    return this.overlapResolver.getSubtreeOverlapScore(vertexId, parentVertexId, vertexOverlapScores);
-  }
-  /**
-   * Returns the current (positioned vertices so far) center of mass.
-   *
-   * @returns {Vector2} The current center of mass.
-   */
-
-
-  getCurrentCenterOfMass() {
-    return this.overlapResolver.getCurrentCenterOfMass();
-  }
-  /**
-   * Returns the current (positioned vertices so far) center of mass in the neighbourhood of a given position.
-   *
-   * @param {Vector2} vec The point at which to look for neighbours.
-   * @param {Number} [r=currentBondLength*2.0] The radius of vertices to include.
-   * @returns {Vector2} The current center of mass.
-   */
-
-
-  getCurrentCenterOfMassInNeigbourhood(vec, r = this.opts.bondLength * 2.0) {
-    return this.overlapResolver.getCurrentCenterOfMassInNeigbourhood(vec, r);
-  }
-  /**
-   * Resolve primary (exact) overlaps, such as two vertices that are connected to the same ring vertex.
-   */
-
-
-  resolvePrimaryOverlaps() {
-    this.overlapResolver.resolvePrimaryOverlaps();
-  }
-  /**
-   * Resolve secondary overlaps. Those overlaps are due to the structure turning back on itself.
-   *
-   * @param {Object[]} scores An array of objects sorted descending by score.
-   * @param {Number} scores[].id A vertex id.
-   * @param {Number} scores[].score The overlap score associated with the vertex id.
-   */
-
-
-  resolveSecondaryOverlaps(scores) {
-    this.overlapResolver.resolveSecondaryOverlaps(scores);
-  }
-  /**
-   * Get the last non-null or 0 angle.
-   * @param {Number} vertexId A vertex id.
-   * @returns {Vertex} The last angle that was not 0 or null.
-   */
-
-
-  getLastAngle(vertexId) {
-    return this.positioningManager.getLastAngle(vertexId);
-  }
-  /**
-   * Positiones the next vertex thus creating a bond.
-   *
-   * @param {Vertex} vertex A vertex.
-   * @param {Vertex} [previousVertex=null] The previous vertex which has been positioned.
-   * @param {Number} [angle=0.0] The (global) angle of the vertex.
-   * @param {Boolean} [originShortest=false] Whether the origin is the shortest subtree in the branch.
-   * @param {Boolean} [skipPositioning=false] Whether or not to skip positioning and just check the neighbours.
-   */
-
-
-  createNextBond(vertex, previousVertex = null, angle = 0.0, originShortest = false, skipPositioning = false) {
-    this.positioningManager.createNextBond(vertex, previousVertex, angle, originShortest, skipPositioning);
-  }
-  /**
-   * Gets the vetex sharing the edge that is the common bond of two rings.
-   *
-   * @param {Vertex} vertex A vertex.
-   * @returns {(Number|null)} The id of a vertex sharing the edge that is the common bond of two rings with the vertex provided or null, if none.
-   */
-
-
-  getCommonRingbondNeighbour(vertex) {
-    return this.ringManager.getCommonRingbondNeighbour(vertex);
-  }
-  /**
-   * Check if a vector is inside any ring.
-   *
-   * @param {Vector2} vec A vector.
-   * @returns {Boolean} A boolean indicating whether or not the point (vector) is inside any of the rings associated with the current molecule.
-   */
-
-
-  isPointInRing(vec) {
-    return this.ringManager.isPointInRing(vec);
-  }
-  /**
-   * Check whether or not an edge is part of a ring.
-   *
-   * @param {Edge} edge An edge.
-   * @returns {Boolean} A boolean indicating whether or not the edge is part of a ring.
-   */
-
-
-  isEdgeInRing(edge) {
-    return this.ringManager.isEdgeInRing(edge);
-  }
-  /**
-   * Check whether or not an edge is rotatable.
-   *
-   * @param {Edge} edge An edge.
-   * @returns {Boolean} A boolean indicating whether or not the edge is rotatable.
-   */
-
-
-  isEdgeRotatable(edge) {
-    let vertexA = this.graph.vertices[edge.sourceId];
-    let vertexB = this.graph.vertices[edge.targetId]; // Only single bonds are rotatable
-
-    if (edge.bondType !== '-') {
-      return false;
-    } // Do not rotate edges that have a further single bond to each side - do that!
-    // If the bond is terminal, it doesn't make sense to rotate it
-    // if (vertexA.getNeighbourCount() + vertexB.getNeighbourCount() < 5) {
-    //   return false;
-    // }
-
-
-    if (vertexA.isTerminal() || vertexB.isTerminal()) {
-      return false;
-    } // Ringbonds are not rotatable
-
-
-    if (vertexA.value.rings.length > 0 && vertexB.value.rings.length > 0 && this.areVerticesInSameRing(vertexA, vertexB)) {
-      return false;
-    }
-
-    return true;
-  }
-  /**
-   * Check whether or not a ring is an implicitly defined aromatic ring (lower case smiles).
-   *
-   * @param {Ring} ring A ring.
-   * @returns {Boolean} A boolean indicating whether or not a ring is implicitly defined as aromatic.
-   */
-
-
-  isRingAromatic(ring) {
-    return this.ringManager.isRingAromatic(ring);
-  }
-  /**
-   * Get the normals of an edge.
-   *
-   * @param {Edge} edge An edge.
-   * @returns {Vector2[]} An array containing two vectors, representing the normals.
-   */
-
-
-  getEdgeNormals(edge) {
-    return this.drawingManager.getEdgeNormals(edge);
-  }
-  /**
-   * Returns an array of vertices that are neighbouring a vertix but are not members of a ring (including bridges).
-   *
-   * @param {Number} vertexId A vertex id.
-   * @returns {Vertex[]} An array of vertices.
-   */
-
-
-  getNonRingNeighbours(vertexId) {
-    return this.positioningManager.getNonRingNeighbours(vertexId);
-  }
-  /**
-   * Annotaed stereochemistry information for visualization.
-   */
-
-
-  annotateStereochemistry() {
-    this.stereochemistryManager.annotateStereochemistry();
-  }
-  /**
-   *
-   *
-   * @param {Number} vertexId The id of a vertex.
-   * @param {(Number|null)} previousVertexId The id of the parent vertex of the vertex.
-   * @param {Uint8Array} visited An array containing the visited flag for all vertices in the graph.
-   * @param {Array} priority An array of arrays storing the atomic numbers for each level.
-   * @param {Number} maxDepth The maximum depth.
-   * @param {Number} depth The current depth.
-   */
-
-
-  visitStereochemistry(vertexId, previousVertexId, visited, priority, maxDepth, depth, parentAtomicNumber = 0) {
-    this.stereochemistryManager.visitStereochemistry(vertexId, previousVertexId, visited, priority, maxDepth, depth, parentAtomicNumber);
-  }
-  /**
-   * Creates pseudo-elements (such as Et, Me, Ac, Bz, ...) at the position of the carbon sets
-   * the involved atoms not to be displayed.
-   */
-
-
-  initPseudoElements() {
-    this.pseudoElementManager.initPseudoElements();
-  }
-
-  get ringIdCounter() {
-    return this.ringManager.ringIdCounter;
-  }
-
-  set ringIdCounter(value) {
-    this.ringManager.ringIdCounter = value;
-  }
-
-  get ringConnectionIdCounter() {
-    return this.ringManager.ringConnectionIdCounter;
-  }
-
-  set ringConnectionIdCounter(value) {
-    this.ringManager.ringConnectionIdCounter = value;
-  }
-
-  get rings() {
-    return this.ringManager.rings;
-  }
-
-  set rings(value) {
-    this.ringManager.rings = value;
-  }
-
-  get ringConnections() {
-    return this.ringManager.ringConnections;
-  }
-
-  set ringConnections(value) {
-    this.ringManager.ringConnections = value;
-  }
-
-  get originalRings() {
-    return this.ringManager.originalRings;
-  }
-
-  set originalRings(value) {
-    this.ringManager.originalRings = value;
-  }
-
-  get originalRingConnections() {
-    return this.ringManager.originalRingConnections;
-  }
-
-  set originalRingConnections(value) {
-    this.ringManager.originalRingConnections = value;
-  }
-
-  get bridgedRing() {
-    return this.ringManager.bridgedRing;
-  }
-
-  set bridgedRing(value) {
-    this.ringManager.bridgedRing = value;
-  }
-
-}
-
-module.exports = DrawerBase;
-
-},{"./DrawingManager":8,"./InitializationManager":13,"./MathHelper":15,"./MolecularInfoManager":16,"./Options":17,"./OverlapResolutionManager":18,"./PositioningManager":21,"./PseudoElementManager":22,"./RingManager":28,"./StereochemistryManager":31}],8:[function(require,module,exports){
+},{"./SvgDrawer":35}],8:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -7061,7 +6162,7 @@ class DrawingManager {
 
 module.exports = DrawingManager;
 
-},{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Line":14,"./ThemeManager":34,"./Vector2":35}],9:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Line":15,"./ThemeManager":37,"./Vector2":38}],9:[function(require,module,exports){
 "use strict";
 /**
  * A class representing an edge.
@@ -7349,7 +6450,7 @@ class GaussDrawer {
 
 module.exports = GaussDrawer;
 
-},{"./PixelsToSvg":20,"./Vector2":35,"chroma-js":2}],12:[function(require,module,exports){
+},{"./PixelsToSvg":23,"./Vector2":38,"chroma-js":2}],12:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -8307,7 +7408,144 @@ class Graph {
 
 module.exports = Graph;
 
-},{"./Atom":4,"./Edge":9,"./MathHelper":15,"./Vertex":36}],13:[function(require,module,exports){
+},{"./Atom":4,"./Edge":9,"./MathHelper":16,"./Vertex":39}],13:[function(require,module,exports){
+"use strict";
+
+const MathHelper = require("./MathHelper");
+
+class GraphProcessingManager {
+  constructor(drawer) {
+    this.drawer = drawer;
+  }
+
+  processGraph() {
+    this.drawer.position(); // Restore the ring information (removes bridged rings and replaces them with the original, multiple, rings)
+
+    this.drawer.restoreRingInformation(); // Atoms bonded to the same ring atom
+
+    this.drawer.resolvePrimaryOverlaps();
+    let overlapScore = this.drawer.getOverlapScore();
+    this.drawer.totalOverlapScore = this.drawer.getOverlapScore().total;
+
+    for (var o = 0; o < this.drawer.opts.overlapResolutionIterations; o++) {
+      for (var i = 0; i < this.drawer.graph.edges.length; i++) {
+        let edge = this.drawer.graph.edges[i];
+
+        if (this.drawer.isEdgeRotatable(edge)) {
+          let subTreeDepthA = this.drawer.graph.getTreeDepth(edge.sourceId, edge.targetId);
+          let subTreeDepthB = this.drawer.graph.getTreeDepth(edge.targetId, edge.sourceId); // Only rotate the shorter subtree
+
+          let a = edge.targetId;
+          let b = edge.sourceId;
+
+          if (subTreeDepthA > subTreeDepthB) {
+            a = edge.sourceId;
+            b = edge.targetId;
+          }
+
+          let subTreeOverlap = this.drawer.getSubtreeOverlapScore(b, a, overlapScore.vertexScores);
+
+          if (subTreeOverlap.value > this.drawer.opts.overlapSensitivity) {
+            let vertexA = this.drawer.graph.vertices[a];
+            let vertexB = this.drawer.graph.vertices[b];
+            let neighboursB = vertexB.getNeighbours(a);
+
+            if (neighboursB.length === 1) {
+              let neighbour = this.drawer.graph.vertices[neighboursB[0]];
+              let angle = neighbour.position.getRotateAwayFromAngle(vertexA.position, vertexB.position, MathHelper.toRad(120));
+              this.drawer.rotateSubtree(neighbour.id, vertexB.id, angle, vertexB.position); // If the new overlap is bigger, undo change
+
+              let newTotalOverlapScore = this.drawer.getOverlapScore().total;
+
+              if (newTotalOverlapScore > this.drawer.totalOverlapScore) {
+                this.drawer.rotateSubtree(neighbour.id, vertexB.id, -angle, vertexB.position);
+              } else {
+                this.drawer.totalOverlapScore = newTotalOverlapScore;
+              }
+            } else if (neighboursB.length === 2) {
+              // Switch places / sides
+              // If vertex a is in a ring, do nothing
+              if (vertexB.value.rings.length !== 0 && vertexA.value.rings.length !== 0) {
+                continue;
+              }
+
+              let neighbourA = this.drawer.graph.vertices[neighboursB[0]];
+              let neighbourB = this.drawer.graph.vertices[neighboursB[1]];
+
+              if (neighbourA.value.rings.length === 1 && neighbourB.value.rings.length === 1) {
+                // Both neighbours in same ring. TODO: does this create problems with wedges? (up = down and vice versa?)
+                if (neighbourA.value.rings[0] !== neighbourB.value.rings[0]) {
+                  continue;
+                } // TODO: Rotate circle
+
+              } else if (neighbourA.value.rings.length !== 0 || neighbourB.value.rings.length !== 0) {
+                continue;
+              } else {
+                let angleA = neighbourA.position.getRotateAwayFromAngle(vertexA.position, vertexB.position, MathHelper.toRad(120));
+                let angleB = neighbourB.position.getRotateAwayFromAngle(vertexA.position, vertexB.position, MathHelper.toRad(120));
+                this.drawer.rotateSubtree(neighbourA.id, vertexB.id, angleA, vertexB.position);
+                this.drawer.rotateSubtree(neighbourB.id, vertexB.id, angleB, vertexB.position);
+                let newTotalOverlapScore = this.drawer.getOverlapScore().total;
+
+                if (newTotalOverlapScore > this.drawer.totalOverlapScore) {
+                  this.drawer.rotateSubtree(neighbourA.id, vertexB.id, -angleA, vertexB.position);
+                  this.drawer.rotateSubtree(neighbourB.id, vertexB.id, -angleB, vertexB.position);
+                } else {
+                  this.drawer.totalOverlapScore = newTotalOverlapScore;
+                }
+              }
+            }
+
+            overlapScore = this.drawer.getOverlapScore();
+          }
+        }
+      }
+    }
+
+    this.drawer.resolveSecondaryOverlaps(overlapScore.scores);
+
+    if (this.drawer.opts.isomeric) {
+      this.drawer.annotateStereochemistry();
+    } // Initialize pseudo elements or shortcuts
+
+
+    if (this.drawer.opts.compactDrawing && this.drawer.opts.atomVisualization === 'default') {
+      this.drawer.initPseudoElements();
+    }
+
+    this.drawer.rotateDrawing();
+  }
+
+  isEdgeRotatable(edge) {
+    let vertexA = this.drawer.graph.vertices[edge.sourceId];
+    let vertexB = this.drawer.graph.vertices[edge.targetId]; // Only single bonds are rotatable
+
+    if (edge.bondType !== '-') {
+      return false;
+    } // Do not rotate edges that have a further single bond to each side - do that!
+    // If the bond is terminal, it doesn't make sense to rotate it
+    // if (vertexA.getNeighbourCount() + vertexB.getNeighbourCount() < 5) {
+    //   return false;
+    // }
+
+
+    if (vertexA.isTerminal() || vertexB.isTerminal()) {
+      return false;
+    } // Ringbonds are not rotatable
+
+
+    if (vertexA.value.rings.length > 0 && vertexB.value.rings.length > 0 && this.drawer.areVerticesInSameRing(vertexA, vertexB)) {
+      return false;
+    }
+
+    return true;
+  }
+
+}
+
+module.exports = GraphProcessingManager;
+
+},{"./MathHelper":16}],14:[function(require,module,exports){
 "use strict";
 
 const Graph = require("./Graph");
@@ -8362,7 +7600,7 @@ class InitializationManager {
 
 module.exports = InitializationManager;
 
-},{"./Graph":12}],14:[function(require,module,exports){
+},{"./Graph":12}],15:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -8670,7 +7908,7 @@ class Line {
 
 module.exports = Line;
 
-},{"./Vector2":35}],15:[function(require,module,exports){
+},{"./Vector2":38}],16:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for math-related tasks.
@@ -8843,7 +8081,7 @@ class MathHelper {
 
 module.exports = MathHelper;
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 "use strict";
 
 const Graph = require("./Graph");
@@ -8935,7 +8173,795 @@ class MolecularInfoManager {
 
 module.exports = MolecularInfoManager;
 
-},{"./Atom":4,"./Graph":12}],17:[function(require,module,exports){
+},{"./Atom":4,"./Graph":12}],18:[function(require,module,exports){
+"use strict";
+
+var __importDefault = undefined && undefined.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+const StereochemistryManager_1 = __importDefault(require("./StereochemistryManager"));
+
+const OverlapResolutionManager_1 = __importDefault(require("./OverlapResolutionManager"));
+
+const PositioningManager_1 = __importDefault(require("./PositioningManager"));
+
+const DrawingManager_1 = __importDefault(require("./DrawingManager"));
+
+const PseudoElementManager_1 = __importDefault(require("./PseudoElementManager"));
+
+const MolecularInfoManager_1 = __importDefault(require("./MolecularInfoManager"));
+
+const InitializationManager_1 = __importDefault(require("./InitializationManager"));
+
+const GraphProcessingManager_1 = __importDefault(require("./GraphProcessingManager"));
+
+const OptionsManager_1 = __importDefault(require("./OptionsManager"));
+
+const RingManager = require("./RingManager");
+/**
+ * The molecular structure preprocessor and coordinator
+ *
+ * @property {Graph} graph The graph associated with this SmilesDrawer.Drawer instance.
+ * @property {Number} ringIdCounter An internal counter to keep track of ring ids.
+ * @property {Number} ringConnectionIdCounter An internal counter to keep track of ring connection ids.
+ * @property {CanvasWrapper} canvasWrapper The CanvasWrapper associated with this SmilesDrawer.Drawer instance.
+ * @property {Number} totalOverlapScore The current internal total overlap score.
+ * @property {Object} defaultOptions The default options.
+ * @property {Object} opts The merged options.
+ * @property {Object} theme The current theme.
+ */
+
+
+class MolecularPreprocessor {
+  /**
+   * The constructor for the class SmilesDrawer.
+   *
+   * @param {Object} options An object containing custom values for different options. It is merged with the default options.
+   */
+  constructor(options) {
+    this.ringManager = new RingManager(this);
+    this.stereochemistryManager = new StereochemistryManager_1.default(this);
+    this.overlapResolver = new OverlapResolutionManager_1.default(this);
+    this.positioningManager = new PositioningManager_1.default(this);
+    this.drawingManager = new DrawingManager_1.default(this);
+    this.pseudoElementManager = new PseudoElementManager_1.default(this);
+    this.molecularInfoManager = new MolecularInfoManager_1.default(this);
+    this.initializationManager = new InitializationManager_1.default(this);
+    this.graphProcessingManager = new GraphProcessingManager_1.default(this);
+    this.graph = null;
+    this.doubleBondConfigCount = 0;
+    this.doubleBondConfig = null;
+    this.ringIdCounter = 0;
+    this.ringConnectionIdCounter = 0;
+    this.canvasWrapper = null;
+    this.totalOverlapScore = 0;
+    const optionsManager = new OptionsManager_1.default(options);
+    this.opts = optionsManager.opts;
+    this.theme = optionsManager.theme;
+  }
+  /**
+   * Draws the parsed smiles data to a canvas element.
+   *
+   * @param {Object} data The tree returned by the smiles parser.
+   * @param {(String|HTMLCanvasElement)} target The id of the HTML canvas element the structure is drawn to - or the element itself.
+   * @param {String} themeName='dark' The name of the theme to use. Built-in themes are 'light' and 'dark'.
+   * @param {Boolean} infoOnly=false Only output info on the molecule without drawing anything to the canvas.
+   */
+
+
+  draw(data, target, themeName = 'light', infoOnly = false) {
+    this.drawingManager.draw(data, target, themeName, infoOnly);
+  }
+  /**
+   * Returns the number of rings this edge is a part of.
+   *
+   * @param {Number} edgeId The id of an edge.
+   * @returns {Number} The number of rings the provided edge is part of.
+   */
+
+
+  edgeRingCount(edgeId) {
+    return this.ringManager.edgeRingCount(edgeId);
+  }
+  /**
+   * Returns an array containing the bridged rings associated with this  molecule.
+   *
+   * @returns {Ring[]} An array containing all bridged rings associated with this molecule.
+   */
+
+
+  getBridgedRings() {
+    return this.ringManager.getBridgedRings();
+  }
+  /**
+   * Returns an array containing all fused rings associated with this molecule.
+   *
+   * @returns {Ring[]} An array containing all fused rings associated with this molecule.
+   */
+
+
+  getFusedRings() {
+    return this.ringManager.getFusedRings();
+  }
+  /**
+   * Returns an array containing all spiros associated with this molecule.
+   *
+   * @returns {Ring[]} An array containing all spiros associated with this molecule.
+   */
+
+
+  getSpiros() {
+    return this.ringManager.getSpiros();
+  }
+  /**
+   * Returns a string containing a semicolon and new-line separated list of ring properties: Id; Members Count; Neighbours Count; IsSpiro; IsFused; IsBridged; Ring Count (subrings of bridged rings)
+   *
+   * @returns {String} A string as described in the method description.
+   */
+
+
+  printRingInfo() {
+    return this.ringManager.printRingInfo();
+  }
+  /**
+   * Rotates the drawing to make the widest dimension horizontal.
+   */
+
+
+  rotateDrawing() {
+    this.drawingManager.rotateDrawing();
+  }
+  /**
+   * Returns the total overlap score of the current molecule.
+   *
+   * @returns {Number} The overlap score.
+   */
+
+
+  getTotalOverlapScore() {
+    return this.totalOverlapScore;
+  }
+  /**
+   * Returns the ring count of the current molecule.
+   *
+   * @returns {Number} The ring count.
+   */
+
+
+  getRingCount() {
+    return this.ringManager.getRingCount();
+  }
+  /**
+   * Checks whether or not the current molecule  a bridged ring.
+   *
+   * @returns {Boolean} A boolean indicating whether or not the current molecule  a bridged ring.
+   */
+
+
+  hasBridgedRing() {
+    return this.ringManager.hasBridgedRing();
+  }
+  /**
+   * Returns the number of heavy atoms (non-hydrogen) in the current molecule.
+   *
+   * @returns {Number} The heavy atom count.
+   */
+
+
+  getHeavyAtomCount() {
+    return this.molecularInfoManager.getHeavyAtomCount();
+  }
+  /**
+   * Returns the molecular formula of the loaded molecule as a string.
+   *
+   * @returns {String} The molecular formula.
+   */
+
+
+  getMolecularFormula(data = null) {
+    return this.molecularInfoManager.getMolecularFormula(data);
+  }
+  /**
+   * Returns the type of the ringbond (e.g. '=' for a double bond). The ringbond represents the break in a ring introduced when creating the MST. If the two vertices supplied as arguments are not part of a common ringbond, the method returns null.
+   *
+   * @param {Vertex} vertexA A vertex.
+   * @param {Vertex} vertexB A vertex.
+   * @returns {(String|null)} Returns the ringbond type or null, if the two supplied vertices are not connected by a ringbond.
+   */
+
+
+  getRingbondType(vertexA, vertexB) {
+    return this.ringManager.getRingbondType(vertexA, vertexB);
+  }
+
+  initDraw(data, themeName, infoOnly, highlight_atoms) {
+    this.initializationManager.initDraw(data, themeName, infoOnly, highlight_atoms);
+  }
+
+  processGraph() {
+    this.graphProcessingManager.processGraph();
+  }
+  /**
+   * Initializes rings and ringbonds for the current molecule.
+   */
+
+
+  initRings() {
+    this.ringManager.initRings();
+  }
+
+  initHydrogens() {
+    this.initializationManager.initHydrogens();
+  }
+  /**
+   * Returns all rings connected by bridged bonds starting from the ring with the supplied ring id.
+   *
+   * @param {Number} ringId A ring id.
+   * @returns {Number[]} An array containing all ring ids of rings part of a bridged ring system.
+   */
+
+
+  getBridgedRingRings(ringId) {
+    return this.ringManager.getBridgedRingRings(ringId);
+  }
+  /**
+   * Checks whether or not a ring is part of a bridged ring.
+   *
+   * @param {Number} ringId A ring id.
+   * @returns {Boolean} A boolean indicating whether or not the supplied ring (by id) is part of a bridged ring system.
+   */
+
+
+  isPartOfBridgedRing(ringId) {
+    return this.ringManager.isPartOfBridgedRing(ringId);
+  }
+  /**
+   * Creates a bridged ring.
+   *
+   * @param {Number[]} ringIds An array of ids of rings involved in the bridged ring.
+   * @param {Number} sourceVertexId The vertex id to start the bridged ring discovery from.
+   * @returns {Ring} The bridged ring.
+   */
+
+
+  createBridgedRing(ringIds, sourceVertexId) {
+    return this.ringManager.createBridgedRing(ringIds, sourceVertexId);
+  }
+  /**
+   * Checks whether or not two vertices are in the same ring.
+   *
+   * @param {Vertex} vertexA A vertex.
+   * @param {Vertex} vertexB A vertex.
+   * @returns {Boolean} A boolean indicating whether or not the two vertices are in the same ring.
+   */
+
+
+  areVerticesInSameRing(vertexA, vertexB) {
+    return this.ringManager.areVerticesInSameRing(vertexA, vertexB);
+  }
+  /**
+   * Returns an array of ring ids shared by both vertices.
+   *
+   * @param {Vertex} vertexA A vertex.
+   * @param {Vertex} vertexB A vertex.
+   * @returns {Number[]} An array of ids of rings shared by the two vertices.
+   */
+
+
+  getCommonRings(vertexA, vertexB) {
+    return this.ringManager.getCommonRings(vertexA, vertexB);
+  }
+  /**
+   * Returns the aromatic or largest ring shared by the two vertices.
+   *
+   * @param {Vertex} vertexA A vertex.
+   * @param {Vertex} vertexB A vertex.
+   * @returns {(Ring|null)} If an aromatic common ring exists, that ring, else the largest (non-aromatic) ring, else null.
+   */
+
+
+  getLargestOrAromaticCommonRing(vertexA, vertexB) {
+    return this.ringManager.getLargestOrAromaticCommonRing(vertexA, vertexB);
+  }
+  /**
+   * Returns an array of vertices positioned at a specified location.
+   *
+   * @param {Vector2} position The position to search for vertices.
+   * @param {Number} radius The radius within to search.
+   * @param {Number} excludeVertexId A vertex id to be excluded from the search results.
+   * @returns {Number[]} An array containing vertex ids in a given location.
+   */
+
+
+  getVerticesAt(position, radius, excludeVertexId) {
+    return this.positioningManager.getVerticesAt(position, radius, excludeVertexId);
+  }
+  /**
+   * Returns the closest vertex (connected as well as unconnected).
+   *
+   * @param {Vertex} vertex The vertex of which to find the closest other vertex.
+   * @returns {Vertex} The closest vertex.
+   */
+
+
+  getClosestVertex(vertex) {
+    return this.positioningManager.getClosestVertex(vertex);
+  }
+  /**
+   * Add a ring to this representation of a molecule.
+   *
+   * @param {Ring} ring A new ring.
+   * @returns {Number} The ring id of the new ring.
+   */
+
+
+  addRing(ring) {
+    return this.ringManager.addRing(ring);
+  }
+  /**
+   * Removes a ring from the array of rings associated with the current molecule.
+   *
+   * @param {Number} ringId A ring id.
+   */
+
+
+  removeRing(ringId) {
+    this.ringManager.removeRing(ringId);
+  }
+  /**
+   * Gets a ring object from the array of rings associated with the current molecule by its id. The ring id is not equal to the index, since rings can be added and removed when processing bridged rings.
+   *
+   * @param {Number} ringId A ring id.
+   * @returns {Ring} A ring associated with the current molecule.
+   */
+
+
+  getRing(ringId) {
+    return this.ringManager.getRing(ringId);
+  }
+  /**
+   * Add a ring connection to this representation of a molecule.
+   *
+   * @param {RingConnection} ringConnection A new ringConnection.
+   * @returns {Number} The ring connection id of the new ring connection.
+   */
+
+
+  addRingConnection(ringConnection) {
+    return this.ringManager.addRingConnection(ringConnection);
+  }
+  /**
+   * Removes a ring connection from the array of rings connections associated with the current molecule.
+   *
+   * @param {Number} ringConnectionId A ring connection id.
+   */
+
+
+  removeRingConnection(ringConnectionId) {
+    this.ringManager.removeRingConnection(ringConnectionId);
+  }
+  /**
+   * Removes all ring connections between two vertices.
+   *
+   * @param {Number} vertexIdA A vertex id.
+   * @param {Number} vertexIdB A vertex id.
+   */
+
+
+  removeRingConnectionsBetween(vertexIdA, vertexIdB) {
+    this.ringManager.removeRingConnectionsBetween(vertexIdA, vertexIdB);
+  }
+  /**
+   * Get a ring connection with a given id.
+   *
+   * @param {Number} id
+   * @returns {RingConnection} The ring connection with the specified id.
+   */
+
+
+  getRingConnection(id) {
+    return this.ringManager.getRingConnection(id);
+  }
+  /**
+   * Get the ring connections between a ring and a set of rings.
+   *
+   * @param {Number} ringId A ring id.
+   * @param {Number[]} ringIds An array of ring ids.
+   * @returns {Number[]} An array of ring connection ids.
+   */
+
+
+  getRingConnections(ringId, ringIds) {
+    return this.ringManager.getRingConnections(ringId, ringIds);
+  }
+  /**
+   * Returns the overlap score of the current molecule based on its positioned vertices. The higher the score, the more overlaps occur in the structure drawing.
+   *
+   * @returns {Object} Returns the total overlap score and the overlap score of each vertex sorted by score (higher to lower). Example: { total: 99, scores: [ { id: 0, score: 22 }, ... ]  }
+   */
+
+
+  getOverlapScore() {
+    return this.overlapResolver.getOverlapScore();
+  }
+  /**
+   * When drawing a double bond, choose the side to place the double bond. E.g. a double bond should always been drawn inside a ring.
+   *
+   * @param {Vertex} vertexA A vertex.
+   * @param {Vertex} vertexB A vertex.
+   * @param {Vector2[]} sides An array containing the two normals of the line spanned by the two provided vertices.
+   * @returns {Object} Returns an object containing the following information: {
+          totalSideCount: Counts the sides of each vertex in the molecule, is an array [ a, b ],
+          totalPosition: Same as position, but based on entire molecule,
+          sideCount: Counts the sides of each neighbour, is an array [ a, b ],
+          position: which side to position the second bond, is 0 or 1, represents the index in the normal array. This is based on only the neighbours
+          anCount: the number of neighbours of vertexA,
+          bnCount: the number of neighbours of vertexB
+      }
+   */
+
+
+  chooseSide(vertexA, vertexB, sides) {
+    return this.overlapResolver.chooseSide(vertexA, vertexB, sides);
+  }
+  /**
+   * Sets the center for a ring.
+   *
+   * @param {Ring} ring A ring.
+   */
+
+
+  setRingCenter(ring) {
+    this.ringManager.setRingCenter(ring);
+  }
+  /**
+   * Gets the center of a ring contained within a bridged ring and containing a given vertex.
+   *
+   * @param {Ring} ring A bridged ring.
+   * @param {Vertex} vertex A vertex.
+   * @returns {Vector2} The center of the subring that containing the vertex.
+   */
+
+
+  getSubringCenter(ring, vertex) {
+    return this.ringManager.getSubringCenter(ring, vertex);
+  }
+  /**
+   * Draw the actual edges as bonds to the canvas.
+   *
+   * @param {Boolean} debug A boolean indicating whether or not to draw debug helpers.
+   */
+
+
+  drawEdges(debug) {
+    this.drawingManager.drawEdges(debug);
+  }
+  /**
+   * Draw the an edge as a bonds to the canvas.
+   *
+   * @param {Number} edgeId An edge id.
+   * @param {Boolean} debug A boolean indicating whether or not to draw debug helpers.
+   */
+
+
+  drawEdge(edgeId, debug) {
+    this.drawingManager.drawEdge(edgeId, debug);
+  }
+  /**
+   * Draws the vertices representing atoms to the canvas.
+   *
+   * @param {Boolean} debug A boolean indicating whether or not to draw debug messages to the canvas.
+   */
+
+
+  drawVertices(debug) {
+    this.drawingManager.drawVertices(debug);
+  }
+  /**
+   * Position the vertices according to their bonds and properties.
+   */
+
+
+  position() {
+    this.positioningManager.position();
+  }
+  /**
+   * Stores the current information associated with rings.
+   */
+
+
+  backupRingInformation() {
+    this.ringManager.backupRingInformation();
+  }
+  /**
+   * Restores the most recently backed up information associated with rings.
+   */
+
+
+  restoreRingInformation() {
+    this.ringManager.restoreRingInformation();
+  } // TODO: This needs some cleaning up
+
+  /**
+   * Creates a new ring, that is, positiones all the vertices inside a ring.
+   *
+   * @param {Ring} ring The ring to position.
+   * @param {(Vector2|null)} [center=null] The center of the ring to be created.
+   * @param {(Vertex|null)} [startVertex=null] The first vertex to be positioned inside the ring.
+   * @param {(Vertex|null)} [previousVertex=null] The last vertex that was positioned.
+   * @param {Boolean} [previousVertex=false] A boolean indicating whether or not this ring was force positioned already - this is needed after force layouting a ring, in order to draw rings connected to it.
+   */
+
+
+  createRing(ring, center = null, startVertex = null, previousVertex = null) {
+    this.ringManager.createRing(ring, center, startVertex, previousVertex);
+  }
+  /**
+   * Rotate an entire subtree by an angle around a center.
+   *
+   * @param {Number} vertexId A vertex id (the root of the sub-tree).
+   * @param {Number} parentVertexId A vertex id in the previous direction of the subtree that is to rotate.
+   * @param {Number} angle An angle in randians.
+   * @param {Vector2} center The rotational center.
+   */
+
+
+  rotateSubtree(vertexId, parentVertexId, angle, center) {
+    this.overlapResolver.rotateSubtree(vertexId, parentVertexId, angle, center);
+  }
+  /**
+   * Gets the overlap score of a subtree.
+   *
+   * @param {Number} vertexId A vertex id (the root of the sub-tree).
+   * @param {Number} parentVertexId A vertex id in the previous direction of the subtree.
+   * @param {Number[]} vertexOverlapScores An array containing the vertex overlap scores indexed by vertex id.
+   * @returns {Object} An object containing the total overlap score and the center of mass of the subtree weighted by overlap score { value: 0.2, center: new Vector2() }.
+   */
+
+
+  getSubtreeOverlapScore(vertexId, parentVertexId, vertexOverlapScores) {
+    return this.overlapResolver.getSubtreeOverlapScore(vertexId, parentVertexId, vertexOverlapScores);
+  }
+  /**
+   * Returns the current (positioned vertices so far) center of mass.
+   *
+   * @returns {Vector2} The current center of mass.
+   */
+
+
+  getCurrentCenterOfMass() {
+    return this.overlapResolver.getCurrentCenterOfMass();
+  }
+  /**
+   * Returns the current (positioned vertices so far) center of mass in the neighbourhood of a given position.
+   *
+   * @param {Vector2} vec The point at which to look for neighbours.
+   * @param {Number} [r=currentBondLength*2.0] The radius of vertices to include.
+   * @returns {Vector2} The current center of mass.
+   */
+
+
+  getCurrentCenterOfMassInNeigbourhood(vec, r = this.opts.bondLength * 2.0) {
+    return this.overlapResolver.getCurrentCenterOfMassInNeigbourhood(vec, r);
+  }
+  /**
+   * Resolve primary (exact) overlaps, such as two vertices that are connected to the same ring vertex.
+   */
+
+
+  resolvePrimaryOverlaps() {
+    this.overlapResolver.resolvePrimaryOverlaps();
+  }
+  /**
+   * Resolve secondary overlaps. Those overlaps are due to the structure turning back on itself.
+   *
+   * @param {Object[]} scores An array of objects sorted descending by score.
+   * @param {Number} scores[].id A vertex id.
+   * @param {Number} scores[].score The overlap score associated with the vertex id.
+   */
+
+
+  resolveSecondaryOverlaps(scores) {
+    this.overlapResolver.resolveSecondaryOverlaps(scores);
+  }
+  /**
+   * Get the last non-null or 0 angle.
+   * @param {Number} vertexId A vertex id.
+   * @returns {Vertex} The last angle that was not 0 or null.
+   */
+
+
+  getLastAngle(vertexId) {
+    return this.positioningManager.getLastAngle(vertexId);
+  }
+  /**
+   * Positiones the next vertex thus creating a bond.
+   *
+   * @param {Vertex} vertex A vertex.
+   * @param {Vertex} [previousVertex=null] The previous vertex which has been positioned.
+   * @param {Number} [angle=0.0] The (global) angle of the vertex.
+   * @param {Boolean} [originShortest=false] Whether the origin is the shortest subtree in the branch.
+   * @param {Boolean} [skipPositioning=false] Whether or not to skip positioning and just check the neighbours.
+   */
+
+
+  createNextBond(vertex, previousVertex = null, angle = 0.0, originShortest = false, skipPositioning = false) {
+    this.positioningManager.createNextBond(vertex, previousVertex, angle, originShortest, skipPositioning);
+  }
+  /**
+   * Gets the vetex sharing the edge that is the common bond of two rings.
+   *
+   * @param {Vertex} vertex A vertex.
+   * @returns {(Number|null)} The id of a vertex sharing the edge that is the common bond of two rings with the vertex provided or null, if none.
+   */
+
+
+  getCommonRingbondNeighbour(vertex) {
+    return this.ringManager.getCommonRingbondNeighbour(vertex);
+  }
+  /**
+   * Check if a vector is inside any ring.
+   *
+   * @param {Vector2} vec A vector.
+   * @returns {Boolean} A boolean indicating whether or not the point (vector) is inside any of the rings associated with the current molecule.
+   */
+
+
+  isPointInRing(vec) {
+    return this.ringManager.isPointInRing(vec);
+  }
+  /**
+   * Check whether or not an edge is part of a ring.
+   *
+   * @param {Edge} edge An edge.
+   * @returns {Boolean} A boolean indicating whether or not the edge is part of a ring.
+   */
+
+
+  isEdgeInRing(edge) {
+    return this.ringManager.isEdgeInRing(edge);
+  }
+  /**
+   * Check whether or not an edge is rotatable.
+   *
+   * @param {Edge} edge An edge.
+   * @returns {Boolean} A boolean indicating whether or not the edge is rotatable.
+   */
+
+
+  isEdgeRotatable(edge) {
+    return this.graphProcessingManager.isEdgeRotatable(edge);
+  }
+  /**
+   * Check whether or not a ring is an implicitly defined aromatic ring (lower case smiles).
+   *
+   * @param {Ring} ring A ring.
+   * @returns {Boolean} A boolean indicating whether or not a ring is implicitly defined as aromatic.
+   */
+
+
+  isRingAromatic(ring) {
+    return this.ringManager.isRingAromatic(ring);
+  }
+  /**
+   * Get the normals of an edge.
+   *
+   * @param {Edge} edge An edge.
+   * @returns {Vector2[]} An array containing two vectors, representing the normals.
+   */
+
+
+  getEdgeNormals(edge) {
+    return this.drawingManager.getEdgeNormals(edge);
+  }
+  /**
+   * Returns an array of vertices that are neighbouring a vertix but are not members of a ring (including bridges).
+   *
+   * @param {Number} vertexId A vertex id.
+   * @returns {Vertex[]} An array of vertices.
+   */
+
+
+  getNonRingNeighbours(vertexId) {
+    return this.positioningManager.getNonRingNeighbours(vertexId);
+  }
+  /**
+   * Annotaed stereochemistry information for visualization.
+   */
+
+
+  annotateStereochemistry() {
+    this.stereochemistryManager.annotateStereochemistry();
+  }
+  /**
+   *
+   *
+   * @param {Number} vertexId The id of a vertex.
+   * @param {(Number|null)} previousVertexId The id of the parent vertex of the vertex.
+   * @param {Uint8Array} visited An array containing the visited flag for all vertices in the graph.
+   * @param {Array} priority An array of arrays storing the atomic numbers for each level.
+   * @param {Number} maxDepth The maximum depth.
+   * @param {Number} depth The current depth.
+   */
+
+
+  visitStereochemistry(vertexId, previousVertexId, visited, priority, maxDepth, depth, parentAtomicNumber = 0) {
+    this.stereochemistryManager.visitStereochemistry(vertexId, previousVertexId, visited, priority, maxDepth, depth, parentAtomicNumber);
+  }
+  /**
+   * Creates pseudo-elements (such as Et, Me, Ac, Bz, ...) at the position of the carbon sets
+   * the involved atoms not to be displayed.
+   */
+
+
+  initPseudoElements() {
+    this.pseudoElementManager.initPseudoElements();
+  }
+
+  get ringIdCounter() {
+    return this.ringManager.ringIdCounter;
+  }
+
+  set ringIdCounter(value) {
+    this.ringManager.ringIdCounter = value;
+  }
+
+  get ringConnectionIdCounter() {
+    return this.ringManager.ringConnectionIdCounter;
+  }
+
+  set ringConnectionIdCounter(value) {
+    this.ringManager.ringConnectionIdCounter = value;
+  }
+
+  get rings() {
+    return this.ringManager.rings;
+  }
+
+  set rings(value) {
+    this.ringManager.rings = value;
+  }
+
+  get ringConnections() {
+    return this.ringManager.ringConnections;
+  }
+
+  set ringConnections(value) {
+    this.ringManager.ringConnections = value;
+  }
+
+  get originalRings() {
+    return this.ringManager.originalRings;
+  }
+
+  set originalRings(value) {
+    this.ringManager.originalRings = value;
+  }
+
+  get originalRingConnections() {
+    return this.ringManager.originalRingConnections;
+  }
+
+  set originalRingConnections(value) {
+    this.ringManager.originalRingConnections = value;
+  }
+
+  get bridgedRing() {
+    return this.ringManager.bridgedRing;
+  }
+
+  set bridgedRing(value) {
+    this.ringManager.bridgedRing = value;
+  }
+
+}
+
+module.exports = MolecularPreprocessor;
+
+},{"./DrawingManager":8,"./GraphProcessingManager":13,"./InitializationManager":14,"./MolecularInfoManager":17,"./OptionsManager":20,"./OverlapResolutionManager":21,"./PositioningManager":24,"./PseudoElementManager":25,"./RingManager":31,"./StereochemistryManager":34}],19:[function(require,module,exports){
 "use strict";
 
 class Options {
@@ -8982,7 +9008,37 @@ class Options {
 
 module.exports = Options;
 
-},{}],18:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
+"use strict";
+
+var __importDefault = undefined && undefined.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+const DefaultOptions_1 = __importDefault(require("./DefaultOptions"));
+
+const Options = require("./Options");
+
+class OptionsManager {
+  constructor(userOptions) {
+    this.defaultOptions = (0, DefaultOptions_1.default)();
+    this.opts = Options.extend(true, this.defaultOptions, userOptions);
+    this.opts.halfBondSpacing = this.opts.bondSpacing / 2.0;
+    this.opts.bondLengthSq = this.opts.bondLength * this.opts.bondLength;
+    this.opts.halfFontSizeLarge = this.opts.fontSizeLarge / 2.0;
+    this.opts.quarterFontSizeLarge = this.opts.fontSizeLarge / 4.0;
+    this.opts.fifthFontSizeSmall = this.opts.fontSizeSmall / 5.0; // Set the default theme.
+
+    this.theme = this.opts.themes.dark;
+  }
+
+}
+
+module.exports = OptionsManager;
+
+},{"./DefaultOptions":6,"./Options":19}],21:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -9284,7 +9340,7 @@ class OverlapResolutionManager {
 
 module.exports = OverlapResolutionManager;
 
-},{"./ArrayHelper":3,"./MathHelper":15,"./Vector2":35}],19:[function(require,module,exports){
+},{"./ArrayHelper":3,"./MathHelper":16,"./Vector2":38}],22:[function(require,module,exports){
 "use strict"; // WHEN REPLACING, CHECK FOR:
 // KEEP THIS WHEN REGENERATING THE PARSER !!
 
@@ -11182,7 +11238,7 @@ module.exports = function () {
   };
 }();
 
-},{}],20:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 "use strict"; // Adapted from https://codepen.io/shshaw/pen/XbxvNj by
 
 function convertImage(img) {
@@ -11304,7 +11360,7 @@ function convertImage(img) {
 
 module.exports = convertImage;
 
-},{}],21:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -11769,7 +11825,7 @@ class PositioningManager {
 
 module.exports = PositioningManager;
 
-},{"./ArrayHelper":3,"./MathHelper":15,"./Vector2":35}],22:[function(require,module,exports){
+},{"./ArrayHelper":3,"./MathHelper":16,"./Vector2":38}],25:[function(require,module,exports){
 "use strict";
 
 const Atom = require("./Atom");
@@ -11898,7 +11954,7 @@ class PseudoElementManager {
 
 module.exports = PseudoElementManager;
 
-},{"./Atom":4}],23:[function(require,module,exports){
+},{"./Atom":4}],26:[function(require,module,exports){
 "use strict";
 
 const Parser = require("./Parser");
@@ -11954,7 +12010,7 @@ class Reaction {
 
 module.exports = Reaction;
 
-},{"./Parser":19}],24:[function(require,module,exports){
+},{"./Parser":22}],27:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -12326,7 +12382,7 @@ class ReactionDrawer {
 
 module.exports = ReactionDrawer;
 
-},{"./FormulaToCommonName":10,"./Options":17,"./SvgDrawer":32,"./SvgWrapper":33,"./ThemeManager":34}],25:[function(require,module,exports){
+},{"./FormulaToCommonName":10,"./Options":19,"./SvgDrawer":35,"./SvgWrapper":36,"./ThemeManager":37}],28:[function(require,module,exports){
 "use strict";
 
 const Reaction = require("./Reaction");
@@ -12347,7 +12403,7 @@ class ReactionParser {
 
 module.exports = ReactionParser;
 
-},{"./Reaction":23}],26:[function(require,module,exports){
+},{"./Reaction":26}],29:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("./ArrayHelper");
@@ -12566,7 +12622,7 @@ class Ring {
 
 module.exports = Ring;
 
-},{"./ArrayHelper":3,"./RingConnection":27,"./Vector2":35}],27:[function(require,module,exports){
+},{"./ArrayHelper":3,"./RingConnection":30,"./Vector2":38}],30:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a ring connection.
@@ -12734,7 +12790,7 @@ class RingConnection {
 
 module.exports = RingConnection;
 
-},{}],28:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -13519,7 +13575,7 @@ class RingManager {
 
 module.exports = RingManager;
 
-},{"./ArrayHelper":3,"./Edge":9,"./MathHelper":15,"./Ring":26,"./RingConnection":27,"./SSSR":29,"./Vector2":35}],29:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Edge":9,"./MathHelper":16,"./Ring":29,"./RingConnection":30,"./SSSR":32,"./Vector2":38}],32:[function(require,module,exports){
 "use strict";
 
 const Graph = require("./Graph");
@@ -14129,7 +14185,7 @@ class SSSR {
 
 module.exports = SSSR;
 
-},{"./Graph":12}],30:[function(require,module,exports){
+},{"./Graph":12}],33:[function(require,module,exports){
 "use strict";
 
 const Parser = require("./Parser");
@@ -14475,7 +14531,7 @@ class SmilesDrawer {
 
 module.exports = SmilesDrawer;
 
-},{"./Options":17,"./Parser":19,"./ReactionDrawer":24,"./ReactionParser":25,"./SvgDrawer":32,"./SvgWrapper":33}],31:[function(require,module,exports){
+},{"./Options":19,"./Parser":22,"./ReactionDrawer":27,"./ReactionParser":28,"./SvgDrawer":35,"./SvgWrapper":36}],34:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -14699,7 +14755,7 @@ class StereochemistryManager {
 
 module.exports = StereochemistryManager;
 
-},{"./MathHelper":15}],32:[function(require,module,exports){
+},{"./MathHelper":16}],35:[function(require,module,exports){
 "use strict"; // we use the drawer to do all the preprocessing. then we take over the drawing
 // portion to output to svg
 
@@ -14707,7 +14763,7 @@ const ArrayHelper = require("./ArrayHelper");
 
 const Atom = require("./Atom");
 
-const DrawerBase = require("./DrawerBase");
+const MolecularPreprocessor = require("./MolecularPreprocessor");
 
 const Line = require("./Line");
 
@@ -14721,7 +14777,7 @@ const GaussDrawer = require("./GaussDrawer");
 
 class SvgDrawer {
   constructor(options, clear = true) {
-    this.preprocessor = new DrawerBase(options);
+    this.preprocessor = new MolecularPreprocessor(options);
     this.opts = this.preprocessor.opts;
     this.clear = clear;
     this.svgWrapper = null;
@@ -15167,7 +15223,7 @@ class SvgDrawer {
 
 module.exports = SvgDrawer;
 
-},{"./ArrayHelper":3,"./Atom":4,"./DrawerBase":7,"./GaussDrawer":11,"./Line":14,"./SvgWrapper":33,"./ThemeManager":34,"./Vector2":35}],33:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Atom":4,"./GaussDrawer":11,"./Line":15,"./MolecularPreprocessor":18,"./SvgWrapper":36,"./ThemeManager":37,"./Vector2":38}],36:[function(require,module,exports){
 "use strict";
 
 const Line = require("./Line");
@@ -16144,7 +16200,7 @@ class SvgWrapper {
 
 module.exports = SvgWrapper;
 
-},{"./Line":14,"./MathHelper":15,"./Vector2":35}],34:[function(require,module,exports){
+},{"./Line":15,"./MathHelper":16,"./Vector2":38}],37:[function(require,module,exports){
 "use strict";
 
 class ThemeManager {
@@ -16192,7 +16248,7 @@ class ThemeManager {
 
 module.exports = ThemeManager;
 
-},{}],35:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a 2D vector.
@@ -16812,7 +16868,7 @@ class Vector2 {
 
 module.exports = Vector2;
 
-},{}],36:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -17189,5 +17245,5 @@ class Vertex {
 
 module.exports = Vertex;
 
-},{"./ArrayHelper":3,"./MathHelper":15,"./Vector2":35}]},{},[1])
+},{"./ArrayHelper":3,"./MathHelper":16,"./Vector2":38}]},{},[1])
 

@@ -1,4 +1,4 @@
-import DrawerBase = require("./DrawerBase");
+import MolecularPreprocessor = require("./MolecularPreprocessor");
 import MathHelper = require("./MathHelper");
 import ArrayHelper = require("./ArrayHelper");
 import Vector2 = require("./Vector2");
@@ -8,7 +8,7 @@ import RingConnection = require("./RingConnection");
 import SSSR = require("./SSSR");
 
 class RingManager {
-    private drawer: DrawerBase;
+    private drawer: MolecularPreprocessor;
     public ringIdCounter: number = 0;
     public ringConnectionIdCounter: number = 0;
     public rings: any[] = [];
@@ -17,7 +17,7 @@ class RingManager {
     public originalRingConnections: any[] = [];
     public bridgedRing: boolean = false;
 
-    constructor(drawer: DrawerBase) {
+    constructor(drawer: MolecularPreprocessor) {
         this.drawer = drawer;
     }
 
