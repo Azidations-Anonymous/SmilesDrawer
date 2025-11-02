@@ -155,7 +155,7 @@ if (!Array.prototype.fill) {
 
 module.exports = SmilesDrawer;
 
-},{"./src/SmilesDrawer":3,"./src/drawing/Drawer":11,"./src/drawing/GaussDrawer":13,"./src/drawing/SvgDrawer":14,"./src/parsing/Parser":30,"./src/parsing/ReactionParser":31,"./src/reactions/ReactionDrawer":42}],2:[function(require,module,exports){
+},{"./src/SmilesDrawer":3,"./src/drawing/Drawer":11,"./src/drawing/GaussDrawer":13,"./src/drawing/SvgDrawer":14,"./src/parsing/Parser":31,"./src/parsing/ReactionParser":32,"./src/reactions/ReactionDrawer":43}],2:[function(require,module,exports){
 /**
  * chroma.js - JavaScript library for color conversions
  *
@@ -4086,7 +4086,7 @@ class SmilesDrawer {
 
 module.exports = SmilesDrawer;
 
-},{"./config/Options":7,"./drawing/SvgDrawer":14,"./drawing/helpers/SvgConversionHelper":16,"./parsing/Parser":30,"./parsing/ReactionParser":31,"./reactions/ReactionDrawer":42}],4:[function(require,module,exports){
+},{"./config/Options":7,"./drawing/SvgDrawer":14,"./drawing/helpers/SvgConversionHelper":17,"./parsing/Parser":31,"./parsing/ReactionParser":32,"./reactions/ReactionDrawer":43}],4:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -4354,7 +4354,7 @@ class KamadaKawaiLayout {
 
 module.exports = KamadaKawaiLayout;
 
-},{"../utils/MathHelper":45}],5:[function(require,module,exports){
+},{"../utils/MathHelper":46}],5:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -4964,7 +4964,7 @@ class SSSR {
 
 module.exports = SSSR;
 
-},{"../graph/Graph":21}],6:[function(require,module,exports){
+},{"../graph/Graph":22}],6:[function(require,module,exports){
 "use strict";
 
 function getDefaultOptions() {
@@ -5318,7 +5318,7 @@ module.exports = ThemeManager;
 
 const MathHelper = require("../utils/MathHelper");
 
-const Vector2 = require("../graph/Vector2");
+const CanvasWedgeDrawer = require("./helpers/CanvasWedgeDrawer");
 /**
  * A class wrapping a canvas element.
  *
@@ -5363,8 +5363,8 @@ class CanvasWrapper {
     this.ctx.font = this.fontLarge;
     this.hydrogenWidth = this.ctx.measureText('H').width;
     this.halfHydrogenWidth = this.hydrogenWidth / 2.0;
-    this.halfBondThickness = this.opts.bondThickness / 2.0; // TODO: Find out why clear was here.
-    // this.clear();
+    this.halfBondThickness = this.opts.bondThickness / 2.0;
+    this.wedgeDrawer = new CanvasWedgeDrawer(this);
   }
   /**
    * Update the width and height of the canvas
@@ -5579,146 +5579,6 @@ class CanvasWrapper {
     }
 
     ctx.strokeStyle = gradient;
-    ctx.stroke();
-    ctx.restore();
-  }
-  /**
-   * Draw a wedge on the canvas.
-   *
-   * @param {Line} line A line.
-   * @param {Number} width The wedge width.
-   */
-
-
-  drawWedge(line, width = 1.0) {
-    if (isNaN(line.from.x) || isNaN(line.from.y) || isNaN(line.to.x) || isNaN(line.to.y)) {
-      return;
-    }
-
-    let ctx = this.ctx;
-    let offsetX = this.offsetX;
-    let offsetY = this.offsetY; // Add a shadow behind the line
-
-    let shortLine = line.clone().shorten(5.0);
-    let l = shortLine.getLeftVector().clone();
-    let r = shortLine.getRightVector().clone();
-    l.x += offsetX;
-    l.y += offsetY;
-    r.x += offsetX;
-    r.y += offsetY;
-    l = line.getLeftVector().clone();
-    r = line.getRightVector().clone();
-    l.x += offsetX;
-    l.y += offsetY;
-    r.x += offsetX;
-    r.y += offsetY;
-    ctx.save();
-    let normals = Vector2.normals(l, r);
-    normals[0].normalize();
-    normals[1].normalize();
-    let isRightChiralCenter = line.getRightChiral();
-    let start = l;
-    let end = r;
-
-    if (isRightChiralCenter) {
-      start = r;
-      end = l;
-    }
-
-    let t = Vector2.add(start, Vector2.multiplyScalar(normals[0], this.halfBondThickness));
-    let u = Vector2.add(end, Vector2.multiplyScalar(normals[0], 1.5 + this.halfBondThickness));
-    let v = Vector2.add(end, Vector2.multiplyScalar(normals[1], 1.5 + this.halfBondThickness));
-    let w = Vector2.add(start, Vector2.multiplyScalar(normals[1], this.halfBondThickness));
-    ctx.beginPath();
-    ctx.moveTo(t.x, t.y);
-    ctx.lineTo(u.x, u.y);
-    ctx.lineTo(v.x, v.y);
-    ctx.lineTo(w.x, w.y);
-    let gradient = this.ctx.createRadialGradient(r.x, r.y, this.opts.bondLength, r.x, r.y, 0);
-    gradient.addColorStop(0.4, this.themeManager.getColor(line.getLeftElement()) || this.themeManager.getColor('C'));
-    gradient.addColorStop(0.6, this.themeManager.getColor(line.getRightElement()) || this.themeManager.getColor('C'));
-    ctx.fillStyle = gradient;
-    ctx.fill();
-    ctx.restore();
-  }
-  /**
-   * Draw a dashed wedge on the canvas.
-   *
-   * @param {Line} line A line.
-   */
-
-
-  drawDashedWedge(line) {
-    if (isNaN(line.from.x) || isNaN(line.from.y) || isNaN(line.to.x) || isNaN(line.to.y)) {
-      return;
-    }
-
-    let ctx = this.ctx;
-    let offsetX = this.offsetX;
-    let offsetY = this.offsetY;
-    let l = line.getLeftVector().clone();
-    let r = line.getRightVector().clone();
-    l.x += offsetX;
-    l.y += offsetY;
-    r.x += offsetX;
-    r.y += offsetY;
-    ctx.save();
-    let normals = Vector2.normals(l, r);
-    normals[0].normalize();
-    normals[1].normalize();
-    let isRightChiralCenter = line.getRightChiral();
-    let start;
-    let end;
-    let sStart;
-    let sEnd;
-    let shortLine = line.clone();
-
-    if (isRightChiralCenter) {
-      start = r;
-      end = l;
-      shortLine.shortenRight(1.0);
-      sStart = shortLine.getRightVector().clone();
-      sEnd = shortLine.getLeftVector().clone();
-    } else {
-      start = l;
-      end = r;
-      shortLine.shortenLeft(1.0);
-      sStart = shortLine.getLeftVector().clone();
-      sEnd = shortLine.getRightVector().clone();
-    }
-
-    sStart.x += offsetX;
-    sStart.y += offsetY;
-    sEnd.x += offsetX;
-    sEnd.y += offsetY;
-    let dir = Vector2.subtract(end, start).normalize();
-    ctx.strokeStyle = this.themeManager.getColor('C');
-    ctx.lineCap = 'round';
-    ctx.lineWidth = this.opts.bondThickness;
-    ctx.beginPath();
-    let length = line.getLength();
-    let step = 1.25 / (length / (this.opts.bondThickness * 3.0));
-    let changed = false;
-
-    for (var t = 0.0; t < 1.0; t += step) {
-      let to = Vector2.multiplyScalar(dir, t * length);
-      let startDash = Vector2.add(start, to);
-      let width = 1.5 * t;
-      let dashOffset = Vector2.multiplyScalar(normals[0], width);
-
-      if (!changed && t > 0.5) {
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.strokeStyle = this.themeManager.getColor(line.getRightElement()) || this.themeManager.getColor('C');
-        changed = true;
-      }
-
-      startDash.subtract(dashOffset);
-      ctx.moveTo(startDash.x, startDash.y);
-      startDash.add(Vector2.multiplyScalar(dashOffset, 2.0));
-      ctx.lineTo(startDash.x, startDash.y);
-    }
-
     ctx.stroke();
     ctx.restore();
   }
@@ -6133,11 +5993,19 @@ class CanvasWrapper {
     this.ctx.clearRect(0, 0, this.canvas.offsetWidth, this.canvas.offsetHeight);
   }
 
+  drawWedge(line, width = 1.0) {
+    this.wedgeDrawer.drawWedge(line, width);
+  }
+
+  drawDashedWedge(line) {
+    this.wedgeDrawer.drawDashedWedge(line);
+  }
+
 }
 
 module.exports = CanvasWrapper;
 
-},{"../graph/Vector2":27,"../utils/MathHelper":45}],11:[function(require,module,exports){
+},{"../utils/MathHelper":46,"./helpers/CanvasWedgeDrawer":16}],11:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -6549,7 +6417,7 @@ class DrawingManager {
 
 module.exports = DrawingManager;
 
-},{"../config/ThemeManager":9,"../graph/Atom":19,"../graph/Line":24,"../graph/Vector2":27,"../utils/ArrayHelper":43,"./CanvasWrapper":10}],13:[function(require,module,exports){
+},{"../config/ThemeManager":9,"../graph/Atom":20,"../graph/Line":25,"../graph/Vector2":28,"../utils/ArrayHelper":44,"./CanvasWrapper":10}],13:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -6733,7 +6601,7 @@ class GaussDrawer {
 
 module.exports = GaussDrawer;
 
-},{"../graph/Vector2":27,"../utils/PixelsToSvg":46,"chroma-js":2}],14:[function(require,module,exports){
+},{"../graph/Vector2":28,"../utils/PixelsToSvg":47,"chroma-js":2}],14:[function(require,module,exports){
 "use strict"; // we use the drawer to do all the preprocessing. then we take over the drawing
 // portion to output to svg
 
@@ -7201,7 +7069,7 @@ class SvgDrawer {
 
 module.exports = SvgDrawer;
 
-},{"../config/ThemeManager":9,"../graph/Atom":19,"../graph/Line":24,"../graph/Vector2":27,"../preprocessing/MolecularPreprocessor":35,"../utils/ArrayHelper":43,"./GaussDrawer":13,"./SvgWrapper":15}],15:[function(require,module,exports){
+},{"../config/ThemeManager":9,"../graph/Atom":20,"../graph/Line":25,"../graph/Vector2":28,"../preprocessing/MolecularPreprocessor":36,"../utils/ArrayHelper":44,"./GaussDrawer":13,"./SvgWrapper":15}],15:[function(require,module,exports){
 "use strict";
 
 const SvgTextHelper = require("./helpers/SvgTextHelper");
@@ -7968,7 +7836,161 @@ class SvgWrapper {
 
 module.exports = SvgWrapper;
 
-},{"../graph/Line":24,"../graph/Vector2":27,"../utils/MathHelper":45,"./helpers/SvgTextHelper":17,"./helpers/SvgUnicodeHelper":18}],16:[function(require,module,exports){
+},{"../graph/Line":25,"../graph/Vector2":28,"../utils/MathHelper":46,"./helpers/SvgTextHelper":18,"./helpers/SvgUnicodeHelper":19}],16:[function(require,module,exports){
+"use strict";
+
+const Vector2 = require("../../graph/Vector2");
+
+class CanvasWedgeDrawer {
+  constructor(wrapper) {
+    this.wrapper = wrapper;
+  }
+  /**
+   * Draw a wedge on the canvas.
+   *
+   * @param {Line} line A line.
+   * @param {Number} width The wedge width.
+   */
+
+
+  drawWedge(line, width = 1.0) {
+    if (isNaN(line.from.x) || isNaN(line.from.y) || isNaN(line.to.x) || isNaN(line.to.y)) {
+      return;
+    }
+
+    let ctx = this.wrapper.ctx;
+    let offsetX = this.wrapper.offsetX;
+    let offsetY = this.wrapper.offsetY; // Add a shadow behind the line
+
+    let shortLine = line.clone().shorten(5.0);
+    let l = shortLine.getLeftVector().clone();
+    let r = shortLine.getRightVector().clone();
+    l.x += offsetX;
+    l.y += offsetY;
+    r.x += offsetX;
+    r.y += offsetY;
+    l = line.getLeftVector().clone();
+    r = line.getRightVector().clone();
+    l.x += offsetX;
+    l.y += offsetY;
+    r.x += offsetX;
+    r.y += offsetY;
+    ctx.save();
+    let normals = Vector2.normals(l, r);
+    normals[0].normalize();
+    normals[1].normalize();
+    let isRightChiralCenter = line.getRightChiral();
+    let start = l;
+    let end = r;
+
+    if (isRightChiralCenter) {
+      start = r;
+      end = l;
+    }
+
+    let t = Vector2.add(start, Vector2.multiplyScalar(normals[0], this.wrapper.halfBondThickness));
+    let u = Vector2.add(end, Vector2.multiplyScalar(normals[0], 1.5 + this.wrapper.halfBondThickness));
+    let v = Vector2.add(end, Vector2.multiplyScalar(normals[1], 1.5 + this.wrapper.halfBondThickness));
+    let w = Vector2.add(start, Vector2.multiplyScalar(normals[1], this.wrapper.halfBondThickness));
+    ctx.beginPath();
+    ctx.moveTo(t.x, t.y);
+    ctx.lineTo(u.x, u.y);
+    ctx.lineTo(v.x, v.y);
+    ctx.lineTo(w.x, w.y);
+    let gradient = this.wrapper.ctx.createRadialGradient(r.x, r.y, this.wrapper.opts.bondLength, r.x, r.y, 0);
+    gradient.addColorStop(0.4, this.wrapper.themeManager.getColor(line.getLeftElement()) || this.wrapper.themeManager.getColor('C'));
+    gradient.addColorStop(0.6, this.wrapper.themeManager.getColor(line.getRightElement()) || this.wrapper.themeManager.getColor('C'));
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    ctx.restore();
+  }
+  /**
+   * Draw a dashed wedge on the canvas.
+   *
+   * @param {Line} line A line.
+   */
+
+
+  drawDashedWedge(line) {
+    if (isNaN(line.from.x) || isNaN(line.from.y) || isNaN(line.to.x) || isNaN(line.to.y)) {
+      return;
+    }
+
+    let ctx = this.wrapper.ctx;
+    let offsetX = this.wrapper.offsetX;
+    let offsetY = this.wrapper.offsetY;
+    let l = line.getLeftVector().clone();
+    let r = line.getRightVector().clone();
+    l.x += offsetX;
+    l.y += offsetY;
+    r.x += offsetX;
+    r.y += offsetY;
+    ctx.save();
+    let normals = Vector2.normals(l, r);
+    normals[0].normalize();
+    normals[1].normalize();
+    let isRightChiralCenter = line.getRightChiral();
+    let start;
+    let end;
+    let sStart;
+    let sEnd;
+    let shortLine = line.clone();
+
+    if (isRightChiralCenter) {
+      start = r;
+      end = l;
+      shortLine.shortenRight(1.0);
+      sStart = shortLine.getRightVector().clone();
+      sEnd = shortLine.getLeftVector().clone();
+    } else {
+      start = l;
+      end = r;
+      shortLine.shortenLeft(1.0);
+      sStart = shortLine.getLeftVector().clone();
+      sEnd = shortLine.getRightVector().clone();
+    }
+
+    sStart.x += offsetX;
+    sStart.y += offsetY;
+    sEnd.x += offsetX;
+    sEnd.y += offsetY;
+    let dir = Vector2.subtract(end, start).normalize();
+    ctx.strokeStyle = this.wrapper.themeManager.getColor('C');
+    ctx.lineCap = 'round';
+    ctx.lineWidth = this.wrapper.opts.bondThickness;
+    ctx.beginPath();
+    let length = line.getLength();
+    let step = 1.25 / (length / (this.wrapper.opts.bondThickness * 3.0));
+    let changed = false;
+
+    for (var t = 0.0; t < 1.0; t += step) {
+      let to = Vector2.multiplyScalar(dir, t * length);
+      let startDash = Vector2.add(start, to);
+      let width = 1.5 * t;
+      let dashOffset = Vector2.multiplyScalar(normals[0], width);
+
+      if (!changed && t > 0.5) {
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.strokeStyle = this.wrapper.themeManager.getColor(line.getRightElement()) || this.wrapper.themeManager.getColor('C');
+        changed = true;
+      }
+
+      startDash.subtract(dashOffset);
+      ctx.moveTo(startDash.x, startDash.y);
+      startDash.add(Vector2.multiplyScalar(dashOffset, 2.0));
+      ctx.lineTo(startDash.x, startDash.y);
+    }
+
+    ctx.stroke();
+    ctx.restore();
+  }
+
+}
+
+module.exports = CanvasWedgeDrawer;
+
+},{"../../graph/Vector2":28}],17:[function(require,module,exports){
 "use strict";
 
 class SvgConversionHelper {
@@ -8027,7 +8049,7 @@ class SvgConversionHelper {
 
 module.exports = SvgConversionHelper;
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 
 class SvgTextHelper {
@@ -8136,7 +8158,7 @@ class SvgTextHelper {
 
 module.exports = SvgTextHelper;
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 "use strict";
 
 class SvgUnicodeHelper {
@@ -8205,7 +8227,7 @@ class SvgUnicodeHelper {
 
 module.exports = SvgUnicodeHelper;
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
@@ -8766,7 +8788,7 @@ class Atom {
 
 module.exports = Atom;
 
-},{"../utils/ArrayHelper":43}],20:[function(require,module,exports){
+},{"../utils/ArrayHelper":44}],21:[function(require,module,exports){
 "use strict";
 /**
  * A class representing an edge.
@@ -8832,7 +8854,7 @@ class Edge {
 
 module.exports = Edge;
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 "use strict";
 
 const Vertex = require("./Vertex");
@@ -9257,7 +9279,7 @@ class Graph {
 
 module.exports = Graph;
 
-},{"../algorithms/KamadaKawaiLayout":4,"./Atom":19,"./Edge":20,"./GraphAlgorithms":22,"./GraphMatrixOperations":23,"./Vertex":28}],22:[function(require,module,exports){
+},{"../algorithms/KamadaKawaiLayout":4,"./Atom":20,"./Edge":21,"./GraphAlgorithms":23,"./GraphMatrixOperations":24,"./Vertex":29}],23:[function(require,module,exports){
 "use strict";
 /**
  * A class providing graph algorithms including bridge detection,
@@ -9513,7 +9535,7 @@ class GraphAlgorithms {
 
 module.exports = GraphAlgorithms;
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 "use strict";
 /**
  * A class providing matrix and list operations for molecular graphs.
@@ -9742,7 +9764,7 @@ class GraphMatrixOperations {
 
 module.exports = GraphMatrixOperations;
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -10050,7 +10072,7 @@ class Line {
 
 module.exports = Line;
 
-},{"./Vector2":27}],25:[function(require,module,exports){
+},{"./Vector2":28}],26:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
@@ -10269,7 +10291,7 @@ class Ring {
 
 module.exports = Ring;
 
-},{"../utils/ArrayHelper":43,"./RingConnection":26,"./Vector2":27}],26:[function(require,module,exports){
+},{"../utils/ArrayHelper":44,"./RingConnection":27,"./Vector2":28}],27:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a ring connection.
@@ -10437,7 +10459,7 @@ class RingConnection {
 
 module.exports = RingConnection;
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a 2D vector.
@@ -11057,7 +11079,7 @@ class Vector2 {
 
 module.exports = Vector2;
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -11434,7 +11456,7 @@ class Vertex {
 
 module.exports = Vertex;
 
-},{"../utils/ArrayHelper":43,"../utils/MathHelper":45,"./Vector2":27}],29:[function(require,module,exports){
+},{"../utils/ArrayHelper":44,"../utils/MathHelper":46,"./Vector2":28}],30:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
@@ -11623,7 +11645,7 @@ class BridgedRingHandler {
 
 module.exports = BridgedRingHandler;
 
-},{"../graph/Ring":25,"../graph/RingConnection":26,"../utils/ArrayHelper":43}],30:[function(require,module,exports){
+},{"../graph/Ring":26,"../graph/RingConnection":27,"../utils/ArrayHelper":44}],31:[function(require,module,exports){
 "use strict"; // WHEN REPLACING, CHECK FOR:
 // KEEP THIS WHEN REGENERATING THE PARSER !!
 
@@ -13521,7 +13543,7 @@ module.exports = function () {
   };
 }();
 
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 "use strict";
 
 const Reaction = require("../reactions/Reaction");
@@ -13542,7 +13564,7 @@ class ReactionParser {
 
 module.exports = ReactionParser;
 
-},{"../reactions/Reaction":41}],32:[function(require,module,exports){
+},{"../reactions/Reaction":42}],33:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -13679,7 +13701,7 @@ class GraphProcessingManager {
 
 module.exports = GraphProcessingManager;
 
-},{"../utils/MathHelper":45}],33:[function(require,module,exports){
+},{"../utils/MathHelper":46}],34:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -13734,7 +13756,7 @@ class InitializationManager {
 
 module.exports = InitializationManager;
 
-},{"../graph/Graph":21}],34:[function(require,module,exports){
+},{"../graph/Graph":22}],35:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -13826,7 +13848,7 @@ class MolecularInfoManager {
 
 module.exports = MolecularInfoManager;
 
-},{"../graph/Atom":19,"../graph/Graph":21}],35:[function(require,module,exports){
+},{"../graph/Atom":20,"../graph/Graph":22}],36:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -14614,7 +14636,7 @@ class MolecularPreprocessor {
 
 module.exports = MolecularPreprocessor;
 
-},{"../config/OptionsManager":8,"../drawing/DrawingManager":12,"./GraphProcessingManager":32,"./InitializationManager":33,"./MolecularInfoManager":34,"./OverlapResolutionManager":36,"./PositioningManager":37,"./PseudoElementManager":38,"./RingManager":39,"./StereochemistryManager":40}],36:[function(require,module,exports){
+},{"../config/OptionsManager":8,"../drawing/DrawingManager":12,"./GraphProcessingManager":33,"./InitializationManager":34,"./MolecularInfoManager":35,"./OverlapResolutionManager":37,"./PositioningManager":38,"./PseudoElementManager":39,"./RingManager":40,"./StereochemistryManager":41}],37:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../graph/Vector2");
@@ -14916,7 +14938,7 @@ class OverlapResolutionManager {
 
 module.exports = OverlapResolutionManager;
 
-},{"../graph/Vector2":27,"../utils/ArrayHelper":43,"../utils/MathHelper":45}],37:[function(require,module,exports){
+},{"../graph/Vector2":28,"../utils/ArrayHelper":44,"../utils/MathHelper":46}],38:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../graph/Vector2");
@@ -15381,7 +15403,7 @@ class PositioningManager {
 
 module.exports = PositioningManager;
 
-},{"../graph/Vector2":27,"../utils/ArrayHelper":43,"../utils/MathHelper":45}],38:[function(require,module,exports){
+},{"../graph/Vector2":28,"../utils/ArrayHelper":44,"../utils/MathHelper":46}],39:[function(require,module,exports){
 "use strict";
 
 const Atom = require("../graph/Atom");
@@ -15510,7 +15532,7 @@ class PseudoElementManager {
 
 module.exports = PseudoElementManager;
 
-},{"../graph/Atom":19}],39:[function(require,module,exports){
+},{"../graph/Atom":20}],40:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -16131,7 +16153,7 @@ class RingManager {
 
 module.exports = RingManager;
 
-},{"../algorithms/SSSR":5,"../graph/Edge":20,"../graph/Ring":25,"../graph/RingConnection":26,"../graph/Vector2":27,"../handlers/BridgedRingHandler":29,"../utils/ArrayHelper":43,"../utils/MathHelper":45}],40:[function(require,module,exports){
+},{"../algorithms/SSSR":5,"../graph/Edge":21,"../graph/Ring":26,"../graph/RingConnection":27,"../graph/Vector2":28,"../handlers/BridgedRingHandler":30,"../utils/ArrayHelper":44,"../utils/MathHelper":46}],41:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -16355,7 +16377,7 @@ class StereochemistryManager {
 
 module.exports = StereochemistryManager;
 
-},{"../utils/MathHelper":45}],41:[function(require,module,exports){
+},{"../utils/MathHelper":46}],42:[function(require,module,exports){
 "use strict";
 
 const Parser = require("../parsing/Parser");
@@ -16411,7 +16433,7 @@ class Reaction {
 
 module.exports = Reaction;
 
-},{"../parsing/Parser":30}],42:[function(require,module,exports){
+},{"../parsing/Parser":31}],43:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("../drawing/SvgDrawer");
@@ -16785,7 +16807,7 @@ class ReactionDrawer {
 
 module.exports = ReactionDrawer;
 
-},{"../config/Options":7,"../config/ThemeManager":9,"../drawing/SvgDrawer":14,"../drawing/helpers/SvgTextHelper":17,"../drawing/helpers/SvgUnicodeHelper":18,"../utils/FormulaToCommonName":44}],43:[function(require,module,exports){
+},{"../config/Options":7,"../config/ThemeManager":9,"../drawing/SvgDrawer":14,"../drawing/helpers/SvgTextHelper":18,"../drawing/helpers/SvgUnicodeHelper":19,"../utils/FormulaToCommonName":45}],44:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for array-related tasks.
@@ -17186,7 +17208,7 @@ class ArrayHelper {
 
 module.exports = ArrayHelper;
 
-},{}],44:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 "use strict";
 
 const formulaToCommonName = {
@@ -17224,7 +17246,7 @@ const formulaToCommonName = {
 };
 module.exports = formulaToCommonName;
 
-},{}],45:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for math-related tasks.
@@ -17397,7 +17419,7 @@ class MathHelper {
 
 module.exports = MathHelper;
 
-},{}],46:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 "use strict"; // Adapted from https://codepen.io/shshaw/pen/XbxvNj by
 
 function convertImage(img) {
