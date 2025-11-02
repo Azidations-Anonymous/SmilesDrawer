@@ -155,7 +155,7 @@ if (!Array.prototype.fill) {
 
 module.exports = SmilesDrawer;
 
-},{"./src/SmilesDrawer":3,"./src/drawing/Drawer":11,"./src/drawing/GaussDrawer":13,"./src/drawing/SvgDrawer":14,"./src/parsing/Parser":33,"./src/parsing/ReactionParser":34,"./src/reactions/ReactionDrawer":45}],2:[function(require,module,exports){
+},{"./src/SmilesDrawer":3,"./src/drawing/Drawer":11,"./src/drawing/GaussDrawer":13,"./src/drawing/SvgDrawer":14,"./src/parsing/Parser":36,"./src/parsing/ReactionParser":37,"./src/reactions/ReactionDrawer":48}],2:[function(require,module,exports){
 /**
  * chroma.js - JavaScript library for color conversions
  *
@@ -4086,7 +4086,7 @@ class SmilesDrawer {
 
 module.exports = SmilesDrawer;
 
-},{"./config/Options":7,"./drawing/SvgDrawer":14,"./drawing/helpers/SvgConversionHelper":19,"./parsing/Parser":33,"./parsing/ReactionParser":34,"./reactions/ReactionDrawer":45}],4:[function(require,module,exports){
+},{"./config/Options":7,"./drawing/SvgDrawer":14,"./drawing/helpers/SvgConversionHelper":22,"./parsing/Parser":36,"./parsing/ReactionParser":37,"./reactions/ReactionDrawer":48}],4:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -4354,7 +4354,7 @@ class KamadaKawaiLayout {
 
 module.exports = KamadaKawaiLayout;
 
-},{"../utils/MathHelper":48}],5:[function(require,module,exports){
+},{"../utils/MathHelper":51}],5:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -4964,7 +4964,7 @@ class SSSR {
 
 module.exports = SSSR;
 
-},{"../graph/Graph":24}],6:[function(require,module,exports){
+},{"../graph/Graph":27}],6:[function(require,module,exports){
 "use strict";
 
 function getDefaultOptions() {
@@ -5956,7 +5956,7 @@ class DrawingManager {
 
 module.exports = DrawingManager;
 
-},{"../config/ThemeManager":9,"../graph/Atom":22,"../graph/Line":27,"../graph/Vector2":30,"../utils/ArrayHelper":46,"./CanvasWrapper":10}],13:[function(require,module,exports){
+},{"../config/ThemeManager":9,"../graph/Atom":25,"../graph/Line":30,"../graph/Vector2":33,"../utils/ArrayHelper":49,"./CanvasWrapper":10}],13:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -6140,25 +6140,20 @@ class GaussDrawer {
 
 module.exports = GaussDrawer;
 
-},{"../graph/Vector2":30,"../utils/PixelsToSvg":49,"chroma-js":2}],14:[function(require,module,exports){
-"use strict"; // we use the drawer to do all the preprocessing. then we take over the drawing
-// portion to output to svg
-
-const ArrayHelper = require("../utils/ArrayHelper");
-
-const Atom = require("../graph/Atom");
+},{"../graph/Vector2":33,"../utils/PixelsToSvg":52,"chroma-js":2}],14:[function(require,module,exports){
+"use strict";
 
 const MolecularPreprocessor = require("../preprocessing/MolecularPreprocessor");
-
-const Line = require("../graph/Line");
 
 const SvgWrapper = require("./SvgWrapper");
 
 const ThemeManager = require("../config/ThemeManager");
 
-const Vector2 = require("../graph/Vector2");
+const SvgEdgeDrawer = require("./draw/SvgEdgeDrawer");
 
-const GaussDrawer = require("./GaussDrawer");
+const SvgVertexDrawer = require("./draw/SvgVertexDrawer");
+
+const SvgWeightsDrawer = require("./draw/SvgWeightsDrawer");
 
 class SvgDrawer {
   constructor(options, clear = true) {
@@ -6166,6 +6161,9 @@ class SvgDrawer {
     this.opts = this.preprocessor.opts;
     this.clear = clear;
     this.svgWrapper = null;
+    this.edgeDrawer = new SvgEdgeDrawer(this);
+    this.vertexDrawer = new SvgVertexDrawer(this);
+    this.weightsDrawer = new SvgWeightsDrawer(this);
   }
   /**
    * Draws the parsed smiles data to an svg element.
@@ -6276,304 +6274,6 @@ class SvgDrawer {
     return target;
   }
   /**
-   * Draws a ring inside a provided ring, indicating aromaticity.
-   *
-   * @param {Ring} ring A ring.
-   */
-
-
-  drawAromaticityRing(ring) {
-    let svgWrapper = this.svgWrapper;
-    svgWrapper.drawRing(ring.center.x, ring.center.y, ring.getSize());
-  }
-  /**
-   * Draw the actual edges as bonds.
-   *
-   * @param {Boolean} debug A boolean indicating whether or not to draw debug helpers.
-   */
-
-
-  drawEdges(debug) {
-    let preprocessor = this.preprocessor,
-        graph = preprocessor.graph,
-        rings = preprocessor.rings,
-        drawn = Array(this.preprocessor.graph.edges.length);
-    drawn.fill(false);
-    graph.traverseBF(0, vertex => {
-      let edges = graph.getEdges(vertex.id);
-
-      for (var i = 0; i < edges.length; i++) {
-        let edgeId = edges[i];
-
-        if (!drawn[edgeId]) {
-          drawn[edgeId] = true;
-          this.drawEdge(edgeId, debug);
-        }
-      }
-    }); // Draw ring for implicitly defined aromatic rings
-
-    if (!this.bridgedRing) {
-      for (var i = 0; i < rings.length; i++) {
-        let ring = rings[i]; //TODO: uses canvas ctx to draw... need to update this to SVG
-
-        if (preprocessor.isRingAromatic(ring)) {
-          this.drawAromaticityRing(ring);
-        }
-      }
-    }
-  }
-  /**
-   * Draw the an edge as a bond.
-   *
-   * @param {Number} edgeId An edge id.
-   * @param {Boolean} debug A boolean indicating whether or not to draw debug helpers.
-   */
-
-
-  drawEdge(edgeId, debug) {
-    let preprocessor = this.preprocessor,
-        opts = preprocessor.opts,
-        svgWrapper = this.svgWrapper,
-        edge = preprocessor.graph.edges[edgeId],
-        vertexA = preprocessor.graph.vertices[edge.sourceId],
-        vertexB = preprocessor.graph.vertices[edge.targetId],
-        elementA = vertexA.value.element,
-        elementB = vertexB.value.element;
-
-    if ((!vertexA.value.isDrawn || !vertexB.value.isDrawn) && preprocessor.opts.atomVisualization === 'default') {
-      return;
-    }
-
-    let a = vertexA.position,
-        b = vertexB.position,
-        normals = preprocessor.getEdgeNormals(edge),
-        // Create a point on each side of the line
-    sides = ArrayHelper.clone(normals);
-    sides[0].multiplyScalar(10).add(a);
-    sides[1].multiplyScalar(10).add(a);
-
-    if (edge.bondType === '=' || preprocessor.getRingbondType(vertexA, vertexB) === '=' || edge.isPartOfAromaticRing && preprocessor.bridgedRing) {
-      // Always draw double bonds inside the ring
-      let inRing = preprocessor.areVerticesInSameRing(vertexA, vertexB);
-      let s = preprocessor.chooseSide(vertexA, vertexB, sides);
-
-      if (inRing) {
-        // Always draw double bonds inside a ring
-        // if the bond is shared by two rings, it is drawn in the larger
-        // problem: smaller ring is aromatic, bond is still drawn in larger -> fix this
-        let lcr = preprocessor.getLargestOrAromaticCommonRing(vertexA, vertexB);
-        let center = lcr.center;
-        normals[0].multiplyScalar(opts.bondSpacing);
-        normals[1].multiplyScalar(opts.bondSpacing); // Choose the normal that is on the same side as the center
-
-        let line = null;
-
-        if (center.sameSideAs(vertexA.position, vertexB.position, Vector2.add(a, normals[0]))) {
-          line = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
-        } else {
-          line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
-        }
-
-        line.shorten(opts.bondLength - opts.shortBondLength * opts.bondLength); // The shortened edge
-
-        if (edge.isPartOfAromaticRing) {
-          // preprocessor.canvasWrapper.drawLine(line, true);
-          svgWrapper.drawLine(line, true);
-        } else {
-          // preprocessor.canvasWrapper.drawLine(line);
-          svgWrapper.drawLine(line);
-        }
-
-        svgWrapper.drawLine(new Line(a, b, elementA, elementB));
-      } else if (edge.center || vertexA.isTerminal() && vertexB.isTerminal() || s.anCount == 0 && s.bnCount > 1 || s.bnCount == 0 && s.anCount > 1) {
-        this.multiplyNormals(normals, opts.halfBondSpacing);
-        let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB),
-            lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
-        svgWrapper.drawLine(lineA);
-        svgWrapper.drawLine(lineB);
-      } else if (s.sideCount[0] > s.sideCount[1] || s.totalSideCount[0] > s.totalSideCount[1]) {
-        this.multiplyNormals(normals, opts.bondSpacing);
-        let line = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
-        line.shorten(opts.bondLength - opts.shortBondLength * opts.bondLength);
-        svgWrapper.drawLine(line);
-        svgWrapper.drawLine(new Line(a, b, elementA, elementB));
-      } else if (s.sideCount[0] < s.sideCount[1] || s.totalSideCount[0] <= s.totalSideCount[1]) {
-        this.multiplyNormals(normals, opts.bondSpacing);
-        let line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
-        line.shorten(opts.bondLength - opts.shortBondLength * opts.bondLength);
-        svgWrapper.drawLine(line);
-        svgWrapper.drawLine(new Line(a, b, elementA, elementB));
-      }
-    } else if (edge.bondType === '#') {
-      normals[0].multiplyScalar(opts.bondSpacing / 1.5);
-      normals[1].multiplyScalar(opts.bondSpacing / 1.5);
-      let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
-      let lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
-      svgWrapper.drawLine(lineA);
-      svgWrapper.drawLine(lineB);
-      svgWrapper.drawLine(new Line(a, b, elementA, elementB));
-    } else if (edge.bondType === '.') {// TODO: Something... maybe... version 2?
-    } else {
-      let isChiralCenterA = vertexA.value.isStereoCenter;
-      let isChiralCenterB = vertexB.value.isStereoCenter;
-
-      if (edge.wedge === 'up') {
-        svgWrapper.drawWedge(new Line(a, b, elementA, elementB, isChiralCenterA, isChiralCenterB));
-      } else if (edge.wedge === 'down') {
-        svgWrapper.drawDashedWedge(new Line(a, b, elementA, elementB, isChiralCenterA, isChiralCenterB));
-      } else {
-        svgWrapper.drawLine(new Line(a, b, elementA, elementB, isChiralCenterA, isChiralCenterB));
-      }
-    }
-
-    if (debug) {
-      let midpoint = Vector2.midpoint(a, b);
-      svgWrapper.drawDebugText(midpoint.x, midpoint.y, 'e: ' + edgeId);
-    }
-  }
-  /**
-   * Draw the highlights for atoms to the canvas.
-   *
-   * @param {Boolean} debug
-   */
-
-
-  drawAtomHighlights(debug) {
-    let preprocessor = this.preprocessor;
-    let opts = preprocessor.opts;
-    let graph = preprocessor.graph;
-    let rings = preprocessor.rings;
-    let svgWrapper = this.svgWrapper;
-
-    for (var i = 0; i < graph.vertices.length; i++) {
-      let vertex = graph.vertices[i];
-      let atom = vertex.value;
-
-      for (var j = 0; j < preprocessor.highlight_atoms.length; j++) {
-        let highlight = preprocessor.highlight_atoms[j];
-
-        if (atom.class === highlight[0]) {
-          svgWrapper.drawAtomHighlight(vertex.position.x, vertex.position.y, highlight[1]);
-        }
-      }
-    }
-  }
-  /**
-   * Draws the vertices representing atoms to the canvas.
-   *
-   * @param {Boolean} debug A boolean indicating whether or not to draw debug messages to the canvas.
-   */
-
-
-  drawVertices(debug) {
-    let preprocessor = this.preprocessor,
-        opts = preprocessor.opts,
-        graph = preprocessor.graph,
-        rings = preprocessor.rings,
-        svgWrapper = this.svgWrapper;
-
-    for (var i = 0; i < graph.vertices.length; i++) {
-      let vertex = graph.vertices[i];
-      let atom = vertex.value;
-      let charge = 0;
-      let isotope = 0;
-      let bondCount = vertex.value.bondCount;
-      let element = atom.element;
-      let hydrogens = Atom.maxBonds[element] - bondCount;
-      let dir = vertex.getTextDirection(graph.vertices, atom.hasAttachedPseudoElements);
-      let isTerminal = opts.terminalCarbons || element !== 'C' || atom.hasAttachedPseudoElements ? vertex.isTerminal() : false;
-      let isCarbon = atom.element === 'C'; // This is a HACK to remove all hydrogens from nitrogens in aromatic rings, as this
-      // should be the most common state. This has to be fixed by kekulization
-
-      if (atom.element === 'N' && atom.isPartOfAromaticRing) {
-        hydrogens = 0;
-      }
-
-      if (atom.bracket) {
-        hydrogens = atom.bracket.hcount;
-        charge = atom.bracket.charge;
-        isotope = atom.bracket.isotope;
-      } // If the molecule has less than 3 elements, always write the "C" for carbon
-      // Likewise, if the carbon has a charge or an isotope, always draw it
-
-
-      if (charge || isotope || graph.vertices.length < 3) {
-        isCarbon = false;
-      }
-
-      if (opts.atomVisualization === 'allballs') {
-        svgWrapper.drawBall(vertex.position.x, vertex.position.y, element);
-      } else if (atom.isDrawn && (!isCarbon || atom.drawExplicit || isTerminal || atom.hasAttachedPseudoElements) || graph.vertices.length === 1) {
-        if (opts.atomVisualization === 'default') {
-          let attachedPseudoElements = atom.getAttachedPseudoElements(); // Draw to the right if the whole molecule is concatenated into one string
-
-          if (atom.hasAttachedPseudoElements && graph.vertices.length === Object.keys(attachedPseudoElements).length + 1) {
-            dir = 'right';
-          }
-
-          svgWrapper.drawText(vertex.position.x, vertex.position.y, element, hydrogens, dir, isTerminal, charge, isotope, graph.vertices.length, attachedPseudoElements);
-        } else if (opts.atomVisualization === 'balls') {
-          svgWrapper.drawBall(vertex.position.x, vertex.position.y, element);
-        }
-      } else if (vertex.getNeighbourCount() === 2 && vertex.forcePositioned == true) {
-        // If there is a carbon which bonds are in a straight line, draw a dot
-        let a = graph.vertices[vertex.neighbours[0]].position;
-        let b = graph.vertices[vertex.neighbours[1]].position;
-        let angle = Vector2.threePointangle(vertex.position, a, b);
-
-        if (Math.abs(Math.PI - angle) < 0.1) {
-          svgWrapper.drawPoint(vertex.position.x, vertex.position.y, element);
-        }
-      }
-
-      if (debug) {
-        let value = 'v: ' + vertex.id + ' ' + ArrayHelper.print(atom.ringbonds);
-        svgWrapper.drawDebugText(vertex.position.x, vertex.position.y, value);
-      } // else {
-      //   svgWrapper.drawDebugText(vertex.position.x, vertex.position.y, vertex.value.chirality);
-      // }
-
-    } // Draw the ring centers for debug purposes
-
-
-    if (opts.debug) {
-      for (var j = 0; j < rings.length; j++) {
-        let center = rings[j].center;
-        svgWrapper.drawDebugPoint(center.x, center.y, 'r: ' + rings[j].id);
-      }
-    }
-  }
-  /**
-   * Draw the weights on a background image.
-   * @param {Number[]} weights The weights assigned to each atom.
-   */
-
-
-  drawWeights(weights, weightsNormalized) {
-    if (!weights) {
-      return;
-    }
-
-    if (weights.every(w => w === 0)) {
-      return;
-    }
-
-    if (weights.length !== this.preprocessor.graph.atomIdxToVertexId.length) {
-      throw new Error('The number of weights supplied must be equal to the number of (heavy) atoms in the molecule.');
-    }
-
-    let points = [];
-
-    for (const atomIdx of this.preprocessor.graph.atomIdxToVertexId) {
-      let vertex = this.preprocessor.graph.vertices[atomIdx];
-      points.push(new Vector2(vertex.position.x - this.svgWrapper.minX, vertex.position.y - this.svgWrapper.minY));
-    }
-
-    let gd = new GaussDrawer(points, weights, this.svgWrapper.drawingWidth, this.svgWrapper.drawingHeight, this.opts.weights.sigma, this.opts.weights.interval, this.opts.weights.colormap, this.opts.weights.opacity, weightsNormalized);
-    gd.draw();
-    this.svgWrapper.addLayer(gd.getSVG());
-  }
-  /**
    * Returns the total overlap score of the current molecule.
    *
    * @returns {Number} The overlap score.
@@ -6593,22 +6293,40 @@ class SvgDrawer {
   getMolecularFormula(graph = null) {
     return this.preprocessor.getMolecularFormula(graph);
   }
-  /**
-   * @param {Array} normals list of normals to multiply
-   * @param {Number} spacing value to multiply normals by
-   */
 
+  drawAromaticityRing(ring) {
+    this.edgeDrawer.drawAromaticityRing(ring);
+  }
+
+  drawEdges(debug) {
+    this.edgeDrawer.drawEdges(debug);
+  }
+
+  drawEdge(edgeId, debug) {
+    this.edgeDrawer.drawEdge(edgeId, debug);
+  }
 
   multiplyNormals(normals, spacing) {
-    normals[0].multiplyScalar(spacing);
-    normals[1].multiplyScalar(spacing);
+    this.edgeDrawer.multiplyNormals(normals, spacing);
+  }
+
+  drawAtomHighlights(debug) {
+    this.vertexDrawer.drawAtomHighlights(debug);
+  }
+
+  drawVertices(debug) {
+    this.vertexDrawer.drawVertices(debug);
+  }
+
+  drawWeights(weights, weightsNormalized) {
+    this.weightsDrawer.drawWeights(weights, weightsNormalized);
   }
 
 }
 
 module.exports = SvgDrawer;
 
-},{"../config/ThemeManager":9,"../graph/Atom":22,"../graph/Line":27,"../graph/Vector2":30,"../preprocessing/MolecularPreprocessor":38,"../utils/ArrayHelper":46,"./GaussDrawer":13,"./SvgWrapper":15}],15:[function(require,module,exports){
+},{"../config/ThemeManager":9,"../preprocessing/MolecularPreprocessor":41,"./SvgWrapper":15,"./draw/SvgEdgeDrawer":19,"./draw/SvgVertexDrawer":20,"./draw/SvgWeightsDrawer":21}],15:[function(require,module,exports){
 "use strict";
 
 const SvgTextHelper = require("./helpers/SvgTextHelper");
@@ -7375,7 +7093,7 @@ class SvgWrapper {
 
 module.exports = SvgWrapper;
 
-},{"../graph/Line":27,"../graph/Vector2":30,"../utils/MathHelper":48,"./helpers/SvgTextHelper":20,"./helpers/SvgUnicodeHelper":21}],16:[function(require,module,exports){
+},{"../graph/Line":30,"../graph/Vector2":33,"../utils/MathHelper":51,"./helpers/SvgTextHelper":23,"./helpers/SvgUnicodeHelper":24}],16:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../../utils/MathHelper");
@@ -7580,7 +7298,7 @@ class CanvasPrimitiveDrawer {
 
 module.exports = CanvasPrimitiveDrawer;
 
-},{"../../utils/MathHelper":48}],17:[function(require,module,exports){
+},{"../../utils/MathHelper":51}],17:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../../utils/MathHelper");
@@ -7900,7 +7618,7 @@ class CanvasTextRenderer {
 
 module.exports = CanvasTextRenderer;
 
-},{"../../utils/MathHelper":48}],18:[function(require,module,exports){
+},{"../../utils/MathHelper":51}],18:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../../graph/Vector2");
@@ -8054,7 +7772,367 @@ class CanvasWedgeDrawer {
 
 module.exports = CanvasWedgeDrawer;
 
-},{"../../graph/Vector2":30}],19:[function(require,module,exports){
+},{"../../graph/Vector2":33}],19:[function(require,module,exports){
+"use strict";
+
+const ArrayHelper = require("../../utils/ArrayHelper");
+
+const Vector2 = require("../../graph/Vector2");
+
+const Line = require("../../graph/Line");
+
+class SvgEdgeDrawer {
+  constructor(drawer) {
+    this.drawer = drawer;
+  }
+  /**
+   * Draws a ring inside a provided ring, indicating aromaticity.
+   *
+   * @param {Ring} ring A ring.
+   */
+
+
+  drawAromaticityRing(ring) {
+    let svgWrapper = this.drawer.svgWrapper;
+    svgWrapper.drawRing(ring.center.x, ring.center.y, ring.getSize());
+  }
+  /**
+   * Draw the actual edges as bonds.
+   *
+   * @param {Boolean} debug A boolean indicating whether or not to draw debug helpers.
+   */
+
+
+  drawEdges(debug) {
+    let preprocessor = this.drawer.preprocessor,
+        graph = preprocessor.graph,
+        rings = preprocessor.rings,
+        drawn = Array(this.drawer.preprocessor.graph.edges.length);
+    drawn.fill(false);
+    graph.traverseBF(0, vertex => {
+      let edges = graph.getEdges(vertex.id);
+
+      for (var i = 0; i < edges.length; i++) {
+        let edgeId = edges[i];
+
+        if (!drawn[edgeId]) {
+          drawn[edgeId] = true;
+          this.drawEdge(edgeId, debug);
+        }
+      }
+    }); // Draw ring for implicitly defined aromatic rings
+
+    if (!this.drawer.bridgedRing) {
+      for (var i = 0; i < rings.length; i++) {
+        let ring = rings[i]; //TODO: uses canvas ctx to draw... need to update this to SVG
+
+        if (preprocessor.isRingAromatic(ring)) {
+          this.drawAromaticityRing(ring);
+        }
+      }
+    }
+  }
+  /**
+   * Draw the an edge as a bond.
+   *
+   * @param {Number} edgeId An edge id.
+   * @param {Boolean} debug A boolean indicating whether or not to draw debug helpers.
+   */
+
+
+  drawEdge(edgeId, debug) {
+    let preprocessor = this.drawer.preprocessor,
+        opts = preprocessor.opts,
+        svgWrapper = this.drawer.svgWrapper,
+        edge = preprocessor.graph.edges[edgeId],
+        vertexA = preprocessor.graph.vertices[edge.sourceId],
+        vertexB = preprocessor.graph.vertices[edge.targetId],
+        elementA = vertexA.value.element,
+        elementB = vertexB.value.element;
+
+    if ((!vertexA.value.isDrawn || !vertexB.value.isDrawn) && preprocessor.opts.atomVisualization === 'default') {
+      return;
+    }
+
+    let a = vertexA.position,
+        b = vertexB.position,
+        normals = preprocessor.getEdgeNormals(edge),
+        // Create a point on each side of the line
+    sides = ArrayHelper.clone(normals);
+    sides[0].multiplyScalar(10).add(a);
+    sides[1].multiplyScalar(10).add(a);
+
+    if (edge.bondType === '=' || preprocessor.getRingbondType(vertexA, vertexB) === '=' || edge.isPartOfAromaticRing && preprocessor.bridgedRing) {
+      // Always draw double bonds inside the ring
+      let inRing = preprocessor.areVerticesInSameRing(vertexA, vertexB);
+      let s = preprocessor.chooseSide(vertexA, vertexB, sides);
+
+      if (inRing) {
+        // Always draw double bonds inside a ring
+        // if the bond is shared by two rings, it is drawn in the larger
+        // problem: smaller ring is aromatic, bond is still drawn in larger -> fix this
+        let lcr = preprocessor.getLargestOrAromaticCommonRing(vertexA, vertexB);
+        let center = lcr.center;
+        normals[0].multiplyScalar(opts.bondSpacing);
+        normals[1].multiplyScalar(opts.bondSpacing); // Choose the normal that is on the same side as the center
+
+        let line = null;
+
+        if (center.sameSideAs(vertexA.position, vertexB.position, Vector2.add(a, normals[0]))) {
+          line = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
+        } else {
+          line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
+        }
+
+        line.shorten(opts.bondLength - opts.shortBondLength * opts.bondLength); // The shortened edge
+
+        if (edge.isPartOfAromaticRing) {
+          // preprocessor.canvasWrapper.drawLine(line, true);
+          svgWrapper.drawLine(line, true);
+        } else {
+          // preprocessor.canvasWrapper.drawLine(line);
+          svgWrapper.drawLine(line);
+        }
+
+        svgWrapper.drawLine(new Line(a, b, elementA, elementB));
+      } else if (edge.center || vertexA.isTerminal() && vertexB.isTerminal() || s.anCount == 0 && s.bnCount > 1 || s.bnCount == 0 && s.anCount > 1) {
+        this.multiplyNormals(normals, opts.halfBondSpacing);
+        let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB),
+            lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
+        svgWrapper.drawLine(lineA);
+        svgWrapper.drawLine(lineB);
+      } else if (s.sideCount[0] > s.sideCount[1] || s.totalSideCount[0] > s.totalSideCount[1]) {
+        this.multiplyNormals(normals, opts.bondSpacing);
+        let line = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
+        line.shorten(opts.bondLength - opts.shortBondLength * opts.bondLength);
+        svgWrapper.drawLine(line);
+        svgWrapper.drawLine(new Line(a, b, elementA, elementB));
+      } else if (s.sideCount[0] < s.sideCount[1] || s.totalSideCount[0] <= s.totalSideCount[1]) {
+        this.multiplyNormals(normals, opts.bondSpacing);
+        let line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
+        line.shorten(opts.bondLength - opts.shortBondLength * opts.bondLength);
+        svgWrapper.drawLine(line);
+        svgWrapper.drawLine(new Line(a, b, elementA, elementB));
+      }
+    } else if (edge.bondType === '#') {
+      normals[0].multiplyScalar(opts.bondSpacing / 1.5);
+      normals[1].multiplyScalar(opts.bondSpacing / 1.5);
+      let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
+      let lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
+      svgWrapper.drawLine(lineA);
+      svgWrapper.drawLine(lineB);
+      svgWrapper.drawLine(new Line(a, b, elementA, elementB));
+    } else if (edge.bondType === '.') {// TODO: Something... maybe... version 2?
+    } else {
+      let isChiralCenterA = vertexA.value.isStereoCenter;
+      let isChiralCenterB = vertexB.value.isStereoCenter;
+
+      if (edge.wedge === 'up') {
+        svgWrapper.drawWedge(new Line(a, b, elementA, elementB, isChiralCenterA, isChiralCenterB));
+      } else if (edge.wedge === 'down') {
+        svgWrapper.drawDashedWedge(new Line(a, b, elementA, elementB, isChiralCenterA, isChiralCenterB));
+      } else {
+        svgWrapper.drawLine(new Line(a, b, elementA, elementB, isChiralCenterA, isChiralCenterB));
+      }
+    }
+
+    if (debug) {
+      let midpoint = Vector2.midpoint(a, b);
+      svgWrapper.drawDebugText(midpoint.x, midpoint.y, 'e: ' + edgeId);
+    }
+  }
+  /**
+   * @param {Array} normals list of normals to multiply
+   * @param {Number} spacing value to multiply normals by
+   */
+
+
+  multiplyNormals(normals, spacing) {
+    normals[0].multiplyScalar(spacing);
+    normals[1].multiplyScalar(spacing);
+  }
+
+}
+
+module.exports = SvgEdgeDrawer;
+
+},{"../../graph/Line":30,"../../graph/Vector2":33,"../../utils/ArrayHelper":49}],20:[function(require,module,exports){
+"use strict";
+
+const Atom = require("../../graph/Atom");
+
+const ArrayHelper = require("../../utils/ArrayHelper");
+
+const Vector2 = require("../../graph/Vector2");
+
+class SvgVertexDrawer {
+  constructor(drawer) {
+    this.drawer = drawer;
+  }
+  /**
+   * Draw the highlights for atoms to the canvas.
+   *
+   * @param {Boolean} debug
+   */
+
+
+  drawAtomHighlights(debug) {
+    let preprocessor = this.drawer.preprocessor;
+    let opts = preprocessor.opts;
+    let graph = preprocessor.graph;
+    let rings = preprocessor.rings;
+    let svgWrapper = this.drawer.svgWrapper;
+
+    for (var i = 0; i < graph.vertices.length; i++) {
+      let vertex = graph.vertices[i];
+      let atom = vertex.value;
+
+      for (var j = 0; j < preprocessor.highlight_atoms.length; j++) {
+        let highlight = preprocessor.highlight_atoms[j];
+
+        if (atom.class === highlight[0]) {
+          svgWrapper.drawAtomHighlight(vertex.position.x, vertex.position.y, highlight[1]);
+        }
+      }
+    }
+  }
+  /**
+   * Draws the vertices representing atoms to the canvas.
+   *
+   * @param {Boolean} debug A boolean indicating whether or not to draw debug messages to the canvas.
+   */
+
+
+  drawVertices(debug) {
+    let preprocessor = this.drawer.preprocessor,
+        opts = preprocessor.opts,
+        graph = preprocessor.graph,
+        rings = preprocessor.rings,
+        svgWrapper = this.drawer.svgWrapper;
+
+    for (var i = 0; i < graph.vertices.length; i++) {
+      let vertex = graph.vertices[i];
+      let atom = vertex.value;
+      let charge = 0;
+      let isotope = 0;
+      let bondCount = vertex.value.bondCount;
+      let element = atom.element;
+      let hydrogens = Atom.maxBonds[element] - bondCount;
+      let dir = vertex.getTextDirection(graph.vertices, atom.hasAttachedPseudoElements);
+      let isTerminal = opts.terminalCarbons || element !== 'C' || atom.hasAttachedPseudoElements ? vertex.isTerminal() : false;
+      let isCarbon = atom.element === 'C'; // This is a HACK to remove all hydrogens from nitrogens in aromatic rings, as this
+      // should be the most common state. This has to be fixed by kekulization
+
+      if (atom.element === 'N' && atom.isPartOfAromaticRing) {
+        hydrogens = 0;
+      }
+
+      if (atom.bracket) {
+        hydrogens = atom.bracket.hcount;
+        charge = atom.bracket.charge;
+        isotope = atom.bracket.isotope;
+      } // If the molecule has less than 3 elements, always write the "C" for carbon
+      // Likewise, if the carbon has a charge or an isotope, always draw it
+
+
+      if (charge || isotope || graph.vertices.length < 3) {
+        isCarbon = false;
+      }
+
+      if (opts.atomVisualization === 'allballs') {
+        svgWrapper.drawBall(vertex.position.x, vertex.position.y, element);
+      } else if (atom.isDrawn && (!isCarbon || atom.drawExplicit || isTerminal || atom.hasAttachedPseudoElements) || graph.vertices.length === 1) {
+        if (opts.atomVisualization === 'default') {
+          let attachedPseudoElements = atom.getAttachedPseudoElements(); // Draw to the right if the whole molecule is concatenated into one string
+
+          if (atom.hasAttachedPseudoElements && graph.vertices.length === Object.keys(attachedPseudoElements).length + 1) {
+            dir = 'right';
+          }
+
+          svgWrapper.drawText(vertex.position.x, vertex.position.y, element, hydrogens, dir, isTerminal, charge, isotope, graph.vertices.length, attachedPseudoElements);
+        } else if (opts.atomVisualization === 'balls') {
+          svgWrapper.drawBall(vertex.position.x, vertex.position.y, element);
+        }
+      } else if (vertex.getNeighbourCount() === 2 && vertex.forcePositioned == true) {
+        // If there is a carbon which bonds are in a straight line, draw a dot
+        let a = graph.vertices[vertex.neighbours[0]].position;
+        let b = graph.vertices[vertex.neighbours[1]].position;
+        let angle = Vector2.threePointangle(vertex.position, a, b);
+
+        if (Math.abs(Math.PI - angle) < 0.1) {
+          svgWrapper.drawPoint(vertex.position.x, vertex.position.y, element);
+        }
+      }
+
+      if (debug) {
+        let value = 'v: ' + vertex.id + ' ' + ArrayHelper.print(atom.ringbonds);
+        svgWrapper.drawDebugText(vertex.position.x, vertex.position.y, value);
+      } // else {
+      //   svgWrapper.drawDebugText(vertex.position.x, vertex.position.y, vertex.value.chirality);
+      // }
+
+    } // Draw the ring centers for debug purposes
+
+
+    if (opts.debug) {
+      for (var j = 0; j < rings.length; j++) {
+        let center = rings[j].center;
+        svgWrapper.drawDebugPoint(center.x, center.y, 'r: ' + rings[j].id);
+      }
+    }
+  }
+
+}
+
+module.exports = SvgVertexDrawer;
+
+},{"../../graph/Atom":25,"../../graph/Vector2":33,"../../utils/ArrayHelper":49}],21:[function(require,module,exports){
+"use strict";
+
+const Vector2 = require("../../graph/Vector2");
+
+const GaussDrawer = require("../GaussDrawer");
+
+class SvgWeightsDrawer {
+  constructor(drawer) {
+    this.drawer = drawer;
+  }
+  /**
+   * Draw the weights on a background image.
+   * @param {Number[]} weights The weights assigned to each atom.
+   */
+
+
+  drawWeights(weights, weightsNormalized) {
+    if (!weights) {
+      return;
+    }
+
+    if (weights.every(w => w === 0)) {
+      return;
+    }
+
+    if (weights.length !== this.drawer.preprocessor.graph.atomIdxToVertexId.length) {
+      throw new Error('The number of weights supplied must be equal to the number of (heavy) atoms in the molecule.');
+    }
+
+    let points = [];
+
+    for (const atomIdx of this.drawer.preprocessor.graph.atomIdxToVertexId) {
+      let vertex = this.drawer.preprocessor.graph.vertices[atomIdx];
+      points.push(new Vector2(vertex.position.x - this.drawer.svgWrapper.minX, vertex.position.y - this.drawer.svgWrapper.minY));
+    }
+
+    let gd = new GaussDrawer(points, weights, this.drawer.svgWrapper.drawingWidth, this.drawer.svgWrapper.drawingHeight, this.drawer.opts.weights.sigma, this.drawer.opts.weights.interval, this.drawer.opts.weights.colormap, this.drawer.opts.weights.opacity, weightsNormalized);
+    gd.draw();
+    this.drawer.svgWrapper.addLayer(gd.getSVG());
+  }
+
+}
+
+module.exports = SvgWeightsDrawer;
+
+},{"../../graph/Vector2":33,"../GaussDrawer":13}],22:[function(require,module,exports){
 "use strict";
 
 class SvgConversionHelper {
@@ -8113,7 +8191,7 @@ class SvgConversionHelper {
 
 module.exports = SvgConversionHelper;
 
-},{}],20:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 "use strict";
 
 class SvgTextHelper {
@@ -8222,7 +8300,7 @@ class SvgTextHelper {
 
 module.exports = SvgTextHelper;
 
-},{}],21:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 "use strict";
 
 class SvgUnicodeHelper {
@@ -8291,7 +8369,7 @@ class SvgUnicodeHelper {
 
 module.exports = SvgUnicodeHelper;
 
-},{}],22:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
@@ -8852,7 +8930,7 @@ class Atom {
 
 module.exports = Atom;
 
-},{"../utils/ArrayHelper":46}],23:[function(require,module,exports){
+},{"../utils/ArrayHelper":49}],26:[function(require,module,exports){
 "use strict";
 /**
  * A class representing an edge.
@@ -8918,7 +8996,7 @@ class Edge {
 
 module.exports = Edge;
 
-},{}],24:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 "use strict";
 
 const Vertex = require("./Vertex");
@@ -9343,7 +9421,7 @@ class Graph {
 
 module.exports = Graph;
 
-},{"../algorithms/KamadaKawaiLayout":4,"./Atom":22,"./Edge":23,"./GraphAlgorithms":25,"./GraphMatrixOperations":26,"./Vertex":31}],25:[function(require,module,exports){
+},{"../algorithms/KamadaKawaiLayout":4,"./Atom":25,"./Edge":26,"./GraphAlgorithms":28,"./GraphMatrixOperations":29,"./Vertex":34}],28:[function(require,module,exports){
 "use strict";
 /**
  * A class providing graph algorithms including bridge detection,
@@ -9599,7 +9677,7 @@ class GraphAlgorithms {
 
 module.exports = GraphAlgorithms;
 
-},{}],26:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 "use strict";
 /**
  * A class providing matrix and list operations for molecular graphs.
@@ -9828,7 +9906,7 @@ class GraphMatrixOperations {
 
 module.exports = GraphMatrixOperations;
 
-},{}],27:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -10136,7 +10214,7 @@ class Line {
 
 module.exports = Line;
 
-},{"./Vector2":30}],28:[function(require,module,exports){
+},{"./Vector2":33}],31:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
@@ -10355,7 +10433,7 @@ class Ring {
 
 module.exports = Ring;
 
-},{"../utils/ArrayHelper":46,"./RingConnection":29,"./Vector2":30}],29:[function(require,module,exports){
+},{"../utils/ArrayHelper":49,"./RingConnection":32,"./Vector2":33}],32:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a ring connection.
@@ -10523,7 +10601,7 @@ class RingConnection {
 
 module.exports = RingConnection;
 
-},{}],30:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a 2D vector.
@@ -11143,7 +11221,7 @@ class Vector2 {
 
 module.exports = Vector2;
 
-},{}],31:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -11520,7 +11598,7 @@ class Vertex {
 
 module.exports = Vertex;
 
-},{"../utils/ArrayHelper":46,"../utils/MathHelper":48,"./Vector2":30}],32:[function(require,module,exports){
+},{"../utils/ArrayHelper":49,"../utils/MathHelper":51,"./Vector2":33}],35:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
@@ -11709,7 +11787,7 @@ class BridgedRingHandler {
 
 module.exports = BridgedRingHandler;
 
-},{"../graph/Ring":28,"../graph/RingConnection":29,"../utils/ArrayHelper":46}],33:[function(require,module,exports){
+},{"../graph/Ring":31,"../graph/RingConnection":32,"../utils/ArrayHelper":49}],36:[function(require,module,exports){
 "use strict"; // WHEN REPLACING, CHECK FOR:
 // KEEP THIS WHEN REGENERATING THE PARSER !!
 
@@ -13607,7 +13685,7 @@ module.exports = function () {
   };
 }();
 
-},{}],34:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 "use strict";
 
 const Reaction = require("../reactions/Reaction");
@@ -13628,7 +13706,7 @@ class ReactionParser {
 
 module.exports = ReactionParser;
 
-},{"../reactions/Reaction":44}],35:[function(require,module,exports){
+},{"../reactions/Reaction":47}],38:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -13765,7 +13843,7 @@ class GraphProcessingManager {
 
 module.exports = GraphProcessingManager;
 
-},{"../utils/MathHelper":48}],36:[function(require,module,exports){
+},{"../utils/MathHelper":51}],39:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -13820,7 +13898,7 @@ class InitializationManager {
 
 module.exports = InitializationManager;
 
-},{"../graph/Graph":24}],37:[function(require,module,exports){
+},{"../graph/Graph":27}],40:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -13912,7 +13990,7 @@ class MolecularInfoManager {
 
 module.exports = MolecularInfoManager;
 
-},{"../graph/Atom":22,"../graph/Graph":24}],38:[function(require,module,exports){
+},{"../graph/Atom":25,"../graph/Graph":27}],41:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -14700,7 +14778,7 @@ class MolecularPreprocessor {
 
 module.exports = MolecularPreprocessor;
 
-},{"../config/OptionsManager":8,"../drawing/DrawingManager":12,"./GraphProcessingManager":35,"./InitializationManager":36,"./MolecularInfoManager":37,"./OverlapResolutionManager":39,"./PositioningManager":40,"./PseudoElementManager":41,"./RingManager":42,"./StereochemistryManager":43}],39:[function(require,module,exports){
+},{"../config/OptionsManager":8,"../drawing/DrawingManager":12,"./GraphProcessingManager":38,"./InitializationManager":39,"./MolecularInfoManager":40,"./OverlapResolutionManager":42,"./PositioningManager":43,"./PseudoElementManager":44,"./RingManager":45,"./StereochemistryManager":46}],42:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../graph/Vector2");
@@ -15002,7 +15080,7 @@ class OverlapResolutionManager {
 
 module.exports = OverlapResolutionManager;
 
-},{"../graph/Vector2":30,"../utils/ArrayHelper":46,"../utils/MathHelper":48}],40:[function(require,module,exports){
+},{"../graph/Vector2":33,"../utils/ArrayHelper":49,"../utils/MathHelper":51}],43:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../graph/Vector2");
@@ -15467,7 +15545,7 @@ class PositioningManager {
 
 module.exports = PositioningManager;
 
-},{"../graph/Vector2":30,"../utils/ArrayHelper":46,"../utils/MathHelper":48}],41:[function(require,module,exports){
+},{"../graph/Vector2":33,"../utils/ArrayHelper":49,"../utils/MathHelper":51}],44:[function(require,module,exports){
 "use strict";
 
 const Atom = require("../graph/Atom");
@@ -15596,7 +15674,7 @@ class PseudoElementManager {
 
 module.exports = PseudoElementManager;
 
-},{"../graph/Atom":22}],42:[function(require,module,exports){
+},{"../graph/Atom":25}],45:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -16217,7 +16295,7 @@ class RingManager {
 
 module.exports = RingManager;
 
-},{"../algorithms/SSSR":5,"../graph/Edge":23,"../graph/Ring":28,"../graph/RingConnection":29,"../graph/Vector2":30,"../handlers/BridgedRingHandler":32,"../utils/ArrayHelper":46,"../utils/MathHelper":48}],43:[function(require,module,exports){
+},{"../algorithms/SSSR":5,"../graph/Edge":26,"../graph/Ring":31,"../graph/RingConnection":32,"../graph/Vector2":33,"../handlers/BridgedRingHandler":35,"../utils/ArrayHelper":49,"../utils/MathHelper":51}],46:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -16441,7 +16519,7 @@ class StereochemistryManager {
 
 module.exports = StereochemistryManager;
 
-},{"../utils/MathHelper":48}],44:[function(require,module,exports){
+},{"../utils/MathHelper":51}],47:[function(require,module,exports){
 "use strict";
 
 const Parser = require("../parsing/Parser");
@@ -16497,7 +16575,7 @@ class Reaction {
 
 module.exports = Reaction;
 
-},{"../parsing/Parser":33}],45:[function(require,module,exports){
+},{"../parsing/Parser":36}],48:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("../drawing/SvgDrawer");
@@ -16871,7 +16949,7 @@ class ReactionDrawer {
 
 module.exports = ReactionDrawer;
 
-},{"../config/Options":7,"../config/ThemeManager":9,"../drawing/SvgDrawer":14,"../drawing/helpers/SvgTextHelper":20,"../drawing/helpers/SvgUnicodeHelper":21,"../utils/FormulaToCommonName":47}],46:[function(require,module,exports){
+},{"../config/Options":7,"../config/ThemeManager":9,"../drawing/SvgDrawer":14,"../drawing/helpers/SvgTextHelper":23,"../drawing/helpers/SvgUnicodeHelper":24,"../utils/FormulaToCommonName":50}],49:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for array-related tasks.
@@ -17272,7 +17350,7 @@ class ArrayHelper {
 
 module.exports = ArrayHelper;
 
-},{}],47:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 "use strict";
 
 const formulaToCommonName = {
@@ -17310,7 +17388,7 @@ const formulaToCommonName = {
 };
 module.exports = formulaToCommonName;
 
-},{}],48:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for math-related tasks.
@@ -17483,7 +17561,7 @@ class MathHelper {
 
 module.exports = MathHelper;
 
-},{}],49:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 "use strict"; // Adapted from https://codepen.io/shshaw/pen/XbxvNj by
 
 function convertImage(img) {
