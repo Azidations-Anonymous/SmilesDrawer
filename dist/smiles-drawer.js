@@ -155,7 +155,7 @@ if (!Array.prototype.fill) {
 
 module.exports = SmilesDrawer;
 
-},{"./src/Drawer":6,"./src/GaussDrawer":10,"./src/Parser":15,"./src/ReactionDrawer":18,"./src/ReactionParser":19,"./src/SmilesDrawer":23,"./src/SvgDrawer":24}],2:[function(require,module,exports){
+},{"./src/Drawer":6,"./src/GaussDrawer":10,"./src/Parser":15,"./src/ReactionDrawer":18,"./src/ReactionParser":19,"./src/SmilesDrawer":24,"./src/SvgDrawer":25}],2:[function(require,module,exports){
 /**
  * chroma.js - JavaScript library for color conversions
  *
@@ -5526,7 +5526,7 @@ class CanvasWrapper {
 
 module.exports = CanvasWrapper;
 
-},{"./MathHelper":13,"./Vector2":27}],6:[function(require,module,exports){
+},{"./MathHelper":13,"./Vector2":28}],6:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -5605,8 +5605,10 @@ class Drawer {
 
 module.exports = Drawer;
 
-},{"./SvgDrawer":24}],7:[function(require,module,exports){
+},{"./SvgDrawer":25}],7:[function(require,module,exports){
 "use strict";
+
+const RingManager = require("./RingManager");
 
 const MathHelper = require("./MathHelper");
 
@@ -5616,19 +5618,11 @@ const Vector2 = require("./Vector2");
 
 const Line = require("./Line");
 
-const Edge = require("./Edge");
-
 const Atom = require("./Atom");
-
-const Ring = require("./Ring");
-
-const RingConnection = require("./RingConnection");
 
 const CanvasWrapper = require("./CanvasWrapper");
 
 const Graph = require("./Graph");
-
-const SSSR = require("./SSSR");
 
 const ThemeManager = require("./ThemeManager");
 
@@ -5654,6 +5648,7 @@ class DrawerBase {
    * @param {Object} options An object containing custom values for different options. It is merged with the default options.
    */
   constructor(options) {
+    this.ringManager = new RingManager(this);
     this.graph = null;
     this.doubleBondConfigCount = 0;
     this.doubleBondConfig = null;
@@ -5929,10 +5924,7 @@ class DrawerBase {
 
 
   edgeRingCount(edgeId) {
-    let edge = this.graph.edges[edgeId];
-    let a = this.graph.vertices[edge.sourceId];
-    let b = this.graph.vertices[edge.targetId];
-    return Math.min(a.value.rings.length, b.value.rings.length);
+    return this.ringManager.edgeRingCount(edgeId);
   }
   /**
    * Returns an array containing the bridged rings associated with this  molecule.
@@ -5942,15 +5934,7 @@ class DrawerBase {
 
 
   getBridgedRings() {
-    let bridgedRings = Array();
-
-    for (var i = 0; i < this.rings.length; i++) {
-      if (this.rings[i].isBridged) {
-        bridgedRings.push(this.rings[i]);
-      }
-    }
-
-    return bridgedRings;
+    return this.ringManager.getBridgedRings();
   }
   /**
    * Returns an array containing all fused rings associated with this molecule.
@@ -5960,15 +5944,7 @@ class DrawerBase {
 
 
   getFusedRings() {
-    let fusedRings = Array();
-
-    for (var i = 0; i < this.rings.length; i++) {
-      if (this.rings[i].isFused) {
-        fusedRings.push(this.rings[i]);
-      }
-    }
-
-    return fusedRings;
+    return this.ringManager.getFusedRings();
   }
   /**
    * Returns an array containing all spiros associated with this molecule.
@@ -5978,15 +5954,7 @@ class DrawerBase {
 
 
   getSpiros() {
-    let spiros = Array();
-
-    for (var i = 0; i < this.rings.length; i++) {
-      if (this.rings[i].isSpiro) {
-        spiros.push(this.rings[i]);
-      }
-    }
-
-    return spiros;
+    return this.ringManager.getSpiros();
   }
   /**
    * Returns a string containing a semicolon and new-line separated list of ring properties: Id; Members Count; Neighbours Count; IsSpiro; IsFused; IsBridged; Ring Count (subrings of bridged rings)
@@ -5996,21 +5964,7 @@ class DrawerBase {
 
 
   printRingInfo() {
-    let result = '';
-
-    for (var i = 0; i < this.rings.length; i++) {
-      const ring = this.rings[i];
-      result += ring.id + ';';
-      result += ring.members.length + ';';
-      result += ring.neighbours.length + ';';
-      result += ring.isSpiro ? 'true;' : 'false;';
-      result += ring.isFused ? 'true;' : 'false;';
-      result += ring.isBridged ? 'true;' : 'false;';
-      result += ring.rings.length + ';';
-      result += '\n';
-    }
-
-    return result;
+    return this.ringManager.printRingInfo();
   }
   /**
    * Rotates the drawing to make the widest dimension horizontal.
@@ -6092,7 +6046,7 @@ class DrawerBase {
 
 
   getRingCount() {
-    return this.rings.length;
+    return this.ringManager.getRingCount();
   }
   /**
    * Checks whether or not the current molecule  a bridged ring.
@@ -6102,7 +6056,7 @@ class DrawerBase {
 
 
   hasBridgedRing() {
-    return this.bridgedRing;
+    return this.ringManager.hasBridgedRing();
   }
   /**
    * Returns the number of heavy atoms (non-hydrogen) in the current molecule.
@@ -6202,28 +6156,7 @@ class DrawerBase {
 
 
   getRingbondType(vertexA, vertexB) {
-    // Checks whether the two vertices are the ones connecting the ring
-    // and what the bond type should be.
-    if (vertexA.value.getRingbondCount() < 1 || vertexB.value.getRingbondCount() < 1) {
-      return null;
-    }
-
-    for (var i = 0; i < vertexA.value.ringbonds.length; i++) {
-      for (var j = 0; j < vertexB.value.ringbonds.length; j++) {
-        // if(i != j) continue;
-        if (vertexA.value.ringbonds[i].id === vertexB.value.ringbonds[j].id) {
-          // If the bonds are equal, it doesn't matter which bond is returned.
-          // if they are not equal, return the one that is not the default ("-")
-          if (vertexA.value.ringbonds[i].bondType === '-') {
-            return vertexB.value.ringbonds[j].bond;
-          } else {
-            return vertexA.value.ringbonds[i].bond;
-          }
-        }
-      }
-    }
-
-    return null;
+    return this.ringManager.getRingbondType(vertexA, vertexB);
   }
 
   initDraw(data, themeName, infoOnly, highlight_atoms) {
@@ -6348,118 +6281,7 @@ class DrawerBase {
 
 
   initRings() {
-    let openBonds = new Map(); // Close the open ring bonds (spanning tree -> graph)
-
-    for (var i = this.graph.vertices.length - 1; i >= 0; i--) {
-      let vertex = this.graph.vertices[i];
-
-      if (vertex.value.ringbonds.length === 0) {
-        continue;
-      }
-
-      for (var j = 0; j < vertex.value.ringbonds.length; j++) {
-        let ringbondId = vertex.value.ringbonds[j].id;
-        let ringbondBond = vertex.value.ringbonds[j].bond; // If the other ringbond id has not been discovered,
-        // add it to the open bonds map and continue.
-        // if the other ringbond id has already been discovered,
-        // create a bond between the two atoms.
-
-        if (!openBonds.has(ringbondId)) {
-          openBonds.set(ringbondId, [vertex.id, ringbondBond]);
-        } else {
-          let sourceVertexId = vertex.id;
-          let targetVertexId = openBonds.get(ringbondId)[0];
-          let targetRingbondBond = openBonds.get(ringbondId)[1];
-          let edge = new Edge(sourceVertexId, targetVertexId, 1);
-          edge.setBondType(targetRingbondBond || ringbondBond || '-');
-          let edgeId = this.graph.addEdge(edge);
-          let targetVertex = this.graph.vertices[targetVertexId];
-          vertex.addRingbondChild(targetVertexId, j);
-          vertex.value.addNeighbouringElement(targetVertex.value.element);
-          targetVertex.addRingbondChild(sourceVertexId, j);
-          targetVertex.value.addNeighbouringElement(vertex.value.element);
-          vertex.edges.push(edgeId);
-          targetVertex.edges.push(edgeId);
-          openBonds.delete(ringbondId);
-        }
-      }
-    } // Get the rings in the graph (the SSSR)
-
-
-    let rings = SSSR.getRings(this.graph, this.opts.experimentalSSSR);
-
-    if (rings === null) {
-      return;
-    }
-
-    for (var i = 0; i < rings.length; i++) {
-      let ringVertices = [...rings[i]];
-      let ringId = this.addRing(new Ring(ringVertices)); // Add the ring to the atoms
-
-      for (var j = 0; j < ringVertices.length; j++) {
-        this.graph.vertices[ringVertices[j]].value.rings.push(ringId);
-      }
-    } // Find connection between rings
-    // Check for common vertices and create ring connections. This is a bit
-    // ugly, but the ringcount is always fairly low (< 100)
-
-
-    for (var i = 0; i < this.rings.length - 1; i++) {
-      for (var j = i + 1; j < this.rings.length; j++) {
-        let a = this.rings[i];
-        let b = this.rings[j];
-        let ringConnection = new RingConnection(a, b); // If there are no vertices in the ring connection, then there
-        // is no ring connection
-
-        if (ringConnection.vertices.size > 0) {
-          this.addRingConnection(ringConnection);
-        }
-      }
-    } // Add neighbours to the rings
-
-
-    for (var i = 0; i < this.rings.length; i++) {
-      let ring = this.rings[i];
-      ring.neighbours = RingConnection.getNeighbours(this.ringConnections, ring.id);
-    } // Anchor the ring to one of it's members, so that the ring center will always
-    // be tied to a single vertex when doing repositionings
-
-
-    for (var i = 0; i < this.rings.length; i++) {
-      let ring = this.rings[i];
-      this.graph.vertices[ring.members[0]].value.addAnchoredRing(ring.id);
-    } // Backup the ring information to restore after placing the bridged ring.
-    // This is needed in order to identify aromatic rings and stuff like this in
-    // rings that are member of the superring.
-
-
-    this.backupRingInformation(); // Replace rings contained by a larger bridged ring with a bridged ring
-
-    while (this.rings.length > 0) {
-      let id = -1;
-
-      for (var i = 0; i < this.rings.length; i++) {
-        let ring = this.rings[i];
-
-        if (this.isPartOfBridgedRing(ring.id) && !ring.isBridged) {
-          id = ring.id;
-        }
-      }
-
-      if (id === -1) {
-        break;
-      }
-
-      let ring = this.getRing(id);
-      let involvedRings = this.getBridgedRingRings(ring.id);
-      this.bridgedRing = true;
-      this.createBridgedRing(involvedRings, ring.members[0]);
-      this.bridgedRing = false; // Remove the rings
-
-      for (var i = 0; i < involvedRings.length; i++) {
-        this.removeRing(involvedRings[i]);
-      }
-    }
+    this.ringManager.initRings();
   }
 
   initHydrogens() {
@@ -6492,24 +6314,7 @@ class DrawerBase {
 
 
   getBridgedRingRings(ringId) {
-    let involvedRings = Array();
-    let that = this;
-
-    let recurse = function (r) {
-      let ring = that.getRing(r);
-      involvedRings.push(r);
-
-      for (var i = 0; i < ring.neighbours.length; i++) {
-        let n = ring.neighbours[i];
-
-        if (involvedRings.indexOf(n) === -1 && n !== r && RingConnection.isBridge(that.ringConnections, that.graph.vertices, r, n)) {
-          recurse(n);
-        }
-      }
-    };
-
-    recurse(ringId);
-    return ArrayHelper.unique(involvedRings);
+    return this.ringManager.getBridgedRingRings(ringId);
   }
   /**
    * Checks whether or not a ring is part of a bridged ring.
@@ -6520,13 +6325,7 @@ class DrawerBase {
 
 
   isPartOfBridgedRing(ringId) {
-    for (var i = 0; i < this.ringConnections.length; i++) {
-      if (this.ringConnections[i].containsRing(ringId) && this.ringConnections[i].isBridge(this.graph.vertices)) {
-        return true;
-      }
-    }
-
-    return false;
+    return this.ringManager.isPartOfBridgedRing(ringId);
   }
   /**
    * Creates a bridged ring.
@@ -6538,115 +6337,7 @@ class DrawerBase {
 
 
   createBridgedRing(ringIds, sourceVertexId) {
-    let ringMembers = new Set();
-    let vertices = new Set();
-    let neighbours = new Set();
-
-    for (var i = 0; i < ringIds.length; i++) {
-      let ring = this.getRing(ringIds[i]);
-      ring.isPartOfBridged = true;
-
-      for (var j = 0; j < ring.members.length; j++) {
-        vertices.add(ring.members[j]);
-      }
-
-      for (var j = 0; j < ring.neighbours.length; j++) {
-        let id = ring.neighbours[j];
-
-        if (ringIds.indexOf(id) === -1) {
-          neighbours.add(ring.neighbours[j]);
-        }
-      }
-    } // A vertex is part of the bridged ring if it only belongs to
-    // one of the rings (or to another ring
-    // which is not part of the bridged ring).
-
-
-    let leftovers = new Set();
-
-    for (let id of vertices) {
-      let vertex = this.graph.vertices[id];
-      let intersection = ArrayHelper.intersection(ringIds, vertex.value.rings);
-
-      if (vertex.value.rings.length === 1 || intersection.length === 1) {
-        ringMembers.add(vertex.id);
-      } else {
-        leftovers.add(vertex.id);
-      }
-    } // Vertices can also be part of multiple rings and lay on the bridged ring,
-    // however, they have to have at least two neighbours that are not part of
-    // two rings
-
-
-    let tmp = Array();
-    let insideRing = Array();
-
-    for (let id of leftovers) {
-      let vertex = this.graph.vertices[id];
-      let onRing = false;
-
-      for (let j = 0; j < vertex.edges.length; j++) {
-        if (this.edgeRingCount(vertex.edges[j]) === 1) {
-          onRing = true;
-        }
-      }
-
-      if (onRing) {
-        vertex.value.isBridgeNode = true;
-        ringMembers.add(vertex.id);
-      } else {
-        vertex.value.isBridge = true;
-        ringMembers.add(vertex.id);
-      }
-    } // Create the ring
-
-
-    let ring = new Ring([...ringMembers]);
-    this.addRing(ring);
-    ring.isBridged = true;
-    ring.neighbours = [...neighbours];
-
-    for (var i = 0; i < ringIds.length; i++) {
-      ring.rings.push(this.getRing(ringIds[i]).clone());
-    }
-
-    for (var i = 0; i < ring.members.length; i++) {
-      this.graph.vertices[ring.members[i]].value.bridgedRing = ring.id;
-    } // Atoms inside the ring are no longer part of a ring but are now
-    // associated with the bridged ring
-
-
-    for (var i = 0; i < insideRing.length; i++) {
-      let vertex = this.graph.vertices[insideRing[i]];
-      vertex.value.rings = Array();
-    } // Remove former rings from members of the bridged ring and add the bridged ring
-
-
-    for (let id of ringMembers) {
-      let vertex = this.graph.vertices[id];
-      vertex.value.rings = ArrayHelper.removeAll(vertex.value.rings, ringIds);
-      vertex.value.rings.push(ring.id);
-    } // Remove all the ring connections no longer used
-
-
-    for (var i = 0; i < ringIds.length; i++) {
-      for (var j = i + 1; j < ringIds.length; j++) {
-        this.removeRingConnectionsBetween(ringIds[i], ringIds[j]);
-      }
-    } // Update the ring connections and add this ring to the neighbours neighbours
-
-
-    for (let id of neighbours) {
-      let connections = this.getRingConnections(id, ringIds);
-
-      for (var j = 0; j < connections.length; j++) {
-        this.getRingConnection(connections[j]).updateOther(ring.id, id);
-      }
-
-      this.getRing(id).neighbours.push(ring.id);
-    }
-
-    return ring;
+    return this.ringManager.createBridgedRing(ringIds, sourceVertexId);
   }
   /**
    * Checks whether or not two vertices are in the same ring.
@@ -6658,17 +6349,7 @@ class DrawerBase {
 
 
   areVerticesInSameRing(vertexA, vertexB) {
-    // This is a little bit lighter (without the array and push) than
-    // getCommonRings().length > 0
-    for (var i = 0; i < vertexA.value.rings.length; i++) {
-      for (var j = 0; j < vertexB.value.rings.length; j++) {
-        if (vertexA.value.rings[i] === vertexB.value.rings[j]) {
-          return true;
-        }
-      }
-    }
-
-    return false;
+    return this.ringManager.areVerticesInSameRing(vertexA, vertexB);
   }
   /**
    * Returns an array of ring ids shared by both vertices.
@@ -6680,17 +6361,7 @@ class DrawerBase {
 
 
   getCommonRings(vertexA, vertexB) {
-    let commonRings = Array();
-
-    for (var i = 0; i < vertexA.value.rings.length; i++) {
-      for (var j = 0; j < vertexB.value.rings.length; j++) {
-        if (vertexA.value.rings[i] == vertexB.value.rings[j]) {
-          commonRings.push(vertexA.value.rings[i]);
-        }
-      }
-    }
-
-    return commonRings;
+    return this.ringManager.getCommonRings(vertexA, vertexB);
   }
   /**
    * Returns the aromatic or largest ring shared by the two vertices.
@@ -6702,23 +6373,7 @@ class DrawerBase {
 
 
   getLargestOrAromaticCommonRing(vertexA, vertexB) {
-    let commonRings = this.getCommonRings(vertexA, vertexB);
-    let maxSize = 0;
-    let largestCommonRing = null;
-
-    for (var i = 0; i < commonRings.length; i++) {
-      let ring = this.getRing(commonRings[i]);
-      let size = ring.getSize();
-
-      if (ring.isBenzeneLike(this.graph.vertices)) {
-        return ring;
-      } else if (size > maxSize) {
-        maxSize = size;
-        largestCommonRing = ring;
-      }
-    }
-
-    return largestCommonRing;
+    return this.ringManager.getLargestOrAromaticCommonRing(vertexA, vertexB);
   }
   /**
    * Returns an array of vertices positioned at a specified location.
@@ -6787,9 +6442,7 @@ class DrawerBase {
 
 
   addRing(ring) {
-    ring.id = this.ringIdCounter++;
-    this.rings.push(ring);
-    return ring.id;
+    return this.ringManager.addRing(ring);
   }
   /**
    * Removes a ring from the array of rings associated with the current molecule.
@@ -6799,20 +6452,7 @@ class DrawerBase {
 
 
   removeRing(ringId) {
-    this.rings = this.rings.filter(function (item) {
-      return item.id !== ringId;
-    }); // Also remove ring connections involving this ring
-
-    this.ringConnections = this.ringConnections.filter(function (item) {
-      return item.firstRingId !== ringId && item.secondRingId !== ringId;
-    }); // Remove the ring as neighbour of other rings
-
-    for (var i = 0; i < this.rings.length; i++) {
-      let r = this.rings[i];
-      r.neighbours = r.neighbours.filter(function (item) {
-        return item !== ringId;
-      });
-    }
+    this.ringManager.removeRing(ringId);
   }
   /**
    * Gets a ring object from the array of rings associated with the current molecule by its id. The ring id is not equal to the index, since rings can be added and removed when processing bridged rings.
@@ -6823,11 +6463,7 @@ class DrawerBase {
 
 
   getRing(ringId) {
-    for (var i = 0; i < this.rings.length; i++) {
-      if (this.rings[i].id == ringId) {
-        return this.rings[i];
-      }
-    }
+    return this.ringManager.getRing(ringId);
   }
   /**
    * Add a ring connection to this representation of a molecule.
@@ -6838,9 +6474,7 @@ class DrawerBase {
 
 
   addRingConnection(ringConnection) {
-    ringConnection.id = this.ringConnectionIdCounter++;
-    this.ringConnections.push(ringConnection);
-    return ringConnection.id;
+    return this.ringManager.addRingConnection(ringConnection);
   }
   /**
    * Removes a ring connection from the array of rings connections associated with the current molecule.
@@ -6850,9 +6484,7 @@ class DrawerBase {
 
 
   removeRingConnection(ringConnectionId) {
-    this.ringConnections = this.ringConnections.filter(function (item) {
-      return item.id !== ringConnectionId;
-    });
+    this.ringManager.removeRingConnection(ringConnectionId);
   }
   /**
    * Removes all ring connections between two vertices.
@@ -6863,19 +6495,7 @@ class DrawerBase {
 
 
   removeRingConnectionsBetween(vertexIdA, vertexIdB) {
-    let toRemove = Array();
-
-    for (var i = 0; i < this.ringConnections.length; i++) {
-      let ringConnection = this.ringConnections[i];
-
-      if (ringConnection.firstRingId === vertexIdA && ringConnection.secondRingId === vertexIdB || ringConnection.firstRingId === vertexIdB && ringConnection.secondRingId === vertexIdA) {
-        toRemove.push(ringConnection.id);
-      }
-    }
-
-    for (var i = 0; i < toRemove.length; i++) {
-      this.removeRingConnection(toRemove[i]);
-    }
+    this.ringManager.removeRingConnectionsBetween(vertexIdA, vertexIdB);
   }
   /**
    * Get a ring connection with a given id.
@@ -6886,11 +6506,7 @@ class DrawerBase {
 
 
   getRingConnection(id) {
-    for (var i = 0; i < this.ringConnections.length; i++) {
-      if (this.ringConnections[i].id == id) {
-        return this.ringConnections[i];
-      }
-    }
+    return this.ringManager.getRingConnection(id);
   }
   /**
    * Get the ring connections between a ring and a set of rings.
@@ -6902,21 +6518,7 @@ class DrawerBase {
 
 
   getRingConnections(ringId, ringIds) {
-    let ringConnections = Array();
-
-    for (var i = 0; i < this.ringConnections.length; i++) {
-      let rc = this.ringConnections[i];
-
-      for (var j = 0; j < ringIds.length; j++) {
-        let id = ringIds[j];
-
-        if (rc.firstRingId === ringId && rc.secondRingId === id || rc.firstRingId === id && rc.secondRingId === ringId) {
-          ringConnections.push(rc.id);
-        }
-      }
-    }
-
-    return ringConnections;
+    return this.ringManager.getRingConnections(ringId, ringIds);
   }
   /**
    * Returns the overlap score of the current molecule based on its positioned vertices. The higher the score, the more overlaps occur in the structure drawing.
@@ -7043,14 +6645,7 @@ class DrawerBase {
 
 
   setRingCenter(ring) {
-    let ringSize = ring.getSize();
-    let total = new Vector2(0, 0);
-
-    for (var i = 0; i < ringSize; i++) {
-      total.add(this.graph.vertices[ring.members[i]].position);
-    }
-
-    ring.center = total.divide(ringSize);
+    this.ringManager.setRingCenter(ring);
   }
   /**
    * Gets the center of a ring contained within a bridged ring and containing a given vertex.
@@ -7062,22 +6657,7 @@ class DrawerBase {
 
 
   getSubringCenter(ring, vertex) {
-    let rings = vertex.value.originalRings;
-    let center = ring.center;
-    let smallest = Number.MAX_VALUE; // Always get the smallest ring.
-
-    for (var i = 0; i < rings.length; i++) {
-      for (var j = 0; j < ring.rings.length; j++) {
-        if (rings[i] === ring.rings[j].id) {
-          if (ring.rings[j].getSize() < smallest) {
-            center = ring.rings[j].center;
-            smallest = ring.rings[j].getSize();
-          }
-        }
-      }
-    }
-
-    return center;
+    return this.ringManager.getSubringCenter(ring, vertex);
   }
   /**
    * Draw the actual edges as bonds to the canvas.
@@ -7355,20 +6935,7 @@ class DrawerBase {
 
 
   backupRingInformation() {
-    this.originalRings = Array();
-    this.originalRingConnections = Array();
-
-    for (var i = 0; i < this.rings.length; i++) {
-      this.originalRings.push(this.rings[i]);
-    }
-
-    for (var i = 0; i < this.ringConnections.length; i++) {
-      this.originalRingConnections.push(this.ringConnections[i]);
-    }
-
-    for (var i = 0; i < this.graph.vertices.length; i++) {
-      this.graph.vertices[i].value.backupRings();
-    }
+    this.ringManager.backupRingInformation();
   }
   /**
    * Restores the most recently backed up information associated with rings.
@@ -7376,31 +6943,7 @@ class DrawerBase {
 
 
   restoreRingInformation() {
-    // Get the subring centers from the bridged rings
-    let bridgedRings = this.getBridgedRings();
-    this.rings = Array();
-    this.ringConnections = Array();
-
-    for (var i = 0; i < bridgedRings.length; i++) {
-      let bridgedRing = bridgedRings[i];
-
-      for (var j = 0; j < bridgedRing.rings.length; j++) {
-        let ring = bridgedRing.rings[j];
-        this.originalRings[ring.id].center = ring.center;
-      }
-    }
-
-    for (var i = 0; i < this.originalRings.length; i++) {
-      this.rings.push(this.originalRings[i]);
-    }
-
-    for (var i = 0; i < this.originalRingConnections.length; i++) {
-      this.ringConnections.push(this.originalRingConnections[i]);
-    }
-
-    for (var i = 0; i < this.graph.vertices.length; i++) {
-      this.graph.vertices[i].value.restoreRings();
-    }
+    this.ringManager.restoreRingInformation();
   } // TODO: This needs some cleaning up
 
   /**
@@ -7415,144 +6958,7 @@ class DrawerBase {
 
 
   createRing(ring, center = null, startVertex = null, previousVertex = null) {
-    if (ring.positioned) {
-      return;
-    }
-
-    center = center ? center : new Vector2(0, 0);
-    let orderedNeighbours = ring.getOrderedNeighbours(this.ringConnections);
-    let startingAngle = startVertex ? Vector2.subtract(startVertex.position, center).angle() : 0;
-    let radius = MathHelper.polyCircumradius(this.opts.bondLength, ring.getSize());
-    let angle = MathHelper.centralAngle(ring.getSize());
-    ring.centralAngle = angle;
-    let a = startingAngle;
-    let that = this;
-    let startVertexId = startVertex ? startVertex.id : null;
-
-    if (ring.members.indexOf(startVertexId) === -1) {
-      if (startVertex) {
-        startVertex.positioned = false;
-      }
-
-      startVertexId = ring.members[0];
-    } // If the ring is bridged, then draw the vertices inside the ring
-    // using a force based approach
-
-
-    if (ring.isBridged) {
-      this.graph.kkLayout(ring.members.slice(), center, startVertex.id, ring, this.opts.bondLength, this.opts.kkThreshold, this.opts.kkInnerThreshold, this.opts.kkMaxIteration, this.opts.kkMaxInnerIteration, this.opts.kkMaxEnergy);
-      ring.positioned = true; // Update the center of the bridged ring
-
-      this.setRingCenter(ring);
-      center = ring.center; // Setting the centers for the subrings
-
-      for (var i = 0; i < ring.rings.length; i++) {
-        this.setRingCenter(ring.rings[i]);
-      }
-    } else {
-      ring.eachMember(this.graph.vertices, function (v) {
-        let vertex = that.graph.vertices[v];
-
-        if (!vertex.positioned) {
-          vertex.setPosition(center.x + Math.cos(a) * radius, center.y + Math.sin(a) * radius);
-        }
-
-        a += angle;
-
-        if (!ring.isBridged || ring.rings.length < 3) {
-          vertex.angle = a;
-          vertex.positioned = true;
-        }
-      }, startVertexId, previousVertex ? previousVertex.id : null);
-    }
-
-    ring.positioned = true;
-    ring.center = center; // Draw neighbours in decreasing order of connectivity
-
-    for (var i = 0; i < orderedNeighbours.length; i++) {
-      let neighbour = this.getRing(orderedNeighbours[i].neighbour);
-
-      if (neighbour.positioned) {
-        continue;
-      }
-
-      let vertices = RingConnection.getVertices(this.ringConnections, ring.id, neighbour.id);
-
-      if (vertices.length === 2) {
-        // This ring is a fused ring
-        ring.isFused = true;
-        neighbour.isFused = true;
-        let vertexA = this.graph.vertices[vertices[0]];
-        let vertexB = this.graph.vertices[vertices[1]]; // Get middle between vertex A and B
-
-        let midpoint = Vector2.midpoint(vertexA.position, vertexB.position); // Get the normals to the line between A and B
-
-        let normals = Vector2.normals(vertexA.position, vertexB.position); // Normalize the normals
-
-        normals[0].normalize();
-        normals[1].normalize(); // Set length from middle of side to center (the apothem)
-
-        let r = MathHelper.polyCircumradius(this.opts.bondLength, neighbour.getSize());
-        let apothem = MathHelper.apothem(r, neighbour.getSize());
-        normals[0].multiplyScalar(apothem).add(midpoint);
-        normals[1].multiplyScalar(apothem).add(midpoint); // Pick the normal which results in a larger distance to the previous center
-        // Also check whether it's inside another ring
-
-        let nextCenter = normals[0];
-
-        if (Vector2.subtract(center, normals[1]).lengthSq() > Vector2.subtract(center, normals[0]).lengthSq()) {
-          nextCenter = normals[1];
-        } // Get the vertex (A or B) which is in clock-wise direction of the other
-
-
-        let posA = Vector2.subtract(vertexA.position, nextCenter);
-        let posB = Vector2.subtract(vertexB.position, nextCenter);
-
-        if (posA.clockwise(posB) === -1) {
-          if (!neighbour.positioned) {
-            this.createRing(neighbour, nextCenter, vertexA, vertexB);
-          }
-        } else {
-          if (!neighbour.positioned) {
-            this.createRing(neighbour, nextCenter, vertexB, vertexA);
-          }
-        }
-      } else if (vertices.length === 1) {
-        // This ring is a spiro
-        ring.isSpiro = true;
-        neighbour.isSpiro = true;
-        let vertexA = this.graph.vertices[vertices[0]]; // Get the vector pointing from the shared vertex to the new centpositioner
-
-        let nextCenter = Vector2.subtract(center, vertexA.position);
-        nextCenter.invert();
-        nextCenter.normalize(); // Get the distance from the vertex to the center
-
-        let r = MathHelper.polyCircumradius(this.opts.bondLength, neighbour.getSize());
-        nextCenter.multiplyScalar(r);
-        nextCenter.add(vertexA.position);
-
-        if (!neighbour.positioned) {
-          this.createRing(neighbour, nextCenter, vertexA);
-        }
-      }
-    } // Next, draw atoms that are not part of a ring that are directly attached to this ring
-
-
-    for (var i = 0; i < ring.members.length; i++) {
-      let ringMember = this.graph.vertices[ring.members[i]];
-      let ringMemberNeighbours = ringMember.neighbours; // If there are multiple, the ovlerap will be resolved in the appropriate step
-
-      for (var j = 0; j < ringMemberNeighbours.length; j++) {
-        let v = this.graph.vertices[ringMemberNeighbours[j]];
-
-        if (v.positioned) {
-          continue;
-        }
-
-        v.value.isConnectedToRing = true;
-        this.createNextBond(v, ringMember, 0.0);
-      }
-    }
+    this.ringManager.createRing(ring, center, startVertex, previousVertex);
   }
   /**
    * Rotate an entire subtree by an angle around a center.
@@ -8171,17 +7577,7 @@ class DrawerBase {
 
 
   getCommonRingbondNeighbour(vertex) {
-    let neighbours = vertex.neighbours;
-
-    for (var i = 0; i < neighbours.length; i++) {
-      let neighbour = this.graph.vertices[neighbours[i]];
-
-      if (ArrayHelper.containsAll(neighbour.value.rings, vertex.value.rings)) {
-        return neighbour;
-      }
-    }
-
-    return null;
+    return this.ringManager.getCommonRingbondNeighbour(vertex);
   }
   /**
    * Check if a vector is inside any ring.
@@ -8192,22 +7588,7 @@ class DrawerBase {
 
 
   isPointInRing(vec) {
-    for (var i = 0; i < this.rings.length; i++) {
-      let ring = this.rings[i];
-
-      if (!ring.positioned) {
-        continue;
-      }
-
-      let radius = MathHelper.polyCircumradius(this.opts.bondLength, ring.getSize());
-      let radiusSq = radius * radius;
-
-      if (vec.distanceSq(ring.center) < radiusSq) {
-        return true;
-      }
-    }
-
-    return false;
+    return this.ringManager.isPointInRing(vec);
   }
   /**
    * Check whether or not an edge is part of a ring.
@@ -8218,9 +7599,7 @@ class DrawerBase {
 
 
   isEdgeInRing(edge) {
-    let source = this.graph.vertices[edge.sourceId];
-    let target = this.graph.vertices[edge.targetId];
-    return this.areVerticesInSameRing(source, target);
+    return this.ringManager.isEdgeInRing(edge);
   }
   /**
    * Check whether or not an edge is rotatable.
@@ -8263,15 +7642,7 @@ class DrawerBase {
 
 
   isRingAromatic(ring) {
-    for (var i = 0; i < ring.members.length; i++) {
-      let vertex = this.graph.vertices[ring.members[i]];
-
-      if (!vertex.value.isPartOfAromaticRing) {
-        return false;
-      }
-    }
-
-    return true;
+    return this.ringManager.isRingAromatic(ring);
   }
   /**
    * Get the normals of an edge.
@@ -8658,11 +8029,67 @@ class DrawerBase {
     }
   }
 
+  get ringIdCounter() {
+    return this.ringManager.ringIdCounter;
+  }
+
+  set ringIdCounter(value) {
+    this.ringManager.ringIdCounter = value;
+  }
+
+  get ringConnectionIdCounter() {
+    return this.ringManager.ringConnectionIdCounter;
+  }
+
+  set ringConnectionIdCounter(value) {
+    this.ringManager.ringConnectionIdCounter = value;
+  }
+
+  get rings() {
+    return this.ringManager.rings;
+  }
+
+  set rings(value) {
+    this.ringManager.rings = value;
+  }
+
+  get ringConnections() {
+    return this.ringManager.ringConnections;
+  }
+
+  set ringConnections(value) {
+    this.ringManager.ringConnections = value;
+  }
+
+  get originalRings() {
+    return this.ringManager.originalRings;
+  }
+
+  set originalRings(value) {
+    this.ringManager.originalRings = value;
+  }
+
+  get originalRingConnections() {
+    return this.ringManager.originalRingConnections;
+  }
+
+  set originalRingConnections(value) {
+    this.ringManager.originalRingConnections = value;
+  }
+
+  get bridgedRing() {
+    return this.ringManager.bridgedRing;
+  }
+
+  set bridgedRing(value) {
+    this.ringManager.bridgedRing = value;
+  }
+
 }
 
 module.exports = DrawerBase;
 
-},{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Edge":8,"./Graph":11,"./Line":12,"./MathHelper":13,"./Options":14,"./Ring":20,"./RingConnection":21,"./SSSR":22,"./ThemeManager":26,"./Vector2":27}],8:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Graph":11,"./Line":12,"./MathHelper":13,"./Options":14,"./RingManager":22,"./ThemeManager":27,"./Vector2":28}],8:[function(require,module,exports){
 "use strict";
 /**
  * A class representing an edge.
@@ -8950,7 +8377,7 @@ class GaussDrawer {
 
 module.exports = GaussDrawer;
 
-},{"./PixelsToSvg":16,"./Vector2":27,"chroma-js":2}],11:[function(require,module,exports){
+},{"./PixelsToSvg":16,"./Vector2":28,"chroma-js":2}],11:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -9908,7 +9335,7 @@ class Graph {
 
 module.exports = Graph;
 
-},{"./Atom":4,"./Edge":8,"./MathHelper":13,"./Vertex":28}],12:[function(require,module,exports){
+},{"./Atom":4,"./Edge":8,"./MathHelper":13,"./Vertex":29}],12:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -10216,7 +9643,7 @@ class Line {
 
 module.exports = Line;
 
-},{"./Vector2":27}],13:[function(require,module,exports){
+},{"./Vector2":28}],13:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for math-related tasks.
@@ -12884,7 +12311,7 @@ class ReactionDrawer {
 
 module.exports = ReactionDrawer;
 
-},{"./FormulaToCommonName":9,"./Options":14,"./SvgDrawer":24,"./SvgWrapper":25,"./ThemeManager":26}],19:[function(require,module,exports){
+},{"./FormulaToCommonName":9,"./Options":14,"./SvgDrawer":25,"./SvgWrapper":26,"./ThemeManager":27}],19:[function(require,module,exports){
 "use strict";
 
 const Reaction = require("./Reaction");
@@ -13124,7 +12551,7 @@ class Ring {
 
 module.exports = Ring;
 
-},{"./ArrayHelper":3,"./RingConnection":21,"./Vector2":27}],21:[function(require,module,exports){
+},{"./ArrayHelper":3,"./RingConnection":21,"./Vector2":28}],21:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a ring connection.
@@ -13293,6 +12720,791 @@ class RingConnection {
 module.exports = RingConnection;
 
 },{}],22:[function(require,module,exports){
+"use strict";
+
+const MathHelper = require("./MathHelper");
+
+const ArrayHelper = require("./ArrayHelper");
+
+const Vector2 = require("./Vector2");
+
+const Edge = require("./Edge");
+
+const Ring = require("./Ring");
+
+const RingConnection = require("./RingConnection");
+
+const SSSR = require("./SSSR");
+
+class RingManager {
+  constructor(drawer) {
+    this.ringIdCounter = 0;
+    this.ringConnectionIdCounter = 0;
+    this.rings = [];
+    this.ringConnections = [];
+    this.originalRings = [];
+    this.originalRingConnections = [];
+    this.bridgedRing = false;
+    this.drawer = drawer;
+  }
+
+  edgeRingCount(edgeId) {
+    let edge = this.drawer.graph.edges[edgeId];
+    let a = this.drawer.graph.vertices[edge.sourceId];
+    let b = this.drawer.graph.vertices[edge.targetId];
+    return Math.min(a.value.rings.length, b.value.rings.length);
+  }
+
+  getBridgedRings() {
+    let bridgedRings = Array();
+
+    for (var i = 0; i < this.rings.length; i++) {
+      if (this.rings[i].isBridged) {
+        bridgedRings.push(this.rings[i]);
+      }
+    }
+
+    return bridgedRings;
+  }
+
+  getFusedRings() {
+    let fusedRings = Array();
+
+    for (var i = 0; i < this.rings.length; i++) {
+      if (this.rings[i].isFused) {
+        fusedRings.push(this.rings[i]);
+      }
+    }
+
+    return fusedRings;
+  }
+
+  getSpiros() {
+    let spiros = Array();
+
+    for (var i = 0; i < this.rings.length; i++) {
+      if (this.rings[i].isSpiro) {
+        spiros.push(this.rings[i]);
+      }
+    }
+
+    return spiros;
+  }
+
+  printRingInfo() {
+    let result = '';
+
+    for (var i = 0; i < this.rings.length; i++) {
+      const ring = this.rings[i];
+      result += ring.id + ';';
+      result += ring.members.length + ';';
+      result += ring.neighbours.length + ';';
+      result += ring.isSpiro ? 'true;' : 'false;';
+      result += ring.isFused ? 'true;' : 'false;';
+      result += ring.isBridged ? 'true;' : 'false;';
+      result += ring.rings.length + ';';
+      result += '\n';
+    }
+
+    return result;
+  }
+
+  getRingCount() {
+    return this.rings.length;
+  }
+
+  hasBridgedRing() {
+    return this.bridgedRing;
+  }
+
+  getRingbondType(vertexA, vertexB) {
+    // Checks whether the two vertices are the ones connecting the ring
+    // and what the bond type should be.
+    if (vertexA.value.getRingbondCount() < 1 || vertexB.value.getRingbondCount() < 1) {
+      return null;
+    }
+
+    for (var i = 0; i < vertexA.value.ringbonds.length; i++) {
+      for (var j = 0; j < vertexB.value.ringbonds.length; j++) {
+        // if(i != j) continue;
+        if (vertexA.value.ringbonds[i].id === vertexB.value.ringbonds[j].id) {
+          // If the bonds are equal, it doesn't matter which bond is returned.
+          // if they are not equal, return the one that is not the default ("-")
+          if (vertexA.value.ringbonds[i].bondType === '-') {
+            return vertexB.value.ringbonds[j].bond;
+          } else {
+            return vertexA.value.ringbonds[i].bond;
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  initRings() {
+    let openBonds = new Map(); // Close the open ring bonds (spanning tree -> graph)
+
+    for (var i = this.drawer.graph.vertices.length - 1; i >= 0; i--) {
+      let vertex = this.drawer.graph.vertices[i];
+
+      if (vertex.value.ringbonds.length === 0) {
+        continue;
+      }
+
+      for (var j = 0; j < vertex.value.ringbonds.length; j++) {
+        let ringbondId = vertex.value.ringbonds[j].id;
+        let ringbondBond = vertex.value.ringbonds[j].bond; // If the other ringbond id has not been discovered,
+        // add it to the open bonds map and continue.
+        // if the other ringbond id has already been discovered,
+        // create a bond between the two atoms.
+
+        if (!openBonds.has(ringbondId)) {
+          openBonds.set(ringbondId, [vertex.id, ringbondBond]);
+        } else {
+          let sourceVertexId = vertex.id;
+          let targetVertexId = openBonds.get(ringbondId)[0];
+          let targetRingbondBond = openBonds.get(ringbondId)[1];
+          let edge = new Edge(sourceVertexId, targetVertexId, 1);
+          edge.setBondType(targetRingbondBond || ringbondBond || '-');
+          let edgeId = this.drawer.graph.addEdge(edge);
+          let targetVertex = this.drawer.graph.vertices[targetVertexId];
+          vertex.addRingbondChild(targetVertexId, j);
+          vertex.value.addNeighbouringElement(targetVertex.value.element);
+          targetVertex.addRingbondChild(sourceVertexId, j);
+          targetVertex.value.addNeighbouringElement(vertex.value.element);
+          vertex.edges.push(edgeId);
+          targetVertex.edges.push(edgeId);
+          openBonds.delete(ringbondId);
+        }
+      }
+    } // Get the rings in the graph (the SSSR)
+
+
+    let rings = SSSR.getRings(this.drawer.graph, this.drawer.opts.experimentalSSSR);
+
+    if (rings === null) {
+      return;
+    }
+
+    for (var i = 0; i < rings.length; i++) {
+      let ringVertices = [...rings[i]];
+      let ringId = this.addRing(new Ring(ringVertices)); // Add the ring to the atoms
+
+      for (var j = 0; j < ringVertices.length; j++) {
+        this.drawer.graph.vertices[ringVertices[j]].value.rings.push(ringId);
+      }
+    } // Find connection between rings
+    // Check for common vertices and create ring connections. This is a bit
+    // ugly, but the ringcount is always fairly low (< 100)
+
+
+    for (var i = 0; i < this.rings.length - 1; i++) {
+      for (var j = i + 1; j < this.rings.length; j++) {
+        let a = this.rings[i];
+        let b = this.rings[j];
+        let ringConnection = new RingConnection(a, b); // If there are no vertices in the ring connection, then there
+        // is no ring connection
+
+        if (ringConnection.vertices.size > 0) {
+          this.addRingConnection(ringConnection);
+        }
+      }
+    } // Add neighbours to the rings
+
+
+    for (var i = 0; i < this.rings.length; i++) {
+      let ring = this.rings[i];
+      ring.neighbours = RingConnection.getNeighbours(this.ringConnections, ring.id);
+    } // Anchor the ring to one of it's members, so that the ring center will always
+    // be tied to a single vertex when doing repositionings
+
+
+    for (var i = 0; i < this.rings.length; i++) {
+      let ring = this.rings[i];
+      this.drawer.graph.vertices[ring.members[0]].value.addAnchoredRing(ring.id);
+    } // Backup the ring information to restore after placing the bridged ring.
+    // This is needed in order to identify aromatic rings and stuff like this in
+    // rings that are member of the superring.
+
+
+    this.backupRingInformation(); // Replace rings contained by a larger bridged ring with a bridged ring
+
+    while (this.rings.length > 0) {
+      let id = -1;
+
+      for (var i = 0; i < this.rings.length; i++) {
+        let ring = this.rings[i];
+
+        if (this.isPartOfBridgedRing(ring.id) && !ring.isBridged) {
+          id = ring.id;
+        }
+      }
+
+      if (id === -1) {
+        break;
+      }
+
+      let ring = this.getRing(id);
+      let involvedRings = this.getBridgedRingRings(ring.id);
+      this.bridgedRing = true;
+      this.createBridgedRing(involvedRings, ring.members[0]);
+      this.bridgedRing = false; // Remove the rings
+
+      for (var i = 0; i < involvedRings.length; i++) {
+        this.removeRing(involvedRings[i]);
+      }
+    }
+  }
+
+  getBridgedRingRings(ringId) {
+    let involvedRings = Array();
+    let that = this;
+
+    let recurse = function (r) {
+      let ring = that.getRing(r);
+      involvedRings.push(r);
+
+      for (var i = 0; i < ring.neighbours.length; i++) {
+        let n = ring.neighbours[i];
+
+        if (involvedRings.indexOf(n) === -1 && n !== r && RingConnection.isBridge(that.ringConnections, that.drawer.graph.vertices, r, n)) {
+          recurse(n);
+        }
+      }
+    };
+
+    recurse(ringId);
+    return ArrayHelper.unique(involvedRings);
+  }
+
+  isPartOfBridgedRing(ringId) {
+    for (var i = 0; i < this.ringConnections.length; i++) {
+      if (this.ringConnections[i].containsRing(ringId) && this.ringConnections[i].isBridge(this.drawer.graph.vertices)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  createBridgedRing(ringIds, sourceVertexId) {
+    let ringMembers = new Set();
+    let vertices = new Set();
+    let neighbours = new Set();
+
+    for (var i = 0; i < ringIds.length; i++) {
+      let ring = this.getRing(ringIds[i]);
+      ring.isPartOfBridged = true;
+
+      for (var j = 0; j < ring.members.length; j++) {
+        vertices.add(ring.members[j]);
+      }
+
+      for (var j = 0; j < ring.neighbours.length; j++) {
+        let id = ring.neighbours[j];
+
+        if (ringIds.indexOf(id) === -1) {
+          neighbours.add(ring.neighbours[j]);
+        }
+      }
+    } // A vertex is part of the bridged ring if it only belongs to
+    // one of the rings (or to another ring
+    // which is not part of the bridged ring).
+
+
+    let leftovers = new Set();
+
+    for (let id of vertices) {
+      let vertex = this.drawer.graph.vertices[id];
+      let intersection = ArrayHelper.intersection(ringIds, vertex.value.rings);
+
+      if (vertex.value.rings.length === 1 || intersection.length === 1) {
+        ringMembers.add(vertex.id);
+      } else {
+        leftovers.add(vertex.id);
+      }
+    } // Vertices can also be part of multiple rings and lay on the bridged ring,
+    // however, they have to have at least two neighbours that are not part of
+    // two rings
+
+
+    let tmp = Array();
+    let insideRing = Array();
+
+    for (let id of leftovers) {
+      let vertex = this.drawer.graph.vertices[id];
+      let onRing = false;
+
+      for (let j = 0; j < vertex.edges.length; j++) {
+        if (this.edgeRingCount(vertex.edges[j]) === 1) {
+          onRing = true;
+        }
+      }
+
+      if (onRing) {
+        vertex.value.isBridgeNode = true;
+        ringMembers.add(vertex.id);
+      } else {
+        vertex.value.isBridge = true;
+        ringMembers.add(vertex.id);
+      }
+    } // Create the ring
+
+
+    let ring = new Ring([...ringMembers]);
+    this.addRing(ring);
+    ring.isBridged = true;
+    ring.neighbours = [...neighbours];
+
+    for (var i = 0; i < ringIds.length; i++) {
+      ring.rings.push(this.getRing(ringIds[i]).clone());
+    }
+
+    for (var i = 0; i < ring.members.length; i++) {
+      this.drawer.graph.vertices[ring.members[i]].value.bridgedRing = ring.id;
+    } // Atoms inside the ring are no longer part of a ring but are now
+    // associated with the bridged ring
+
+
+    for (var i = 0; i < insideRing.length; i++) {
+      let vertex = this.drawer.graph.vertices[insideRing[i]];
+      vertex.value.rings = Array();
+    } // Remove former rings from members of the bridged ring and add the bridged ring
+
+
+    for (let id of ringMembers) {
+      let vertex = this.drawer.graph.vertices[id];
+      vertex.value.rings = ArrayHelper.removeAll(vertex.value.rings, ringIds);
+      vertex.value.rings.push(ring.id);
+    } // Remove all the ring connections no longer used
+
+
+    for (var i = 0; i < ringIds.length; i++) {
+      for (var j = i + 1; j < ringIds.length; j++) {
+        this.removeRingConnectionsBetween(ringIds[i], ringIds[j]);
+      }
+    } // Update the ring connections and add this ring to the neighbours neighbours
+
+
+    for (let id of neighbours) {
+      let connections = this.getRingConnections(id, ringIds);
+
+      for (var j = 0; j < connections.length; j++) {
+        this.getRingConnection(connections[j]).updateOther(ring.id, id);
+      }
+
+      this.getRing(id).neighbours.push(ring.id);
+    }
+
+    return ring;
+  }
+
+  areVerticesInSameRing(vertexA, vertexB) {
+    // This is a little bit lighter (without the array and push) than
+    // getCommonRings().length > 0
+    for (var i = 0; i < vertexA.value.rings.length; i++) {
+      for (var j = 0; j < vertexB.value.rings.length; j++) {
+        if (vertexA.value.rings[i] === vertexB.value.rings[j]) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  getCommonRings(vertexA, vertexB) {
+    let commonRings = Array();
+
+    for (var i = 0; i < vertexA.value.rings.length; i++) {
+      for (var j = 0; j < vertexB.value.rings.length; j++) {
+        if (vertexA.value.rings[i] == vertexB.value.rings[j]) {
+          commonRings.push(vertexA.value.rings[i]);
+        }
+      }
+    }
+
+    return commonRings;
+  }
+
+  getLargestOrAromaticCommonRing(vertexA, vertexB) {
+    let commonRings = this.getCommonRings(vertexA, vertexB);
+    let maxSize = 0;
+    let largestCommonRing = null;
+
+    for (var i = 0; i < commonRings.length; i++) {
+      let ring = this.getRing(commonRings[i]);
+      let size = ring.getSize();
+
+      if (ring.isBenzeneLike(this.drawer.graph.vertices)) {
+        return ring;
+      } else if (size > maxSize) {
+        maxSize = size;
+        largestCommonRing = ring;
+      }
+    }
+
+    return largestCommonRing;
+  }
+
+  addRing(ring) {
+    ring.id = this.ringIdCounter++;
+    this.rings.push(ring);
+    return ring.id;
+  }
+
+  removeRing(ringId) {
+    this.rings = this.rings.filter(function (item) {
+      return item.id !== ringId;
+    }); // Also remove ring connections involving this ring
+
+    this.ringConnections = this.ringConnections.filter(function (item) {
+      return item.firstRingId !== ringId && item.secondRingId !== ringId;
+    }); // Remove the ring as neighbour of other rings
+
+    for (var i = 0; i < this.rings.length; i++) {
+      let r = this.rings[i];
+      r.neighbours = r.neighbours.filter(function (item) {
+        return item !== ringId;
+      });
+    }
+  }
+
+  getRing(ringId) {
+    for (var i = 0; i < this.rings.length; i++) {
+      if (this.rings[i].id == ringId) {
+        return this.rings[i];
+      }
+    }
+  }
+
+  addRingConnection(ringConnection) {
+    ringConnection.id = this.ringConnectionIdCounter++;
+    this.ringConnections.push(ringConnection);
+    return ringConnection.id;
+  }
+
+  removeRingConnection(ringConnectionId) {
+    this.ringConnections = this.ringConnections.filter(function (item) {
+      return item.id !== ringConnectionId;
+    });
+  }
+
+  removeRingConnectionsBetween(vertexIdA, vertexIdB) {
+    let toRemove = Array();
+
+    for (var i = 0; i < this.ringConnections.length; i++) {
+      let ringConnection = this.ringConnections[i];
+
+      if (ringConnection.firstRingId === vertexIdA && ringConnection.secondRingId === vertexIdB || ringConnection.firstRingId === vertexIdB && ringConnection.secondRingId === vertexIdA) {
+        toRemove.push(ringConnection.id);
+      }
+    }
+
+    for (var i = 0; i < toRemove.length; i++) {
+      this.removeRingConnection(toRemove[i]);
+    }
+  }
+
+  getRingConnection(id) {
+    for (var i = 0; i < this.ringConnections.length; i++) {
+      if (this.ringConnections[i].id == id) {
+        return this.ringConnections[i];
+      }
+    }
+  }
+
+  getRingConnections(ringId, ringIds) {
+    let ringConnections = Array();
+
+    for (var i = 0; i < this.ringConnections.length; i++) {
+      let rc = this.ringConnections[i];
+
+      for (var j = 0; j < ringIds.length; j++) {
+        let id = ringIds[j];
+
+        if (rc.firstRingId === ringId && rc.secondRingId === id || rc.firstRingId === id && rc.secondRingId === ringId) {
+          ringConnections.push(rc.id);
+        }
+      }
+    }
+
+    return ringConnections;
+  }
+
+  setRingCenter(ring) {
+    let ringSize = ring.getSize();
+    let total = new Vector2(0, 0);
+
+    for (var i = 0; i < ringSize; i++) {
+      total.add(this.drawer.graph.vertices[ring.members[i]].position);
+    }
+
+    ring.center = total.divide(ringSize);
+  }
+
+  getSubringCenter(ring, vertex) {
+    let rings = vertex.value.originalRings;
+    let center = ring.center;
+    let smallest = Number.MAX_VALUE; // Always get the smallest ring.
+
+    for (var i = 0; i < rings.length; i++) {
+      for (var j = 0; j < ring.rings.length; j++) {
+        if (rings[i] === ring.rings[j].id) {
+          if (ring.rings[j].getSize() < smallest) {
+            center = ring.rings[j].center;
+            smallest = ring.rings[j].getSize();
+          }
+        }
+      }
+    }
+
+    return center;
+  }
+
+  backupRingInformation() {
+    this.originalRings = Array();
+    this.originalRingConnections = Array();
+
+    for (var i = 0; i < this.rings.length; i++) {
+      this.originalRings.push(this.rings[i]);
+    }
+
+    for (var i = 0; i < this.ringConnections.length; i++) {
+      this.originalRingConnections.push(this.ringConnections[i]);
+    }
+
+    for (var i = 0; i < this.drawer.graph.vertices.length; i++) {
+      this.drawer.graph.vertices[i].value.backupRings();
+    }
+  }
+
+  restoreRingInformation() {
+    // Get the subring centers from the bridged rings
+    let bridgedRings = this.getBridgedRings();
+    this.rings = Array();
+    this.ringConnections = Array();
+
+    for (var i = 0; i < bridgedRings.length; i++) {
+      let bridgedRing = bridgedRings[i];
+
+      for (var j = 0; j < bridgedRing.rings.length; j++) {
+        let ring = bridgedRing.rings[j];
+        this.originalRings[ring.id].center = ring.center;
+      }
+    }
+
+    for (var i = 0; i < this.originalRings.length; i++) {
+      this.rings.push(this.originalRings[i]);
+    }
+
+    for (var i = 0; i < this.originalRingConnections.length; i++) {
+      this.ringConnections.push(this.originalRingConnections[i]);
+    }
+
+    for (var i = 0; i < this.drawer.graph.vertices.length; i++) {
+      this.drawer.graph.vertices[i].value.restoreRings();
+    }
+  }
+
+  createRing(ring, center = null, startVertex = null, previousVertex = null) {
+    if (ring.positioned) {
+      return;
+    }
+
+    center = center ? center : new Vector2(0, 0);
+    let orderedNeighbours = ring.getOrderedNeighbours(this.ringConnections);
+    let startingAngle = startVertex ? Vector2.subtract(startVertex.position, center).angle() : 0;
+    let radius = MathHelper.polyCircumradius(this.drawer.opts.bondLength, ring.getSize());
+    let angle = MathHelper.centralAngle(ring.getSize());
+    ring.centralAngle = angle;
+    let a = startingAngle;
+    let that = this;
+    let startVertexId = startVertex ? startVertex.id : null;
+
+    if (ring.members.indexOf(startVertexId) === -1) {
+      if (startVertex) {
+        startVertex.positioned = false;
+      }
+
+      startVertexId = ring.members[0];
+    } // If the ring is bridged, then draw the vertices inside the ring
+    // using a force based approach
+
+
+    if (ring.isBridged) {
+      this.drawer.graph.kkLayout(ring.members.slice(), center, startVertex.id, ring, this.drawer.opts.bondLength, this.drawer.opts.kkThreshold, this.drawer.opts.kkInnerThreshold, this.drawer.opts.kkMaxIteration, this.drawer.opts.kkMaxInnerIteration, this.drawer.opts.kkMaxEnergy);
+      ring.positioned = true; // Update the center of the bridged ring
+
+      this.setRingCenter(ring);
+      center = ring.center; // Setting the centers for the subrings
+
+      for (var i = 0; i < ring.rings.length; i++) {
+        this.setRingCenter(ring.rings[i]);
+      }
+    } else {
+      ring.eachMember(this.drawer.graph.vertices, function (v) {
+        let vertex = that.drawer.graph.vertices[v];
+
+        if (!vertex.positioned) {
+          vertex.setPosition(center.x + Math.cos(a) * radius, center.y + Math.sin(a) * radius);
+        }
+
+        a += angle;
+
+        if (!ring.isBridged || ring.rings.length < 3) {
+          vertex.angle = a;
+          vertex.positioned = true;
+        }
+      }, startVertexId, previousVertex ? previousVertex.id : null);
+    }
+
+    ring.positioned = true;
+    ring.center = center; // Draw neighbours in decreasing order of connectivity
+
+    for (var i = 0; i < orderedNeighbours.length; i++) {
+      let neighbour = this.getRing(orderedNeighbours[i].neighbour);
+
+      if (neighbour.positioned) {
+        continue;
+      }
+
+      let vertices = RingConnection.getVertices(this.ringConnections, ring.id, neighbour.id);
+
+      if (vertices.length === 2) {
+        // This ring is a fused ring
+        ring.isFused = true;
+        neighbour.isFused = true;
+        let vertexA = this.drawer.graph.vertices[vertices[0]];
+        let vertexB = this.drawer.graph.vertices[vertices[1]]; // Get middle between vertex A and B
+
+        let midpoint = Vector2.midpoint(vertexA.position, vertexB.position); // Get the normals to the line between A and B
+
+        let normals = Vector2.normals(vertexA.position, vertexB.position); // Normalize the normals
+
+        normals[0].normalize();
+        normals[1].normalize(); // Set length from middle of side to center (the apothem)
+
+        let r = MathHelper.polyCircumradius(this.drawer.opts.bondLength, neighbour.getSize());
+        let apothem = MathHelper.apothem(r, neighbour.getSize());
+        normals[0].multiplyScalar(apothem).add(midpoint);
+        normals[1].multiplyScalar(apothem).add(midpoint); // Pick the normal which results in a larger distance to the previous center
+        // Also check whether it's inside another ring
+
+        let nextCenter = normals[0];
+
+        if (Vector2.subtract(center, normals[1]).lengthSq() > Vector2.subtract(center, normals[0]).lengthSq()) {
+          nextCenter = normals[1];
+        } // Get the vertex (A or B) which is in clock-wise direction of the other
+
+
+        let posA = Vector2.subtract(vertexA.position, nextCenter);
+        let posB = Vector2.subtract(vertexB.position, nextCenter);
+
+        if (posA.clockwise(posB) === -1) {
+          if (!neighbour.positioned) {
+            this.createRing(neighbour, nextCenter, vertexA, vertexB);
+          }
+        } else {
+          if (!neighbour.positioned) {
+            this.createRing(neighbour, nextCenter, vertexB, vertexA);
+          }
+        }
+      } else if (vertices.length === 1) {
+        // This ring is a spiro
+        ring.isSpiro = true;
+        neighbour.isSpiro = true;
+        let vertexA = this.drawer.graph.vertices[vertices[0]]; // Get the vector pointing from the shared vertex to the new centpositioner
+
+        let nextCenter = Vector2.subtract(center, vertexA.position);
+        nextCenter.invert();
+        nextCenter.normalize(); // Get the distance from the vertex to the center
+
+        let r = MathHelper.polyCircumradius(this.drawer.opts.bondLength, neighbour.getSize());
+        nextCenter.multiplyScalar(r);
+        nextCenter.add(vertexA.position);
+
+        if (!neighbour.positioned) {
+          this.createRing(neighbour, nextCenter, vertexA);
+        }
+      }
+    } // Next, draw atoms that are not part of a ring that are directly attached to this ring
+
+
+    for (var i = 0; i < ring.members.length; i++) {
+      let ringMember = this.drawer.graph.vertices[ring.members[i]];
+      let ringMemberNeighbours = ringMember.neighbours; // If there are multiple, the ovlerap will be resolved in the appropriate step
+
+      for (var j = 0; j < ringMemberNeighbours.length; j++) {
+        let v = this.drawer.graph.vertices[ringMemberNeighbours[j]];
+
+        if (v.positioned) {
+          continue;
+        }
+
+        v.value.isConnectedToRing = true;
+        this.drawer.createNextBond(v, ringMember, 0.0);
+      }
+    }
+  }
+
+  getCommonRingbondNeighbour(vertex) {
+    let neighbours = vertex.neighbours;
+
+    for (var i = 0; i < neighbours.length; i++) {
+      let neighbour = this.drawer.graph.vertices[neighbours[i]];
+
+      if (ArrayHelper.containsAll(neighbour.value.rings, vertex.value.rings)) {
+        return neighbour;
+      }
+    }
+
+    return null;
+  }
+
+  isPointInRing(vec) {
+    for (var i = 0; i < this.rings.length; i++) {
+      let ring = this.rings[i];
+
+      if (!ring.positioned) {
+        continue;
+      }
+
+      let radius = MathHelper.polyCircumradius(this.drawer.opts.bondLength, ring.getSize());
+      let radiusSq = radius * radius;
+
+      if (vec.distanceSq(ring.center) < radiusSq) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  isEdgeInRing(edge) {
+    let source = this.drawer.graph.vertices[edge.sourceId];
+    let target = this.drawer.graph.vertices[edge.targetId];
+    return this.areVerticesInSameRing(source, target);
+  }
+
+  isRingAromatic(ring) {
+    for (var i = 0; i < ring.members.length; i++) {
+      let vertex = this.drawer.graph.vertices[ring.members[i]];
+
+      if (!vertex.value.isPartOfAromaticRing) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+}
+
+module.exports = RingManager;
+
+},{"./ArrayHelper":3,"./Edge":8,"./MathHelper":13,"./Ring":20,"./RingConnection":21,"./SSSR":23,"./Vector2":28}],23:[function(require,module,exports){
 "use strict";
 
 const Graph = require("./Graph");
@@ -13902,7 +14114,7 @@ class SSSR {
 
 module.exports = SSSR;
 
-},{"./Graph":11}],23:[function(require,module,exports){
+},{"./Graph":11}],24:[function(require,module,exports){
 "use strict";
 
 const Parser = require("./Parser");
@@ -14248,7 +14460,7 @@ class SmilesDrawer {
 
 module.exports = SmilesDrawer;
 
-},{"./Options":14,"./Parser":15,"./ReactionDrawer":18,"./ReactionParser":19,"./SvgDrawer":24,"./SvgWrapper":25}],24:[function(require,module,exports){
+},{"./Options":14,"./Parser":15,"./ReactionDrawer":18,"./ReactionParser":19,"./SvgDrawer":25,"./SvgWrapper":26}],25:[function(require,module,exports){
 "use strict"; // we use the drawer to do all the preprocessing. then we take over the drawing
 // portion to output to svg
 
@@ -14716,7 +14928,7 @@ class SvgDrawer {
 
 module.exports = SvgDrawer;
 
-},{"./ArrayHelper":3,"./Atom":4,"./DrawerBase":7,"./GaussDrawer":10,"./Line":12,"./SvgWrapper":25,"./ThemeManager":26,"./Vector2":27}],25:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Atom":4,"./DrawerBase":7,"./GaussDrawer":10,"./Line":12,"./SvgWrapper":26,"./ThemeManager":27,"./Vector2":28}],26:[function(require,module,exports){
 "use strict";
 
 const Line = require("./Line");
@@ -15693,7 +15905,7 @@ class SvgWrapper {
 
 module.exports = SvgWrapper;
 
-},{"./Line":12,"./MathHelper":13,"./Vector2":27}],26:[function(require,module,exports){
+},{"./Line":12,"./MathHelper":13,"./Vector2":28}],27:[function(require,module,exports){
 "use strict";
 
 class ThemeManager {
@@ -15741,7 +15953,7 @@ class ThemeManager {
 
 module.exports = ThemeManager;
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a 2D vector.
@@ -16361,7 +16573,7 @@ class Vector2 {
 
 module.exports = Vector2;
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -16738,5 +16950,5 @@ class Vertex {
 
 module.exports = Vertex;
 
-},{"./ArrayHelper":3,"./MathHelper":13,"./Vector2":27}]},{},[1])
+},{"./ArrayHelper":3,"./MathHelper":13,"./Vector2":28}]},{},[1])
 
