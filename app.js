@@ -1,11 +1,11 @@
 // @ts-nocheck
-const Drawer = require('./src/Drawer')
-const Parser = require('./src/Parser')
-const ReactionParser = require('./src/ReactionParser')
-const SvgDrawer = require('./src/SvgDrawer')
-const ReactionDrawer = require('./src/ReactionDrawer')
+const Drawer = require('./src/drawing/Drawer')
+const Parser = require('./src/parsing/Parser')
+const ReactionParser = require('./src/parsing/ReactionParser')
+const SvgDrawer = require('./src/drawing/SvgDrawer')
+const ReactionDrawer = require('./src/reactions/ReactionDrawer')
 const SmiDrawer = require('./src/SmilesDrawer')
-const GaussDrawer = require('./src/GaussDrawer')
+const GaussDrawer = require('./src/drawing/GaussDrawer')
 
 // Detect SSR (server side rendering)
 var canUseDOM = !!(
