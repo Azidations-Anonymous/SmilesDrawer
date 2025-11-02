@@ -155,7 +155,7 @@ if (!Array.prototype.fill) {
 
 module.exports = SmilesDrawer;
 
-},{"./src/SmilesDrawer":3,"./src/drawing/Drawer":11,"./src/drawing/GaussDrawer":13,"./src/drawing/SvgDrawer":14,"./src/parsing/Parser":31,"./src/parsing/ReactionParser":32,"./src/reactions/ReactionDrawer":43}],2:[function(require,module,exports){
+},{"./src/SmilesDrawer":3,"./src/drawing/Drawer":11,"./src/drawing/GaussDrawer":13,"./src/drawing/SvgDrawer":14,"./src/parsing/Parser":33,"./src/parsing/ReactionParser":34,"./src/reactions/ReactionDrawer":45}],2:[function(require,module,exports){
 /**
  * chroma.js - JavaScript library for color conversions
  *
@@ -4086,7 +4086,7 @@ class SmilesDrawer {
 
 module.exports = SmilesDrawer;
 
-},{"./config/Options":7,"./drawing/SvgDrawer":14,"./drawing/helpers/SvgConversionHelper":17,"./parsing/Parser":31,"./parsing/ReactionParser":32,"./reactions/ReactionDrawer":43}],4:[function(require,module,exports){
+},{"./config/Options":7,"./drawing/SvgDrawer":14,"./drawing/helpers/SvgConversionHelper":19,"./parsing/Parser":33,"./parsing/ReactionParser":34,"./reactions/ReactionDrawer":45}],4:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -4354,7 +4354,7 @@ class KamadaKawaiLayout {
 
 module.exports = KamadaKawaiLayout;
 
-},{"../utils/MathHelper":46}],5:[function(require,module,exports){
+},{"../utils/MathHelper":48}],5:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -4964,7 +4964,7 @@ class SSSR {
 
 module.exports = SSSR;
 
-},{"../graph/Graph":22}],6:[function(require,module,exports){
+},{"../graph/Graph":24}],6:[function(require,module,exports){
 "use strict";
 
 function getDefaultOptions() {
@@ -5314,11 +5314,13 @@ class ThemeManager {
 module.exports = ThemeManager;
 
 },{}],10:[function(require,module,exports){
-"use strict"; //@ts-check
+"use strict";
 
-const MathHelper = require("../utils/MathHelper");
+const CanvasWedgeDrawer = require("./draw/CanvasWedgeDrawer");
 
-const CanvasWedgeDrawer = require("./helpers/CanvasWedgeDrawer");
+const CanvasPrimitiveDrawer = require("./draw/CanvasPrimitiveDrawer");
+
+const CanvasTextRenderer = require("./draw/CanvasTextRenderer");
 /**
  * A class wrapping a canvas element.
  *
@@ -5365,6 +5367,8 @@ class CanvasWrapper {
     this.halfHydrogenWidth = this.hydrogenWidth / 2.0;
     this.halfBondThickness = this.opts.bondThickness / 2.0;
     this.wedgeDrawer = new CanvasWedgeDrawer(this);
+    this.primitiveDrawer = new CanvasPrimitiveDrawer(this);
+    this.textRenderer = new CanvasTextRenderer(this);
   }
   /**
    * Update the width and height of the canvas
@@ -5474,484 +5478,6 @@ class CanvasWrapper {
     return this.colors['C'];
   }
   /**
-   * Draws a circle to a canvas context.
-   * @param {Number} x The x coordinate of the circles center.
-   * @param {Number} y The y coordinate of the circles center.
-   * @param {Number} radius The radius of the circle
-   * @param {String} color A hex encoded color.
-   * @param {Boolean} [fill=true] Whether to fill or stroke the circle.
-   * @param {Boolean} [debug=false] Draw in debug mode.
-   * @param {String} [debugText=''] A debug message.
-   */
-
-
-  drawCircle(x, y, radius, color, fill = true, debug = false, debugText = '') {
-    let ctx = this.ctx;
-    let offsetX = this.offsetX;
-    let offsetY = this.offsetY;
-    ctx.save();
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(x + offsetX, y + offsetY, radius, 0, MathHelper.twoPI, true);
-    ctx.closePath();
-
-    if (debug) {
-      if (fill) {
-        ctx.fillStyle = '#f00';
-        ctx.fill();
-      } else {
-        ctx.strokeStyle = '#f00';
-        ctx.stroke();
-      }
-
-      this.drawDebugText(x, y, debugText);
-    } else {
-      if (fill) {
-        ctx.fillStyle = color;
-        ctx.fill();
-      } else {
-        ctx.strokeStyle = color;
-        ctx.stroke();
-      }
-    }
-
-    ctx.restore();
-  }
-  /**
-   * Draw a line to a canvas.
-   *
-   * @param {Line} line A line.
-   * @param {Boolean} [dashed=false] Whether or not the line is dashed.
-   * @param {Number} [alpha=1.0] The alpha value of the color.
-   */
-
-
-  drawLine(line, dashed = false, alpha = 1.0) {
-    let ctx = this.ctx;
-    let offsetX = this.offsetX;
-    let offsetY = this.offsetY; // Add a shadow behind the line
-
-    let shortLine = line.clone().shorten(4.0);
-    let l = shortLine.getLeftVector().clone();
-    let r = shortLine.getRightVector().clone();
-    l.x += offsetX;
-    l.y += offsetY;
-    r.x += offsetX;
-    r.y += offsetY; // Draw the "shadow"
-
-    if (!dashed) {
-      ctx.save();
-      ctx.globalCompositeOperation = 'destination-out';
-      ctx.beginPath();
-      ctx.moveTo(l.x, l.y);
-      ctx.lineTo(r.x, r.y);
-      ctx.lineCap = 'round';
-      ctx.lineWidth = this.opts.bondThickness + 1.2;
-      ctx.strokeStyle = this.themeManager.getColor('BACKGROUND');
-      ctx.stroke();
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.restore();
-    }
-
-    l = line.getLeftVector().clone();
-    r = line.getRightVector().clone();
-    l.x += offsetX;
-    l.y += offsetY;
-    r.x += offsetX;
-    r.y += offsetY;
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(l.x, l.y);
-    ctx.lineTo(r.x, r.y);
-    ctx.lineCap = 'round';
-    ctx.lineWidth = this.opts.bondThickness;
-    let gradient = this.ctx.createLinearGradient(l.x, l.y, r.x, r.y);
-    gradient.addColorStop(0.4, this.themeManager.getColor(line.getLeftElement()) || this.themeManager.getColor('C'));
-    gradient.addColorStop(0.6, this.themeManager.getColor(line.getRightElement()) || this.themeManager.getColor('C'));
-
-    if (dashed) {
-      ctx.setLineDash([1, 1.5]);
-      ctx.lineWidth = this.opts.bondThickness / 1.5;
-    }
-
-    if (alpha < 1.0) {
-      ctx.globalAlpha = alpha;
-    }
-
-    ctx.strokeStyle = gradient;
-    ctx.stroke();
-    ctx.restore();
-  }
-  /**
-   * Draws a debug text message at a given position
-   *
-   * @param {Number} x The x coordinate.
-   * @param {Number} y The y coordinate.
-   * @param {String} text The debug text.
-   */
-
-
-  drawDebugText(x, y, text) {
-    let ctx = this.ctx;
-    ctx.save();
-    ctx.font = '5px Droid Sans, sans-serif';
-    ctx.textAlign = 'start';
-    ctx.textBaseline = 'top';
-    ctx.fillStyle = '#ff0000';
-    ctx.fillText(text, x + this.offsetX, y + this.offsetY);
-    ctx.restore();
-  }
-  /**
-   * Draw a ball to the canvas.
-   *
-   * @param {Number} x The x position of the text.
-   * @param {Number} y The y position of the text.
-   * @param {String} elementName The name of the element (single-letter).
-   */
-
-
-  drawBall(x, y, elementName) {
-    let ctx = this.ctx;
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(x + this.offsetX, y + this.offsetY, this.opts.bondLength / 4.5, 0, MathHelper.twoPI, false);
-    ctx.fillStyle = this.themeManager.getColor(elementName);
-    ctx.fill();
-    ctx.restore();
-  }
-  /**
-   * Draw a point to the canvas.
-   *
-   * @param {Number} x The x position of the point.
-   * @param {Number} y The y position of the point.
-   * @param {String} elementName The name of the element (single-letter).
-   */
-
-
-  drawPoint(x, y, elementName) {
-    let ctx = this.ctx;
-    let offsetX = this.offsetX;
-    let offsetY = this.offsetY;
-    ctx.save();
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.beginPath();
-    ctx.arc(x + offsetX, y + offsetY, 1.5, 0, MathHelper.twoPI, true);
-    ctx.closePath();
-    ctx.fill();
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.beginPath();
-    ctx.arc(x + this.offsetX, y + this.offsetY, 0.75, 0, MathHelper.twoPI, false);
-    ctx.fillStyle = this.themeManager.getColor(elementName);
-    ctx.fill();
-    ctx.restore();
-  }
-  /**
-   * Draw a text to the canvas.
-   *
-   * @param {Number} x The x position of the text.
-   * @param {Number} y The y position of the text.
-   * @param {String} elementName The name of the element (single-letter).
-   * @param {Number} hydrogens The number of hydrogen atoms.
-   * @param {String} direction The direction of the text in relation to the associated vertex.
-   * @param {Boolean} isTerminal A boolean indicating whether or not the vertex is terminal.
-   * @param {Number} charge The charge of the atom.
-   * @param {Number} isotope The isotope number.
-   * @param {Number} vertexCount The number of vertices in the molecular graph.
-   * @param {Object} attachedPseudoElement A map with containing information for pseudo elements or concatinated elements. The key is comprised of the element symbol and the hydrogen count.
-   * @param {String} attachedPseudoElement.element The element symbol.
-   * @param {Number} attachedPseudoElement.count The number of occurences that match the key.
-   * @param {Number} attachedPseudoElement.hyrogenCount The number of hydrogens attached to each atom matching the key.
-   */
-
-
-  drawText(x, y, elementName, hydrogens, direction, isTerminal, charge, isotope, vertexCount, attachedPseudoElement = {}) {
-    let ctx = this.ctx;
-    let offsetX = this.offsetX;
-    let offsetY = this.offsetY;
-    ctx.save();
-    ctx.textAlign = 'start';
-    ctx.textBaseline = 'alphabetic';
-    let pseudoElementHandled = false; // Charge
-
-    let chargeText = '';
-    let chargeWidth = 0;
-
-    if (charge) {
-      chargeText = this.getChargeText(charge);
-      ctx.font = this.fontSmall;
-      chargeWidth = ctx.measureText(chargeText).width;
-    }
-
-    let isotopeText = '0';
-    let isotopeWidth = 0;
-
-    if (isotope > 0) {
-      isotopeText = isotope.toString();
-      ctx.font = this.fontSmall;
-      isotopeWidth = ctx.measureText(isotopeText).width;
-    } // TODO: Better handle exceptions
-    // Exception for nitro (draw nitro as NO2 instead of N+O-O)
-
-
-    if (charge === 1 && elementName === 'N' && attachedPseudoElement.hasOwnProperty('0O') && attachedPseudoElement.hasOwnProperty('0O-1')) {
-      attachedPseudoElement = {
-        '0O': {
-          element: 'O',
-          count: 2,
-          hydrogenCount: 0,
-          previousElement: 'C',
-          charge: ''
-        }
-      };
-      charge = 0;
-    }
-
-    ctx.font = this.fontLarge;
-    ctx.fillStyle = this.themeManager.getColor('BACKGROUND');
-    let dim = ctx.measureText(elementName); // @ts-ignore - Adding custom properties to TextMetrics for internal use
-
-    dim.totalWidth = dim.width + chargeWidth; // @ts-ignore - Adding custom properties to TextMetrics for internal use
-
-    dim.height = parseInt(this.fontLarge, 10);
-    let r = dim.width > this.opts.fontSizeLarge ? dim.width : this.opts.fontSizeLarge;
-    r /= 1.5;
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.beginPath();
-    ctx.arc(x + offsetX, y + offsetY, r, 0, MathHelper.twoPI, true);
-    ctx.closePath();
-    ctx.fill();
-    ctx.globalCompositeOperation = 'source-over';
-    let cursorPos = -dim.width / 2.0;
-    let cursorPosLeft = -dim.width / 2.0;
-    ctx.fillStyle = this.themeManager.getColor(elementName);
-    ctx.fillText(elementName, x + offsetX + cursorPos, y + this.opts.halfFontSizeLarge + offsetY);
-    cursorPos += dim.width;
-
-    if (charge) {
-      ctx.font = this.fontSmall;
-      ctx.fillText(chargeText, x + offsetX + cursorPos, y - this.opts.fifthFontSizeSmall + offsetY);
-      cursorPos += chargeWidth;
-    }
-
-    if (isotope > 0) {
-      ctx.font = this.fontSmall;
-      ctx.fillText(isotopeText, x + offsetX + cursorPosLeft - isotopeWidth, y - this.opts.fifthFontSizeSmall + offsetY);
-      cursorPosLeft -= isotopeWidth;
-    }
-
-    ctx.font = this.fontLarge;
-    let hydrogenWidth = 0;
-    let hydrogenCountWidth = 0;
-
-    if (hydrogens === 1) {
-      let hx = x + offsetX;
-      let hy = y + offsetY + this.opts.halfFontSizeLarge;
-      hydrogenWidth = this.hydrogenWidth;
-      cursorPosLeft -= hydrogenWidth;
-
-      if (direction === 'left') {
-        hx += cursorPosLeft;
-      } else if (direction === 'right') {
-        hx += cursorPos;
-      } else if (direction === 'up' && isTerminal) {
-        hx += cursorPos;
-      } else if (direction === 'down' && isTerminal) {
-        hx += cursorPos;
-      } else if (direction === 'up' && !isTerminal) {
-        hy -= this.opts.fontSizeLarge + this.opts.quarterFontSizeLarge;
-        hx -= this.halfHydrogenWidth;
-      } else if (direction === 'down' && !isTerminal) {
-        hy += this.opts.fontSizeLarge + this.opts.quarterFontSizeLarge;
-        hx -= this.halfHydrogenWidth;
-      }
-
-      ctx.fillText('H', hx, hy);
-      cursorPos += hydrogenWidth;
-    } else if (hydrogens > 1) {
-      let hx = x + offsetX;
-      let hy = y + offsetY + this.opts.halfFontSizeLarge;
-      hydrogenWidth = this.hydrogenWidth;
-      ctx.font = this.fontSmall;
-      hydrogenCountWidth = ctx.measureText(hydrogens.toString()).width;
-      cursorPosLeft -= hydrogenWidth + hydrogenCountWidth;
-
-      if (direction === 'left') {
-        hx += cursorPosLeft;
-      } else if (direction === 'right') {
-        hx += cursorPos;
-      } else if (direction === 'up' && isTerminal) {
-        hx += cursorPos;
-      } else if (direction === 'down' && isTerminal) {
-        hx += cursorPos;
-      } else if (direction === 'up' && !isTerminal) {
-        hy -= this.opts.fontSizeLarge + this.opts.quarterFontSizeLarge;
-        hx -= this.halfHydrogenWidth;
-      } else if (direction === 'down' && !isTerminal) {
-        hy += this.opts.fontSizeLarge + this.opts.quarterFontSizeLarge;
-        hx -= this.halfHydrogenWidth;
-      }
-
-      ctx.font = this.fontLarge;
-      ctx.fillText('H', hx, hy);
-      ctx.font = this.fontSmall;
-      ctx.fillText(hydrogens.toString(), hx + this.halfHydrogenWidth + hydrogenCountWidth, hy + this.opts.fifthFontSizeSmall);
-      cursorPos += hydrogenWidth + this.halfHydrogenWidth + hydrogenCountWidth;
-    }
-
-    if (pseudoElementHandled) {
-      ctx.restore();
-      return;
-    }
-
-    for (let key in attachedPseudoElement) {
-      if (!attachedPseudoElement.hasOwnProperty(key)) {
-        continue;
-      }
-
-      let openParenthesisWidth = 0;
-      let closeParenthesisWidth = 0;
-      let element = attachedPseudoElement[key].element;
-      let elementCount = attachedPseudoElement[key].count;
-      let hydrogenCount = attachedPseudoElement[key].hydrogenCount;
-      let elementCharge = attachedPseudoElement[key].charge;
-      ctx.font = this.fontLarge;
-
-      if (elementCount > 1 && hydrogenCount > 0) {
-        openParenthesisWidth = ctx.measureText('(').width;
-        closeParenthesisWidth = ctx.measureText(')').width;
-      }
-
-      let elementWidth = ctx.measureText(element).width;
-      let elementCountWidth = 0;
-      let elementChargeText = '';
-      let elementChargeWidth = 0;
-      hydrogenWidth = 0;
-
-      if (hydrogenCount > 0) {
-        hydrogenWidth = this.hydrogenWidth;
-      }
-
-      ctx.font = this.fontSmall;
-
-      if (elementCount > 1) {
-        elementCountWidth = ctx.measureText(elementCount).width;
-      }
-
-      if (elementCharge !== 0) {
-        elementChargeText = this.getChargeText(elementCharge);
-        elementChargeWidth = ctx.measureText(elementChargeText).width;
-      }
-
-      hydrogenCountWidth = 0;
-
-      if (hydrogenCount > 1) {
-        hydrogenCountWidth = ctx.measureText(hydrogenCount).width;
-      }
-
-      ctx.font = this.fontLarge;
-      let hx = x + offsetX;
-      let hy = y + offsetY + this.opts.halfFontSizeLarge;
-      ctx.fillStyle = this.themeManager.getColor(element);
-
-      if (elementCount > 0) {
-        cursorPosLeft -= elementCountWidth;
-      }
-
-      if (elementCount > 1 && hydrogenCount > 0) {
-        if (direction === 'left') {
-          cursorPosLeft -= closeParenthesisWidth;
-          ctx.fillText(')', hx + cursorPosLeft, hy);
-        } else {
-          ctx.fillText('(', hx + cursorPos, hy);
-          cursorPos += openParenthesisWidth;
-        }
-      }
-
-      if (direction === 'left') {
-        cursorPosLeft -= elementWidth;
-        ctx.fillText(element, hx + cursorPosLeft, hy);
-      } else {
-        ctx.fillText(element, hx + cursorPos, hy);
-        cursorPos += elementWidth;
-      }
-
-      if (hydrogenCount > 0) {
-        if (direction === 'left') {
-          cursorPosLeft -= hydrogenWidth + hydrogenCountWidth;
-          ctx.fillText('H', hx + cursorPosLeft, hy);
-
-          if (hydrogenCount > 1) {
-            ctx.font = this.fontSmall;
-            ctx.fillText(hydrogenCount, hx + cursorPosLeft + hydrogenWidth, hy + this.opts.fifthFontSizeSmall);
-          }
-        } else {
-          ctx.fillText('H', hx + cursorPos, hy);
-          cursorPos += hydrogenWidth;
-
-          if (hydrogenCount > 1) {
-            ctx.font = this.fontSmall;
-            ctx.fillText(hydrogenCount, hx + cursorPos, hy + this.opts.fifthFontSizeSmall);
-            cursorPos += hydrogenCountWidth;
-          }
-        }
-      }
-
-      ctx.font = this.fontLarge;
-
-      if (elementCount > 1 && hydrogenCount > 0) {
-        if (direction === 'left') {
-          cursorPosLeft -= openParenthesisWidth;
-          ctx.fillText('(', hx + cursorPosLeft, hy);
-        } else {
-          ctx.fillText(')', hx + cursorPos, hy);
-          cursorPos += closeParenthesisWidth;
-        }
-      }
-
-      ctx.font = this.fontSmall;
-
-      if (elementCount > 1) {
-        if (direction === 'left') {
-          ctx.fillText(elementCount, hx + cursorPosLeft + openParenthesisWidth + closeParenthesisWidth + hydrogenWidth + hydrogenCountWidth + elementWidth, hy + this.opts.fifthFontSizeSmall);
-        } else {
-          ctx.fillText(elementCount, hx + cursorPos, hy + this.opts.fifthFontSizeSmall);
-          cursorPos += elementCountWidth;
-        }
-      }
-
-      if (elementCharge !== 0) {
-        if (direction === 'left') {
-          ctx.fillText(elementChargeText, hx + cursorPosLeft + openParenthesisWidth + closeParenthesisWidth + hydrogenWidth + hydrogenCountWidth + elementWidth, y - this.opts.fifthFontSizeSmall + offsetY);
-        } else {
-          ctx.fillText(elementChargeText, hx + cursorPos, y - this.opts.fifthFontSizeSmall + offsetY);
-          cursorPos += elementChargeWidth;
-        }
-      }
-    }
-
-    ctx.restore();
-  }
-  /**
-   * Translate the integer indicating the charge to the appropriate text.
-   * @param {Number} charge The integer indicating the charge.
-   * @returns {String} A string representing a charge.
-   */
-
-
-  getChargeText(charge) {
-    if (charge === 1) {
-      return '+';
-    } else if (charge === 2) {
-      return '2+';
-    } else if (charge === -1) {
-      return '-';
-    } else if (charge === -2) {
-      return '2-';
-    } else {
-      return '';
-    }
-  }
-  /**
    * Draws a dubug dot at a given coordinate and adds text.
    *
    * @param {Number} x The x coordinate.
@@ -5963,25 +5489,6 @@ class CanvasWrapper {
 
   drawDebugPoint(x, y, debugText = '', color = '#f00') {
     this.drawCircle(x, y, 2, color, true, true, debugText);
-  }
-  /**
-   * Draws a ring inside a provided ring, indicating aromaticity.
-   *
-   * @param {Ring} ring A ring.
-   */
-
-
-  drawAromaticityRing(ring) {
-    let ctx = this.ctx;
-    let radius = MathHelper.apothemFromSideLength(this.opts.bondLength, ring.getSize());
-    ctx.save();
-    ctx.strokeStyle = this.themeManager.getColor('C');
-    ctx.lineWidth = this.opts.bondThickness;
-    ctx.beginPath();
-    ctx.arc(ring.center.x + this.offsetX, ring.center.y + this.offsetY, radius - this.opts.bondSpacing, 0, Math.PI * 2, true);
-    ctx.closePath();
-    ctx.stroke();
-    ctx.restore();
   }
   /**
    * Clear the canvas.
@@ -6001,11 +5508,43 @@ class CanvasWrapper {
     this.wedgeDrawer.drawDashedWedge(line);
   }
 
+  drawCircle(x, y, radius, color, fill = true, debug = false, debugText = '') {
+    this.primitiveDrawer.drawCircle(x, y, radius, color, fill, debug, debugText);
+  }
+
+  drawLine(line, dashed = false, alpha = 1.0) {
+    this.primitiveDrawer.drawLine(line, dashed, alpha);
+  }
+
+  drawBall(x, y, elementName) {
+    this.primitiveDrawer.drawBall(x, y, elementName);
+  }
+
+  drawPoint(x, y, elementName) {
+    this.primitiveDrawer.drawPoint(x, y, elementName);
+  }
+
+  drawAromaticityRing(ring) {
+    this.primitiveDrawer.drawAromaticityRing(ring);
+  }
+
+  drawDebugText(x, y, text) {
+    this.primitiveDrawer.drawDebugText(x, y, text);
+  }
+
+  drawText(x, y, elementName, hydrogens, direction, isTerminal, charge, isotope, vertexCount, attachedPseudoElement = {}) {
+    this.textRenderer.drawText(x, y, elementName, hydrogens, direction, isTerminal, charge, isotope, vertexCount, attachedPseudoElement);
+  }
+
+  getChargeText(charge) {
+    return this.textRenderer.getChargeText(charge);
+  }
+
 }
 
 module.exports = CanvasWrapper;
 
-},{"../utils/MathHelper":46,"./helpers/CanvasWedgeDrawer":16}],11:[function(require,module,exports){
+},{"./draw/CanvasPrimitiveDrawer":16,"./draw/CanvasTextRenderer":17,"./draw/CanvasWedgeDrawer":18}],11:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -6417,7 +5956,7 @@ class DrawingManager {
 
 module.exports = DrawingManager;
 
-},{"../config/ThemeManager":9,"../graph/Atom":20,"../graph/Line":25,"../graph/Vector2":28,"../utils/ArrayHelper":44,"./CanvasWrapper":10}],13:[function(require,module,exports){
+},{"../config/ThemeManager":9,"../graph/Atom":22,"../graph/Line":27,"../graph/Vector2":30,"../utils/ArrayHelper":46,"./CanvasWrapper":10}],13:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -6601,7 +6140,7 @@ class GaussDrawer {
 
 module.exports = GaussDrawer;
 
-},{"../graph/Vector2":28,"../utils/PixelsToSvg":47,"chroma-js":2}],14:[function(require,module,exports){
+},{"../graph/Vector2":30,"../utils/PixelsToSvg":49,"chroma-js":2}],14:[function(require,module,exports){
 "use strict"; // we use the drawer to do all the preprocessing. then we take over the drawing
 // portion to output to svg
 
@@ -7069,7 +6608,7 @@ class SvgDrawer {
 
 module.exports = SvgDrawer;
 
-},{"../config/ThemeManager":9,"../graph/Atom":20,"../graph/Line":25,"../graph/Vector2":28,"../preprocessing/MolecularPreprocessor":36,"../utils/ArrayHelper":44,"./GaussDrawer":13,"./SvgWrapper":15}],15:[function(require,module,exports){
+},{"../config/ThemeManager":9,"../graph/Atom":22,"../graph/Line":27,"../graph/Vector2":30,"../preprocessing/MolecularPreprocessor":38,"../utils/ArrayHelper":46,"./GaussDrawer":13,"./SvgWrapper":15}],15:[function(require,module,exports){
 "use strict";
 
 const SvgTextHelper = require("./helpers/SvgTextHelper");
@@ -7836,7 +7375,532 @@ class SvgWrapper {
 
 module.exports = SvgWrapper;
 
-},{"../graph/Line":25,"../graph/Vector2":28,"../utils/MathHelper":46,"./helpers/SvgTextHelper":18,"./helpers/SvgUnicodeHelper":19}],16:[function(require,module,exports){
+},{"../graph/Line":27,"../graph/Vector2":30,"../utils/MathHelper":48,"./helpers/SvgTextHelper":20,"./helpers/SvgUnicodeHelper":21}],16:[function(require,module,exports){
+"use strict";
+
+const MathHelper = require("../../utils/MathHelper");
+
+class CanvasPrimitiveDrawer {
+  constructor(wrapper) {
+    this.wrapper = wrapper;
+  }
+  /**
+   * Draws a circle to a canvas context.
+   * @param {Number} x The x coordinate of the circles center.
+   * @param {Number} y The y coordinate of the circles center.
+   * @param {Number} radius The radius of the circle
+   * @param {String} color A hex encoded color.
+   * @param {Boolean} [fill=true] Whether to fill or stroke the circle.
+   * @param {Boolean} [debug=false] Draw in debug mode.
+   * @param {String} [debugText=''] A debug message.
+   */
+
+
+  drawCircle(x, y, radius, color, fill = true, debug = false, debugText = '') {
+    let ctx = this.wrapper.ctx;
+    let offsetX = this.wrapper.offsetX;
+    let offsetY = this.wrapper.offsetY;
+    ctx.save();
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(x + offsetX, y + offsetY, radius, 0, MathHelper.twoPI, true);
+    ctx.closePath();
+
+    if (debug) {
+      if (fill) {
+        ctx.fillStyle = '#f00';
+        ctx.fill();
+      } else {
+        ctx.strokeStyle = '#f00';
+        ctx.stroke();
+      }
+
+      this.drawDebugText(x, y, debugText);
+    } else {
+      if (fill) {
+        ctx.fillStyle = color;
+        ctx.fill();
+      } else {
+        ctx.strokeStyle = color;
+        ctx.stroke();
+      }
+    }
+
+    ctx.restore();
+  }
+  /**
+   * Draw a line to a canvas.
+   *
+   * @param {Line} line A line.
+   * @param {Boolean} [dashed=false] Whether or not the line is dashed.
+   * @param {Number} [alpha=1.0] The alpha value of the color.
+   */
+
+
+  drawLine(line, dashed = false, alpha = 1.0) {
+    let ctx = this.wrapper.ctx;
+    let offsetX = this.wrapper.offsetX;
+    let offsetY = this.wrapper.offsetY; // Add a shadow behind the line
+
+    let shortLine = line.clone().shorten(4.0);
+    let l = shortLine.getLeftVector().clone();
+    let r = shortLine.getRightVector().clone();
+    l.x += offsetX;
+    l.y += offsetY;
+    r.x += offsetX;
+    r.y += offsetY; // Draw the "shadow"
+
+    if (!dashed) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath();
+      ctx.moveTo(l.x, l.y);
+      ctx.lineTo(r.x, r.y);
+      ctx.lineCap = 'round';
+      ctx.lineWidth = this.wrapper.opts.bondThickness + 1.2;
+      ctx.strokeStyle = this.wrapper.themeManager.getColor('BACKGROUND');
+      ctx.stroke();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.restore();
+    }
+
+    l = line.getLeftVector().clone();
+    r = line.getRightVector().clone();
+    l.x += offsetX;
+    l.y += offsetY;
+    r.x += offsetX;
+    r.y += offsetY;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(l.x, l.y);
+    ctx.lineTo(r.x, r.y);
+    ctx.lineCap = 'round';
+    ctx.lineWidth = this.wrapper.opts.bondThickness;
+    let gradient = this.wrapper.ctx.createLinearGradient(l.x, l.y, r.x, r.y);
+    gradient.addColorStop(0.4, this.wrapper.themeManager.getColor(line.getLeftElement()) || this.wrapper.themeManager.getColor('C'));
+    gradient.addColorStop(0.6, this.wrapper.themeManager.getColor(line.getRightElement()) || this.wrapper.themeManager.getColor('C'));
+
+    if (dashed) {
+      ctx.setLineDash([1, 1.5]);
+      ctx.lineWidth = this.wrapper.opts.bondThickness / 1.5;
+    }
+
+    if (alpha < 1.0) {
+      ctx.globalAlpha = alpha;
+    }
+
+    ctx.strokeStyle = gradient;
+    ctx.stroke();
+    ctx.restore();
+  }
+  /**
+   * Draw a ball to the canvas.
+   *
+   * @param {Number} x The x position of the text.
+   * @param {Number} y The y position of the text.
+   * @param {String} elementName The name of the element (single-letter).
+   */
+
+
+  drawBall(x, y, elementName) {
+    let ctx = this.wrapper.ctx;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x + this.wrapper.offsetX, y + this.wrapper.offsetY, this.wrapper.opts.bondLength / 4.5, 0, MathHelper.twoPI, false);
+    ctx.fillStyle = this.wrapper.themeManager.getColor(elementName);
+    ctx.fill();
+    ctx.restore();
+  }
+  /**
+   * Draw a point to the canvas.
+   *
+   * @param {Number} x The x position of the point.
+   * @param {Number} y The y position of the point.
+   * @param {String} elementName The name of the element (single-letter).
+   */
+
+
+  drawPoint(x, y, elementName) {
+    let ctx = this.wrapper.ctx;
+    let offsetX = this.wrapper.offsetX;
+    let offsetY = this.wrapper.offsetY;
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(x + offsetX, y + offsetY, 1.5, 0, MathHelper.twoPI, true);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.beginPath();
+    ctx.arc(x + this.wrapper.offsetX, y + this.wrapper.offsetY, 0.75, 0, MathHelper.twoPI, false);
+    ctx.fillStyle = this.wrapper.themeManager.getColor(elementName);
+    ctx.fill();
+    ctx.restore();
+  }
+  /**
+   * Draws a ring inside a provided ring, indicating aromaticity.
+   *
+   * @param {Ring} ring A ring.
+   */
+
+
+  drawAromaticityRing(ring) {
+    let ctx = this.wrapper.ctx;
+    let radius = MathHelper.apothemFromSideLength(this.wrapper.opts.bondLength, ring.getSize());
+    ctx.save();
+    ctx.strokeStyle = this.wrapper.themeManager.getColor('C');
+    ctx.lineWidth = this.wrapper.opts.bondThickness;
+    ctx.beginPath();
+    ctx.arc(ring.center.x + this.wrapper.offsetX, ring.center.y + this.wrapper.offsetY, radius - this.wrapper.opts.bondSpacing, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
+  }
+  /**
+   * Draws a debug text message at a given position
+   *
+   * @param {Number} x The x coordinate.
+   * @param {Number} y The y coordinate.
+   * @param {String} text The debug text.
+   */
+
+
+  drawDebugText(x, y, text) {
+    let ctx = this.wrapper.ctx;
+    ctx.save();
+    ctx.font = '5px Droid Sans, sans-serif';
+    ctx.textAlign = 'start';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = '#ff0000';
+    ctx.fillText(text, x + this.wrapper.offsetX, y + this.wrapper.offsetY);
+    ctx.restore();
+  }
+
+}
+
+module.exports = CanvasPrimitiveDrawer;
+
+},{"../../utils/MathHelper":48}],17:[function(require,module,exports){
+"use strict";
+
+const MathHelper = require("../../utils/MathHelper");
+
+class CanvasTextRenderer {
+  constructor(wrapper) {
+    this.wrapper = wrapper;
+  }
+  /**
+   * Draw a text to the canvas.
+   *
+   * @param {Number} x The x position of the text.
+   * @param {Number} y The y position of the text.
+   * @param {String} elementName The name of the element (single-letter).
+   * @param {Number} hydrogens The number of hydrogen atoms.
+   * @param {String} direction The direction of the text in relation to the associated vertex.
+   * @param {Boolean} isTerminal A boolean indicating whether or not the vertex is terminal.
+   * @param {Number} charge The charge of the atom.
+   * @param {Number} isotope The isotope number.
+   * @param {Number} vertexCount The number of vertices in the molecular graph.
+   * @param {Object} attachedPseudoElement A map with containing information for pseudo elements or concatinated elements. The key is comprised of the element symbol and the hydrogen count.
+   * @param {String} attachedPseudoElement.element The element symbol.
+   * @param {Number} attachedPseudoElement.count The number of occurences that match the key.
+   * @param {Number} attachedPseudoElement.hyrogenCount The number of hydrogens attached to each atom matching the key.
+   */
+
+
+  drawText(x, y, elementName, hydrogens, direction, isTerminal, charge, isotope, vertexCount, attachedPseudoElement = {}) {
+    let ctx = this.wrapper.ctx;
+    let offsetX = this.wrapper.offsetX;
+    let offsetY = this.wrapper.offsetY;
+    ctx.save();
+    ctx.textAlign = 'start';
+    ctx.textBaseline = 'alphabetic';
+    let pseudoElementHandled = false; // Charge
+
+    let chargeText = '';
+    let chargeWidth = 0;
+
+    if (charge) {
+      chargeText = this.getChargeText(charge);
+      ctx.font = this.wrapper.fontSmall;
+      chargeWidth = ctx.measureText(chargeText).width;
+    }
+
+    let isotopeText = '0';
+    let isotopeWidth = 0;
+
+    if (isotope > 0) {
+      isotopeText = isotope.toString();
+      ctx.font = this.wrapper.fontSmall;
+      isotopeWidth = ctx.measureText(isotopeText).width;
+    } // TODO: Better handle exceptions
+    // Exception for nitro (draw nitro as NO2 instead of N+O-O)
+
+
+    if (charge === 1 && elementName === 'N' && attachedPseudoElement.hasOwnProperty('0O') && attachedPseudoElement.hasOwnProperty('0O-1')) {
+      attachedPseudoElement = {
+        '0O': {
+          element: 'O',
+          count: 2,
+          hydrogenCount: 0,
+          previousElement: 'C',
+          charge: ''
+        }
+      };
+      charge = 0;
+    }
+
+    ctx.font = this.wrapper.fontLarge;
+    ctx.fillStyle = this.wrapper.themeManager.getColor('BACKGROUND');
+    let dim = ctx.measureText(elementName); // @ts-ignore - Adding custom properties to TextMetrics for internal use
+
+    dim.totalWidth = dim.width + chargeWidth; // @ts-ignore - Adding custom properties to TextMetrics for internal use
+
+    dim.height = parseInt(this.wrapper.fontLarge, 10);
+    let r = dim.width > this.wrapper.opts.fontSizeLarge ? dim.width : this.wrapper.opts.fontSizeLarge;
+    r /= 1.5;
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(x + offsetX, y + offsetY, r, 0, MathHelper.twoPI, true);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+    let cursorPos = -dim.width / 2.0;
+    let cursorPosLeft = -dim.width / 2.0;
+    ctx.fillStyle = this.wrapper.themeManager.getColor(elementName);
+    ctx.fillText(elementName, x + offsetX + cursorPos, y + this.wrapper.opts.halfFontSizeLarge + offsetY);
+    cursorPos += dim.width;
+
+    if (charge) {
+      ctx.font = this.wrapper.fontSmall;
+      ctx.fillText(chargeText, x + offsetX + cursorPos, y - this.wrapper.opts.fifthFontSizeSmall + offsetY);
+      cursorPos += chargeWidth;
+    }
+
+    if (isotope > 0) {
+      ctx.font = this.wrapper.fontSmall;
+      ctx.fillText(isotopeText, x + offsetX + cursorPosLeft - isotopeWidth, y - this.wrapper.opts.fifthFontSizeSmall + offsetY);
+      cursorPosLeft -= isotopeWidth;
+    }
+
+    ctx.font = this.wrapper.fontLarge;
+    let hydrogenWidth = 0;
+    let hydrogenCountWidth = 0;
+
+    if (hydrogens === 1) {
+      let hx = x + offsetX;
+      let hy = y + offsetY + this.wrapper.opts.halfFontSizeLarge;
+      hydrogenWidth = this.wrapper.hydrogenWidth;
+      cursorPosLeft -= hydrogenWidth;
+
+      if (direction === 'left') {
+        hx += cursorPosLeft;
+      } else if (direction === 'right') {
+        hx += cursorPos;
+      } else if (direction === 'up' && isTerminal) {
+        hx += cursorPos;
+      } else if (direction === 'down' && isTerminal) {
+        hx += cursorPos;
+      } else if (direction === 'up' && !isTerminal) {
+        hy -= this.wrapper.opts.fontSizeLarge + this.wrapper.opts.quarterFontSizeLarge;
+        hx -= this.wrapper.halfHydrogenWidth;
+      } else if (direction === 'down' && !isTerminal) {
+        hy += this.wrapper.opts.fontSizeLarge + this.wrapper.opts.quarterFontSizeLarge;
+        hx -= this.wrapper.halfHydrogenWidth;
+      }
+
+      ctx.fillText('H', hx, hy);
+      cursorPos += hydrogenWidth;
+    } else if (hydrogens > 1) {
+      let hx = x + offsetX;
+      let hy = y + offsetY + this.wrapper.opts.halfFontSizeLarge;
+      hydrogenWidth = this.wrapper.hydrogenWidth;
+      ctx.font = this.wrapper.fontSmall;
+      hydrogenCountWidth = ctx.measureText(hydrogens.toString()).width;
+      cursorPosLeft -= hydrogenWidth + hydrogenCountWidth;
+
+      if (direction === 'left') {
+        hx += cursorPosLeft;
+      } else if (direction === 'right') {
+        hx += cursorPos;
+      } else if (direction === 'up' && isTerminal) {
+        hx += cursorPos;
+      } else if (direction === 'down' && isTerminal) {
+        hx += cursorPos;
+      } else if (direction === 'up' && !isTerminal) {
+        hy -= this.wrapper.opts.fontSizeLarge + this.wrapper.opts.quarterFontSizeLarge;
+        hx -= this.wrapper.halfHydrogenWidth;
+      } else if (direction === 'down' && !isTerminal) {
+        hy += this.wrapper.opts.fontSizeLarge + this.wrapper.opts.quarterFontSizeLarge;
+        hx -= this.wrapper.halfHydrogenWidth;
+      }
+
+      ctx.font = this.wrapper.fontLarge;
+      ctx.fillText('H', hx, hy);
+      ctx.font = this.wrapper.fontSmall;
+      ctx.fillText(hydrogens.toString(), hx + this.wrapper.halfHydrogenWidth + hydrogenCountWidth, hy + this.wrapper.opts.fifthFontSizeSmall);
+      cursorPos += hydrogenWidth + this.wrapper.halfHydrogenWidth + hydrogenCountWidth;
+    }
+
+    if (pseudoElementHandled) {
+      ctx.restore();
+      return;
+    }
+
+    for (let key in attachedPseudoElement) {
+      if (!attachedPseudoElement.hasOwnProperty(key)) {
+        continue;
+      }
+
+      let openParenthesisWidth = 0;
+      let closeParenthesisWidth = 0;
+      let element = attachedPseudoElement[key].element;
+      let elementCount = attachedPseudoElement[key].count;
+      let hydrogenCount = attachedPseudoElement[key].hydrogenCount;
+      let elementCharge = attachedPseudoElement[key].charge;
+      ctx.font = this.wrapper.fontLarge;
+
+      if (elementCount > 1 && hydrogenCount > 0) {
+        openParenthesisWidth = ctx.measureText('(').width;
+        closeParenthesisWidth = ctx.measureText(')').width;
+      }
+
+      let elementWidth = ctx.measureText(element).width;
+      let elementCountWidth = 0;
+      let elementChargeText = '';
+      let elementChargeWidth = 0;
+      hydrogenWidth = 0;
+
+      if (hydrogenCount > 0) {
+        hydrogenWidth = this.wrapper.hydrogenWidth;
+      }
+
+      ctx.font = this.wrapper.fontSmall;
+
+      if (elementCount > 1) {
+        elementCountWidth = ctx.measureText(elementCount).width;
+      }
+
+      if (elementCharge !== 0) {
+        elementChargeText = this.getChargeText(elementCharge);
+        elementChargeWidth = ctx.measureText(elementChargeText).width;
+      }
+
+      hydrogenCountWidth = 0;
+
+      if (hydrogenCount > 1) {
+        hydrogenCountWidth = ctx.measureText(hydrogenCount).width;
+      }
+
+      ctx.font = this.wrapper.fontLarge;
+      let hx = x + offsetX;
+      let hy = y + offsetY + this.wrapper.opts.halfFontSizeLarge;
+      ctx.fillStyle = this.wrapper.themeManager.getColor(element);
+
+      if (elementCount > 0) {
+        cursorPosLeft -= elementCountWidth;
+      }
+
+      if (elementCount > 1 && hydrogenCount > 0) {
+        if (direction === 'left') {
+          cursorPosLeft -= closeParenthesisWidth;
+          ctx.fillText(')', hx + cursorPosLeft, hy);
+        } else {
+          ctx.fillText('(', hx + cursorPos, hy);
+          cursorPos += openParenthesisWidth;
+        }
+      }
+
+      if (direction === 'left') {
+        cursorPosLeft -= elementWidth;
+        ctx.fillText(element, hx + cursorPosLeft, hy);
+      } else {
+        ctx.fillText(element, hx + cursorPos, hy);
+        cursorPos += elementWidth;
+      }
+
+      if (hydrogenCount > 0) {
+        if (direction === 'left') {
+          cursorPosLeft -= hydrogenWidth + hydrogenCountWidth;
+          ctx.fillText('H', hx + cursorPosLeft, hy);
+
+          if (hydrogenCount > 1) {
+            ctx.font = this.wrapper.fontSmall;
+            ctx.fillText(hydrogenCount, hx + cursorPosLeft + hydrogenWidth, hy + this.wrapper.opts.fifthFontSizeSmall);
+          }
+        } else {
+          ctx.fillText('H', hx + cursorPos, hy);
+          cursorPos += hydrogenWidth;
+
+          if (hydrogenCount > 1) {
+            ctx.font = this.wrapper.fontSmall;
+            ctx.fillText(hydrogenCount, hx + cursorPos, hy + this.wrapper.opts.fifthFontSizeSmall);
+            cursorPos += hydrogenCountWidth;
+          }
+        }
+      }
+
+      ctx.font = this.wrapper.fontLarge;
+
+      if (elementCount > 1 && hydrogenCount > 0) {
+        if (direction === 'left') {
+          cursorPosLeft -= openParenthesisWidth;
+          ctx.fillText('(', hx + cursorPosLeft, hy);
+        } else {
+          ctx.fillText(')', hx + cursorPos, hy);
+          cursorPos += closeParenthesisWidth;
+        }
+      }
+
+      ctx.font = this.wrapper.fontSmall;
+
+      if (elementCount > 1) {
+        if (direction === 'left') {
+          ctx.fillText(elementCount, hx + cursorPosLeft + openParenthesisWidth + closeParenthesisWidth + hydrogenWidth + hydrogenCountWidth + elementWidth, hy + this.wrapper.opts.fifthFontSizeSmall);
+        } else {
+          ctx.fillText(elementCount, hx + cursorPos, hy + this.wrapper.opts.fifthFontSizeSmall);
+          cursorPos += elementCountWidth;
+        }
+      }
+
+      if (elementCharge !== 0) {
+        if (direction === 'left') {
+          ctx.fillText(elementChargeText, hx + cursorPosLeft + openParenthesisWidth + closeParenthesisWidth + hydrogenWidth + hydrogenCountWidth + elementWidth, y - this.wrapper.opts.fifthFontSizeSmall + offsetY);
+        } else {
+          ctx.fillText(elementChargeText, hx + cursorPos, y - this.wrapper.opts.fifthFontSizeSmall + offsetY);
+          cursorPos += elementChargeWidth;
+        }
+      }
+    }
+
+    ctx.restore();
+  }
+  /**
+   * Translate the integer indicating the charge to the appropriate text.
+   * @param {Number} charge The integer indicating the charge.
+   * @returns {String} A string representing a charge.
+   */
+
+
+  getChargeText(charge) {
+    if (charge === 1) {
+      return '+';
+    } else if (charge === 2) {
+      return '2+';
+    } else if (charge === -1) {
+      return '-';
+    } else if (charge === -2) {
+      return '2-';
+    } else {
+      return '';
+    }
+  }
+
+}
+
+module.exports = CanvasTextRenderer;
+
+},{"../../utils/MathHelper":48}],18:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../../graph/Vector2");
@@ -7990,7 +8054,7 @@ class CanvasWedgeDrawer {
 
 module.exports = CanvasWedgeDrawer;
 
-},{"../../graph/Vector2":28}],17:[function(require,module,exports){
+},{"../../graph/Vector2":30}],19:[function(require,module,exports){
 "use strict";
 
 class SvgConversionHelper {
@@ -8049,7 +8113,7 @@ class SvgConversionHelper {
 
 module.exports = SvgConversionHelper;
 
-},{}],18:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 "use strict";
 
 class SvgTextHelper {
@@ -8158,7 +8222,7 @@ class SvgTextHelper {
 
 module.exports = SvgTextHelper;
 
-},{}],19:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 "use strict";
 
 class SvgUnicodeHelper {
@@ -8227,7 +8291,7 @@ class SvgUnicodeHelper {
 
 module.exports = SvgUnicodeHelper;
 
-},{}],20:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
@@ -8788,7 +8852,7 @@ class Atom {
 
 module.exports = Atom;
 
-},{"../utils/ArrayHelper":44}],21:[function(require,module,exports){
+},{"../utils/ArrayHelper":46}],23:[function(require,module,exports){
 "use strict";
 /**
  * A class representing an edge.
@@ -8854,7 +8918,7 @@ class Edge {
 
 module.exports = Edge;
 
-},{}],22:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 "use strict";
 
 const Vertex = require("./Vertex");
@@ -9279,7 +9343,7 @@ class Graph {
 
 module.exports = Graph;
 
-},{"../algorithms/KamadaKawaiLayout":4,"./Atom":20,"./Edge":21,"./GraphAlgorithms":23,"./GraphMatrixOperations":24,"./Vertex":29}],23:[function(require,module,exports){
+},{"../algorithms/KamadaKawaiLayout":4,"./Atom":22,"./Edge":23,"./GraphAlgorithms":25,"./GraphMatrixOperations":26,"./Vertex":31}],25:[function(require,module,exports){
 "use strict";
 /**
  * A class providing graph algorithms including bridge detection,
@@ -9535,7 +9599,7 @@ class GraphAlgorithms {
 
 module.exports = GraphAlgorithms;
 
-},{}],24:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 "use strict";
 /**
  * A class providing matrix and list operations for molecular graphs.
@@ -9764,7 +9828,7 @@ class GraphMatrixOperations {
 
 module.exports = GraphMatrixOperations;
 
-},{}],25:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -10072,7 +10136,7 @@ class Line {
 
 module.exports = Line;
 
-},{"./Vector2":28}],26:[function(require,module,exports){
+},{"./Vector2":30}],28:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
@@ -10291,7 +10355,7 @@ class Ring {
 
 module.exports = Ring;
 
-},{"../utils/ArrayHelper":44,"./RingConnection":27,"./Vector2":28}],27:[function(require,module,exports){
+},{"../utils/ArrayHelper":46,"./RingConnection":29,"./Vector2":30}],29:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a ring connection.
@@ -10459,7 +10523,7 @@ class RingConnection {
 
 module.exports = RingConnection;
 
-},{}],28:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a 2D vector.
@@ -11079,7 +11143,7 @@ class Vector2 {
 
 module.exports = Vector2;
 
-},{}],29:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -11456,7 +11520,7 @@ class Vertex {
 
 module.exports = Vertex;
 
-},{"../utils/ArrayHelper":44,"../utils/MathHelper":46,"./Vector2":28}],30:[function(require,module,exports){
+},{"../utils/ArrayHelper":46,"../utils/MathHelper":48,"./Vector2":30}],32:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
@@ -11645,7 +11709,7 @@ class BridgedRingHandler {
 
 module.exports = BridgedRingHandler;
 
-},{"../graph/Ring":26,"../graph/RingConnection":27,"../utils/ArrayHelper":44}],31:[function(require,module,exports){
+},{"../graph/Ring":28,"../graph/RingConnection":29,"../utils/ArrayHelper":46}],33:[function(require,module,exports){
 "use strict"; // WHEN REPLACING, CHECK FOR:
 // KEEP THIS WHEN REGENERATING THE PARSER !!
 
@@ -13543,7 +13607,7 @@ module.exports = function () {
   };
 }();
 
-},{}],32:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 "use strict";
 
 const Reaction = require("../reactions/Reaction");
@@ -13564,7 +13628,7 @@ class ReactionParser {
 
 module.exports = ReactionParser;
 
-},{"../reactions/Reaction":42}],33:[function(require,module,exports){
+},{"../reactions/Reaction":44}],35:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -13701,7 +13765,7 @@ class GraphProcessingManager {
 
 module.exports = GraphProcessingManager;
 
-},{"../utils/MathHelper":46}],34:[function(require,module,exports){
+},{"../utils/MathHelper":48}],36:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -13756,7 +13820,7 @@ class InitializationManager {
 
 module.exports = InitializationManager;
 
-},{"../graph/Graph":22}],35:[function(require,module,exports){
+},{"../graph/Graph":24}],37:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -13848,7 +13912,7 @@ class MolecularInfoManager {
 
 module.exports = MolecularInfoManager;
 
-},{"../graph/Atom":20,"../graph/Graph":22}],36:[function(require,module,exports){
+},{"../graph/Atom":22,"../graph/Graph":24}],38:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -14636,7 +14700,7 @@ class MolecularPreprocessor {
 
 module.exports = MolecularPreprocessor;
 
-},{"../config/OptionsManager":8,"../drawing/DrawingManager":12,"./GraphProcessingManager":33,"./InitializationManager":34,"./MolecularInfoManager":35,"./OverlapResolutionManager":37,"./PositioningManager":38,"./PseudoElementManager":39,"./RingManager":40,"./StereochemistryManager":41}],37:[function(require,module,exports){
+},{"../config/OptionsManager":8,"../drawing/DrawingManager":12,"./GraphProcessingManager":35,"./InitializationManager":36,"./MolecularInfoManager":37,"./OverlapResolutionManager":39,"./PositioningManager":40,"./PseudoElementManager":41,"./RingManager":42,"./StereochemistryManager":43}],39:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../graph/Vector2");
@@ -14938,7 +15002,7 @@ class OverlapResolutionManager {
 
 module.exports = OverlapResolutionManager;
 
-},{"../graph/Vector2":28,"../utils/ArrayHelper":44,"../utils/MathHelper":46}],38:[function(require,module,exports){
+},{"../graph/Vector2":30,"../utils/ArrayHelper":46,"../utils/MathHelper":48}],40:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../graph/Vector2");
@@ -15403,7 +15467,7 @@ class PositioningManager {
 
 module.exports = PositioningManager;
 
-},{"../graph/Vector2":28,"../utils/ArrayHelper":44,"../utils/MathHelper":46}],39:[function(require,module,exports){
+},{"../graph/Vector2":30,"../utils/ArrayHelper":46,"../utils/MathHelper":48}],41:[function(require,module,exports){
 "use strict";
 
 const Atom = require("../graph/Atom");
@@ -15532,7 +15596,7 @@ class PseudoElementManager {
 
 module.exports = PseudoElementManager;
 
-},{"../graph/Atom":20}],40:[function(require,module,exports){
+},{"../graph/Atom":22}],42:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -16153,7 +16217,7 @@ class RingManager {
 
 module.exports = RingManager;
 
-},{"../algorithms/SSSR":5,"../graph/Edge":21,"../graph/Ring":26,"../graph/RingConnection":27,"../graph/Vector2":28,"../handlers/BridgedRingHandler":30,"../utils/ArrayHelper":44,"../utils/MathHelper":46}],41:[function(require,module,exports){
+},{"../algorithms/SSSR":5,"../graph/Edge":23,"../graph/Ring":28,"../graph/RingConnection":29,"../graph/Vector2":30,"../handlers/BridgedRingHandler":32,"../utils/ArrayHelper":46,"../utils/MathHelper":48}],43:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -16377,7 +16441,7 @@ class StereochemistryManager {
 
 module.exports = StereochemistryManager;
 
-},{"../utils/MathHelper":46}],42:[function(require,module,exports){
+},{"../utils/MathHelper":48}],44:[function(require,module,exports){
 "use strict";
 
 const Parser = require("../parsing/Parser");
@@ -16433,7 +16497,7 @@ class Reaction {
 
 module.exports = Reaction;
 
-},{"../parsing/Parser":31}],43:[function(require,module,exports){
+},{"../parsing/Parser":33}],45:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("../drawing/SvgDrawer");
@@ -16807,7 +16871,7 @@ class ReactionDrawer {
 
 module.exports = ReactionDrawer;
 
-},{"../config/Options":7,"../config/ThemeManager":9,"../drawing/SvgDrawer":14,"../drawing/helpers/SvgTextHelper":18,"../drawing/helpers/SvgUnicodeHelper":19,"../utils/FormulaToCommonName":45}],44:[function(require,module,exports){
+},{"../config/Options":7,"../config/ThemeManager":9,"../drawing/SvgDrawer":14,"../drawing/helpers/SvgTextHelper":20,"../drawing/helpers/SvgUnicodeHelper":21,"../utils/FormulaToCommonName":47}],46:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for array-related tasks.
@@ -17208,7 +17272,7 @@ class ArrayHelper {
 
 module.exports = ArrayHelper;
 
-},{}],45:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 "use strict";
 
 const formulaToCommonName = {
@@ -17246,7 +17310,7 @@ const formulaToCommonName = {
 };
 module.exports = formulaToCommonName;
 
-},{}],46:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for math-related tasks.
@@ -17419,7 +17483,7 @@ class MathHelper {
 
 module.exports = MathHelper;
 
-},{}],47:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 "use strict"; // Adapted from https://codepen.io/shshaw/pen/XbxvNj by
 
 function convertImage(img) {
