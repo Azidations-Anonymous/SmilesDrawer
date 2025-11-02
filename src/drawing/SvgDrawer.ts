@@ -11,6 +11,7 @@ import Vector2 = require('../graph/Vector2');
 import GaussDrawer = require('./GaussDrawer');
 import SvgEdgeDrawer = require('./draw/SvgEdgeDrawer');
 import SvgVertexDrawer = require('./draw/SvgVertexDrawer');
+import SvgWeightsDrawer = require('./draw/SvgWeightsDrawer');
 
 class SvgDrawer {
   preprocessor: any;
@@ -21,14 +22,16 @@ class SvgDrawer {
   bridgedRing: boolean;
     private edgeDrawer: SvgEdgeDrawer;
     private vertexDrawer: SvgVertexDrawer;
+    private weightsDrawer: SvgWeightsDrawer;
 
   constructor(options: any, clear: boolean = true) {
       this.preprocessor = new MolecularPreprocessor(options);
       this.opts = this.preprocessor.opts;
       this.clear = clear;
       this.svgWrapper = null;
-        this.edgeDrawer = new SvgEdgeDrawer(this);
-          this.vertexDrawer = new SvgVertexDrawer(this);
+      this.edgeDrawer = new SvgEdgeDrawer(this);
+        this.vertexDrawer = new SvgVertexDrawer(this);
+          this.weightsDrawer = new SvgWeightsDrawer(this);
   }
 
   /**
@@ -141,44 +144,6 @@ class SvgDrawer {
   }
 
   /**
-   * Draw the weights on a background image.
-   * @param {Number[]} weights The weights assigned to each atom.
-   */
-  drawWeights(weights: number[], weightsNormalized: boolean): void {
-
-    if (!weights) {
-      return;
-    }
-
-    if (weights.every(w => w === 0)) {
-      return;
-    }
-
-    if (weights.length !== this.preprocessor.graph.atomIdxToVertexId.length) {
-      throw new Error('The number of weights supplied must be equal to the number of (heavy) atoms in the molecule.');
-    }
-
-    let points = [];
-
-    for (const atomIdx of this.preprocessor.graph.atomIdxToVertexId) {
-      let vertex = this.preprocessor.graph.vertices[atomIdx];
-      points.push(new Vector2(
-        vertex.position.x - this.svgWrapper.minX,
-        vertex.position.y - this.svgWrapper.minY)
-      );
-    }
-
-    let gd = new GaussDrawer(
-      points, weights, this.svgWrapper.drawingWidth, this.svgWrapper.drawingHeight,
-      this.opts.weights.sigma, this.opts.weights.interval, this.opts.weights.colormap,
-      this.opts.weights.opacity, weightsNormalized
-    );
-
-    gd.draw();
-    this.svgWrapper.addLayer(gd.getSVG());
-  }
-
-  /**
    * Returns the total overlap score of the current molecule.
    *
    * @returns {Number} The overlap score.
@@ -218,6 +183,10 @@ class SvgDrawer {
 
     drawVertices(debug: boolean): void {
         this.vertexDrawer.drawVertices(debug);
+    }
+
+    drawWeights(weights: number[], weightsNormalized: boolean): void {
+        this.weightsDrawer.drawWeights(weights, weightsNormalized);
     }
 }
 
