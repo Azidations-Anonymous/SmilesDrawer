@@ -132,45 +132,18 @@ SmilesDrawer includes comprehensive regression testing to ensure changes don't b
 
 #### Regression Testing
 
-Run fail-early regression tests using the fast regression dataset:
+Run regression tests to compare molecular structure rendering between versions:
 
 ```bash
 npm run test:regression
+# or
+npm run test:visual  # alias for test:regression
 ```
 
 Compare against a specific commit or branch:
 
 ```bash
 npm run test:regression <commit/branch>
-```
-
-Run against all datasets (not just fastregression):
-
-```bash
-npm run test:regression -all
-```
-
-Or compare against a specific commit using all datasets:
-
-```bash
-npm run test:regression <commit/branch> -all
-```
-
-**Flags:**
-- `-all` - Test all datasets instead of just fastregression
-
-#### Visual Regression Testing
-
-Create side-by-side comparisons of molecules that render differently:
-
-```bash
-npm run test:visual
-```
-
-Compare against a specific commit or branch:
-
-```bash
-npm run test:visual <commit/branch>
 ```
 
 **Available flags:**
@@ -181,21 +154,26 @@ npm run test:visual <commit/branch>
 **Examples:**
 
 ```bash
-# Test all datasets with visual reports
-npm run test:visual -all
+# Basic regression test (fast dataset, collects all differences, generates visuals)
+npm run test:regression
+
+# Test all datasets
+npm run test:regression -all
 
 # Fail early mode (stop at first difference)
-npm run test:visual -failearly
+npm run test:regression -failearly
 
 # Quick check without visual output
-npm run test:visual -novisual
+npm run test:regression -novisual
 
-# Combine flags
-npm run test:visual <commit/branch> -all -failearly
+# Compare against master with all datasets, fail early
+npm run test:regression master -all -failearly
 ```
 
-Visual regression tests generate reports in the `regression-results/` directory:
-- **HTML files** (`N.html`) - Side-by-side SVG comparisons for visual inspection
+**Output:**
+
+Regression tests generate reports in the `regression-results/` directory:
+- **HTML files** (`N.html`) - Side-by-side SVG comparisons for visual inspection (unless `-novisual`)
 - **JSON files** (`N.json`) - Structured data with `{old, new}` fields for programmatic comparison
 
 This makes it easy to both visually spot rendering changes and programmatically analyze differences.

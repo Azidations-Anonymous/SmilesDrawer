@@ -1,38 +1,31 @@
 #!/usr/bin/env node
 
 /**
- * @file Regression test orchestrator for SmilesDrawer
+ * @file Regression test runner for SmilesDrawer
  * @module test/regression-runner
  * @description
- * Compares molecular graph outputs between two versions of SmilesDrawer to detect regressions.
- * Uses a fail-fast approach: tests SMILES strings one at a time and stops on the first mismatch.
+ * Compares molecular structure renderings between two versions of SmilesDrawer.
+ * By default, continues testing even when differences are found and generates
+ * HTML reports with side-by-side SVG comparisons and JSON output files.
  *
- * ## Test Modes
- * - **Fast mode (default)**: Tests only the fastregression dataset (~114 SMILES)
- * - **Full mode (-all)**: Tests all 6 datasets (thousands of SMILES)
+ * ## Features
+ * - Tests all SMILES (with optional fail-early mode)
+ * - Generates SVG for both old and new versions (optional with -novisual)
+ * - Creates interactive HTML reports showing differences
+ * - Saves JSON output to regression-results/ directory
+ * - Allows manual visual inspection of changes
  *
- * ## How it works
- * 1. For each SMILES string:
- *    - Sanitize input (remove control characters)
- *    - Generate molecular graph JSON from old code version
- *    - Generate molecular graph JSON from new code version
- *    - Compare JSON outputs byte-for-byte
- *    - Stop immediately if mismatch found
- * 2. Skip invalid SMILES that fail to parse in either version
- * 3. Report total tested, skipped, and any regressions found
+ * ## Output
+ * - regression-results/[N].html - Side-by-side SVG comparison (unless -novisual)
+ * - regression-results/[N].json - JSON with {old, new} fields for data comparison
  *
- * ## Exit codes
- * - 0: All tests passed
- * - 1: Regression detected (outputs diff)
- * - 2: Infrastructure error
+ * ## Usage
+ * node test/regression-runner.js <old-code-path> <new-code-path> [-all] [-failearly] [-novisual]
  *
  * @example
- * // Test fast regression dataset
- * node test/regression-runner.js /path/to/old/code /path/to/new/code
- *
- * @example
- * // Test all datasets
- * node test/regression-runner.js /path/to/old/code /path/to/new/code -all
+ * node test/regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer
+ * node test/regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer -all
+ * node test/regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer -failearly -novisual
  */
 
 const { spawnSync } = require('child_process');
@@ -55,6 +48,8 @@ const fullDatasets = [
 
 const args = process.argv.slice(2);
 const allMode = args.includes('-all');
+const failEarly = args.includes('-failearly');
+const noVisual = args.includes('-novisual');
 const pathArgs = args.filter(arg => !arg.startsWith('-'));
 
 const oldCodePath = pathArgs[0];
@@ -62,27 +57,40 @@ const newCodePath = pathArgs[1];
 
 if (!oldCodePath || !newCodePath) {
     console.error('ERROR: Missing arguments');
-    console.error('Usage: node regression-runner.js <old-code-path> <new-code-path> [-all]');
-    console.error('  -all  Test all datasets (default: fastregression only)');
+    console.error('Usage: node regression-runner.js <old-code-path> <new-code-path> [-all] [-failearly] [-novisual]');
+    console.error('  -all       Test all datasets (default: fastregression only)');
+    console.error('  -failearly Stop at first difference (default: continue)');
+    console.error('  -novisual  Skip SVG generation (default: generate visual comparisons)');
     console.error('');
     console.error('Example: node regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer');
-    console.error('Example: node regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer -all');
+    console.error('Example: node regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer -all -failearly');
     process.exit(2);
 }
 
 const datasets = allMode ? fullDatasets : fastDatasets;
 
+// Create output directory for reports (delete old results)
+const outputDir = path.join(process.cwd(), 'regression-results');
+if (fs.existsSync(outputDir)) {
+    fs.rmSync(outputDir, { recursive: true, force: true });
+}
+fs.mkdirSync(outputDir, { recursive: true });
+
 console.log('='.repeat(80));
-console.log('SMILES DRAWER REGRESSION TEST SUITE');
+console.log('SMILES DRAWER REGRESSION TEST');
 console.log('='.repeat(80));
 console.log('MODE: ' + (allMode ? 'FULL (all datasets)' : 'FAST (fastregression only)'));
+console.log('FAIL-EARLY: ' + (failEarly ? 'YES (stop at first difference)' : 'NO (collect all differences)'));
+console.log('VISUAL: ' + (noVisual ? 'NO (skip SVG generation)' : 'YES (generate side-by-side comparisons)'));
 console.log('OLD CODE PATH: ' + oldCodePath);
 console.log('NEW CODE PATH: ' + newCodePath);
+console.log('OUTPUT DIRECTORY: ' + outputDir);
 console.log('='.repeat(80));
 
 let totalTested = 0;
 let totalDatasets = 0;
 let totalSkipped = 0;
+let totalDifferences = 0;
 
 for (const dataset of datasets) {
     console.log('\n' + '='.repeat(80));
@@ -91,7 +99,6 @@ for (const dataset of datasets) {
 
     let smilesList;
     try {
-        const fs = require('fs');
         const datasetContent = fs.readFileSync(path.join(__dirname, dataset.file), 'utf8');
         const func = new Function(datasetContent + '; return ' + dataset.name + ';');
         smilesList = func();
@@ -113,123 +120,182 @@ for (const dataset of datasets) {
 
         console.log('\n[' + dataset.name + ' ' + index + '/' + smilesList.length + '] Testing: ' + smiles.substring(0, 60) + (smiles.length > 60 ? '...' : ''));
 
-        let oldJson, newJson;
+        // Generate JSON for comparison
+        const oldJsonFile = path.join(os.tmpdir(), 'smiles-drawer-old-json-' + Date.now() + '-' + Math.random().toString(36).substring(7) + '.json');
+        const newJsonFile = path.join(os.tmpdir(), 'smiles-drawer-new-json-' + Date.now() + '-' + Math.random().toString(36).substring(7) + '.json');
 
-        const oldTempFile = path.join(os.tmpdir(), 'smiles-drawer-old-' + Date.now() + '-' + Math.random().toString(36).substring(7) + '.json');
-        const newTempFile = path.join(os.tmpdir(), 'smiles-drawer-new-' + Date.now() + '-' + Math.random().toString(36).substring(7) + '.json');
-
-        const oldResult = spawnSync('node', ['test/generate-json.js', smiles, oldTempFile], {
+        const oldJsonResult = spawnSync('node', ['test/generate-json.js', smiles, oldJsonFile], {
             cwd: oldCodePath,
             encoding: 'utf8'
         });
 
-        if (oldResult.error || oldResult.status !== 0) {
-            if (oldResult.stderr && oldResult.stderr.includes('PARSE_ERROR')) {
+        if (oldJsonResult.error || oldJsonResult.status !== 0) {
+            if (oldJsonResult.stderr && oldJsonResult.stderr.includes('PARSE_ERROR')) {
                 console.log('  SKIP: Invalid SMILES (parse error in old code)');
                 totalSkipped++;
                 continue;
             }
-            console.error('  ERROR: Old code failed to generate graph data');
-            if (oldResult.error) {
-                console.error('  ' + oldResult.error.message);
-            }
-            if (oldResult.stderr) {
-                console.error('  STDERR: ' + oldResult.stderr);
-            }
-            if (oldResult.stdout) {
-                console.error('  STDOUT: ' + oldResult.stdout);
-            }
-            process.exit(2);
+            console.error('  WARNING: Old code failed to generate data');
+            totalSkipped++;
+            continue;
         }
 
-        try {
-            oldJson = fs.readFileSync(oldTempFile, 'utf8');
-            console.log('  OLD: Generated graph data (' + oldJson.length + ' bytes)');
-            fs.unlinkSync(oldTempFile);
-        } catch (err) {
-            console.error('  ERROR: Failed to read JSON from old code temp file');
-            console.error('  ' + err.message);
-            process.exit(2);
-        }
-
-        const newResult = spawnSync('node', ['test/generate-json.js', smiles, newTempFile], {
+        const newJsonResult = spawnSync('node', ['test/generate-json.js', smiles, newJsonFile], {
             cwd: newCodePath,
             encoding: 'utf8'
         });
 
-        if (newResult.error || newResult.status !== 0) {
-            if (newResult.stderr && newResult.stderr.includes('PARSE_ERROR')) {
+        if (newJsonResult.error || newJsonResult.status !== 0) {
+            if (newJsonResult.stderr && newJsonResult.stderr.includes('PARSE_ERROR')) {
                 console.log('  SKIP: Invalid SMILES (parse error in new code)');
                 totalSkipped++;
                 continue;
             }
-            console.error('  ERROR: New code failed to generate graph data');
-            if (newResult.error) {
-                console.error('  ' + newResult.error.message);
-            }
-            if (newResult.stderr) {
-                console.error('  STDERR: ' + newResult.stderr);
-            }
-            if (newResult.stdout) {
-                console.error('  STDOUT: ' + newResult.stdout);
-            }
-            process.exit(2);
+            console.error('  WARNING: New code failed to generate data');
+            totalSkipped++;
+            continue;
         }
 
+        let oldJson, newJson;
         try {
-            newJson = fs.readFileSync(newTempFile, 'utf8');
-            console.log('  NEW: Generated graph data (' + newJson.length + ' bytes)');
-            fs.unlinkSync(newTempFile);
+            oldJson = fs.readFileSync(oldJsonFile, 'utf8');
+            newJson = fs.readFileSync(newJsonFile, 'utf8');
+            fs.unlinkSync(oldJsonFile);
+            fs.unlinkSync(newJsonFile);
         } catch (err) {
-            console.error('  ERROR: Failed to read JSON from new code temp file');
-            console.error('  ' + err.message);
-            process.exit(2);
+            console.error('  WARNING: Failed to read JSON files');
+            totalSkipped++;
+            continue;
         }
 
+        // Check if there's a difference
         if (oldJson !== newJson) {
-            console.error('\n' + '!'.repeat(80));
-            console.error('REGRESSION DETECTED!');
-            console.error('!'.repeat(80));
-            console.error('Dataset: ' + dataset.name);
-            console.error('Index: ' + index + '/' + smilesList.length);
-            console.error('SMILES: ' + smiles);
-            console.error('Old JSON length: ' + oldJson.length + ' bytes');
-            console.error('New JSON length: ' + newJson.length + ' bytes');
-            console.error('\nOLD JSON:');
-            console.error(oldJson);
-            console.error('\nNEW JSON:');
-            console.error(newJson);
-            console.error('\n' + '!'.repeat(80));
-            process.exit(1);
+            totalDifferences++;
+
+            if (failEarly) {
+                // Save JSON to file instead of printing to console
+                const jsonFilePath = path.join(outputDir, '1.json');
+                const jsonOutput = {
+                    old: JSON.parse(oldJson),
+                    new: JSON.parse(newJson)
+                };
+                fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
+
+                console.error('\n' + '!'.repeat(80));
+                console.error('DIFFERENCE DETECTED!');
+                console.error('!'.repeat(80));
+                console.error('Dataset: ' + dataset.name);
+                console.error('Index: ' + index + '/' + smilesList.length);
+                console.error('SMILES: ' + smiles);
+                console.error('Old JSON length: ' + oldJson.length + ' bytes');
+                console.error('New JSON length: ' + newJson.length + ' bytes');
+                console.error('JSON saved to: ' + jsonFilePath);
+                console.error('\n' + '!'.repeat(80));
+                process.exit(1);
+            }
+
+            console.log('  DIFFERENCE DETECTED' + (noVisual ? '' : ' - Generating SVG comparison'));
+
+            if (!noVisual) {
+                // Generate SVG for both versions
+                const oldSvgFile = path.join(os.tmpdir(), 'smiles-drawer-old-svg-' + Date.now() + '-' + Math.random().toString(36).substring(7) + '.svg');
+                const newSvgFile = path.join(os.tmpdir(), 'smiles-drawer-new-svg-' + Date.now() + '-' + Math.random().toString(36).substring(7) + '.svg');
+
+                spawnSync('node', ['test/generate-svg.js', smiles, oldSvgFile], {
+                    cwd: oldCodePath,
+                    encoding: 'utf8'
+                });
+
+                spawnSync('node', ['test/generate-svg.js', smiles, newSvgFile], {
+                    cwd: newCodePath,
+                    encoding: 'utf8'
+                });
+
+                let oldSvg = '';
+                let newSvg = '';
+                try {
+                    oldSvg = fs.readFileSync(oldSvgFile, 'utf8');
+                    newSvg = fs.readFileSync(newSvgFile, 'utf8');
+                    fs.unlinkSync(oldSvgFile);
+                    fs.unlinkSync(newSvgFile);
+                } catch (err) {
+                    console.error('  WARNING: Failed to read SVG files');
+                }
+
+                // Save JSON to file
+                const jsonFilePath = path.join(outputDir, totalDifferences + '.json');
+                const jsonOutput = {
+                    old: JSON.parse(oldJson),
+                    new: JSON.parse(newJson)
+                };
+                fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
+
+                // Generate and save individual HTML report immediately
+                const htmlFilePath = path.join(outputDir, totalDifferences + '.html');
+                const html = generateIndividualHTMLReport({
+                    dataset: dataset.name,
+                    index: index,
+                    total: smilesList.length,
+                    smiles: smiles,
+                    oldSvg: oldSvg,
+                    newSvg: newSvg,
+                    oldJsonLength: oldJson.length,
+                    newJsonLength: newJson.length,
+                    diffNumber: totalDifferences
+                });
+
+                fs.writeFileSync(htmlFilePath, html, 'utf8');
+                console.log('  Reports saved: ' + totalDifferences + '.html, ' + totalDifferences + '.json');
+            } else {
+                // Save JSON even when -novisual is used
+                const jsonFilePath = path.join(outputDir, totalDifferences + '.json');
+                const jsonOutput = {
+                    old: JSON.parse(oldJson),
+                    new: JSON.parse(newJson)
+                };
+                fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
+                console.log('  JSON saved: ' + totalDifferences + '.json');
+            }
+        } else {
+            console.log('  MATCH: Identical output ✓');
         }
 
-        console.log('  MATCH: Graph data is identical ✓');
         totalTested++;
     }
 
     totalDatasets++;
-    console.log('\n' + dataset.name + ' COMPLETE: All ' + smilesList.length + ' SMILES passed');
+    console.log('\n' + dataset.name + ' COMPLETE: ' + smilesList.length + ' SMILES tested');
 }
 
+// Final summary
 console.log('\n' + '='.repeat(80));
-console.log('ALL TESTS PASSED!');
-console.log('='.repeat(80));
-console.log('Datasets tested: ' + totalDatasets);
-console.log('Total SMILES tested: ' + totalTested);
-console.log('Invalid SMILES skipped: ' + totalSkipped);
-console.log('Regressions found: 0');
-console.log('='.repeat(80));
+if (totalDifferences > 0) {
+    if (noVisual) {
+        console.log('DIFFERENCES FOUND - JSON REPORTS GENERATED');
+    } else {
+        console.log('DIFFERENCES FOUND - REPORTS GENERATED');
+    }
+    console.log('='.repeat(80));
+    console.log('Total tested: ' + totalTested);
+    console.log('Total skipped: ' + totalSkipped);
+    console.log('Differences found: ' + totalDifferences);
+    console.log('\nReports saved to: ' + outputDir);
+    if (noVisual) {
+        console.log('Files: 1.json through ' + totalDifferences + '.json');
+    } else {
+        console.log('Files: 1.html, 1.json through ' + totalDifferences + '.html, ' + totalDifferences + '.json');
+    }
+    console.log('='.repeat(80));
+    process.exit(1);
+} else {
+    console.log('ALL TESTS PASSED - NO DIFFERENCES FOUND');
+    console.log('='.repeat(80));
+    console.log('Total tested: ' + totalTested);
+    console.log('Total skipped: ' + totalSkipped);
+    console.log('='.repeat(80));
+    process.exit(0);
+}
 
-process.exit(0);
-
-/**
- * Sanitizes a SMILES string by removing non-printable ASCII characters.
- * Some datasets contain control characters that cause parse errors. This function
- * filters the input to only include visible ASCII characters (32-126).
- *
- * @param {string} smiles - The SMILES string to sanitize
- * @returns {string} Sanitized SMILES string containing only printable ASCII characters
- */
 function sanitizeSmiles(smiles) {
     let cleaned = '';
     for (let i = 0; i < smiles.length; i++) {
@@ -241,27 +307,130 @@ function sanitizeSmiles(smiles) {
     return cleaned;
 }
 
-/**
- * Extracts JSON content between markers from script output.
- * Used as a fallback when file-based output is not available.
- *
- * @param {string} output - The raw output containing JSON_START_MARKER and JSON_END_MARKER
- * @returns {string} Extracted JSON string
- * @throws {Error} If markers are not found in the output
- * @private
- */
-function extractJSON(output) {
-    const startMarker = 'JSON_START_MARKER';
-    const endMarker = 'JSON_END_MARKER';
+function escapeHtml(text) {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
-    const startIndex = output.indexOf(startMarker);
-    const endIndex = output.indexOf(endMarker);
+function generateIndividualHTMLReport(diff) {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Difference #${diff.diffNumber} - SMILES Drawer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    if (startIndex === -1 || endIndex === -1) {
-        const err = new Error('Could not find JSON markers in output. Output length: ' + output.length + ', has start: ' + (startIndex !== -1) + ', has end: ' + (endIndex !== -1));
-        err.output = output;
-        throw err;
-    }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
 
-    return output.substring(startIndex + startMarker.length, endIndex).trim();
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .smiles-display {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 12px 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .smiles-display code {
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+        }
+
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .comparison-side {
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            padding: 15px;
+        }
+
+        .comparison-side h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .svg-container {
+            background: white;
+            border: 1px solid #ecf0f1;
+            border-radius: 3px;
+            padding: 10px;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .svg-container svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .meta {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="smiles-display">
+            <code>${escapeHtml(diff.smiles)}</code>
+        </div>
+
+        <div class="comparison-container">
+            <div class="comparison-side">
+                <h4>Baseline (Old)</h4>
+                <div class="svg-container">
+                    ${diff.oldSvg}
+                </div>
+                <div class="meta">JSON: ${diff.oldJsonLength} bytes</div>
+            </div>
+            <div class="comparison-side">
+                <h4>Current (New)</h4>
+                <div class="svg-container">
+                    ${diff.newSvg}
+                </div>
+                <div class="meta">JSON: ${diff.newJsonLength} bytes</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
 }

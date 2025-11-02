@@ -3,12 +3,12 @@
 set -e
 
 BASELINE_COMMIT="HEAD"
-ALL_FLAG=""
+FLAGS=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        -all)
-            ALL_FLAG="-all"
+        -all|-failearly|-novisual)
+            FLAGS="${FLAGS} $1"
             shift
             ;;
         *)
@@ -64,16 +64,11 @@ echo "✓ Current build complete"
 echo ""
 
 echo "Step 5: Running regression tests..."
-if [ -n "${ALL_FLAG}" ]; then
-    echo "Mode: FULL - testing all datasets (fail-fast mode)"
-else
-    echo "Mode: FAST - testing fastregression dataset only"
-    echo "Use -all flag to test all datasets"
-fi
+echo "Flags:${FLAGS:-" (none)"}"
 echo ""
 
 cd "${CURRENT_DIR}/test"
-node regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" ${ALL_FLAG}
+node regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" ${FLAGS}
 
 REGRESSION_EXIT_CODE=$?
 
@@ -85,12 +80,13 @@ echo ""
 
 if [ ${REGRESSION_EXIT_CODE} -eq 0 ]; then
     echo "================================================================================"
-    echo "SUCCESS: No regressions detected!"
+    echo "SUCCESS: No differences detected!"
     echo "================================================================================"
     exit 0
 elif [ ${REGRESSION_EXIT_CODE} -eq 1 ]; then
     echo "================================================================================"
-    echo "FAILURE: Regression detected (see output above)"
+    echo "DIFFERENCES FOUND: Regression reports generated"
+    echo "Check regression-results/ for details"
     echo "================================================================================"
     exit 1
 else
