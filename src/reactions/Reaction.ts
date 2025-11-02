@@ -1,4 +1,4 @@
-import Parser = require('./Parser');
+import Parser = require('../parsing/Parser');
 
 class Reaction {
     reactantsSmiles: string[];

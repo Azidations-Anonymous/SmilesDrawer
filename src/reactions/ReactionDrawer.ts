@@ -1,8 +1,8 @@
-import SvgDrawer = require('./SvgDrawer');
-import SvgWrapper = require('./SvgWrapper');
-import Options = require('./Options');
-import ThemeManager = require('./ThemeManager');
-import formulaToCommonName = require('./FormulaToCommonName');
+import SvgDrawer = require('../drawing/SvgDrawer');
+import SvgWrapper = require('../drawing/SvgWrapper');
+import Options = require('../config/Options');
+import ThemeManager = require('../config/ThemeManager');
+import formulaToCommonName = require('../utils/FormulaToCommonName');
 
 class ReactionDrawer {
     defaultOptions: any;

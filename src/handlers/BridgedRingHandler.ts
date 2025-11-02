@@ -1,7 +1,7 @@
-import RingManager = require("./RingManager");
-import ArrayHelper = require("./ArrayHelper");
-import RingConnection = require("./RingConnection");
-import Ring = require("./Ring");
+import RingManager = require("../preprocessing/RingManager");
+import ArrayHelper = require("../utils/ArrayHelper");
+import RingConnection = require("../graph/RingConnection");
+import Ring = require("../graph/Ring");
 
 class BridgedRingHandler {
     private ringManager: RingManager;

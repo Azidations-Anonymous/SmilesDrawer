@@ -1,4 +1,4 @@
-import Reaction = require('./Reaction');
+import Reaction = require('../reactions/Reaction');
 
 class ReactionParser {
     /**

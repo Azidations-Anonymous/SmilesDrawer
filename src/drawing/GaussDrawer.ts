@@ -1,5 +1,5 @@
-import Vector2 = require('./Vector2');
-import convertImage = require('./PixelsToSvg');
+import Vector2 = require('../graph/Vector2');
+import convertImage = require('../utils/PixelsToSvg');
 
 import chroma from 'chroma-js';
 

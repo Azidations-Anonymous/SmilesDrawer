@@ -1,8 +1,8 @@
 import MolecularPreprocessor from "./MolecularPreprocessor";
 
-import Vector2 = require("./Vector2");
-import ArrayHelper = require("./ArrayHelper");
-import MathHelper = require("./MathHelper");
+import Vector2 = require("../graph/Vector2");
+import ArrayHelper = require("../utils/ArrayHelper");
+import MathHelper = require("../utils/MathHelper");
 class PositioningManager {
     private drawer: MolecularPreprocessor;
 

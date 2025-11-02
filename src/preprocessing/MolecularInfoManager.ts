@@ -1,6 +1,6 @@
 import MolecularPreprocessor from "./MolecularPreprocessor";
-import Graph = require("./Graph");
-import Atom = require("./Atom");
+import Graph = require("../graph/Graph");
+import Atom = require("../graph/Atom");
 
 class MolecularInfoManager {
     private drawer: MolecularPreprocessor;

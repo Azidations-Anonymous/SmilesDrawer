@@ -1,4 +1,4 @@
-import MathHelper = require('./MathHelper');
+import MathHelper = require('../utils/MathHelper');
 import Vector2 = require('./Vector2');
 import Vertex = require('./Vertex');
 import Edge = require('./Edge');

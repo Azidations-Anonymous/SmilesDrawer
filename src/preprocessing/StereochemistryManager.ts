@@ -1,5 +1,5 @@
 import MolecularPreprocessor from "./MolecularPreprocessor";
-import MathHelper = require("./MathHelper");
+import MathHelper = require("../utils/MathHelper");
 
 class StereochemistryManager {
     private drawer: MolecularPreprocessor;

@@ -1,4 +1,4 @@
-import Graph = require('./Graph');
+import Graph = require('../graph/Graph');
 
 /** A class encapsulating the functionality to find the smallest set of smallest rings in a graph. */
 class SSSR {

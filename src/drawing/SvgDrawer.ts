@@ -1,13 +1,13 @@
 // we use the drawer to do all the preprocessing. then we take over the drawing
 // portion to output to svg
-import ArrayHelper = require('./ArrayHelper');
-import Atom = require('./Atom');
-import MolecularPreprocessor = require('./MolecularPreprocessor');
-import Graph = require('./Graph');
-import Line = require('./Line');
+import ArrayHelper = require('../utils/ArrayHelper');
+import Atom = require('../graph/Atom');
+import MolecularPreprocessor = require('../preprocessing/MolecularPreprocessor');
+import Graph = require('../graph/Graph');
+import Line = require('../graph/Line');
 import SvgWrapper = require('./SvgWrapper');
-import ThemeManager = require('./ThemeManager');
-import Vector2 = require('./Vector2');
+import ThemeManager = require('../config/ThemeManager');
+import Vector2 = require('../graph/Vector2');
 import GaussDrawer = require('./GaussDrawer');
 
 class SvgDrawer {

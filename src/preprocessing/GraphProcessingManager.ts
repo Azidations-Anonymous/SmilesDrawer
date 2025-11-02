@@ -1,4 +1,4 @@
-import MathHelper = require('./MathHelper');
+import MathHelper = require('../utils/MathHelper');
 
 class GraphProcessingManager {
     private drawer: any;

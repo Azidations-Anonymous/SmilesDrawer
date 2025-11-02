@@ -1,5 +1,5 @@
-import MathHelper = require('./MathHelper');
-import ArrayHelper = require('./ArrayHelper');
+import MathHelper = require('../utils/MathHelper');
+import ArrayHelper = require('../utils/ArrayHelper');
 import Vector2 = require('./Vector2');
 import Atom = require('./Atom');
 

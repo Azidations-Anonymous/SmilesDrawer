@@ -1,4 +1,4 @@
-import ArrayHelper = require('./ArrayHelper');
+import ArrayHelper = require('../utils/ArrayHelper');
 import Vector2 = require('./Vector2');
 import Vertex = require('./Vertex');
 import RingConnection = require('./RingConnection');

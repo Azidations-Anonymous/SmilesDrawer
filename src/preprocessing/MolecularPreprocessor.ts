@@ -1,28 +1,28 @@
 import StereochemistryManager from "./StereochemistryManager";
 import OverlapResolutionManager from "./OverlapResolutionManager";
 import PositioningManager from "./PositioningManager";
-import DrawingManager from "./DrawingManager";
+import DrawingManager from "../drawing/DrawingManager";
 import PseudoElementManager from "./PseudoElementManager";
 import MolecularInfoManager from "./MolecularInfoManager";
 import InitializationManager from "./InitializationManager";
 import GraphProcessingManager from "./GraphProcessingManager";
-import OptionsManager from "./OptionsManager";
+import OptionsManager from "../config/OptionsManager";
 import RingManager = require("./RingManager");
 
-import MathHelper = require('./MathHelper');
-import ArrayHelper = require('./ArrayHelper');
-import Vector2 = require('./Vector2');
-import Line = require('./Line');
-import Vertex = require('./Vertex');
-import Edge = require('./Edge');
-import Atom = require('./Atom');
-import Ring = require('./Ring');
-import RingConnection = require('./RingConnection');
-import CanvasWrapper = require('./CanvasWrapper');
-import Graph = require('./Graph');
-import SSSR = require('./SSSR');
-import ThemeManager = require('./ThemeManager');
-import Options = require('./Options');
+import MathHelper = require('../utils/MathHelper');
+import ArrayHelper = require('../utils/ArrayHelper');
+import Vector2 = require('../graph/Vector2');
+import Line = require('../graph/Line');
+import Vertex = require('../graph/Vertex');
+import Edge = require('../graph/Edge');
+import Atom = require('../graph/Atom');
+import Ring = require('../graph/Ring');
+import RingConnection = require('../graph/RingConnection');
+import CanvasWrapper = require('../drawing/CanvasWrapper');
+import Graph = require('../graph/Graph');
+import SSSR = require('../algorithms/SSSR');
+import ThemeManager = require('../config/ThemeManager');
+import Options = require('../config/Options');
 
 /**
  * The molecular structure preprocessor and coordinator 

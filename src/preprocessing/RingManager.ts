@@ -1,13 +1,13 @@
 import MolecularPreprocessor = require("./MolecularPreprocessor");
-import MathHelper = require("./MathHelper");
-import ArrayHelper = require("./ArrayHelper");
-import Vector2 = require("./Vector2");
-import Edge = require("./Edge");
-import Ring = require("./Ring");
-import RingConnection = require("./RingConnection");
-import SSSR = require("./SSSR");
+import MathHelper = require("../utils/MathHelper");
+import ArrayHelper = require("../utils/ArrayHelper");
+import Vector2 = require("../graph/Vector2");
+import Edge = require("../graph/Edge");
+import Ring = require("../graph/Ring");
+import RingConnection = require("../graph/RingConnection");
+import SSSR = require("../algorithms/SSSR");
 
-import BridgedRingHandler = require("./BridgedRingHandler");
+import BridgedRingHandler = require("../handlers/BridgedRingHandler");
 class RingManager {
     public drawer: MolecularPreprocessor;
     public ringIdCounter: number = 0;

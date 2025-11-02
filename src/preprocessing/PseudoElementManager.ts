@@ -1,5 +1,5 @@
 import MolecularPreprocessor from "./MolecularPreprocessor";
-import Atom = require("./Atom");
+import Atom = require("../graph/Atom");
 
 class PseudoElementManager {
     private drawer: MolecularPreprocessor;

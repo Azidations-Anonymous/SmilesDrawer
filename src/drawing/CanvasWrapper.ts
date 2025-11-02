@@ -1,9 +1,9 @@
 //@ts-check
-import MathHelper = require('./MathHelper');
-import Vector2 = require('./Vector2');
-import Line = require('./Line');
-import Vertex = require('./Vertex');
-import Ring = require('./Ring');
+import MathHelper = require('../utils/MathHelper');
+import Vector2 = require('../graph/Vector2');
+import Line = require('../graph/Line');
+import Vertex = require('../graph/Vertex');
+import Ring = require('../graph/Ring');
 
 /**
  * A class wrapping a canvas element.

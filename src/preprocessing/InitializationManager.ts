@@ -1,5 +1,5 @@
 import MolecularPreprocessor from "./MolecularPreprocessor";
-import Graph = require("./Graph");
+import Graph = require("../graph/Graph");
 
 class InitializationManager {
     private drawer: MolecularPreprocessor;

@@ -1,6 +1,6 @@
-import Line = require('./Line');
-import Vector2 = require('./Vector2');
-import MathHelper = require('./MathHelper');
+import Line = require('../graph/Line');
+import Vector2 = require('../graph/Vector2');
+import MathHelper = require('../utils/MathHelper');
 
 function makeid(length: number): string {
   var result = '';

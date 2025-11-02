@@ -1,10 +1,10 @@
-import Drawer = require('./Drawer');
-import Parser = require('./Parser');
-import ReactionParser = require('./ReactionParser');
-import SvgDrawer = require('./SvgDrawer');
-import ReactionDrawer = require('./ReactionDrawer');
-import SvgWrapper = require('./SvgWrapper');
-import Options = require('./Options');
+import Drawer = require('./drawing/Drawer');
+import Parser = require('./parsing/Parser');
+import ReactionParser = require('./parsing/ReactionParser');
+import SvgDrawer = require('./drawing/SvgDrawer');
+import ReactionDrawer = require('./reactions/ReactionDrawer');
+import SvgWrapper = require('./drawing/SvgWrapper');
+import Options = require('./config/Options');
 
 class SmilesDrawer {
     drawer: any;

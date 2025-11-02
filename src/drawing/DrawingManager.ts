@@ -1,12 +1,12 @@
-import MolecularPreprocessor from "./MolecularPreprocessor";
+import MolecularPreprocessor from "../preprocessing/MolecularPreprocessor";
 
-import Vector2 = require("./Vector2");
-import ArrayHelper = require("./ArrayHelper");
-import Line = require("./Line");
-import Edge = require("./Edge");
-import ThemeManager = require("./ThemeManager");
+import Vector2 = require("../graph/Vector2");
+import ArrayHelper = require("../utils/ArrayHelper");
+import Line = require("../graph/Line");
+import Edge = require("../graph/Edge");
+import ThemeManager = require("../config/ThemeManager");
 import CanvasWrapper = require("./CanvasWrapper");
-import Atom = require("./Atom");
+import Atom = require("../graph/Atom");
 class DrawingManager {
     private drawer: MolecularPreprocessor;
 
