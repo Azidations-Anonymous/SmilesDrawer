@@ -155,7 +155,7 @@ if (!Array.prototype.fill) {
 
 module.exports = SmilesDrawer;
 
-},{"./src/Drawer":6,"./src/GaussDrawer":11,"./src/Parser":18,"./src/ReactionDrawer":23,"./src/ReactionParser":24,"./src/SmilesDrawer":29,"./src/SvgDrawer":31}],2:[function(require,module,exports){
+},{"./src/Drawer":6,"./src/GaussDrawer":11,"./src/Parser":19,"./src/ReactionDrawer":24,"./src/ReactionParser":25,"./src/SmilesDrawer":30,"./src/SvgDrawer":32}],2:[function(require,module,exports){
 /**
  * chroma.js - JavaScript library for color conversions
  *
@@ -5526,7 +5526,7 @@ class CanvasWrapper {
 
 module.exports = CanvasWrapper;
 
-},{"./MathHelper":14,"./Vector2":34}],6:[function(require,module,exports){
+},{"./MathHelper":15,"./Vector2":35}],6:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -5605,7 +5605,7 @@ class Drawer {
 
 module.exports = Drawer;
 
-},{"./SvgDrawer":31}],7:[function(require,module,exports){
+},{"./SvgDrawer":32}],7:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -5626,11 +5626,11 @@ const PseudoElementManager_1 = __importDefault(require("./PseudoElementManager")
 
 const MolecularInfoManager_1 = __importDefault(require("./MolecularInfoManager"));
 
+const InitializationManager_1 = __importDefault(require("./InitializationManager"));
+
 const RingManager = require("./RingManager");
 
 const MathHelper = require("./MathHelper");
-
-const Graph = require("./Graph");
 
 const Options = require("./Options");
 /**
@@ -5661,6 +5661,7 @@ class DrawerBase {
     this.drawingManager = new DrawingManager_1.default(this);
     this.pseudoElementManager = new PseudoElementManager_1.default(this);
     this.molecularInfoManager = new MolecularInfoManager_1.default(this);
+    this.initializationManager = new InitializationManager_1.default(this);
     this.graph = null;
     this.doubleBondConfigCount = 0;
     this.doubleBondConfig = null;
@@ -6029,22 +6030,7 @@ class DrawerBase {
   }
 
   initDraw(data, themeName, infoOnly, highlight_atoms) {
-    this.data = data;
-    this.infoOnly = infoOnly;
-    this.ringIdCounter = 0;
-    this.ringConnectionIdCounter = 0;
-    this.graph = new Graph(data, this.opts.isomeric);
-    this.rings = Array();
-    this.ringConnections = Array();
-    this.originalRings = Array();
-    this.originalRingConnections = Array();
-    this.bridgedRing = false; // Reset those, in case the previous drawn SMILES had a dangling \ or /
-
-    this.doubleBondConfigCount = null;
-    this.doubleBondConfig = null;
-    this.highlight_atoms = highlight_atoms;
-    this.initRings();
-    this.initHydrogens();
+    this.initializationManager.initDraw(data, themeName, infoOnly, highlight_atoms);
   }
 
   processGraph() {
@@ -6154,25 +6140,7 @@ class DrawerBase {
   }
 
   initHydrogens() {
-    // Do not draw hydrogens except when they are connected to a stereocenter connected to two or more rings.
-    if (!this.opts.explicitHydrogens) {
-      for (var i = 0; i < this.graph.vertices.length; i++) {
-        let vertex = this.graph.vertices[i];
-
-        if (vertex.value.element !== 'H') {
-          continue;
-        } // Hydrogens should have only one neighbour, so just take the first
-        // Also set hasHydrogen true on connected atom
-
-
-        let neighbour = this.graph.vertices[vertex.neighbours[0]];
-        neighbour.value.hasHydrogen = true;
-
-        if (!neighbour.value.isStereoCenter || neighbour.value.rings.length < 2 && !neighbour.value.bridgedRing || neighbour.value.bridgedRing && neighbour.value.originalRings.length < 2) {
-          vertex.value.isDrawn = false;
-        }
-      }
-    }
+    this.initializationManager.initHydrogens();
   }
   /**
    * Returns all rings connected by bridged bonds starting from the ring with the supplied ring id.
@@ -6760,7 +6728,7 @@ class DrawerBase {
 
 module.exports = DrawerBase;
 
-},{"./DrawingManager":8,"./Graph":12,"./MathHelper":14,"./MolecularInfoManager":15,"./Options":16,"./OverlapResolutionManager":17,"./PositioningManager":20,"./PseudoElementManager":21,"./RingManager":27,"./StereochemistryManager":30}],8:[function(require,module,exports){
+},{"./DrawingManager":8,"./InitializationManager":13,"./MathHelper":15,"./MolecularInfoManager":16,"./Options":17,"./OverlapResolutionManager":18,"./PositioningManager":21,"./PseudoElementManager":22,"./RingManager":28,"./StereochemistryManager":31}],8:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -7093,7 +7061,7 @@ class DrawingManager {
 
 module.exports = DrawingManager;
 
-},{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Line":13,"./ThemeManager":33,"./Vector2":34}],9:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Line":14,"./ThemeManager":34,"./Vector2":35}],9:[function(require,module,exports){
 "use strict";
 /**
  * A class representing an edge.
@@ -7381,7 +7349,7 @@ class GaussDrawer {
 
 module.exports = GaussDrawer;
 
-},{"./PixelsToSvg":19,"./Vector2":34,"chroma-js":2}],12:[function(require,module,exports){
+},{"./PixelsToSvg":20,"./Vector2":35,"chroma-js":2}],12:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -8339,7 +8307,62 @@ class Graph {
 
 module.exports = Graph;
 
-},{"./Atom":4,"./Edge":9,"./MathHelper":14,"./Vertex":35}],13:[function(require,module,exports){
+},{"./Atom":4,"./Edge":9,"./MathHelper":15,"./Vertex":36}],13:[function(require,module,exports){
+"use strict";
+
+const Graph = require("./Graph");
+
+class InitializationManager {
+  constructor(drawer) {
+    this.drawer = drawer;
+  }
+
+  initDraw(data, themeName, infoOnly, highlight_atoms) {
+    this.drawer.data = data;
+    this.drawer.infoOnly = infoOnly;
+    this.drawer.ringIdCounter = 0;
+    this.drawer.ringConnectionIdCounter = 0;
+    this.drawer.graph = new Graph(data, this.drawer.opts.isomeric);
+    this.drawer.rings = Array();
+    this.drawer.ringConnections = Array();
+    this.drawer.originalRings = Array();
+    this.drawer.originalRingConnections = Array();
+    this.drawer.bridgedRing = false; // Reset those, in case the previous drawn SMILES had a dangling \ or /
+
+    this.drawer.doubleBondConfigCount = null;
+    this.drawer.doubleBondConfig = null;
+    this.drawer.highlight_atoms = highlight_atoms;
+    this.drawer.initRings();
+    this.initHydrogens();
+  }
+
+  initHydrogens() {
+    // Do not draw hydrogens except when they are connected to a stereocenter connected to two or more rings.
+    if (!this.drawer.opts.explicitHydrogens) {
+      for (var i = 0; i < this.drawer.graph.vertices.length; i++) {
+        let vertex = this.drawer.graph.vertices[i];
+
+        if (vertex.value.element !== 'H') {
+          continue;
+        } // Hydrogens should have only one neighbour, so just take the first
+        // Also set hasHydrogen true on connected atom
+
+
+        let neighbour = this.drawer.graph.vertices[vertex.neighbours[0]];
+        neighbour.value.hasHydrogen = true;
+
+        if (!neighbour.value.isStereoCenter || neighbour.value.rings.length < 2 && !neighbour.value.bridgedRing || neighbour.value.bridgedRing && neighbour.value.originalRings.length < 2) {
+          vertex.value.isDrawn = false;
+        }
+      }
+    }
+  }
+
+}
+
+module.exports = InitializationManager;
+
+},{"./Graph":12}],14:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -8647,7 +8670,7 @@ class Line {
 
 module.exports = Line;
 
-},{"./Vector2":34}],14:[function(require,module,exports){
+},{"./Vector2":35}],15:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for math-related tasks.
@@ -8820,7 +8843,7 @@ class MathHelper {
 
 module.exports = MathHelper;
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 "use strict";
 
 const Graph = require("./Graph");
@@ -8912,7 +8935,7 @@ class MolecularInfoManager {
 
 module.exports = MolecularInfoManager;
 
-},{"./Atom":4,"./Graph":12}],16:[function(require,module,exports){
+},{"./Atom":4,"./Graph":12}],17:[function(require,module,exports){
 "use strict";
 
 class Options {
@@ -8959,7 +8982,7 @@ class Options {
 
 module.exports = Options;
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -9261,7 +9284,7 @@ class OverlapResolutionManager {
 
 module.exports = OverlapResolutionManager;
 
-},{"./ArrayHelper":3,"./MathHelper":14,"./Vector2":34}],18:[function(require,module,exports){
+},{"./ArrayHelper":3,"./MathHelper":15,"./Vector2":35}],19:[function(require,module,exports){
 "use strict"; // WHEN REPLACING, CHECK FOR:
 // KEEP THIS WHEN REGENERATING THE PARSER !!
 
@@ -11159,7 +11182,7 @@ module.exports = function () {
   };
 }();
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 "use strict"; // Adapted from https://codepen.io/shshaw/pen/XbxvNj by
 
 function convertImage(img) {
@@ -11281,7 +11304,7 @@ function convertImage(img) {
 
 module.exports = convertImage;
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -11746,7 +11769,7 @@ class PositioningManager {
 
 module.exports = PositioningManager;
 
-},{"./ArrayHelper":3,"./MathHelper":14,"./Vector2":34}],21:[function(require,module,exports){
+},{"./ArrayHelper":3,"./MathHelper":15,"./Vector2":35}],22:[function(require,module,exports){
 "use strict";
 
 const Atom = require("./Atom");
@@ -11875,7 +11898,7 @@ class PseudoElementManager {
 
 module.exports = PseudoElementManager;
 
-},{"./Atom":4}],22:[function(require,module,exports){
+},{"./Atom":4}],23:[function(require,module,exports){
 "use strict";
 
 const Parser = require("./Parser");
@@ -11931,7 +11954,7 @@ class Reaction {
 
 module.exports = Reaction;
 
-},{"./Parser":18}],23:[function(require,module,exports){
+},{"./Parser":19}],24:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -12303,7 +12326,7 @@ class ReactionDrawer {
 
 module.exports = ReactionDrawer;
 
-},{"./FormulaToCommonName":10,"./Options":16,"./SvgDrawer":31,"./SvgWrapper":32,"./ThemeManager":33}],24:[function(require,module,exports){
+},{"./FormulaToCommonName":10,"./Options":17,"./SvgDrawer":32,"./SvgWrapper":33,"./ThemeManager":34}],25:[function(require,module,exports){
 "use strict";
 
 const Reaction = require("./Reaction");
@@ -12324,7 +12347,7 @@ class ReactionParser {
 
 module.exports = ReactionParser;
 
-},{"./Reaction":22}],25:[function(require,module,exports){
+},{"./Reaction":23}],26:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("./ArrayHelper");
@@ -12543,7 +12566,7 @@ class Ring {
 
 module.exports = Ring;
 
-},{"./ArrayHelper":3,"./RingConnection":26,"./Vector2":34}],26:[function(require,module,exports){
+},{"./ArrayHelper":3,"./RingConnection":27,"./Vector2":35}],27:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a ring connection.
@@ -12711,7 +12734,7 @@ class RingConnection {
 
 module.exports = RingConnection;
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -13496,7 +13519,7 @@ class RingManager {
 
 module.exports = RingManager;
 
-},{"./ArrayHelper":3,"./Edge":9,"./MathHelper":14,"./Ring":25,"./RingConnection":26,"./SSSR":28,"./Vector2":34}],28:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Edge":9,"./MathHelper":15,"./Ring":26,"./RingConnection":27,"./SSSR":29,"./Vector2":35}],29:[function(require,module,exports){
 "use strict";
 
 const Graph = require("./Graph");
@@ -14106,7 +14129,7 @@ class SSSR {
 
 module.exports = SSSR;
 
-},{"./Graph":12}],29:[function(require,module,exports){
+},{"./Graph":12}],30:[function(require,module,exports){
 "use strict";
 
 const Parser = require("./Parser");
@@ -14452,7 +14475,7 @@ class SmilesDrawer {
 
 module.exports = SmilesDrawer;
 
-},{"./Options":16,"./Parser":18,"./ReactionDrawer":23,"./ReactionParser":24,"./SvgDrawer":31,"./SvgWrapper":32}],30:[function(require,module,exports){
+},{"./Options":17,"./Parser":19,"./ReactionDrawer":24,"./ReactionParser":25,"./SvgDrawer":32,"./SvgWrapper":33}],31:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -14676,7 +14699,7 @@ class StereochemistryManager {
 
 module.exports = StereochemistryManager;
 
-},{"./MathHelper":14}],31:[function(require,module,exports){
+},{"./MathHelper":15}],32:[function(require,module,exports){
 "use strict"; // we use the drawer to do all the preprocessing. then we take over the drawing
 // portion to output to svg
 
@@ -15144,7 +15167,7 @@ class SvgDrawer {
 
 module.exports = SvgDrawer;
 
-},{"./ArrayHelper":3,"./Atom":4,"./DrawerBase":7,"./GaussDrawer":11,"./Line":13,"./SvgWrapper":32,"./ThemeManager":33,"./Vector2":34}],32:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Atom":4,"./DrawerBase":7,"./GaussDrawer":11,"./Line":14,"./SvgWrapper":33,"./ThemeManager":34,"./Vector2":35}],33:[function(require,module,exports){
 "use strict";
 
 const Line = require("./Line");
@@ -16121,7 +16144,7 @@ class SvgWrapper {
 
 module.exports = SvgWrapper;
 
-},{"./Line":13,"./MathHelper":14,"./Vector2":34}],33:[function(require,module,exports){
+},{"./Line":14,"./MathHelper":15,"./Vector2":35}],34:[function(require,module,exports){
 "use strict";
 
 class ThemeManager {
@@ -16169,7 +16192,7 @@ class ThemeManager {
 
 module.exports = ThemeManager;
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a 2D vector.
@@ -16789,7 +16812,7 @@ class Vector2 {
 
 module.exports = Vector2;
 
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -17166,5 +17189,5 @@ class Vertex {
 
 module.exports = Vertex;
 
-},{"./ArrayHelper":3,"./MathHelper":14,"./Vector2":34}]},{},[1])
+},{"./ArrayHelper":3,"./MathHelper":15,"./Vector2":35}]},{},[1])
 

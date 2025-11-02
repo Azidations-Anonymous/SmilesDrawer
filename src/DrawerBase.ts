@@ -4,6 +4,7 @@ import PositioningManager from "./PositioningManager";
 import DrawingManager from "./DrawingManager";
 import PseudoElementManager from "./PseudoElementManager";
 import MolecularInfoManager from "./MolecularInfoManager";
+import InitializationManager from "./InitializationManager";
 
 import RingManager = require("./RingManager");
 
@@ -61,6 +62,7 @@ class DrawerBase {
       this.drawingManager = new DrawingManager(this);
       this.pseudoElementManager = new PseudoElementManager(this);
       this.molecularInfoManager = new MolecularInfoManager(this);
+      this.initializationManager = new InitializationManager(this);
     this.graph = null;
     this.doubleBondConfigCount = 0;
     this.doubleBondConfig = null;
@@ -419,29 +421,7 @@ class DrawerBase {
   }
 
   initDraw(data: any, themeName: string, infoOnly: boolean, highlight_atoms: any): void {
-    this.data = data;
-    this.infoOnly = infoOnly;
-
-    this.ringIdCounter = 0;
-    this.ringConnectionIdCounter = 0;
-
-    this.graph = new Graph(data, this.opts.isomeric);
-    this.rings = Array();
-    this.ringConnections = Array();
-
-    this.originalRings = Array();
-    this.originalRingConnections = Array();
-
-    this.bridgedRing = false;
-
-    // Reset those, in case the previous drawn SMILES had a dangling \ or /
-    this.doubleBondConfigCount = null;
-    this.doubleBondConfig = null;
-
-    this.highlight_atoms = highlight_atoms
-
-    this.initRings();
-    this.initHydrogens();
+      this.initializationManager.initDraw(data, themeName, infoOnly, highlight_atoms);
   }
 
   processGraph(): void {
@@ -556,26 +536,7 @@ class DrawerBase {
   }
 
   initHydrogens(): void {
-    // Do not draw hydrogens except when they are connected to a stereocenter connected to two or more rings.
-    if (!this.opts.explicitHydrogens) {
-      for (var i = 0; i < this.graph.vertices.length; i++) {
-        let vertex = this.graph.vertices[i];
-
-        if (vertex.value.element !== 'H') {
-          continue;
-        }
-
-        // Hydrogens should have only one neighbour, so just take the first
-        // Also set hasHydrogen true on connected atom
-        let neighbour = this.graph.vertices[vertex.neighbours[0]];
-        neighbour.value.hasHydrogen = true;
-
-        if (!neighbour.value.isStereoCenter || neighbour.value.rings.length < 2 && !neighbour.value.bridgedRing ||
-          neighbour.value.bridgedRing && neighbour.value.originalRings.length < 2) {
-          vertex.value.isDrawn = false;
-        }
-      }
-    }
+      this.initializationManager.initHydrogens();
   }
 
   /**
@@ -1126,6 +1087,7 @@ class DrawerBase {
     private drawingManager: DrawingManager;
     private pseudoElementManager: PseudoElementManager;
     private molecularInfoManager: MolecularInfoManager;
+    private initializationManager: InitializationManager;
 }
 
 export = DrawerBase;
