@@ -1,12 +1,26 @@
 #!/usr/bin/env node
 
+/**
+ * @file Generates SVG representation of molecular structures from SMILES strings for visual regression testing.
+ * @module test/generate-svg
+ * @description
+ * This script parses a SMILES string using SmilesDrawer and generates an SVG representation.
+ * Used for visual regression testing to compare rendering differences between code versions.
+ *
+ * @example
+ * // Generate SVG to file
+ * node test/generate-svg.js "CCO" /tmp/output.svg
+ */
+
 const { JSDOM } = require('jsdom');
+const fs = require('fs');
 
 const smilesInput = process.argv[2];
+const outputFile = process.argv[3];
 
 if (!smilesInput) {
     console.error('ERROR: No SMILES string provided');
-    console.error('Usage: node generate-svg.js "<SMILES>"');
+    console.error('Usage: node generate-svg.js "<SMILES>" [output-file]');
     process.exit(2);
 }
 
@@ -79,21 +93,27 @@ try {
 
     SmilesDrawer.parse(smilesInput, function(tree) {
         console.log('PARSE_SUCCESS: Tree generated');
+        console.log('PROCESSING: Generating SVG');
 
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
         svg.setAttribute('width', String(options.width));
         svg.setAttribute('height', String(options.height));
 
-        console.log('DRAWING: Starting SVG generation');
         svgDrawer.draw(tree, svg, 'light', false);
 
-        const svgOutput = svg.outerHTML;
-        console.log('DRAW_SUCCESS: SVG generated');
-        console.log('SVG_LENGTH: ' + svgOutput.length);
-        console.log('SVG_START_MARKER');
-        console.log(svgOutput);
-        console.log('SVG_END_MARKER');
+        const svgString = svg.outerHTML;
+        console.log('PROCESS_SUCCESS: SVG generated');
+
+        if (outputFile) {
+            fs.writeFileSync(outputFile, svgString, 'utf8');
+            console.log('SVG written to: ' + outputFile);
+            console.log('SVG length: ' + svgString.length + ' bytes');
+        } else {
+            console.log('SVG_START_MARKER');
+            console.log(svgString);
+            console.log('SVG_END_MARKER');
+        }
 
         process.exit(0);
     }, function(err) {
