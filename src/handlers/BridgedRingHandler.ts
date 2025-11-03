@@ -150,7 +150,10 @@ class BridgedRingHandler {
           let connections = this.ringManager.getRingConnections(id as number, ringIds);
 
           for (var j = 0; j < connections.length; j++) {
-            this.ringManager.getRingConnection(connections[j]).updateOther(ring.id, id);
+            let connection = this.ringManager.getRingConnection(connections[j] as number);
+            if (connection) {
+              connection.updateOther(ring.id, id as number);
+            }
           }
 
           this.ringManager.getRing(id as number).neighbours.push(ring.id);

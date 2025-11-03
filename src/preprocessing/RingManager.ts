@@ -2,6 +2,7 @@ import MolecularPreprocessor = require("./MolecularPreprocessor");
 import MathHelper = require("../utils/MathHelper");
 import ArrayHelper = require("../utils/ArrayHelper");
 import Vector2 = require("../graph/Vector2");
+import Vertex = require("../graph/Vertex");
 import Edge = require("../graph/Edge");
 import Ring = require("../graph/Ring");
 import RingConnection = require("../graph/RingConnection");
@@ -12,10 +13,10 @@ class RingManager {
     public drawer: MolecularPreprocessor;
     public ringIdCounter: number = 0;
     public ringConnectionIdCounter: number = 0;
-    public rings: any[] = [];
-    public ringConnections: any[] = [];
-    public originalRings: any[] = [];
-    public originalRingConnections: any[] = [];
+    public rings: Ring[] = [];
+    public ringConnections: RingConnection[] = [];
+    public originalRings: Ring[] = [];
+    public originalRingConnections: RingConnection[] = [];
     public bridgedRing: boolean = false;
     public bridgedRingHandler: BridgedRingHandler;
 
@@ -32,7 +33,7 @@ class RingManager {
         return Math.min(a.value.rings.length, b.value.rings.length);
     }
 
-    getBridgedRings(): any[] {
+    getBridgedRings(): Ring[] {
         let bridgedRings = Array();
 
         for (var i = 0; i < this.rings.length; i++) {
@@ -44,7 +45,7 @@ class RingManager {
         return bridgedRings;
     }
 
-    getFusedRings(): any[] {
+    getFusedRings(): Ring[] {
         let fusedRings = Array();
 
         for (var i = 0; i < this.rings.length; i++) {
@@ -56,7 +57,7 @@ class RingManager {
         return fusedRings;
     }
 
-    getSpiros(): any[] {
+    getSpiros(): Ring[] {
         let spiros = Array();
 
         for (var i = 0; i < this.rings.length; i++) {
@@ -94,7 +95,7 @@ class RingManager {
         return this.bridgedRing;
     }
 
-    getRingbondType(vertexA: any, vertexB: any): string {
+    getRingbondType(vertexA: Vertex, vertexB: Vertex): string {
         // Checks whether the two vertices are the ones connecting the ring
         // and what the bond type should be.
         if (vertexA.value.getRingbondCount() < 1 || vertexB.value.getRingbondCount() < 1) {
@@ -108,9 +109,9 @@ class RingManager {
               // If the bonds are equal, it doesn't matter which bond is returned.
               // if they are not equal, return the one that is not the default ("-")
               if (vertexA.value.ringbonds[i].bondType === '-') {
-                return vertexB.value.ringbonds[j].bond;
+                return vertexB.value.ringbonds[j].bondType;
               } else {
-                return vertexA.value.ringbonds[i].bond;
+                return vertexA.value.ringbonds[i].bondType;
               }
             }
           }
@@ -218,7 +219,7 @@ class RingManager {
                 this.bridgedRingHandler.processBridgedRingsInInitRings();
     }
 
-    areVerticesInSameRing(vertexA: any, vertexB: any): boolean {
+    areVerticesInSameRing(vertexA: Vertex, vertexB: Vertex): boolean {
         // This is a little bit lighter (without the array and push) than
         // getCommonRings().length > 0
         for (var i = 0; i < vertexA.value.rings.length; i++) {
@@ -232,7 +233,7 @@ class RingManager {
         return false;
     }
 
-    getCommonRings(vertexA: any, vertexB: any): number[] {
+    getCommonRings(vertexA: Vertex, vertexB: Vertex): number[] {
         let commonRings = Array();
 
         for (var i = 0; i < vertexA.value.rings.length; i++) {
@@ -246,7 +247,7 @@ class RingManager {
         return commonRings;
     }
 
-    getLargestOrAromaticCommonRing(vertexA: any, vertexB: any): any {
+    getLargestOrAromaticCommonRing(vertexA: Vertex, vertexB: Vertex): Ring | null {
         let commonRings = this.getCommonRings(vertexA, vertexB);
         let maxSize = 0;
         let largestCommonRing = null;
@@ -266,7 +267,7 @@ class RingManager {
         return largestCommonRing;
     }
 
-    addRing(ring: any): number {
+    addRing(ring: Ring): number {
         ring.id = this.ringIdCounter++;
         this.rings.push(ring);
 
@@ -292,7 +293,7 @@ class RingManager {
         }
     }
 
-    getRing(ringId: number): any {
+    getRing(ringId: number): Ring | null {
         for (var i = 0; i < this.rings.length; i++) {
           if (this.rings[i].id == ringId) {
             return this.rings[i];
@@ -300,7 +301,7 @@ class RingManager {
         }
     }
 
-    addRingConnection(ringConnection: any): number {
+    addRingConnection(ringConnection: RingConnection): number {
         ringConnection.id = this.ringConnectionIdCounter++;
         this.ringConnections.push(ringConnection);
 
@@ -329,7 +330,7 @@ class RingManager {
         }
     }
 
-    getRingConnection(id: number): any {
+    getRingConnection(id: number): RingConnection | null {
         for (var i = 0; i < this.ringConnections.length; i++) {
           if (this.ringConnections[i].id == id) {
             return this.ringConnections[i];
@@ -356,7 +357,7 @@ class RingManager {
         return ringConnections;
     }
 
-    setRingCenter(ring: any): void {
+    setRingCenter(ring: Ring): void {
         let ringSize = ring.getSize();
         let total = new Vector2(0, 0);
 
@@ -367,7 +368,7 @@ class RingManager {
         ring.center = total.divide(ringSize);
     }
 
-    getSubringCenter(ring: any, vertex: any): any {
+    getSubringCenter(ring: Ring, vertex: Vertex): Vector2 {
         let rings = vertex.value.originalRings;
         let center = ring.center;
         let smallest = Number.MAX_VALUE;
@@ -433,7 +434,7 @@ class RingManager {
         }
     }
 
-    createRing(ring: any, center: any = null, startVertex: any = null, previousVertex: any = null): void {
+    createRing(ring: Ring, center: Vector2 | null = null, startVertex: Vertex | null = null, previousVertex: Vertex | null = null): void {
         if (ring.positioned) {
           return;
         }
@@ -595,7 +596,7 @@ class RingManager {
         }
     }
 
-    getCommonRingbondNeighbour(vertex: any): any {
+    getCommonRingbondNeighbour(vertex: Vertex): Vertex | null {
         let neighbours = vertex.neighbours;
 
         for (var i = 0; i < neighbours.length; i++) {
@@ -609,7 +610,7 @@ class RingManager {
         return null;
     }
 
-    isPointInRing(vec: any): boolean {
+    isPointInRing(vec: Vector2): boolean {
         for (var i = 0; i < this.rings.length; i++) {
           let ring = this.rings[i];
 
@@ -628,14 +629,14 @@ class RingManager {
         return false;
     }
 
-    isEdgeInRing(edge: any): boolean {
+    isEdgeInRing(edge: Edge): boolean {
         let source = this.drawer.graph.vertices[edge.sourceId];
         let target = this.drawer.graph.vertices[edge.targetId];
 
         return this.areVerticesInSameRing(source, target);
     }
 
-    isRingAromatic(ring: any): boolean {
+    isRingAromatic(ring: Ring): boolean {
         for (var i = 0; i < ring.members.length; i++) {
           let vertex = this.drawer.graph.vertices[ring.members[i]];
 
