@@ -5,13 +5,21 @@ import SvgTextHelper = require('../drawing/helpers/SvgTextHelper');
 import Options = require('../config/Options');
 import ThemeManager = require('../config/ThemeManager');
 import formulaToCommonName = require('../utils/FormulaToCommonName');
+import { IMoleculeOptions, IReactionOptions } from '../config/IOptions';
+import Reaction = require('./Reaction');
+
+type ReactionWeights = {
+    reactants?: number[][];
+    reagents?: number[][];
+    products?: number[][];
+};
 
 class ReactionDrawer {
-    defaultOptions: any;
-    opts: any;
-    drawer: any;
-    molOpts: any;
-    themeManager: any;
+    defaultOptions: IReactionOptions;
+    opts: IReactionOptions;
+    drawer: SvgDrawer;
+    molOpts: IMoleculeOptions;
+    themeManager: ThemeManager | null;
 
     /**
      * The constructor for the class ReactionDrawer.
@@ -19,10 +27,14 @@ class ReactionDrawer {
      * @param {Object} options An object containing reaction drawing specitic options.
      * @param {Object} moleculeOptions An object containing molecule drawing specific options.
      */
-    constructor(options: any, moleculeOptions: any) {
+    constructor(options: Partial<IReactionOptions>, moleculeOptions: Partial<IMoleculeOptions>) {
+        this.drawer = new SvgDrawer(moleculeOptions);
+        this.molOpts = this.drawer.opts;
+        this.themeManager = null;
+
         this.defaultOptions = {
-            scale: moleculeOptions.scale > 0.0 ? moleculeOptions.scale : 1.0,
-            fontSize: moleculeOptions.fontSizeLarge * 0.8,
+            scale: this.molOpts.scale > 0.0 ? this.molOpts.scale : 1.0,
+            fontSize: this.molOpts.fontSizeLarge * 0.8,
             fontFamily: 'Arial, Helvetica, sans-serif',
             spacing: 10,
             plus: {
@@ -30,7 +42,7 @@ class ReactionDrawer {
                 thickness: 1.0
             },
             arrow: {
-                length: moleculeOptions.bondLength * 4.0,
+                length: this.molOpts.bondLength * 4.0,
                 headSize: 6.0,
                 thickness: 1.0,
                 margin: 3
@@ -40,10 +52,7 @@ class ReactionDrawer {
             }
         }
 
-        this.opts = Options.extend(true, this.defaultOptions, options);
-
-        this.drawer = new SvgDrawer(moleculeOptions);
-        this.molOpts = this.drawer.opts;
+        this.opts = Options.extend(true, this.defaultOptions, options) as IReactionOptions;
     }
 
     /**
@@ -57,10 +66,10 @@ class ReactionDrawer {
    * @param {String} textBelow='' The text below the arrow.
    * @param {?Object} weights=null The weights for reactants, agents, and products.
    * @param {Boolean} infoOnly=false Only output info on the molecule without drawing anything to the canvas.
-   * 
+   *
    * @returns {SVGElement} The svg element
    */
-    draw(reaction: any, target: string | SVGElement | null, themeName: string = 'light', weights: any = null, textAbove: string = '{reagents}', textBelow: string = '', infoOnly: boolean = false): SVGElement {
+    draw(reaction: Reaction, target: string | SVGElement | null, themeName: string = 'light', weights: ReactionWeights | null = null, textAbove: string = '{reagents}', textBelow: string = '', infoOnly: boolean = false): SVGElement {
         this.themeManager = new ThemeManager(this.molOpts.themes, themeName);
 
         // Normalize the weights over the reaction molecules

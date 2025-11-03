@@ -205,8 +205,12 @@ class SmilesDrawer {
         }
     }
 
-    drawReaction(smiles: string, target: DrawTarget, theme: string, settings: { textAboveArrow: string, textBelowArrow: string }, weights: Weights, callback: ((result: SVGElement | HTMLCanvasElement | HTMLImageElement) => void) | null): void {
+    drawReaction(smiles: string, target: DrawTarget, theme: string, settings: { textAboveArrow: string, textBelowArrow: string }, weights: Weights | null, callback: ((result: SVGElement | HTMLCanvasElement | HTMLImageElement) => void) | null): void {
         let reaction = ReactionParser.parse(smiles);
+
+        // Type guard: reactions need object weights, not simple arrays
+        let reactionWeights: { reactants?: number[][], reagents?: number[][], products?: number[][] } | null =
+            (weights && !Array.isArray(weights)) ? weights : null;
 
         if (target === null || target === 'svg') {
             let svg = this.reactionDrawer.draw(reaction, null, theme);
@@ -217,22 +221,22 @@ class SmilesDrawer {
                 callback(svg);
             }
         } else if (target === 'canvas') {
-            let canvas = this.svgToCanvas(this.reactionDrawer.draw(reaction, null, theme, weights, settings.textAboveArrow, settings.textBelowArrow));
+            let canvas = this.svgToCanvas(this.reactionDrawer.draw(reaction, null, theme, reactionWeights, settings.textAboveArrow, settings.textBelowArrow));
             if (callback) {
                 callback(canvas);
             }
         } else if (target === 'img') {
-            let img = this.svgToImg(this.reactionDrawer.draw(reaction, null, theme, weights, settings.textAboveArrow, settings.textBelowArrow));
+            let img = this.svgToImg(this.reactionDrawer.draw(reaction, null, theme, reactionWeights, settings.textAboveArrow, settings.textBelowArrow));
             if (callback) {
                 callback(img);
             }
         } else if (target instanceof HTMLImageElement) {
-            this.svgToImg(this.reactionDrawer.draw(reaction, null, theme, weights, settings.textAboveArrow, settings.textBelowArrow), target);
+            this.svgToImg(this.reactionDrawer.draw(reaction, null, theme, reactionWeights, settings.textAboveArrow, settings.textBelowArrow), target);
             if (callback) {
                 callback(target);
             }
         } else if (target instanceof SVGElement) {
-            this.reactionDrawer.draw(reaction, target, theme, weights, settings.textAboveArrow, settings.textBelowArrow);
+            this.reactionDrawer.draw(reaction, target, theme, reactionWeights, settings.textAboveArrow, settings.textBelowArrow);
             if (callback) {
                 callback(target);
             }
@@ -241,7 +245,7 @@ class SmilesDrawer {
             elements.forEach(element => {
                 let tag = element.nodeName.toLowerCase();
                 if (tag === 'svg') {
-                    this.reactionDrawer.draw(reaction, element as SVGElement, theme, weights, settings.textAboveArrow, settings.textBelowArrow);
+                    this.reactionDrawer.draw(reaction, element as SVGElement, theme, reactionWeights, settings.textAboveArrow, settings.textBelowArrow);
                     // The svg has to have a css width and height set for the other
                     // tags, however, here it would overwrite the chosen width and height
                     if (this.reactionDrawer.opts.scale <= 0) {
@@ -255,12 +259,12 @@ class SmilesDrawer {
                         callback(element as SVGElement);
                     }
                 } else if (tag === 'canvas') {
-                    this.svgToCanvas(this.reactionDrawer.draw(reaction, null, theme, weights, settings.textAboveArrow, settings.textBelowArrow), element as HTMLCanvasElement);
+                    this.svgToCanvas(this.reactionDrawer.draw(reaction, null, theme, reactionWeights, settings.textAboveArrow, settings.textBelowArrow), element as HTMLCanvasElement);
                     if (callback) {
                         callback(element as HTMLCanvasElement);
                     }
                 } else if (tag === 'img') {
-                    this.svgToImg(this.reactionDrawer.draw(reaction, null, theme, weights, settings.textAboveArrow, settings.textBelowArrow), element as HTMLImageElement);
+                    this.svgToImg(this.reactionDrawer.draw(reaction, null, theme, reactionWeights, settings.textAboveArrow, settings.textBelowArrow), element as HTMLImageElement);
                     if (callback) {
                         callback(element as HTMLImageElement);
                     }
