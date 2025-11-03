@@ -594,7 +594,7 @@ class SvgWrapper {
    * @param {Number} attachedPseudoElement.count The number of occurences that match the key.
    * @param {Number} attachedPseudoElement.hyrogenCount The number of hydrogens attached to each atom matching the key.
    */
-  drawText(x: number, y: number, elementName: string, hydrogens: number, direction: string, isTerminal: boolean, charge: number | string, isotope: number, totalVertices: number, attachedPseudoElement: AttachedPseudoElements = {}): void {
+  drawText(x: number, y: number, elementName: string, hydrogens: number, direction: string, isTerminal: boolean, charge: number, isotope: number, totalVertices: number, attachedPseudoElement: AttachedPseudoElements = {}): void {
     let text = [];
     let display = elementName;
 

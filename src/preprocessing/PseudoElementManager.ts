@@ -82,7 +82,7 @@ class PseudoElementManager {
             neighbour.value.isDrawn = false;
 
             let hydrogens = Atom.maxBonds[neighbour.value.element] - neighbour.value.bondCount;
-            let charge = '';
+            let charge = 0;
 
             if (neighbour.value.bracket) {
               hydrogens = neighbour.value.bracket.hcount;

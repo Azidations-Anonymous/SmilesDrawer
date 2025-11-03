@@ -9,7 +9,7 @@ import GraphProcessingManager from "./GraphProcessingManager";
 import OptionsManager from "../config/OptionsManager";
 import RingManager = require("./RingManager");
 import IMolecularData = require("./IMolecularData");
-import { SideChoice, AtomHighlight } from "./MolecularDataTypes";
+import { SideChoice, AtomHighlight, OverlapScore, SubtreeOverlapScore, VertexOverlapScoreEntry } from "./MolecularDataTypes";
 import { IMoleculeOptions, IThemeColors } from "../config/IOptions";
 
 import MathHelper = require('../utils/MathHelper');
@@ -389,7 +389,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Number} sourceVertexId The vertex id to start the bridged ring discovery from.
    * @returns {Ring} The bridged ring.
    */
-  createBridgedRing(ringIds: number[], sourceVertexId: number): any {
+  createBridgedRing(ringIds: number[], sourceVertexId: number): Ring {
       return this.ringManager.bridgedRingHandler.createBridgedRing(ringIds, sourceVertexId);
   }
 
@@ -434,7 +434,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Number} excludeVertexId A vertex id to be excluded from the search results.
    * @returns {Number[]} An array containing vertex ids in a given location.
    */
-  getVerticesAt(position: any, radius: number, excludeVertexId: number): number[] {
+  getVerticesAt(position: Vector2, radius: number, excludeVertexId: number): number[] {
       return this.positioningManager.getVerticesAt(position, radius, excludeVertexId);
   }
 
@@ -444,7 +444,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Vertex} vertex The vertex of which to find the closest other vertex.
    * @returns {Vertex} The closest vertex.
    */
-  getClosestVertex(vertex: any): any {
+  getClosestVertex(vertex: Vertex): Vertex {
       return this.positioningManager.getClosestVertex(vertex);
   }
 
@@ -454,7 +454,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Ring} ring A new ring.
    * @returns {Number} The ring id of the new ring.
    */
-  addRing(ring: any): number {
+  addRing(ring: Ring): number {
       return this.ringManager.addRing(ring);
   }
 
@@ -473,7 +473,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Number} ringId A ring id.
    * @returns {Ring} A ring associated with the current molecule.
    */
-  getRing(ringId: number): any {
+  getRing(ringId: number): Ring | null {
       return this.ringManager.getRing(ringId);
   }
 
@@ -483,7 +483,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {RingConnection} ringConnection A new ringConnection.
    * @returns {Number} The ring connection id of the new ring connection.
    */
-  addRingConnection(ringConnection: any): number {
+  addRingConnection(ringConnection: RingConnection): number {
       return this.ringManager.addRingConnection(ringConnection);
   }
 
@@ -512,7 +512,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Number} id
    * @returns {RingConnection} The ring connection with the specified id.
    */
-  getRingConnection(id: number): any {
+  getRingConnection(id: number): RingConnection | null {
       return this.ringManager.getRingConnection(id);
   }
 
@@ -532,7 +532,7 @@ class MolecularPreprocessor implements IMolecularData {
    *
    * @returns {Object} Returns the total overlap score and the overlap score of each vertex sorted by score (higher to lower). Example: { total: 99, scores: [ { id: 0, score: 22 }, ... ]  }
    */
-  getOverlapScore(): any {
+  getOverlapScore(): OverlapScore {
       return this.overlapResolver.getOverlapScore();
   }
 
@@ -560,7 +560,7 @@ class MolecularPreprocessor implements IMolecularData {
    *
    * @param {Ring} ring A ring.
    */
-  setRingCenter(ring: any): void {
+  setRingCenter(ring: Ring): void {
       this.ringManager.setRingCenter(ring);
   }
 
@@ -571,7 +571,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Vertex} vertex A vertex.
    * @returns {Vector2} The center of the subring that containing the vertex.
    */
-  getSubringCenter(ring: any, vertex: any): any {
+  getSubringCenter(ring: Ring, vertex: Vertex): Vector2 {
       return this.ringManager.getSubringCenter(ring, vertex);
   }
 
@@ -635,7 +635,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {(Vertex|null)} [previousVertex=null] The last vertex that was positioned.
    * @param {Boolean} [previousVertex=false] A boolean indicating whether or not this ring was force positioned already - this is needed after force layouting a ring, in order to draw rings connected to it.
    */
-  createRing(ring: any, center: any = null, startVertex: any = null, previousVertex: any = null): void {
+  createRing(ring: Ring, center: Vector2 | null = null, startVertex: Vertex | null = null, previousVertex: Vertex | null = null): void {
       this.ringManager.createRing(ring, center, startVertex, previousVertex);
   }
 
@@ -647,7 +647,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Number} angle An angle in randians.
    * @param {Vector2} center The rotational center.
    */
-  rotateSubtree(vertexId: number, parentVertexId: number, angle: number, center: any): void {
+  rotateSubtree(vertexId: number, parentVertexId: number, angle: number, center: Vector2): void {
       this.overlapResolver.rotateSubtree(vertexId, parentVertexId, angle, center);
   }
 
@@ -659,7 +659,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Number[]} vertexOverlapScores An array containing the vertex overlap scores indexed by vertex id.
    * @returns {Object} An object containing the total overlap score and the center of mass of the subtree weighted by overlap score { value: 0.2, center: new Vector2() }.
    */
-  getSubtreeOverlapScore(vertexId: number, parentVertexId: number, vertexOverlapScores: any): any {
+  getSubtreeOverlapScore(vertexId: number, parentVertexId: number, vertexOverlapScores: Float32Array): SubtreeOverlapScore {
       return this.overlapResolver.getSubtreeOverlapScore(vertexId, parentVertexId, vertexOverlapScores);
   }
 
@@ -668,7 +668,7 @@ class MolecularPreprocessor implements IMolecularData {
    *
    * @returns {Vector2} The current center of mass.
    */
-  getCurrentCenterOfMass(): any {
+  getCurrentCenterOfMass(): Vector2 {
       return this.overlapResolver.getCurrentCenterOfMass();
   }
 
@@ -679,7 +679,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Number} [r=currentBondLength*2.0] The radius of vertices to include.
    * @returns {Vector2} The current center of mass.
    */
-  getCurrentCenterOfMassInNeigbourhood(vec: any, r: number = this.opts.bondLength * 2.0): any {
+  getCurrentCenterOfMassInNeigbourhood(vec: Vector2, r: number = this.opts.bondLength * 2.0): Vector2 {
       return this.overlapResolver.getCurrentCenterOfMassInNeigbourhood(vec, r);
   }
 
@@ -697,7 +697,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Number} scores[].id A vertex id.
    * @param {Number} scores[].score The overlap score associated with the vertex id.
    */
-  resolveSecondaryOverlaps(scores: any[]): void {
+  resolveSecondaryOverlaps(scores: VertexOverlapScoreEntry[]): void {
       this.overlapResolver.resolveSecondaryOverlaps(scores);
   }
 
@@ -719,7 +719,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Boolean} [originShortest=false] Whether the origin is the shortest subtree in the branch.
    * @param {Boolean} [skipPositioning=false] Whether or not to skip positioning and just check the neighbours.
    */
-  createNextBond(vertex: any, previousVertex: any = null, angle: number = 0.0, originShortest: boolean = false, skipPositioning: boolean = false): void {
+  createNextBond(vertex: Vertex, previousVertex: Vertex | null = null, angle: number = 0.0, originShortest: boolean = false, skipPositioning: boolean = false): void {
       this.positioningManager.createNextBond(vertex, previousVertex, angle, originShortest, skipPositioning);
   }
 
@@ -727,9 +727,9 @@ class MolecularPreprocessor implements IMolecularData {
    * Gets the vetex sharing the edge that is the common bond of two rings.
    *
    * @param {Vertex} vertex A vertex.
-   * @returns {(Number|null)} The id of a vertex sharing the edge that is the common bond of two rings with the vertex provided or null, if none.
+   * @returns {(Vertex|null)} The vertex sharing the edge that is the common bond of two rings with the vertex provided or null, if none.
    */
-  getCommonRingbondNeighbour(vertex: any): any {
+  getCommonRingbondNeighbour(vertex: Vertex): Vertex | null {
       return this.ringManager.getCommonRingbondNeighbour(vertex);
   }
 
@@ -739,7 +739,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Vector2} vec A vector.
    * @returns {Boolean} A boolean indicating whether or not the point (vector) is inside any of the rings associated with the current molecule.
    */
-  isPointInRing(vec: any): boolean {
+  isPointInRing(vec: Vector2): boolean {
       return this.ringManager.isPointInRing(vec);
   }
 
@@ -749,7 +749,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Edge} edge An edge.
    * @returns {Boolean} A boolean indicating whether or not the edge is part of a ring.
    */
-  isEdgeInRing(edge: any): boolean {
+  isEdgeInRing(edge: Edge): boolean {
       return this.ringManager.isEdgeInRing(edge);
   }
 
@@ -759,7 +759,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Edge} edge An edge.
    * @returns {Boolean} A boolean indicating whether or not the edge is rotatable.
    */
-  isEdgeRotatable(edge: any): boolean {
+  isEdgeRotatable(edge: Edge): boolean {
       return this.graphProcessingManager.isEdgeRotatable(edge);
   }
 
@@ -769,7 +769,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Ring} ring A ring.
    * @returns {Boolean} A boolean indicating whether or not a ring is implicitly defined as aromatic.
    */
-  isRingAromatic(ring: any): boolean {
+  isRingAromatic(ring: Ring): boolean {
       return this.ringManager.isRingAromatic(ring);
   }
 
@@ -779,7 +779,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Edge} edge An edge.
    * @returns {Vector2[]} An array containing two vectors, representing the normals.
    */
-  getEdgeNormals(edge: any): any[] {
+  getEdgeNormals(edge: Edge): Vector2[] {
       return this.drawingManager.getEdgeNormals(edge);
   }
 
@@ -789,7 +789,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Number} vertexId A vertex id.
    * @returns {Vertex[]} An array of vertices.
    */
-  getNonRingNeighbours(vertexId: number): any[] {
+  getNonRingNeighbours(vertexId: number): Vertex[] {
       return this.positioningManager.getNonRingNeighbours(vertexId);
   }
 
@@ -840,35 +840,35 @@ class MolecularPreprocessor implements IMolecularData {
         this.ringManager.ringConnectionIdCounter = value;
     }
 
-    get rings(): any[] {
+    get rings(): Ring[] {
         return this.ringManager.rings;
     }
 
-    set rings(value: any[]) {
+    set rings(value: Ring[]) {
         this.ringManager.rings = value;
     }
 
-    get ringConnections(): any[] {
+    get ringConnections(): RingConnection[] {
         return this.ringManager.ringConnections;
     }
 
-    set ringConnections(value: any[]) {
+    set ringConnections(value: RingConnection[]) {
         this.ringManager.ringConnections = value;
     }
 
-    get originalRings(): any[] {
+    get originalRings(): Ring[] {
         return this.ringManager.originalRings;
     }
 
-    set originalRings(value: any[]) {
+    set originalRings(value: Ring[]) {
         this.ringManager.originalRings = value;
     }
 
-    get originalRingConnections(): any[] {
+    get originalRingConnections(): RingConnection[] {
         return this.ringManager.originalRingConnections;
     }
 
-    set originalRingConnections(value: any[]) {
+    set originalRingConnections(value: RingConnection[]) {
         this.ringManager.originalRingConnections = value;
     }
 

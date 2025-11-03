@@ -15976,7 +15976,7 @@ class RingManager {
 
       for (var j = 0; j < vertex.value.ringbonds.length; j++) {
         let ringbondId = vertex.value.ringbonds[j].id;
-        let ringbondBond = vertex.value.ringbonds[j].bond; // If the other ringbond id has not been discovered,
+        let ringbondBond = vertex.value.ringbonds[j].bondType; // If the other ringbond id has not been discovered,
         // add it to the open bonds map and continue.
         // if the other ringbond id has already been discovered,
         // create a bond between the two atoms.

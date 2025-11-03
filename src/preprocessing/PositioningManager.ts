@@ -203,7 +203,7 @@ class PositioningManager {
 
               // TODO: One of these is on value, but the other isn't?
               vertex.value.drawExplicit = false;
-              nextVertex.drawExplicit = true;
+              nextVertex.value.drawExplicit = true;
               nextVertex.angle = 0.0;
 
               this.createNextBond(nextVertex, vertex, previousAngle + nextVertex.angle);

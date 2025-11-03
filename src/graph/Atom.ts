@@ -9,7 +9,7 @@ interface Ringbond {
 
 interface BracketInfo {
   hcount: number | null;
-  charge: string;
+  charge: number;
   isotope: number;
   chirality?: string;
 }

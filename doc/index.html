@@ -27,7 +27,7 @@
 
 <nav >
     
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-test_generate-json.html">test/generate-json</a></li><li><a href="module-test_regression-runner.html">test/regression-runner</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-test_generate-json.html">test/generate-json</a></li><li><a href="module-test_regression-runner.html">test/regression-runner</a><ul class='methods'><li data-type='method'><a href="module-test_regression-runner.html#~collapseDiff">collapseDiff</a></li><li data-type='method'><a href="module-test_regression-runner.html#~collapseJsonDiff">collapseJsonDiff</a></li><li data-type='method'><a href="module-test_regression-runner.html#~getCommitHash">getCommitHash</a></li><li data-type='method'><a href="module-test_regression-runner.html#~getSrcDiff">getSrcDiff</a></li><li data-type='method'><a href="module-test_regression-runner.html#~hasUncommittedChanges">hasUncommittedChanges</a></li></ul></li></ul>
 </nav>
 
 <div id="main">
@@ -57,11 +57,7 @@
 
 
     <section class="readme usertext">
-        <article><p>Hey all, Daniel here. I'm looking for someone who has the time and motivation to maintain this repo.
-I wanted to get back to it but I won't be able to find the time this year. The best, of course, would be
-if it were someone who actually can do it as part of their work.
-You can let me know via E-Mail. You'll find the address here: https://people.epfl.ch/daniel.probst/?lang=en</p>
-<h1>SmilesDrawer 2.0</h1>
+        <article><h1>SmilesDrawer 2.0</h1>
 <p>No server, no images, no templates, just a SMILES 😊</p>
 <p>Current Version: <strong>2.1.10</strong></p>
 <table style="width: 100%; table-layout: fixed">
@@ -140,7 +136,7 @@ You can let me know via E-Mail. You'll find the address here: https://people.epf
 </ul>
 <p>A very simple JSFiddle example can be found <a href="https://jsfiddle.net/zjdtkL57/1/">here</a>. This example shows the <code>SmilesDrawer.apply()</code> functionality which draws the structure for every <code>canvas</code> element with a <code>data-smiles</code> attribute. E.g. <code>&lt;canvas data-smiles=&quot;C1CCCCC1&quot;&gt;&lt;/canvas&gt;</code></p>
 <h3>Experimental Features</h3>
-<p>If you experience problems with the drawing of complex ring systems (including very long bonds), please enable experimental features (see options).</p>
+<p>If you experience problems with the drawing of complex ring systems (including very long bonds), please enable experimental SSSR ring detection (see <code>experimentalSSSR</code> option).</p>
 <h3>&quot;Installation&quot;</h3>
 <p>SmilesDrawer is available from the unpkg content delivery network:</p>
 <pre class="prettyprint source"><code>https://unpkg.com/smiles-drawer@1.2.0/dist/smiles-drawer.min.js
@@ -155,10 +151,36 @@ You can let me know via E-Mail. You'll find the address here: https://people.epf
 gulp
 </code></pre>
 <h3>Testing</h3>
-<p>SmilesDrawer includes comprehensive regression testing to detect rendering differences between code versions.</p>
+<p>SmilesDrawer includes comprehensive regression testing to detect rendering differences between code versions, and smoke testing for quick sanity checks.</p>
+<h4>Smoke Testing</h4>
+<p>Generate SVG and JSON outputs for current codebase without comparison (fast sanity check):</p>
+<pre class="prettyprint source lang-bash"><code>npm run test:smoke [dataset] -- [-all]
+</code></pre>
+<p><strong>Flags:</strong></p>
+<ul>
+<li><code>-all</code> - Test all datasets (default: <code>fastregression</code> dataset only)</li>
+<li><code>[dataset]</code> - Specify dataset: <code>chembl</code>, <code>drugbank</code>, <code>fdb</code>, <code>force</code>, <code>gdb17</code>, <code>schembl</code></li>
+</ul>
+<p><strong>Common Usage:</strong></p>
+<pre class="prettyprint source lang-bash"><code># Quick test with fastregression dataset
+npm run test:smoke
+
+# Test specific dataset
+npm run test:smoke chembl
+
+# Test all datasets
+npm run test:smoke -- -all
+</code></pre>
+<p><strong>Output:</strong></p>
+<p>Results are saved to <code>test/smoketest/</code>:</p>
+<ul>
+<li><strong><code>N.html</code></strong> - SVG rendering with JSON position data</li>
+<li><strong><code>N.json</code></strong> - JSON position data only</li>
+</ul>
+<p>Each HTML file includes commit hash and git diff of uncommitted src/ changes for debugging.</p>
 <h4>Regression Testing</h4>
 <p>Compare molecular structure rendering between code versions:</p>
-<pre class="prettyprint source lang-bash"><code>npm run test:regression [commit/branch] [-all] [-failearly] [-novisual]
+<pre class="prettyprint source lang-bash"><code>npm run test:regression [commit/branch] -- [-all] [-failearly] [-novisual]
 </code></pre>
 <p><strong>Flags:</strong></p>
 <ul>
@@ -175,16 +197,16 @@ npm run test:regression master
 npm run test:regression HEAD~1
 
 # Test all datasets comprehensively
-npm run test:regression -all
+npm run test:regression -- -all
 
 # Fast fail-early check (stops at first diff)
-npm run test:regression -failearly -novisual
+npm run test:regression -- -failearly -novisual
 
 # Full comparison against master
-npm run test:regression master -all
+npm run test:regression master -- -all
 </code></pre>
 <p><strong>Output:</strong></p>
-<p>Results are saved to <code>regression-results/</code>:</p>
+<p>Results are saved to <code>test/regression-results/</code>:</p>
 <ul>
 <li><strong><code>N.html</code></strong> - Side-by-side SVG visual comparison (unless <code>-novisual</code>)</li>
 <li><strong><code>N.json</code></strong> - JSON data with <code>{old, new}</code> fields for detailed analysis</li>
@@ -312,8 +334,8 @@ let smilesDrawer = new SmilesDrawer(options);
 <td>20.0</td>
 </tr>
 <tr>
-<td>Use experimental features</td>
-<td>experimental</td>
+<td>Use experimental SSSR ring detection</td>
+<td>experimentalSSSR</td>
 <td>boolean</td>
 <td>false</td>
 </tr>
@@ -386,7 +408,7 @@ let smilesDrawer = new SmilesDrawer(options);
     fontSizeLarge: 5,
     fontSizeSmall: 3,
     padding: 20.0,
-    experimental: false,
+    experimentalSSSR: false,
     themes: {
         dark: {
             C: '#fff',
@@ -449,8 +471,71 @@ let smilesDrawer = new SmilesDrawer(options);
 <td>Returns the molecular formula, eg. C22H30N6O4S, of the currently loaded molecule.</td>
 <td><code>String</code></td>
 </tr>
+<tr>
+<td><code>getPositionData()</code></td>
+<td>Returns an <code>IMolecularData</code> interface providing complete access to positioning, structural data, and rendering helper methods. Includes vertices (atoms) with positions/angles, edges (bonds) with types/stereochemistry, rings, and all the helper methods used by the internal renderer. Useful for implementing custom renderers that need the same computational tools as the built-in renderer.</td>
+<td><code>IMolecularData</code></td>
+</tr>
 </tbody>
 </table>
+<h4>Example: Using <code>getPositionData()</code> for Custom Rendering</h4>
+<p>The <code>getPositionData()</code> method returns an <code>IMolecularData</code> interface that provides both raw data and helper methods used by the internal renderer:</p>
+<pre class="prettyprint source lang-javascript"><code>let smilesDrawer = new SmilesDrawer.Drawer({ width: 500, height: 500 });
+
+SmilesDrawer.parse('c1ccccc1', function(tree) {
+    // Draw the molecule first (positions atoms)
+    smilesDrawer.draw(tree, 'output-canvas', 'light');
+
+    // Get the molecular data interface
+    const molData = smilesDrawer.getPositionData();
+
+    // Access raw data
+    console.log('Atoms:', molData.graph.vertices.length);
+    console.log('Bonds:', molData.graph.edges.length);
+    console.log('Rings:', molData.rings.length);
+
+    // Access atom positions
+    molData.graph.vertices.forEach(v => {
+        console.log(`Atom ${v.id}: ${v.value.element} at (${v.position.x}, ${v.position.y})`);
+    });
+
+    // Access bond information
+    molData.graph.edges.forEach(e => {
+        console.log(`Bond ${e.id}: ${e.bondType} from ${e.sourceId} to ${e.targetId}`);
+    });
+
+    // Use helper methods (same as internal renderer)
+    const edge = molData.graph.edges[0];
+    const normals = molData.getEdgeNormals(edge);  // Get perpendicular vectors for double bonds
+
+    const ring = molData.rings[0];
+    const isAromatic = molData.isRingAromatic(ring);  // Check if ring is aromatic
+    console.log('Ring aromatic?', isAromatic);
+
+    // Serialize to JSON for storage or transmission
+    const jsonData = JSON.stringify(molData);  // Automatically uses toJSON()
+});
+</code></pre>
+<p>The <code>IMolecularData</code> interface provides:</p>
+<p><strong>Properties:</strong></p>
+<ul>
+<li><code>graph</code>: Complete graph with vertices (atoms) and edges (bonds)</li>
+<li><code>rings</code>: Array of ring structures with member atoms</li>
+<li><code>ringConnections</code>: Connections between rings</li>
+<li><code>opts</code>: Drawing options</li>
+<li><code>bridgedRing</code>: Whether bridged ring handling is active</li>
+<li><code>highlight_atoms</code>: Highlighted atom information</li>
+</ul>
+<p><strong>Helper Methods:</strong></p>
+<ul>
+<li><code>getEdgeNormals(edge)</code>: Get perpendicular vectors for bond positioning</li>
+<li><code>isRingAromatic(ring)</code>: Check if a ring is aromatic</li>
+<li><code>areVerticesInSameRing(vertexA, vertexB)</code>: Check if atoms share a ring</li>
+<li><code>chooseSide(vertexA, vertexB, sides)</code>: Determine which side to draw double bonds</li>
+<li><code>getLargestOrAromaticCommonRing(vertexA, vertexB)</code>: Find common ring between atoms</li>
+<li><code>getMolecularFormula()</code>: Get molecular formula string</li>
+<li><code>getTotalOverlapScore()</code>: Get overlap score for layout quality</li>
+</ul>
 <h3>Bridged Rings</h3>
 <p>Bridged rings are positioned using the Kamada–Kawai algorithm. If there is a bridged ring in the molecule, explicitly defined aromatic rings are not drawn with a circle inside the ring, but with dashed gray lines where double bonds would be.</p>
 <h3>Contributors</h3>
@@ -473,7 +558,7 @@ let smilesDrawer = new SmilesDrawer(options);
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Mon Nov 03 2025 11:57:54 GMT+1100 (Australian Eastern Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Mon Nov 03 2025 19:40:27 GMT+1100 (Australian Eastern Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
