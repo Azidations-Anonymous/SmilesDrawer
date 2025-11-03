@@ -1,8 +1,12 @@
-class ThemeManager {
-  colors: any;
-  theme: any;
+import { IThemeColors } from './IOptions';
 
-  constructor(colors: any, theme: string) {
+type ThemeMap = Record<string, IThemeColors>;
+
+class ThemeManager {
+  colors: ThemeMap;
+  theme: IThemeColors;
+
+  constructor(colors: ThemeMap, theme: string) {
     this.colors = colors;
     this.theme = this.colors[theme];
   }
