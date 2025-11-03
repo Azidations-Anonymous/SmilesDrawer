@@ -21,7 +21,7 @@ interface IThemeColors {
  * Heatmap/weight visualization configuration
  */
 interface IWeightOptions {
-  colormap: string | null;
+  colormap: string[] | null;
   additionalPadding: number;
   sigma: number;
   interval: number;

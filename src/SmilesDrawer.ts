@@ -134,7 +134,9 @@ class SmilesDrawer {
             }
         } else {
             try {
-                this.drawMolecule(smiles, target, theme, weights, successCallback);
+                // For molecules, weights should be a simple array or null (not reaction weights object)
+                let moleculeWeights: number[] | null = Array.isArray(weights) ? weights : null;
+                this.drawMolecule(smiles, target, theme, moleculeWeights, successCallback);
             } catch (err) {
                 if (errorCallback) {
                     errorCallback(err as Error);
@@ -145,7 +147,7 @@ class SmilesDrawer {
         }
     }
 
-    drawMolecule(smiles: string, target: DrawTarget, theme: string, weights: Weights, callback: ((result: SVGElement | HTMLCanvasElement | HTMLImageElement) => void) | null): void {
+    drawMolecule(smiles: string, target: DrawTarget, theme: string, weights: number[] | null, callback: ((result: SVGElement | HTMLCanvasElement | HTMLImageElement) => void) | null): void {
         let parseTree = Parser.parse(smiles, {});
 
         if (target === null || target === 'svg') {

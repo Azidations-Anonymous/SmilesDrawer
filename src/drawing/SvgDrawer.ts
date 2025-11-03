@@ -7,6 +7,7 @@ import IMolecularData = require('../preprocessing/IMolecularData');
 import MolecularDataSnapshot = require('../preprocessing/MolecularDataSnapshot');
 import Graph = require('../graph/Graph');
 import Line = require('../graph/Line');
+import Ring = require('../graph/Ring');
 import SvgWrapper = require('./SvgWrapper');
 import ThemeManager = require('../config/ThemeManager');
 import Vector2 = require('../graph/Vector2');
@@ -14,23 +15,28 @@ import GaussDrawer = require('./GaussDrawer');
 import SvgEdgeDrawer = require('./draw/SvgEdgeDrawer');
 import SvgVertexDrawer = require('./draw/SvgVertexDrawer');
 import SvgWeightsDrawer = require('./draw/SvgWeightsDrawer');
+import { IMoleculeOptions } from '../config/IOptions';
+import { AtomHighlight } from '../preprocessing/MolecularDataTypes';
+
+type ParseTree = any;
 
 class SvgDrawer {
   preprocessor: IMolecularData;
-  opts: any;
+  opts: IMoleculeOptions;
   clear: boolean;
-  svgWrapper: any;
-  themeManager: any;
+  svgWrapper: SvgWrapper | null;
+  themeManager: ThemeManager | null;
   bridgedRing: boolean;
     private edgeDrawer: SvgEdgeDrawer;
     private vertexDrawer: SvgVertexDrawer;
     private weightsDrawer: SvgWeightsDrawer;
 
-  constructor(options: any, clear: boolean = true) {
+  constructor(options: Partial<IMoleculeOptions>, clear: boolean = true) {
       this.preprocessor = new MolecularPreprocessor(options);
       this.opts = this.preprocessor.opts;
       this.clear = clear;
       this.svgWrapper = null;
+      this.themeManager = null;
       this.edgeDrawer = new SvgEdgeDrawer(this);
         this.vertexDrawer = new SvgVertexDrawer(this);
           this.weightsDrawer = new SvgWeightsDrawer(this);
@@ -46,7 +52,7 @@ class SvgDrawer {
    *
    * @returns {SVGElement} The svg element
    */
-  draw(data: any, target: string | SVGElement | null, themeName: string = 'light', weights: any = null, infoOnly: boolean = false, highlight_atoms: any[] = [], weightsNormalized: boolean = false): SVGElement {
+  draw(data: ParseTree, target: string | SVGElement | null, themeName: string = 'light', weights: number[] | null = null, infoOnly: boolean = false, highlight_atoms: AtomHighlight[] = [], weightsNormalized: boolean = false): SVGElement {
     if (target === null || target === 'svg') {
       target = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       target.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
@@ -104,7 +110,7 @@ class SvgDrawer {
     // Reset options in case weights were added.
     if (weights !== null) {
       this.opts.padding = optionBackup.padding;
-      this.opts.compactDrawing = optionBackup.padding;
+      this.opts.compactDrawing = optionBackup.compactDrawing;
     }
 
     return target;
@@ -118,7 +124,7 @@ class SvgDrawer {
  * @param {String} themeName='dark' The name of the theme to use. Built-in themes are 'light' and 'dark'.
  * @param {Boolean} infoOnly=false Only output info on the molecule without drawing anything to the canvas.
  */
-  drawCanvas(data: any, target: string | HTMLCanvasElement, themeName: string = 'light', infoOnly: boolean = false): string | HTMLCanvasElement {
+  drawCanvas(data: ParseTree, target: string | HTMLCanvasElement, themeName: string = 'light', infoOnly: boolean = false): string | HTMLCanvasElement {
     let canvas = null;
     if (typeof target === 'string') {
       canvas = document.getElementById(target);
@@ -154,7 +160,7 @@ class SvgDrawer {
    *
    * @returns {String} The molecular formula.
    */
-  getMolecularFormula(graph: any = null): string {
+  getMolecularFormula(graph: Graph | null = null): string {
     return this.preprocessor.getMolecularFormula(graph);
   }
 
@@ -184,7 +190,7 @@ class SvgDrawer {
     return new MolecularDataSnapshot(this.preprocessor);
   }
 
-    drawAromaticityRing(ring: any): void {
+    drawAromaticityRing(ring: Ring): void {
         this.edgeDrawer.drawAromaticityRing(ring);
     }
 
@@ -196,7 +202,7 @@ class SvgDrawer {
         this.edgeDrawer.drawEdge(edgeId, debug);
     }
 
-    multiplyNormals(normals: any[], spacing: number): void {
+    multiplyNormals(normals: Vector2[], spacing: number): void {
         this.edgeDrawer.multiplyNormals(normals, spacing);
     }
 
