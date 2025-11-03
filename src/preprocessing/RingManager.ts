@@ -7,6 +7,7 @@ import Edge = require("../graph/Edge");
 import Ring = require("../graph/Ring");
 import RingConnection = require("../graph/RingConnection");
 import SSSR = require("../algorithms/SSSR");
+import { BondType } from '../types/CommonTypes';
 
 import BridgedRingHandler = require("../handlers/BridgedRingHandler");
 class RingManager {
@@ -95,7 +96,7 @@ class RingManager {
         return this.bridgedRing;
     }
 
-    getRingbondType(vertexA: Vertex, vertexB: Vertex): string {
+    getRingbondType(vertexA: Vertex, vertexB: Vertex): BondType | null {
         // Checks whether the two vertices are the ones connecting the ring
         // and what the bond type should be.
         if (vertexA.value.getRingbondCount() < 1 || vertexB.value.getRingbondCount() < 1) {

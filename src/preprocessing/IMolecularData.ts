@@ -6,6 +6,7 @@ import Edge = require('../graph/Edge');
 import Vector2 = require('../graph/Vector2');
 import { IMoleculeOptions } from '../config/IOptions';
 import { AtomHighlight, SideChoice, PositionData } from './MolecularDataTypes';
+import { BondType } from '../types/CommonTypes';
 
 type ParseTree = any;
 
@@ -19,7 +20,7 @@ interface IMolecularData {
 
   isRingAromatic(ring: Ring): boolean;
   getEdgeNormals(edge: Edge): Vector2[];
-  getRingbondType(vertexA: Vertex, vertexB: Vertex): string | null;
+  getRingbondType(vertexA: Vertex, vertexB: Vertex): BondType | null;
   areVerticesInSameRing(vertexA: Vertex, vertexB: Vertex): boolean;
   chooseSide(vertexA: Vertex, vertexB: Vertex, sides: Vector2[]): SideChoice;
   getLargestOrAromaticCommonRing(vertexA: Vertex, vertexB: Vertex): Ring | null;

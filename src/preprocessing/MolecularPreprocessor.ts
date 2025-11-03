@@ -11,6 +11,7 @@ import RingManager = require("./RingManager");
 import IMolecularData = require("./IMolecularData");
 import { SideChoice, AtomHighlight, OverlapScore, SubtreeOverlapScore, VertexOverlapScoreEntry, PositionData } from "./MolecularDataTypes";
 import { IMoleculeOptions, IThemeColors } from "../config/IOptions";
+import { BondType } from '../types/CommonTypes';
 
 import MathHelper = require('../utils/MathHelper');
 import ArrayHelper = require('../utils/ArrayHelper');
@@ -341,7 +342,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Vertex} vertexB A vertex.
    * @returns {(String|null)} Returns the ringbond type or null, if the two supplied vertices are not connected by a ringbond.
    */
-  getRingbondType(vertexA: Vertex, vertexB: Vertex): string | null {
+  getRingbondType(vertexA: Vertex, vertexB: Vertex): BondType | null {
       return this.ringManager.getRingbondType(vertexA, vertexB);
   }
 

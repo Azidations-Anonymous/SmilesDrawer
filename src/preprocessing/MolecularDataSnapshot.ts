@@ -7,6 +7,7 @@ import Edge = require('../graph/Edge');
 import Vector2 = require('../graph/Vector2');
 import { IMoleculeOptions } from '../config/IOptions';
 import { SideChoice, AtomHighlight, PositionData } from './MolecularDataTypes';
+import { BondType } from '../types/CommonTypes';
 
 type ParseTree = any;
 
@@ -51,7 +52,7 @@ class MolecularDataSnapshot implements IMolecularData {
     return this.source.getEdgeNormals(edge);
   }
 
-  getRingbondType(vertexA: Vertex, vertexB: Vertex): string | null {
+  getRingbondType(vertexA: Vertex, vertexB: Vertex): BondType | null {
     return this.source.getRingbondType(vertexA, vertexB);
   }
 
