@@ -160,7 +160,7 @@ class GaussDrawer {
      *
      * @param {CallableFunction} callback
      */
-    getSVG(): string {
+    getSVG(): SVGElement {
         return convertImage(this.context.getImageData(0, 0, this.width, this.height));
     }
 
