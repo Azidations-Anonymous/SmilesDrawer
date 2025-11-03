@@ -3849,18 +3849,18 @@ class SmilesDrawer {
     let rest = [];
     [smiles, ...rest] = smiles.split(' ');
     let info = rest.join(' ');
-    let settings = {};
+    let settingsOverride = {};
 
     if (info.includes('__')) {
       let settingsString = info.substring(info.indexOf('__') + 2, info.lastIndexOf('__'));
-      settings = JSON.parse(settingsString.replaceAll('\'', '"'));
+      settingsOverride = JSON.parse(settingsString.replaceAll('\'', '"'));
     }
 
     let defaultSettings = {
       textAboveArrow: '{reagents}',
       textBelowArrow: ''
     };
-    settings = Options.extend(true, defaultSettings, settings);
+    let settings = Options.extend(true, defaultSettings, settingsOverride);
 
     if (smiles.includes('>')) {
       try {
@@ -3874,7 +3874,9 @@ class SmilesDrawer {
       }
     } else {
       try {
-        this.drawMolecule(smiles, target, theme, weights, successCallback);
+        // For molecules, weights should be a simple array or null (not reaction weights object)
+        let moleculeWeights = Array.isArray(weights) ? weights : null;
+        this.drawMolecule(smiles, target, theme, moleculeWeights, successCallback);
       } catch (err) {
         if (errorCallback) {
           errorCallback(err);
@@ -3952,7 +3954,9 @@ class SmilesDrawer {
   }
 
   drawReaction(smiles, target, theme, settings, weights, callback) {
-    let reaction = ReactionParser.parse(smiles);
+    let reaction = ReactionParser.parse(smiles); // Type guard: reactions need object weights, not simple arrays
+
+    let reactionWeights = weights && !Array.isArray(weights) ? weights : null;
 
     if (target === null || target === 'svg') {
       let svg = this.reactionDrawer.draw(reaction, null, theme);
@@ -3964,25 +3968,25 @@ class SmilesDrawer {
         callback(svg);
       }
     } else if (target === 'canvas') {
-      let canvas = this.svgToCanvas(this.reactionDrawer.draw(reaction, null, theme, weights, settings.textAboveArrow, settings.textBelowArrow));
+      let canvas = this.svgToCanvas(this.reactionDrawer.draw(reaction, null, theme, reactionWeights, settings.textAboveArrow, settings.textBelowArrow));
 
       if (callback) {
         callback(canvas);
       }
     } else if (target === 'img') {
-      let img = this.svgToImg(this.reactionDrawer.draw(reaction, null, theme, weights, settings.textAboveArrow, settings.textBelowArrow));
+      let img = this.svgToImg(this.reactionDrawer.draw(reaction, null, theme, reactionWeights, settings.textAboveArrow, settings.textBelowArrow));
 
       if (callback) {
         callback(img);
       }
     } else if (target instanceof HTMLImageElement) {
-      this.svgToImg(this.reactionDrawer.draw(reaction, null, theme, weights, settings.textAboveArrow, settings.textBelowArrow), target);
+      this.svgToImg(this.reactionDrawer.draw(reaction, null, theme, reactionWeights, settings.textAboveArrow, settings.textBelowArrow), target);
 
       if (callback) {
         callback(target);
       }
     } else if (target instanceof SVGElement) {
-      this.reactionDrawer.draw(reaction, target, theme, weights, settings.textAboveArrow, settings.textBelowArrow);
+      this.reactionDrawer.draw(reaction, target, theme, reactionWeights, settings.textAboveArrow, settings.textBelowArrow);
 
       if (callback) {
         callback(target);
@@ -3993,12 +3997,12 @@ class SmilesDrawer {
         let tag = element.nodeName.toLowerCase();
 
         if (tag === 'svg') {
-          this.reactionDrawer.draw(reaction, element, theme, weights, settings.textAboveArrow, settings.textBelowArrow); // The svg has to have a css width and height set for the other
+          this.reactionDrawer.draw(reaction, element, theme, reactionWeights, settings.textAboveArrow, settings.textBelowArrow); // The svg has to have a css width and height set for the other
           // tags, however, here it would overwrite the chosen width and height
 
           if (this.reactionDrawer.opts.scale <= 0) {
-            element.style.width = null;
-            element.style.height = null;
+            element.style.width = '';
+            element.style.height = '';
           } // let dims = this.getDimensions(element);
           // element.setAttributeNS(null, 'width', '' + dims.w);
           // element.setAttributeNS(null, 'height', '' + dims.h);
@@ -4008,13 +4012,13 @@ class SmilesDrawer {
             callback(element);
           }
         } else if (tag === 'canvas') {
-          this.svgToCanvas(this.reactionDrawer.draw(reaction, null, theme, weights, settings.textAboveArrow, settings.textBelowArrow), element);
+          this.svgToCanvas(this.reactionDrawer.draw(reaction, null, theme, reactionWeights, settings.textAboveArrow, settings.textBelowArrow), element);
 
           if (callback) {
             callback(element);
           }
         } else if (tag === 'img') {
-          this.svgToImg(this.reactionDrawer.draw(reaction, null, theme, weights, settings.textAboveArrow, settings.textBelowArrow), element);
+          this.svgToImg(this.reactionDrawer.draw(reaction, null, theme, reactionWeights, settings.textAboveArrow, settings.textBelowArrow), element);
 
           if (callback) {
             callback(element);
@@ -4056,11 +4060,15 @@ class SmilesDrawer {
     let h = this.drawer.opts.height;
 
     if (this.drawer.opts.scale <= 0) {
-      if (w === null) {
+      if (w === null && element instanceof HTMLCanvasElement) {
+        w = element.width;
+      } else if (w === null && element instanceof HTMLImageElement) {
         w = element.width;
       }
 
-      if (h === null) {
+      if (h === null && element instanceof HTMLCanvasElement) {
+        h = element.height;
+      } else if (h === null && element instanceof HTMLImageElement) {
         h = element.height;
       }
 
@@ -4505,7 +4513,6 @@ class SSSR {
     }
 
     var k = length;
-    var j;
 
     while (k--) {
       i = length;
@@ -4652,7 +4659,7 @@ class SSSR {
 
     for (let i = 0; i < length; i++) {
       for (let j = 0; j < length; j++) {
-        if (d[i][j] === 0 || pe[i][j].length === 1 && pe_prime[i][j] === 0) {
+        if (d[i][j] === 0 || pe[i][j].length === 1 && pe_prime[i][j].length === 0) {
           continue;
         } else {
           // c is the number of vertices in the cycle.
@@ -6180,6 +6187,7 @@ class SvgDrawer {
     this.opts = this.preprocessor.opts;
     this.clear = clear;
     this.svgWrapper = null;
+    this.themeManager = null;
     this.edgeDrawer = new SvgEdgeDrawer(this);
     this.vertexDrawer = new SvgVertexDrawer(this);
     this.weightsDrawer = new SvgWeightsDrawer(this);
@@ -6250,7 +6258,7 @@ class SvgDrawer {
 
     if (weights !== null) {
       this.opts.padding = optionBackup.padding;
-      this.opts.compactDrawing = optionBackup.padding;
+      this.opts.compactDrawing = optionBackup.compactDrawing;
     }
 
     return target;
@@ -6304,8 +6312,8 @@ class SvgDrawer {
    */
 
 
-  getMolecularFormula(graph = null) {
-    return this.preprocessor.getMolecularFormula(graph);
+  getMolecularFormula(data = null) {
+    return this.preprocessor.getMolecularFormula(data);
   }
   /**
    * Returns complete positioning and structural data for the loaded molecule.
@@ -6940,7 +6948,7 @@ class SvgWrapper {
           count: 2,
           hydrogenCount: 0,
           previousElement: 'C',
-          charge: ''
+          charge: 0
         }
       };
       charge = 0;
@@ -6958,8 +6966,8 @@ class SvgWrapper {
         display += SvgUnicodeHelper.createUnicodeSubscript(pe.count);
       }
 
-      if (pe.charge !== '') {
-        display += SvgUnicodeHelper.createUnicodeCharge(charge);
+      if (pe.charge !== 0) {
+        display += SvgUnicodeHelper.createUnicodeCharge(pe.charge);
       }
 
       text.push([display, pe.element]);
@@ -8346,11 +8354,6 @@ module.exports = SvgTextHelper;
 
 class SvgUnicodeHelper {
   static createUnicodeCharge(n) {
-    // Handle string charge formats like '+', '++', '--'
-    if (typeof n === 'string') {
-      return n;
-    }
-
     if (n === 1) {
       return '⁺';
     }
@@ -14791,7 +14794,7 @@ class MolecularPreprocessor {
    * Gets the vetex sharing the edge that is the common bond of two rings.
    *
    * @param {Vertex} vertex A vertex.
-   * @returns {(Number|null)} The id of a vertex sharing the edge that is the common bond of two rings with the vertex provided or null, if none.
+   * @returns {(Vertex|null)} The vertex sharing the edge that is the common bond of two rings with the vertex provided or null, if none.
    */
 
 
@@ -15448,7 +15451,7 @@ class PositioningManager {
           nextEdge.center = true; // TODO: One of these is on value, but the other isn't?
 
           vertex.value.drawExplicit = false;
-          nextVertex.drawExplicit = true;
+          nextVertex.value.drawExplicit = true;
           nextVertex.angle = 0.0;
           this.createNextBond(nextVertex, vertex, previousAngle + nextVertex.angle);
         } else if (previousVertex && previousVertex.value.rings.length > 0) {
@@ -15782,7 +15785,7 @@ class PseudoElementManager {
 
         neighbour.value.isDrawn = false;
         let hydrogens = Atom.maxBonds[neighbour.value.element] - neighbour.value.bondCount;
-        let charge = '';
+        let charge = 0;
 
         if (neighbour.value.bracket) {
           hydrogens = neighbour.value.bracket.hcount;
@@ -16762,9 +16765,12 @@ class ReactionDrawer {
    * @param {Object} moleculeOptions An object containing molecule drawing specific options.
    */
   constructor(options, moleculeOptions) {
+    this.drawer = new SvgDrawer(moleculeOptions);
+    this.molOpts = this.drawer.opts;
+    this.themeManager = null;
     this.defaultOptions = {
-      scale: moleculeOptions.scale > 0.0 ? moleculeOptions.scale : 1.0,
-      fontSize: moleculeOptions.fontSizeLarge * 0.8,
+      scale: this.molOpts.scale > 0.0 ? this.molOpts.scale : 1.0,
+      fontSize: this.molOpts.fontSizeLarge * 0.8,
       fontFamily: 'Arial, Helvetica, sans-serif',
       spacing: 10,
       plus: {
@@ -16772,7 +16778,7 @@ class ReactionDrawer {
         thickness: 1.0
       },
       arrow: {
-        length: moleculeOptions.bondLength * 4.0,
+        length: this.molOpts.bondLength * 4.0,
         headSize: 6.0,
         thickness: 1.0,
         margin: 3
@@ -16782,8 +16788,6 @@ class ReactionDrawer {
       }
     };
     this.opts = Options.extend(true, this.defaultOptions, options);
-    this.drawer = new SvgDrawer(moleculeOptions);
-    this.molOpts = this.drawer.opts;
   }
   /**
   * Draws the parsed reaction smiles data to a canvas element.
@@ -17128,15 +17132,15 @@ class ArrayHelper {
    * @returns {*} A clone of the array or object.
    */
   static clone(arr) {
-    let out = Array.isArray(arr) ? Array() : {};
+    let out = Array.isArray(arr) ? [] : {};
 
     for (let key in arr) {
       let value = arr[key];
 
-      if (typeof value.clone === 'function') {
+      if (typeof value === 'object' && value !== null && typeof value.clone === 'function') {
         out[key] = value.clone();
       } else {
-        out[key] = typeof value === 'object' ? ArrayHelper.clone(value) : value;
+        out[key] = typeof value === 'object' && value !== null ? ArrayHelper.clone(value) : value;
       }
     }
 
@@ -17296,8 +17300,9 @@ class ArrayHelper {
   static unique(arr) {
     let contains = {};
     return arr.filter(function (i) {
-      // using !== instead of hasOwnProperty (http://andrew.hedges.name/experiments/in/)
-      return contains[i] !== undefined ? false : contains[i] = true;
+      let key = String(i); // using !== instead of hasOwnProperty (http://andrew.hedges.name/experiments/in/)
+
+      return contains[key] !== undefined ? false : contains[key] = true;
     });
   }
   /**
@@ -17500,7 +17505,7 @@ class ArrayHelper {
     for (let i = 0; i < arr.length; i++) {
       let item = arr[i];
 
-      if (item instanceof Array) {
+      if (Array.isArray(item)) {
         newArr[i] = ArrayHelper.deepCopy(item);
       } else {
         newArr[i] = item;
@@ -17732,12 +17737,8 @@ function convertImage(img) {
   "use strict";
 
   function each(obj, fn) {
-    var length = obj.length,
-        likeArray = length === 0 || length > 0 && length - 1 in obj,
-        i = 0;
-
-    if (likeArray) {
-      for (; i < length; i++) {
+    if (Array.isArray(obj)) {
+      for (let i = 0; i < obj.length; i++) {
         if (fn.call(obj[i], i, obj[i]) === false) {
           break;
         }
@@ -17752,22 +17753,22 @@ function convertImage(img) {
   }
 
   function componentToHex(c) {
-    var hex = parseInt(c).toString(16);
+    var hex = parseInt(c.toString()).toString(16);
     return hex.length == 1 ? "0" + hex : hex;
   }
 
   function getColor(r, g, b, a) {
-    a = parseInt(a);
+    let alpha = parseInt(a.toString());
 
-    if (a === undefined || a === 255) {
+    if (alpha === undefined || alpha === 255) {
       return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
     }
 
-    if (a === 0) {
+    if (alpha === 0) {
       return false;
     }
 
-    return 'rgba(' + r + ',' + g + ',' + b + ',' + a / 255 + ')';
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha / 255 + ')';
   } // Optimized for horizontal lines
 
 
@@ -17784,9 +17785,9 @@ function convertImage(img) {
 
     each(colors, function (color, values) {
       var orig = color;
-      color = getColor.apply(null, color.split(','));
+      var colorResult = getColor.apply(null, color.split(','));
 
-      if (color === false) {
+      if (colorResult === false) {
         return;
       }
 
@@ -17806,9 +17807,12 @@ function convertImage(img) {
           curPath = this;
         }
       });
-      paths.push(makePathData(curPath[0], curPath[1], w)); // Finish last path
 
-      output += makePath(color, paths.join(''));
+      if (curPath) {
+        paths.push(makePathData(curPath[0], curPath[1], w)); // Finish last path
+      }
+
+      output += makePath(colorResult, paths.join(''));
     });
     return output;
   }

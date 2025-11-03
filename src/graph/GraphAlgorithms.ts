@@ -123,7 +123,7 @@ class GraphAlgorithms {
         }
     }
 
-    public static getConnectedComponents(adjacencyMatrix: any) {
+    public static getConnectedComponents(adjacencyMatrix: number[][]): number[][] {
         let length = adjacencyMatrix.length;
         let visited = new Array(length);
         let components = new Array();
@@ -147,7 +147,7 @@ class GraphAlgorithms {
         return components;
     }
 
-    public static getConnectedComponentCount(adjacencyMatrix: any) {
+    public static getConnectedComponentCount(adjacencyMatrix: number[][]): number {
         let length = adjacencyMatrix.length;
         let visited = new Array(length);
         let count = 0;
@@ -165,7 +165,7 @@ class GraphAlgorithms {
         return count;
     }
 
-    private static _ccCountDfs(u: any, visited: any, adjacencyMatrix: any) {
+    private static _ccCountDfs(u: number, visited: boolean[], adjacencyMatrix: number[][]): void {
         for (var v = 0; v < adjacencyMatrix[u].length; v++) {
           let c = adjacencyMatrix[u][v];
 
@@ -178,7 +178,7 @@ class GraphAlgorithms {
         }
     }
 
-    private static _ccGetDfs(u: any, visited: any, adjacencyMatrix: any, component: any) {
+    private static _ccGetDfs(u: number, visited: boolean[], adjacencyMatrix: number[][], component: number[]): void {
         for (var v = 0; v < adjacencyMatrix[u].length; v++) {
           let c = adjacencyMatrix[u][v];
 

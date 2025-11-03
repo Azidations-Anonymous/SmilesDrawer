@@ -1,6 +1,7 @@
 import MolecularPreprocessor from "./MolecularPreprocessor";
 
 import Vector2 = require("../graph/Vector2");
+import Vertex = require("../graph/Vertex");
 import ArrayHelper = require("../utils/ArrayHelper");
 import MathHelper = require("../utils/MathHelper");
 class PositioningManager {
@@ -40,7 +41,7 @@ class PositioningManager {
         this.createNextBond(startVertex, null, 0.0);
     }
 
-    createNextBond(vertex: any, previousVertex: any = null, angle: number = 0.0, originShortest: boolean = false, skipPositioning: boolean = false): void {
+    createNextBond(vertex: Vertex, previousVertex: Vertex | null = null, angle: number = 0.0, originShortest: boolean = false, skipPositioning: boolean = false): void {
         if (vertex.positioned && !skipPositioning) {
           return;
         }
@@ -415,7 +416,7 @@ class PositioningManager {
         return 0;
     }
 
-    getVerticesAt(position: any, radius: number, excludeVertexId: number): number[] {
+    getVerticesAt(position: Vector2, radius: number, excludeVertexId: number): number[] {
         let locals = Array();
 
         for (var i = 0; i < this.drawer.graph.vertices.length; i++) {
@@ -435,9 +436,9 @@ class PositioningManager {
         return locals;
     }
 
-    getClosestVertex(vertex: any): any {
+    getClosestVertex(vertex: Vertex): Vertex | null {
         let minDist = 99999;
-        let minVertex = null;
+        let minVertex: Vertex | null = null;
 
         for (var i = 0; i < this.drawer.graph.vertices.length; i++) {
           let v = this.drawer.graph.vertices[i];
@@ -457,8 +458,8 @@ class PositioningManager {
         return minVertex;
     }
 
-    getNonRingNeighbours(vertexId: number): any[] {
-        let nrneighbours = Array();
+    getNonRingNeighbours(vertexId: number): Vertex[] {
+        let nrneighbours: Vertex[] = [];
         let vertex = this.drawer.graph.vertices[vertexId];
         let neighbours = vertex.neighbours;
 
