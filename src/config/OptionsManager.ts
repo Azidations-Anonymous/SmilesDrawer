@@ -1,15 +1,16 @@
 import getDefaultOptions from "./DefaultOptions";
 import Options = require('./Options');
+import { IMoleculeOptions, IThemeColors } from './IOptions';
 
 class OptionsManager {
-    private defaultOptions: any;
-    opts: any;
-    theme: any;
+    private defaultOptions: IMoleculeOptions;
+    opts: IMoleculeOptions;
+    theme: IThemeColors;
 
-    constructor(userOptions: any) {
+    constructor(userOptions: Partial<IMoleculeOptions>) {
         this.defaultOptions = getDefaultOptions();
 
-            this.opts = Options.extend(true, this.defaultOptions, userOptions);
+            this.opts = Options.extend<IMoleculeOptions>(true, this.defaultOptions, userOptions);
             this.opts.halfBondSpacing = this.opts.bondSpacing / 2.0;
             this.opts.bondLengthSq = this.opts.bondLength * this.opts.bondLength;
             this.opts.halfFontSizeLarge = this.opts.fontSizeLarge / 2.0;

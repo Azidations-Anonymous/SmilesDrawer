@@ -1,4 +1,6 @@
-function getDefaultOptions(): any {
+import { IMoleculeOptions } from './IOptions';
+
+function getDefaultOptions(): IMoleculeOptions {
   return {
       width: 500,
       height: 500,

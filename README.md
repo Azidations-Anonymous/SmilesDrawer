@@ -1,8 +1,3 @@
-Hey all, Daniel here. I'm looking for someone who has the time and motivation to maintain this repo.
-I wanted to get back to it but I won't be able to find the time this year. The best, of course, would be
-if it were someone who actually can do it as part of their work.
-You can let me know via E-Mail. You'll find the address here: https://people.epfl.ch/daniel.probst/?lang=en
-
 # SmilesDrawer 2.0
 
 No server, no images, no templates, just a SMILES 😊
@@ -99,7 +94,7 @@ A very simple JSFiddle example can be found [here](https://jsfiddle.net/zjdtkL57
 
 ### Experimental Features
 
-If you experience problems with the drawing of complex ring systems (including very long bonds), please enable experimental features (see options).
+If you experience problems with the drawing of complex ring systems (including very long bonds), please enable experimental SSSR ring detection (see `experimentalSSSR` option).
 
 ### "Installation"
 
@@ -135,11 +130,11 @@ SmilesDrawer includes comprehensive regression testing to detect rendering diffe
 Generate SVG and JSON outputs for current codebase without comparison (fast sanity check):
 
 ```bash
-npm run test:smoke [dataset] [-all]
+npm run test:smoke [dataset] -- [-all]
 ```
 
 **Flags:**
-- `-all` - Test all datasets (default: fastregression dataset only)
+- `-all` - Test all datasets (default: `fastregression` dataset only)
 - `[dataset]` - Specify dataset: `chembl`, `drugbank`, `fdb`, `force`, `gdb17`, `schembl`
 
 **Common Usage:**
@@ -152,7 +147,7 @@ npm run test:smoke
 npm run test:smoke chembl
 
 # Test all datasets
-npm run test:smoke -all
+npm run test:smoke -- -all
 ```
 
 **Output:**
@@ -168,7 +163,7 @@ Each HTML file includes commit hash and git diff of uncommitted src/ changes for
 Compare molecular structure rendering between code versions:
 
 ```bash
-npm run test:regression [commit/branch] [-all] [-failearly] [-novisual]
+npm run test:regression [commit/branch] -- [-all] [-failearly] [-novisual]
 ```
 
 **Flags:**
@@ -187,13 +182,13 @@ npm run test:regression master
 npm run test:regression HEAD~1
 
 # Test all datasets comprehensively
-npm run test:regression -all
+npm run test:regression -- -all
 
 # Fast fail-early check (stops at first diff)
-npm run test:regression -failearly -novisual
+npm run test:regression -- -failearly -novisual
 
 # Full comparison against master
-npm run test:regression master -all
+npm run test:regression master -- -all
 ```
 
 **Output:**
@@ -277,7 +272,7 @@ The following options are available:
 | Large Font Size (in pt for elements)                            | fontSizeLarge               | number                              | 6             |
 | Small Font Size (in pt for numbers)                             | fontSizeSmall               | number                              | 4             |
 | Padding                                                         | padding                     | number                              | 20.0          |
-| Use experimental features                                       | experimental                | boolean                             | false         |
+| Use experimental SSSR ring detection                            | experimentalSSSR            | boolean                             | false         |
 | Show Terminal Carbons (CH3)                                     | terminalCarbons             | boolean                             | false         |
 | Show explicit hydrogens                                         | explicitHydrogens           | boolean                             | false         |
 | Overlap sensitivity                                             | overlapSensitivity          | number                              | 0.42          |
@@ -308,7 +303,7 @@ The default options are defined as follows:
     fontSizeLarge: 5,
     fontSizeSmall: 3,
     padding: 20.0,
-    experimental: false,
+    experimentalSSSR: false,
     themes: {
         dark: {
             C: '#fff',

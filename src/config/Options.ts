@@ -1,3 +1,5 @@
+import { IMoleculeOptions, IReactionOptions } from './IOptions';
+
 class Options {
     /**
      * A helper method to extend the default options with user supplied ones.
@@ -6,7 +8,7 @@ class Options {
      * @param objects - Objects to merge together
      * @returns The merged object
      */
-    static extend(...args: any[]): any {
+    static extend<T>(...args: any[]): T {
         let that = this;
         let extended: any = {};
         let deep = false;
