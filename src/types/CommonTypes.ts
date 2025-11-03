@@ -9,6 +9,7 @@ export type BondType =
   | '-'   // Single bond
   | '='   // Double bond
   | '#'   // Triple bond
+  | '$'   // Quadruple bond
   | '.'   // Disconnected/zero bond
   | '/'   // Stereochemistry up
   | '\\'; // Stereochemistry down
