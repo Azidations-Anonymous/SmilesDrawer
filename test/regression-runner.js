@@ -389,11 +389,76 @@ function escapeHtml(text) {
         .replace(/'/g, '&#039;');
 }
 
+/**
+ * Collapse unchanged lines in a git diff output
+ * @param {string} diffText - Raw git diff output
+ * @returns {string} Collapsed diff with "..." for large unchanged chunks
+ */
+function collapseDiff(diffText) {
+    if (!diffText) return '';
+
+    const lines = diffText.split('\n');
+    const result = [];
+    let unchangedChunk = [];
+    const CONTEXT_LINES = 3;  // Lines to show before/after changes
+    const MIN_COLLAPSE = 7;   // Minimum unchanged lines to collapse
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const isChanged = line.startsWith('+') || line.startsWith('-') ||
+                         line.startsWith('@@') || line.startsWith('diff ') ||
+                         line.startsWith('index ') || line.startsWith('---') ||
+                         line.startsWith('+++');
+
+        if (isChanged) {
+            // Flush unchanged chunk before this change
+            if (unchangedChunk.length > MIN_COLLAPSE) {
+                // Show first CONTEXT_LINES
+                for (let j = 0; j < CONTEXT_LINES && j < unchangedChunk.length; j++) {
+                    result.push(unchangedChunk[j]);
+                }
+                // Add collapse marker
+                const collapsedCount = unchangedChunk.length - (2 * CONTEXT_LINES);
+                if (collapsedCount > 0) {
+                    result.push(`... (${collapsedCount} unchanged lines) ...`);
+                }
+                // Show last CONTEXT_LINES
+                for (let j = Math.max(CONTEXT_LINES, unchangedChunk.length - CONTEXT_LINES); j < unchangedChunk.length; j++) {
+                    result.push(unchangedChunk[j]);
+                }
+            } else {
+                // Chunk too small, show all
+                result.push(...unchangedChunk);
+            }
+            unchangedChunk = [];
+            result.push(line);
+        } else {
+            unchangedChunk.push(line);
+        }
+    }
+
+    // Flush remaining unchanged chunk
+    if (unchangedChunk.length > MIN_COLLAPSE) {
+        for (let j = 0; j < CONTEXT_LINES && j < unchangedChunk.length; j++) {
+            result.push(unchangedChunk[j]);
+        }
+        const collapsedCount = unchangedChunk.length - CONTEXT_LINES;
+        if (collapsedCount > 0) {
+            result.push(`... (${collapsedCount} unchanged lines) ...`);
+        }
+    } else {
+        result.push(...unchangedChunk);
+    }
+
+    return result.join('\n');
+}
+
 function generateIndividualHTMLReport(diff) {
-    const diffSection = diff.newHasChanges && diff.newSrcDiff ? `
+    const collapsedDiff = diff.newHasChanges && diff.newSrcDiff ? collapseDiff(diff.newSrcDiff) : '';
+    const diffSection = diff.newHasChanges && collapsedDiff ? `
         <div class="diff-section">
             <h3>Uncommitted Changes in src/</h3>
-            <pre class="diff-content"><code>${escapeHtml(diff.newSrcDiff)}</code></pre>
+            <pre class="diff-content"><code>${escapeHtml(collapsedDiff)}</code></pre>
         </div>` : '';
 
     return `<!DOCTYPE html>

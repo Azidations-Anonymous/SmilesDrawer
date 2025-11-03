@@ -13840,12 +13840,31 @@ module.exports = InitializationManager;
 class MolecularDataSnapshot {
   constructor(source) {
     this.source = source;
-    this.graph = source.graph;
-    this.rings = source.rings;
-    this.ringConnections = source.ringConnections;
-    this.opts = source.opts;
-    this.bridgedRing = source.bridgedRing;
-    this.highlight_atoms = source.highlight_atoms;
+    this.serializedData = source.getPositionData();
+  }
+
+  get graph() {
+    return this.source.graph;
+  }
+
+  get rings() {
+    return this.source.rings;
+  }
+
+  get ringConnections() {
+    return this.source.ringConnections;
+  }
+
+  get opts() {
+    return this.source.opts;
+  }
+
+  get bridgedRing() {
+    return this.source.bridgedRing;
+  }
+
+  get highlight_atoms() {
+    return this.source.highlight_atoms;
   }
 
   isRingAromatic(ring) {
@@ -13889,11 +13908,11 @@ class MolecularDataSnapshot {
   }
 
   getPositionData() {
-    return this.source.getPositionData();
+    return this.serializedData;
   }
 
   toJSON() {
-    return this.source.getPositionData();
+    return this.serializedData;
   }
 
 }
@@ -14232,7 +14251,6 @@ class MolecularPreprocessor {
       edges: v.edges ? [...v.edges] : [],
       neighbours: v.neighbours ? [...v.neighbours] : [],
       neighbourCount: v.neighbourCount,
-      neighbouringElements: v.neighbouringElements ? [...v.neighbouringElements] : [],
       // Positioning data
       position: v.position ? {
         x: v.position.x,
@@ -14254,6 +14272,7 @@ class MolecularPreprocessor {
       dir: v.dir,
       // Atom data from v.value
       value: v.value ? {
+        idx: v.value.idx,
         element: v.value.element,
         drawExplicit: v.value.drawExplicit,
         isDrawn: v.value.isDrawn,
@@ -14262,6 +14281,8 @@ class MolecularPreprocessor {
         ringbonds: v.value.ringbonds ? [...v.value.ringbonds] : [],
         rings: v.value.rings ? [...v.value.rings] : [],
         bondCount: v.value.bondCount,
+        class: v.value.class,
+        neighbouringElements: v.value.neighbouringElements ? [...v.value.neighbouringElements] : [],
         // Ring membership
         isBridge: v.value.isBridge,
         isBridgeNode: v.value.isBridgeNode,

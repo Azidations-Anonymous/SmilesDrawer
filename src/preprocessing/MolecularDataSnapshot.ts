@@ -1,23 +1,36 @@
 import IMolecularData = require('./IMolecularData');
 
 class MolecularDataSnapshot implements IMolecularData {
-  graph: any;
-  rings: any;
-  ringConnections: any;
-  opts: any;
-  bridgedRing: boolean;
-  highlight_atoms: any;
-
   private source: IMolecularData;
+  private serializedData: any;
 
   constructor(source: IMolecularData) {
     this.source = source;
-    this.graph = source.graph;
-    this.rings = source.rings;
-    this.ringConnections = source.ringConnections;
-    this.opts = source.opts;
-    this.bridgedRing = source.bridgedRing;
-    this.highlight_atoms = source.highlight_atoms;
+    this.serializedData = source.getPositionData();
+  }
+
+  get graph(): any {
+    return this.source.graph;
+  }
+
+  get rings(): any {
+    return this.source.rings;
+  }
+
+  get ringConnections(): any {
+    return this.source.ringConnections;
+  }
+
+  get opts(): any {
+    return this.source.opts;
+  }
+
+  get bridgedRing(): boolean {
+    return this.source.bridgedRing;
+  }
+
+  get highlight_atoms(): any {
+    return this.source.highlight_atoms;
   }
 
   isRingAromatic(ring: any): boolean {
@@ -61,11 +74,11 @@ class MolecularDataSnapshot implements IMolecularData {
   }
 
   getPositionData(): any {
-    return this.source.getPositionData();
+    return this.serializedData;
   }
 
   toJSON(): any {
-    return this.source.getPositionData();
+    return this.serializedData;
   }
 }
 

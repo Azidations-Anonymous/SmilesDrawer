@@ -235,7 +235,6 @@ class MolecularPreprocessor implements IMolecularData {
           edges: v.edges ? [...v.edges] : [],
           neighbours: v.neighbours ? [...v.neighbours] : [],
           neighbourCount: v.neighbourCount,
-          neighbouringElements: v.neighbouringElements ? [...v.neighbouringElements] : [],
 
           // Positioning data
           position: v.position ? { x: v.position.x, y: v.position.y } : { x: 0, y: 0 },
@@ -247,6 +246,7 @@ class MolecularPreprocessor implements IMolecularData {
 
           // Atom data from v.value
           value: v.value ? {
+              idx: v.value.idx,
               element: v.value.element,
               drawExplicit: v.value.drawExplicit,
               isDrawn: v.value.isDrawn,
@@ -255,6 +255,8 @@ class MolecularPreprocessor implements IMolecularData {
               ringbonds: v.value.ringbonds ? [...v.value.ringbonds] : [],
               rings: v.value.rings ? [...v.value.rings] : [],
               bondCount: v.value.bondCount,
+              class: v.value.class,
+              neighbouringElements: v.value.neighbouringElements ? [...v.value.neighbouringElements] : [],
 
               // Ring membership
               isBridge: v.value.isBridge,
