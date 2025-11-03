@@ -9,17 +9,17 @@ class ArrayHelper {
      * @param {*} arr The array or object to be cloned.
      * @returns {*} A clone of the array or object.
      */
-    static clone<T>(arr: T[] | Record<string, any>): T[] | Record<string, any> {
-        let out: any = Array.isArray(arr) ? Array() : {};
+    static clone<T>(arr: T[] | Record<string, T>): T[] | Record<string, T> {
+        let out: T[] | Record<string, T> = Array.isArray(arr) ? [] : {};
 
         for (let key in arr) {
-            let value = arr[key];
+            let value: any = arr[key];
 
-            if (typeof value.clone === 'function') {
-                out[key] = value.clone();
+            if (typeof value === 'object' && value !== null && typeof value.clone === 'function') {
+                (out as any)[key] = value.clone();
             }
             else {
-                out[key] = (typeof value === 'object') ? ArrayHelper.clone(value) : value;
+                (out as any)[key] = (typeof value === 'object' && value !== null) ? ArrayHelper.clone(value) : value;
             }
         }
 
@@ -172,9 +172,10 @@ class ArrayHelper {
      */
     static unique<T>(arr: T[]): T[] {
         let contains: Record<string, boolean> = {};
-        return arr.filter(function (i: any) {
+        return arr.filter(function (i: T) {
+            let key = String(i);
             // using !== instead of hasOwnProperty (http://andrew.hedges.name/experiments/in/)
-            return contains[i] !== undefined ? false : (contains[i] = true);
+            return contains[key] !== undefined ? false : (contains[key] = true);
         });
     }
 
@@ -366,8 +367,8 @@ class ArrayHelper {
         for (let i = 0; i < arr.length; i++) {
             let item = arr[i];
 
-            if (item instanceof Array) {
-                newArr[i] = ArrayHelper.deepCopy(item) as any;
+            if (Array.isArray(item)) {
+                newArr[i] = ArrayHelper.deepCopy(item) as T;
             } else {
                 newArr[i] = item;
             }
