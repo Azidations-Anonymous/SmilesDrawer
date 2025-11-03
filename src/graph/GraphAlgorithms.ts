@@ -31,7 +31,7 @@ class GraphAlgorithms {
         return outBridges;
     }
 
-    public traverseBF(startVertexId: number, callback: (vertex: import("/Users/ch/Develop/smilesDrawer/src/graph/Vertex")) => void): void {
+    public traverseBF(startVertexId: number, callback: (vertex: Vertex) => void): void {
         let length = this.graph.vertices.length;
         let visited = new Array(length);
 
@@ -76,7 +76,7 @@ class GraphAlgorithms {
         return max + 1;
     }
 
-    public traverseTree(vertexId: number, parentVertexId: number, callback: (vertex: import("/Users/ch/Develop/smilesDrawer/src/graph/Vertex")) => void, maxDepth: number, ignoreFirst: boolean, depth: number, visited: Uint8Array<ArrayBufferLike>): void {
+    public traverseTree(vertexId: number, parentVertexId: number, callback: (vertex: Vertex) => void, maxDepth: number, ignoreFirst: boolean, depth: number, visited: Uint8Array | null): void {
         if (visited === null) {
           visited = new Uint8Array(this.graph.vertices.length);
         }

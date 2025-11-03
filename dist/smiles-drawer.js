@@ -155,7 +155,7 @@ if (!Array.prototype.fill) {
 
 module.exports = SmilesDrawer;
 
-},{"./src/SmilesDrawer":3,"./src/drawing/Drawer":10,"./src/drawing/GaussDrawer":12,"./src/drawing/SvgDrawer":13,"./src/parsing/Parser":33,"./src/parsing/ReactionParser":34,"./src/reactions/ReactionDrawer":45}],2:[function(require,module,exports){
+},{"./src/SmilesDrawer":3,"./src/drawing/Drawer":11,"./src/drawing/GaussDrawer":13,"./src/drawing/SvgDrawer":14,"./src/parsing/Parser":36,"./src/parsing/ReactionParser":37,"./src/reactions/ReactionDrawer":48}],2:[function(require,module,exports){
 /**
  * chroma.js - JavaScript library for color conversions
  *
@@ -4086,7 +4086,265 @@ class SmilesDrawer {
 
 module.exports = SmilesDrawer;
 
-},{"./config/Options":6,"./drawing/SvgDrawer":13,"./drawing/helpers/SvgConversionHelper":21,"./parsing/Parser":33,"./parsing/ReactionParser":34,"./reactions/ReactionDrawer":45}],4:[function(require,module,exports){
+},{"./config/Options":7,"./drawing/SvgDrawer":14,"./drawing/helpers/SvgConversionHelper":22,"./parsing/Parser":36,"./parsing/ReactionParser":37,"./reactions/ReactionDrawer":48}],4:[function(require,module,exports){
+"use strict";
+
+const MathHelper = require("../utils/MathHelper");
+/**
+ * Implements the Kamada-Kawai force-directed graph layout algorithm.
+ * Used for positioning bridged ring systems.
+ *
+ * Reference: https://pdfs.semanticscholar.org/b8d3/bca50ccc573c5cb99f7d201e8acce6618f04.pdf
+ */
+
+
+class KamadaKawaiLayout {
+  constructor(graph) {
+    this.graph = graph;
+  }
+
+  layout(vertexIds, center, startVertexId, ring, bondLength, threshold, innerThreshold, maxIteration, maxInnerIteration, maxEnergy) {
+    let edgeStrength = bondLength; // Add vertices that are directly connected to the ring
+
+    var i = vertexIds.length;
+
+    while (i--) {
+      let vertex = this.graph.vertices[vertexIds[i]];
+      var j = vertex.neighbours.length;
+    }
+
+    let matDist = this.graph.getSubgraphDistanceMatrix(vertexIds);
+    let length = vertexIds.length; // Initialize the positions. Place all vertices on a ring around the center
+
+    let radius = MathHelper.polyCircumradius(500, length);
+    let angle = MathHelper.centralAngle(length);
+    let a = 0.0;
+    let arrPositionX = new Float32Array(length);
+    let arrPositionY = new Float32Array(length);
+    let arrPositioned = Array(length);
+    i = length;
+
+    while (i--) {
+      let vertex = this.graph.vertices[vertexIds[i]];
+
+      if (!vertex.positioned) {
+        arrPositionX[i] = center.x + Math.cos(a) * radius;
+        arrPositionY[i] = center.y + Math.sin(a) * radius;
+      } else {
+        arrPositionX[i] = vertex.position.x;
+        arrPositionY[i] = vertex.position.y;
+      }
+
+      arrPositioned[i] = vertex.positioned;
+      a += angle;
+    } // Create the matrix containing the lengths
+
+
+    let matLength = Array(length);
+    i = length;
+
+    while (i--) {
+      matLength[i] = new Array(length);
+      var j = length;
+
+      while (j--) {
+        matLength[i][j] = bondLength * matDist[i][j];
+      }
+    } // Create the matrix containing the spring strenghts
+
+
+    let matStrength = Array(length);
+    i = length;
+
+    while (i--) {
+      matStrength[i] = Array(length);
+      var j = length;
+
+      while (j--) {
+        matStrength[i][j] = edgeStrength * Math.pow(matDist[i][j], -2.0);
+      }
+    } // Create the matrix containing the energies
+
+
+    let matEnergy = Array(length);
+    let arrEnergySumX = new Float32Array(length);
+    let arrEnergySumY = new Float32Array(length);
+    i = length;
+
+    while (i--) {
+      matEnergy[i] = Array(length);
+    }
+
+    i = length;
+    let ux, uy, dEx, dEy, vx, vy, denom;
+
+    while (i--) {
+      ux = arrPositionX[i];
+      uy = arrPositionY[i];
+      dEx = 0.0;
+      dEy = 0.0;
+      let j = length;
+
+      while (j--) {
+        if (i === j) {
+          continue;
+        }
+
+        vx = arrPositionX[j];
+        vy = arrPositionY[j];
+        denom = 1.0 / Math.sqrt((ux - vx) * (ux - vx) + (uy - vy) * (uy - vy));
+        matEnergy[i][j] = [matStrength[i][j] * (ux - vx - matLength[i][j] * (ux - vx) * denom), matStrength[i][j] * (uy - vy - matLength[i][j] * (uy - vy) * denom)];
+        matEnergy[j][i] = matEnergy[i][j];
+        dEx += matEnergy[i][j][0];
+        dEy += matEnergy[i][j][1];
+      }
+
+      arrEnergySumX[i] = dEx;
+      arrEnergySumY[i] = dEy;
+    } // Utility functions, maybe inline them later
+
+
+    let energy = function (index) {
+      return [arrEnergySumX[index] * arrEnergySumX[index] + arrEnergySumY[index] * arrEnergySumY[index], arrEnergySumX[index], arrEnergySumY[index]];
+    };
+
+    let highestEnergy = function () {
+      let maxEnergy = 0.0;
+      let maxEnergyId = 0;
+      let maxDEX = 0.0;
+      let maxDEY = 0.0;
+      i = length;
+
+      while (i--) {
+        let [delta, dEX, dEY] = energy(i);
+
+        if (delta > maxEnergy && arrPositioned[i] === false) {
+          maxEnergy = delta;
+          maxEnergyId = i;
+          maxDEX = dEX;
+          maxDEY = dEY;
+        }
+      }
+
+      return [maxEnergyId, maxEnergy, maxDEX, maxDEY];
+    };
+
+    let update = function (index, dEX, dEY) {
+      let dxx = 0.0;
+      let dyy = 0.0;
+      let dxy = 0.0;
+      let ux = arrPositionX[index];
+      let uy = arrPositionY[index];
+      let arrL = matLength[index];
+      let arrK = matStrength[index];
+      i = length;
+
+      while (i--) {
+        if (i === index) {
+          continue;
+        }
+
+        let vx = arrPositionX[i];
+        let vy = arrPositionY[i];
+        let l = arrL[i];
+        let k = arrK[i];
+        let m = (ux - vx) * (ux - vx);
+        let denom = 1.0 / Math.pow(m + (uy - vy) * (uy - vy), 1.5);
+        dxx += k * (1 - l * (uy - vy) * (uy - vy) * denom);
+        dyy += k * (1 - l * m * denom);
+        dxy += k * (l * (ux - vx) * (uy - vy) * denom);
+      } // Prevent division by zero
+
+
+      if (dxx === 0) {
+        dxx = 0.1;
+      }
+
+      if (dyy === 0) {
+        dyy = 0.1;
+      }
+
+      if (dxy === 0) {
+        dxy = 0.1;
+      }
+
+      let dy = dEX / dxx + dEY / dxy;
+      dy /= dxy / dxx - dyy / dxy; // had to split this onto two lines because the syntax highlighter went crazy.
+
+      let dx = -(dxy * dy + dEX) / dxx;
+      arrPositionX[index] += dx;
+      arrPositionY[index] += dy; // Update the energies
+
+      let arrE = matEnergy[index];
+      dEX = 0.0;
+      dEY = 0.0;
+      ux = arrPositionX[index];
+      uy = arrPositionY[index];
+      let vx, vy, prevEx, prevEy, denom;
+      i = length;
+
+      while (i--) {
+        if (index === i) {
+          continue;
+        }
+
+        vx = arrPositionX[i];
+        vy = arrPositionY[i]; // Store old energies
+
+        prevEx = arrE[i][0];
+        prevEy = arrE[i][1];
+        denom = 1.0 / Math.sqrt((ux - vx) * (ux - vx) + (uy - vy) * (uy - vy));
+        dx = arrK[i] * (ux - vx - arrL[i] * (ux - vx) * denom);
+        dy = arrK[i] * (uy - vy - arrL[i] * (uy - vy) * denom);
+        arrE[i] = [dx, dy];
+        dEX += dx;
+        dEY += dy;
+        arrEnergySumX[i] += dx - prevEx;
+        arrEnergySumY[i] += dy - prevEy;
+      }
+
+      arrEnergySumX[index] = dEX;
+      arrEnergySumY[index] = dEY;
+    }; // Setting up variables for the while loops
+
+
+    let maxEnergyId = 0;
+    let dEX = 0.0;
+    let dEY = 0.0;
+    let delta = 0.0;
+    let iteration = 0;
+    let innerIteration = 0;
+
+    while (maxEnergy > threshold && maxIteration > iteration) {
+      iteration++;
+      [maxEnergyId, maxEnergy, dEX, dEY] = highestEnergy();
+      delta = maxEnergy;
+      innerIteration = 0;
+
+      while (delta > innerThreshold && maxInnerIteration > innerIteration) {
+        innerIteration++;
+        update(maxEnergyId, dEX, dEY);
+        [delta, dEX, dEY] = energy(maxEnergyId);
+      }
+    }
+
+    i = length;
+
+    while (i--) {
+      let index = vertexIds[i];
+      let vertex = this.graph.vertices[index];
+      vertex.position.x = arrPositionX[i];
+      vertex.position.y = arrPositionY[i];
+      vertex.positioned = true;
+      vertex.forcePositioned = true;
+    }
+  }
+
+}
+
+module.exports = KamadaKawaiLayout;
+
+},{"../utils/MathHelper":51}],5:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -4696,7 +4954,7 @@ class SSSR {
 
 module.exports = SSSR;
 
-},{"../graph/Graph":26}],5:[function(require,module,exports){
+},{"../graph/Graph":27}],6:[function(require,module,exports){
 "use strict";
 
 function getDefaultOptions() {
@@ -4920,7 +5178,7 @@ function getDefaultOptions() {
 
 module.exports = getDefaultOptions;
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 "use strict";
 
 class Options {
@@ -4967,7 +5225,7 @@ class Options {
 
 module.exports = Options;
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -4997,7 +5255,7 @@ class OptionsManager {
 
 module.exports = OptionsManager;
 
-},{"./DefaultOptions":5,"./Options":6}],8:[function(require,module,exports){
+},{"./DefaultOptions":6,"./Options":7}],9:[function(require,module,exports){
 "use strict";
 
 class ThemeManager {
@@ -5045,7 +5303,7 @@ class ThemeManager {
 
 module.exports = ThemeManager;
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict";
 
 const CanvasWedgeDrawer = require("./draw/CanvasWedgeDrawer");
@@ -5276,7 +5534,7 @@ class CanvasDrawer {
 
 module.exports = CanvasDrawer;
 
-},{"./draw/CanvasPrimitiveDrawer":15,"./draw/CanvasTextDrawer":16,"./draw/CanvasWedgeDrawer":17}],10:[function(require,module,exports){
+},{"./draw/CanvasPrimitiveDrawer":16,"./draw/CanvasTextDrawer":17,"./draw/CanvasWedgeDrawer":18}],11:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -5355,7 +5613,7 @@ class Drawer {
 
 module.exports = Drawer;
 
-},{"./SvgDrawer":13}],11:[function(require,module,exports){
+},{"./SvgDrawer":14}],12:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../graph/Vector2");
@@ -5688,7 +5946,7 @@ class DrawingManager {
 
 module.exports = DrawingManager;
 
-},{"../config/ThemeManager":8,"../graph/Atom":24,"../graph/Line":27,"../graph/Vector2":30,"../utils/ArrayHelper":46,"./CanvasDrawer":9}],12:[function(require,module,exports){
+},{"../config/ThemeManager":9,"../graph/Atom":25,"../graph/Line":30,"../graph/Vector2":33,"../utils/ArrayHelper":49,"./CanvasDrawer":10}],13:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -5872,7 +6130,7 @@ class GaussDrawer {
 
 module.exports = GaussDrawer;
 
-},{"../graph/Vector2":30,"../utils/PixelsToSvg":49,"chroma-js":2}],13:[function(require,module,exports){
+},{"../graph/Vector2":33,"../utils/PixelsToSvg":52,"chroma-js":2}],14:[function(require,module,exports){
 "use strict";
 
 const MolecularPreprocessor = require("../preprocessing/MolecularPreprocessor");
@@ -6053,7 +6311,7 @@ class SvgDrawer {
 
 module.exports = SvgDrawer;
 
-},{"../config/ThemeManager":8,"../preprocessing/MolecularPreprocessor":38,"./SvgWrapper":14,"./draw/SvgEdgeDrawer":18,"./draw/SvgVertexDrawer":19,"./draw/SvgWeightsDrawer":20}],14:[function(require,module,exports){
+},{"../config/ThemeManager":9,"../preprocessing/MolecularPreprocessor":41,"./SvgWrapper":15,"./draw/SvgEdgeDrawer":19,"./draw/SvgVertexDrawer":20,"./draw/SvgWeightsDrawer":21}],15:[function(require,module,exports){
 "use strict";
 
 const SvgTextHelper = require("./helpers/SvgTextHelper");
@@ -6820,7 +7078,7 @@ class SvgWrapper {
 
 module.exports = SvgWrapper;
 
-},{"../graph/Line":27,"../graph/Vector2":30,"../utils/MathHelper":48,"./helpers/SvgTextHelper":22,"./helpers/SvgUnicodeHelper":23}],15:[function(require,module,exports){
+},{"../graph/Line":30,"../graph/Vector2":33,"../utils/MathHelper":51,"./helpers/SvgTextHelper":23,"./helpers/SvgUnicodeHelper":24}],16:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../../utils/MathHelper");
@@ -7025,7 +7283,7 @@ class CanvasPrimitiveDrawer {
 
 module.exports = CanvasPrimitiveDrawer;
 
-},{"../../utils/MathHelper":48}],16:[function(require,module,exports){
+},{"../../utils/MathHelper":51}],17:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../../utils/MathHelper");
@@ -7345,7 +7603,7 @@ class CanvasTextDrawer {
 
 module.exports = CanvasTextDrawer;
 
-},{"../../utils/MathHelper":48}],17:[function(require,module,exports){
+},{"../../utils/MathHelper":51}],18:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../../graph/Vector2");
@@ -7499,7 +7757,7 @@ class CanvasWedgeDrawer {
 
 module.exports = CanvasWedgeDrawer;
 
-},{"../../graph/Vector2":30}],18:[function(require,module,exports){
+},{"../../graph/Vector2":33}],19:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../../utils/ArrayHelper");
@@ -7683,7 +7941,7 @@ class SvgEdgeDrawer {
 
 module.exports = SvgEdgeDrawer;
 
-},{"../../graph/Line":27,"../../graph/Vector2":30,"../../utils/ArrayHelper":46}],19:[function(require,module,exports){
+},{"../../graph/Line":30,"../../graph/Vector2":33,"../../utils/ArrayHelper":49}],20:[function(require,module,exports){
 "use strict";
 
 const Atom = require("../../graph/Atom");
@@ -7813,7 +8071,7 @@ class SvgVertexDrawer {
 
 module.exports = SvgVertexDrawer;
 
-},{"../../graph/Atom":24,"../../graph/Vector2":30,"../../utils/ArrayHelper":46}],20:[function(require,module,exports){
+},{"../../graph/Atom":25,"../../graph/Vector2":33,"../../utils/ArrayHelper":49}],21:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../../graph/Vector2");
@@ -7859,7 +8117,7 @@ class SvgWeightsDrawer {
 
 module.exports = SvgWeightsDrawer;
 
-},{"../../graph/Vector2":30,"../GaussDrawer":12}],21:[function(require,module,exports){
+},{"../../graph/Vector2":33,"../GaussDrawer":13}],22:[function(require,module,exports){
 "use strict";
 
 class SvgConversionHelper {
@@ -7918,7 +8176,7 @@ class SvgConversionHelper {
 
 module.exports = SvgConversionHelper;
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 "use strict";
 
 class SvgTextHelper {
@@ -8027,7 +8285,7 @@ class SvgTextHelper {
 
 module.exports = SvgTextHelper;
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 "use strict";
 
 class SvgUnicodeHelper {
@@ -8096,7 +8354,7 @@ class SvgUnicodeHelper {
 
 module.exports = SvgUnicodeHelper;
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
@@ -8657,7 +8915,7 @@ class Atom {
 
 module.exports = Atom;
 
-},{"../utils/ArrayHelper":46}],25:[function(require,module,exports){
+},{"../utils/ArrayHelper":49}],26:[function(require,module,exports){
 "use strict";
 /**
  * A class representing an edge.
@@ -8723,10 +8981,14 @@ class Edge {
 
 module.exports = Edge;
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 "use strict";
 
-const MathHelper = require("../utils/MathHelper");
+const GraphMatrixOperations = require("./GraphMatrixOperations");
+
+const GraphAlgorithms = require("./GraphAlgorithms");
+
+const KamadaKawaiLayout = require("../algorithms/KamadaKawaiLayout");
 
 const Vertex = require("./Vertex");
 
@@ -8763,6 +9025,10 @@ class Graph {
     this._time = 0;
 
     this._init(parseTree);
+
+    this.matrixOps = new GraphMatrixOperations(this);
+    this.algorithms = new GraphAlgorithms(this);
+    this.layout = new KamadaKawaiLayout(this);
   }
   /**
    * PRIVATE FUNCTION. Initializing the graph from the parse tree.
@@ -8984,21 +9250,7 @@ class Graph {
 
 
   getAdjacencyMatrix() {
-    let length = this.vertices.length;
-    let adjacencyMatrix = Array(length);
-
-    for (var i = 0; i < length; i++) {
-      adjacencyMatrix[i] = new Array(length);
-      adjacencyMatrix[i].fill(0);
-    }
-
-    for (var i = 0; i < this.edges.length; i++) {
-      let edge = this.edges[i];
-      adjacencyMatrix[edge.sourceId][edge.targetId] = 1;
-      adjacencyMatrix[edge.targetId][edge.sourceId] = 1;
-    }
-
-    return adjacencyMatrix;
+    return this.matrixOps.getAdjacencyMatrix();
   }
   /**
    * Get the adjacency matrix of the graph with all bridges removed (thus the components). Thus the remaining vertices are all part of ring systems.
@@ -9008,17 +9260,390 @@ class Graph {
 
 
   getComponentsAdjacencyMatrix() {
-    let length = this.vertices.length;
+    return this.matrixOps.getComponentsAdjacencyMatrix();
+  }
+  /**
+   * Get the adjacency matrix of a subgraph.
+   *
+   * @param {Number[]} vertexIds An array containing the vertex ids contained within the subgraph.
+   * @returns {Array[]} The adjancency matrix of the subgraph.
+   */
+
+
+  getSubgraphAdjacencyMatrix(vertexIds) {
+    return this.matrixOps.getSubgraphAdjacencyMatrix(vertexIds);
+  }
+  /**
+   * Get the distance matrix of the graph.
+   *
+   * @returns {Array[]} The distance matrix of the graph.
+   */
+
+
+  getDistanceMatrix() {
+    return this.matrixOps.getDistanceMatrix();
+  }
+  /**
+   * Get the distance matrix of a subgraph.
+   *
+   * @param {Number[]} vertexIds An array containing the vertex ids contained within the subgraph.
+   * @returns {Array[]} The distance matrix of the subgraph.
+   */
+
+
+  getSubgraphDistanceMatrix(vertexIds) {
+    return this.matrixOps.getSubgraphDistanceMatrix(vertexIds);
+  }
+  /**
+   * Get the adjacency list of the graph.
+   *
+   * @returns {Array[]} The adjancency list of the graph.
+   */
+
+
+  getAdjacencyList() {
+    return this.matrixOps.getAdjacencyList();
+  }
+  /**
+   * Get the adjacency list of a subgraph.
+   *
+   * @param {Number[]} vertexIds An array containing the vertex ids contained within the subgraph.
+   * @returns {Array[]} The adjancency list of the subgraph.
+   */
+
+
+  getSubgraphAdjacencyList(vertexIds) {
+    return this.matrixOps.getSubgraphAdjacencyList(vertexIds);
+  }
+  /**
+   * Returns an array containing the edge ids of bridges. A bridge splits the graph into multiple components when removed.
+   *
+   * @returns {Number[]} An array containing the edge ids of the bridges.
+   */
+
+
+  getBridges() {
+    return this.algorithms.getBridges();
+  }
+  /**
+   * Traverses the graph in breadth-first order.
+   *
+   * @param {Number} startVertexId The id of the starting vertex.
+   * @param {Function} callback The callback function to be called on every vertex.
+   */
+
+
+  traverseBF(startVertexId, callback) {
+    return this.algorithms.traverseBF(startVertexId, callback);
+  }
+  /**
+   * Get the depth of a subtree in the direction opposite to the vertex specified as the parent vertex.
+   *
+   * @param {Number} vertexId A vertex id.
+   * @param {Number} parentVertexId The id of a neighbouring vertex.
+   * @returns {Number} The depth of the sub-tree.
+   */
+
+
+  getTreeDepth(vertexId, parentVertexId) {
+    return this.algorithms.getTreeDepth(vertexId, parentVertexId);
+  }
+  /**
+   * Traverse a sub-tree in the graph.
+   *
+   * @param {Number} vertexId A vertex id.
+   * @param {Number} parentVertexId A neighbouring vertex.
+   * @param {Function} callback The callback function that is called with each visited as an argument.
+   * @param {Number} [maxDepth=999999] The maximum depth of the recursion.
+   * @param {Boolean} [ignoreFirst=false] Whether or not to ignore the starting vertex supplied as vertexId in the callback.
+   * @param {Number} [depth=1] The current depth in the tree.
+   * @param {Uint8Array} [visited=null] An array holding a flag on whether or not a node has been visited.
+   */
+
+
+  traverseTree(vertexId, parentVertexId, callback, maxDepth = 999999, ignoreFirst = false, depth = 1, visited = null) {
+    return this.algorithms.traverseTree(vertexId, parentVertexId, callback, maxDepth, ignoreFirst, depth, visited);
+  }
+  /**
+   * Positiones the (sub)graph using Kamada and Kawais algorithm for drawing general undirected graphs. https://pdfs.semanticscholar.org/b8d3/bca50ccc573c5cb99f7d201e8acce6618f04.pdf
+   * There are undocumented layout parameters. They are undocumented for a reason, so be very careful.
+   *
+   * @param {Number[]} vertexIds An array containing vertexIds to be placed using the force based layout.
+   * @param {Vector2} center The center of the layout.
+   * @param {Number} startVertexId A vertex id. Should be the starting vertex - e.g. the first to be positioned and connected to a previously place vertex.
+   * @param {Ring} ring The bridged ring associated with this force-based layout.
+   */
+
+
+  kkLayout(vertexIds, center, startVertexId, ring, bondLength, threshold = 0.1, innerThreshold = 0.1, maxIteration = 2000, maxInnerIteration = 50, maxEnergy = 1e9) {
+    return this.layout.layout(vertexIds, center, startVertexId, ring, bondLength, threshold, innerThreshold, maxIteration, maxInnerIteration, maxEnergy);
+  }
+  /**
+   * Returns the connected components of the graph.
+   *
+   * @param {Array[]} adjacencyMatrix An adjacency matrix.
+   * @returns {Set[]} Connected components as sets.
+   */
+
+
+  static getConnectedComponents(adjacencyMatrix) {
+    return GraphAlgorithms.getConnectedComponents(adjacencyMatrix);
+  }
+  /**
+   * Returns the number of connected components for the graph.
+   *
+   * @param {Array[]} adjacencyMatrix An adjacency matrix.
+   * @returns {Number} The number of connected components of the supplied graph.
+   */
+
+
+  static getConnectedComponentCount(adjacencyMatrix) {
+    return GraphAlgorithms.getConnectedComponentCount(adjacencyMatrix);
+  }
+
+}
+
+module.exports = Graph;
+
+},{"../algorithms/KamadaKawaiLayout":4,"./Atom":25,"./Edge":26,"./GraphAlgorithms":28,"./GraphMatrixOperations":29,"./Vertex":34}],28:[function(require,module,exports){
+"use strict";
+/**
+ * A class providing graph algorithms including bridge detection,
+ * graph traversal, and connected component analysis.
+ */
+
+class GraphAlgorithms {
+  constructor(graph) {
+    this.graph = graph;
+  }
+
+  getBridges() {
+    let length = this.graph.vertices.length;
+    let visited = new Array(length);
+    let disc = new Array(length);
+    let low = new Array(length);
+    let parent = new Array(length);
+    let adj = this.graph.getAdjacencyList();
+    let outBridges = Array();
+    visited.fill(false);
+    parent.fill(null);
+    this.graph._time = 0;
+
+    for (var i = 0; i < length; i++) {
+      if (!visited[i]) {
+        this._bridgeDfs(i, visited, disc, low, parent, adj, outBridges);
+      }
+    }
+
+    return outBridges;
+  }
+
+  traverseBF(startVertexId, callback) {
+    let length = this.graph.vertices.length;
+    let visited = new Array(length);
+    visited.fill(false);
+    var queue = [startVertexId];
+
+    while (queue.length > 0) {
+      // JavaScripts shift() is O(n) ... bad JavaScript, bad!
+      let u = queue.shift();
+      let vertex = this.graph.vertices[u];
+      callback(vertex);
+
+      for (var i = 0; i < vertex.neighbours.length; i++) {
+        let v = vertex.neighbours[i];
+
+        if (!visited[v]) {
+          visited[v] = true;
+          queue.push(v);
+        }
+      }
+    }
+  }
+
+  getTreeDepth(vertexId, parentVertexId) {
+    if (vertexId === null || parentVertexId === null) {
+      return 0;
+    }
+
+    let neighbours = this.graph.vertices[vertexId].getSpanningTreeNeighbours(parentVertexId);
+    let max = 0;
+
+    for (var i = 0; i < neighbours.length; i++) {
+      let childId = neighbours[i];
+      let d = this.getTreeDepth(childId, vertexId);
+
+      if (d > max) {
+        max = d;
+      }
+    }
+
+    return max + 1;
+  }
+
+  traverseTree(vertexId, parentVertexId, callback, maxDepth, ignoreFirst, depth, visited) {
+    if (visited === null) {
+      visited = new Uint8Array(this.graph.vertices.length);
+    }
+
+    if (depth > maxDepth + 1 || visited[vertexId] === 1) {
+      return;
+    }
+
+    visited[vertexId] = 1;
+    let vertex = this.graph.vertices[vertexId];
+    let neighbours = vertex.getNeighbours(parentVertexId);
+
+    if (!ignoreFirst || depth > 1) {
+      callback(vertex);
+    }
+
+    for (var i = 0; i < neighbours.length; i++) {
+      this.traverseTree(neighbours[i], vertexId, callback, maxDepth, ignoreFirst, depth + 1, visited);
+    }
+  }
+
+  _bridgeDfs(u, visited, disc, low, parent, adj, outBridges) {
+    visited[u] = true;
+    disc[u] = low[u] = ++this.graph._time;
+
+    for (var i = 0; i < adj[u].length; i++) {
+      let v = adj[u][i];
+
+      if (!visited[v]) {
+        parent[v] = u;
+
+        this._bridgeDfs(v, visited, disc, low, parent, adj, outBridges);
+
+        low[u] = Math.min(low[u], low[v]); // If low > disc, we have a bridge
+
+        if (low[v] > disc[u]) {
+          outBridges.push([u, v]);
+        }
+      } else if (v !== parent[u]) {
+        low[u] = Math.min(low[u], disc[v]);
+      }
+    }
+  }
+
+  static getConnectedComponents(adjacencyMatrix) {
+    let length = adjacencyMatrix.length;
+    let visited = new Array(length);
+    let components = new Array();
+    let count = 0;
+    visited.fill(false);
+
+    for (var u = 0; u < length; u++) {
+      if (!visited[u]) {
+        let component = Array();
+        visited[u] = true;
+        component.push(u);
+        count++;
+
+        GraphAlgorithms._ccGetDfs(u, visited, adjacencyMatrix, component);
+
+        if (component.length > 1) {
+          components.push(component);
+        }
+      }
+    }
+
+    return components;
+  }
+
+  static getConnectedComponentCount(adjacencyMatrix) {
+    let length = adjacencyMatrix.length;
+    let visited = new Array(length);
+    let count = 0;
+    visited.fill(false);
+
+    for (var u = 0; u < length; u++) {
+      if (!visited[u]) {
+        visited[u] = true;
+        count++;
+
+        GraphAlgorithms._ccCountDfs(u, visited, adjacencyMatrix);
+      }
+    }
+
+    return count;
+  }
+
+  static _ccCountDfs(u, visited, adjacencyMatrix) {
+    for (var v = 0; v < adjacencyMatrix[u].length; v++) {
+      let c = adjacencyMatrix[u][v];
+
+      if (!c || visited[v] || u === v) {
+        continue;
+      }
+
+      visited[v] = true;
+
+      GraphAlgorithms._ccCountDfs(v, visited, adjacencyMatrix);
+    }
+  }
+
+  static _ccGetDfs(u, visited, adjacencyMatrix, component) {
+    for (var v = 0; v < adjacencyMatrix[u].length; v++) {
+      let c = adjacencyMatrix[u][v];
+
+      if (!c || visited[v] || u === v) {
+        continue;
+      }
+
+      visited[v] = true;
+      component.push(v);
+
+      GraphAlgorithms._ccGetDfs(v, visited, adjacencyMatrix, component);
+    }
+  }
+
+}
+
+module.exports = GraphAlgorithms;
+
+},{}],29:[function(require,module,exports){
+"use strict";
+/**
+ * A class providing matrix and list operations for molecular graphs.
+ * Handles adjacency matrices, distance matrices, and adjacency lists.
+ */
+
+class GraphMatrixOperations {
+  constructor(graph) {
+    this.graph = graph;
+  }
+
+  getAdjacencyMatrix() {
+    let length = this.graph.vertices.length;
     let adjacencyMatrix = Array(length);
-    let bridges = this.getBridges();
 
     for (var i = 0; i < length; i++) {
       adjacencyMatrix[i] = new Array(length);
       adjacencyMatrix[i].fill(0);
     }
 
-    for (var i = 0; i < this.edges.length; i++) {
-      let edge = this.edges[i];
+    for (var i = 0; i < this.graph.edges.length; i++) {
+      let edge = this.graph.edges[i];
+      adjacencyMatrix[edge.sourceId][edge.targetId] = 1;
+      adjacencyMatrix[edge.targetId][edge.sourceId] = 1;
+    }
+
+    return adjacencyMatrix;
+  }
+
+  getComponentsAdjacencyMatrix() {
+    let length = this.graph.vertices.length;
+    let adjacencyMatrix = Array(length);
+    let bridges = this.graph.getBridges();
+
+    for (var i = 0; i < length; i++) {
+      adjacencyMatrix[i] = new Array(length);
+      adjacencyMatrix[i].fill(0);
+    }
+
+    for (var i = 0; i < this.graph.edges.length; i++) {
+      let edge = this.graph.edges[i];
       adjacencyMatrix[edge.sourceId][edge.targetId] = 1;
       adjacencyMatrix[edge.targetId][edge.sourceId] = 1;
     }
@@ -9030,13 +9655,6 @@ class Graph {
 
     return adjacencyMatrix;
   }
-  /**
-   * Get the adjacency matrix of a subgraph.
-   *
-   * @param {Number[]} vertexIds An array containing the vertex ids contained within the subgraph.
-   * @returns {Array[]} The adjancency matrix of the subgraph.
-   */
-
 
   getSubgraphAdjacencyMatrix(vertexIds) {
     let length = vertexIds.length;
@@ -9051,7 +9669,7 @@ class Graph {
           continue;
         }
 
-        if (this.hasEdge(vertexIds[i], vertexIds[j])) {
+        if (this.graph.hasEdge(vertexIds[i], vertexIds[j])) {
           adjacencyMatrix[i][j] = 1;
         }
       }
@@ -9059,15 +9677,9 @@ class Graph {
 
     return adjacencyMatrix;
   }
-  /**
-   * Get the distance matrix of the graph.
-   *
-   * @returns {Array[]} The distance matrix of the graph.
-   */
-
 
   getDistanceMatrix() {
-    let length = this.vertices.length;
+    let length = this.graph.vertices.length;
     let adja = this.getAdjacencyMatrix();
     let dist = Array(length);
 
@@ -9096,13 +9708,6 @@ class Graph {
 
     return dist;
   }
-  /**
-   * Get the distance matrix of a subgraph.
-   *
-   * @param {Number[]} vertexIds An array containing the vertex ids contained within the subgraph.
-   * @returns {Array[]} The distance matrix of the subgraph.
-   */
-
 
   getSubgraphDistanceMatrix(vertexIds) {
     let length = vertexIds.length;
@@ -9134,15 +9739,9 @@ class Graph {
 
     return dist;
   }
-  /**
-   * Get the adjacency list of the graph.
-   *
-   * @returns {Array[]} The adjancency list of the graph.
-   */
-
 
   getAdjacencyList() {
-    let length = this.vertices.length;
+    let length = this.graph.vertices.length;
     let adjacencyList = Array(length);
 
     for (var i = 0; i < length; i++) {
@@ -9153,7 +9752,7 @@ class Graph {
           continue;
         }
 
-        if (this.hasEdge(this.vertices[i].id, this.vertices[j].id)) {
+        if (this.graph.hasEdge(this.graph.vertices[i].id, this.graph.vertices[j].id)) {
           adjacencyList[i].push(j);
         }
       }
@@ -9161,13 +9760,6 @@ class Graph {
 
     return adjacencyList;
   }
-  /**
-   * Get the adjacency list of a subgraph.
-   *
-   * @param {Number[]} vertexIds An array containing the vertex ids contained within the subgraph.
-   * @returns {Array[]} The adjancency list of the subgraph.
-   */
-
 
   getSubgraphAdjacencyList(vertexIds) {
     let length = vertexIds.length;
@@ -9181,7 +9773,7 @@ class Graph {
           continue;
         }
 
-        if (this.hasEdge(vertexIds[i], vertexIds[j])) {
+        if (this.graph.hasEdge(vertexIds[i], vertexIds[j])) {
           adjacencyList[i].push(j);
         }
       }
@@ -9189,499 +9781,12 @@ class Graph {
 
     return adjacencyList;
   }
-  /**
-   * Returns an array containing the edge ids of bridges. A bridge splits the graph into multiple components when removed.
-   *
-   * @returns {Number[]} An array containing the edge ids of the bridges.
-   */
-
-
-  getBridges() {
-    let length = this.vertices.length;
-    let visited = new Array(length);
-    let disc = new Array(length);
-    let low = new Array(length);
-    let parent = new Array(length);
-    let adj = this.getAdjacencyList();
-    let outBridges = Array();
-    visited.fill(false);
-    parent.fill(null);
-    this._time = 0;
-
-    for (var i = 0; i < length; i++) {
-      if (!visited[i]) {
-        this._bridgeDfs(i, visited, disc, low, parent, adj, outBridges);
-      }
-    }
-
-    return outBridges;
-  }
-  /**
-   * Traverses the graph in breadth-first order.
-   *
-   * @param {Number} startVertexId The id of the starting vertex.
-   * @param {Function} callback The callback function to be called on every vertex.
-   */
-
-
-  traverseBF(startVertexId, callback) {
-    let length = this.vertices.length;
-    let visited = new Array(length);
-    visited.fill(false);
-    var queue = [startVertexId];
-
-    while (queue.length > 0) {
-      // JavaScripts shift() is O(n) ... bad JavaScript, bad!
-      let u = queue.shift();
-      let vertex = this.vertices[u];
-      callback(vertex);
-
-      for (var i = 0; i < vertex.neighbours.length; i++) {
-        let v = vertex.neighbours[i];
-
-        if (!visited[v]) {
-          visited[v] = true;
-          queue.push(v);
-        }
-      }
-    }
-  }
-  /**
-   * Get the depth of a subtree in the direction opposite to the vertex specified as the parent vertex.
-   *
-   * @param {Number} vertexId A vertex id.
-   * @param {Number} parentVertexId The id of a neighbouring vertex.
-   * @returns {Number} The depth of the sub-tree.
-   */
-
-
-  getTreeDepth(vertexId, parentVertexId) {
-    if (vertexId === null || parentVertexId === null) {
-      return 0;
-    }
-
-    let neighbours = this.vertices[vertexId].getSpanningTreeNeighbours(parentVertexId);
-    let max = 0;
-
-    for (var i = 0; i < neighbours.length; i++) {
-      let childId = neighbours[i];
-      let d = this.getTreeDepth(childId, vertexId);
-
-      if (d > max) {
-        max = d;
-      }
-    }
-
-    return max + 1;
-  }
-  /**
-   * Traverse a sub-tree in the graph.
-   *
-   * @param {Number} vertexId A vertex id.
-   * @param {Number} parentVertexId A neighbouring vertex.
-   * @param {Function} callback The callback function that is called with each visited as an argument.
-   * @param {Number} [maxDepth=999999] The maximum depth of the recursion.
-   * @param {Boolean} [ignoreFirst=false] Whether or not to ignore the starting vertex supplied as vertexId in the callback.
-   * @param {Number} [depth=1] The current depth in the tree.
-   * @param {Uint8Array} [visited=null] An array holding a flag on whether or not a node has been visited.
-   */
-
-
-  traverseTree(vertexId, parentVertexId, callback, maxDepth = 999999, ignoreFirst = false, depth = 1, visited = null) {
-    if (visited === null) {
-      visited = new Uint8Array(this.vertices.length);
-    }
-
-    if (depth > maxDepth + 1 || visited[vertexId] === 1) {
-      return;
-    }
-
-    visited[vertexId] = 1;
-    let vertex = this.vertices[vertexId];
-    let neighbours = vertex.getNeighbours(parentVertexId);
-
-    if (!ignoreFirst || depth > 1) {
-      callback(vertex);
-    }
-
-    for (var i = 0; i < neighbours.length; i++) {
-      this.traverseTree(neighbours[i], vertexId, callback, maxDepth, ignoreFirst, depth + 1, visited);
-    }
-  }
-  /**
-   * Positiones the (sub)graph using Kamada and Kawais algorithm for drawing general undirected graphs. https://pdfs.semanticscholar.org/b8d3/bca50ccc573c5cb99f7d201e8acce6618f04.pdf
-   * There are undocumented layout parameters. They are undocumented for a reason, so be very careful.
-   *
-   * @param {Number[]} vertexIds An array containing vertexIds to be placed using the force based layout.
-   * @param {Vector2} center The center of the layout.
-   * @param {Number} startVertexId A vertex id. Should be the starting vertex - e.g. the first to be positioned and connected to a previously place vertex.
-   * @param {Ring} ring The bridged ring associated with this force-based layout.
-   */
-
-
-  kkLayout(vertexIds, center, startVertexId, ring, bondLength, threshold = 0.1, innerThreshold = 0.1, maxIteration = 2000, maxInnerIteration = 50, maxEnergy = 1e9) {
-    let edgeStrength = bondLength; // Add vertices that are directly connected to the ring
-
-    var i = vertexIds.length;
-
-    while (i--) {
-      let vertex = this.vertices[vertexIds[i]];
-      var j = vertex.neighbours.length;
-    }
-
-    let matDist = this.getSubgraphDistanceMatrix(vertexIds);
-    let length = vertexIds.length; // Initialize the positions. Place all vertices on a ring around the center
-
-    let radius = MathHelper.polyCircumradius(500, length);
-    let angle = MathHelper.centralAngle(length);
-    let a = 0.0;
-    let arrPositionX = new Float32Array(length);
-    let arrPositionY = new Float32Array(length);
-    let arrPositioned = Array(length);
-    i = length;
-
-    while (i--) {
-      let vertex = this.vertices[vertexIds[i]];
-
-      if (!vertex.positioned) {
-        arrPositionX[i] = center.x + Math.cos(a) * radius;
-        arrPositionY[i] = center.y + Math.sin(a) * radius;
-      } else {
-        arrPositionX[i] = vertex.position.x;
-        arrPositionY[i] = vertex.position.y;
-      }
-
-      arrPositioned[i] = vertex.positioned;
-      a += angle;
-    } // Create the matrix containing the lengths
-
-
-    let matLength = Array(length);
-    i = length;
-
-    while (i--) {
-      matLength[i] = new Array(length);
-      var j = length;
-
-      while (j--) {
-        matLength[i][j] = bondLength * matDist[i][j];
-      }
-    } // Create the matrix containing the spring strenghts
-
-
-    let matStrength = Array(length);
-    i = length;
-
-    while (i--) {
-      matStrength[i] = Array(length);
-      var j = length;
-
-      while (j--) {
-        matStrength[i][j] = edgeStrength * Math.pow(matDist[i][j], -2.0);
-      }
-    } // Create the matrix containing the energies
-
-
-    let matEnergy = Array(length);
-    let arrEnergySumX = new Float32Array(length);
-    let arrEnergySumY = new Float32Array(length);
-    i = length;
-
-    while (i--) {
-      matEnergy[i] = Array(length);
-    }
-
-    i = length;
-    let ux, uy, dEx, dEy, vx, vy, denom;
-
-    while (i--) {
-      ux = arrPositionX[i];
-      uy = arrPositionY[i];
-      dEx = 0.0;
-      dEy = 0.0;
-      let j = length;
-
-      while (j--) {
-        if (i === j) {
-          continue;
-        }
-
-        vx = arrPositionX[j];
-        vy = arrPositionY[j];
-        denom = 1.0 / Math.sqrt((ux - vx) * (ux - vx) + (uy - vy) * (uy - vy));
-        matEnergy[i][j] = [matStrength[i][j] * (ux - vx - matLength[i][j] * (ux - vx) * denom), matStrength[i][j] * (uy - vy - matLength[i][j] * (uy - vy) * denom)];
-        matEnergy[j][i] = matEnergy[i][j];
-        dEx += matEnergy[i][j][0];
-        dEy += matEnergy[i][j][1];
-      }
-
-      arrEnergySumX[i] = dEx;
-      arrEnergySumY[i] = dEy;
-    } // Utility functions, maybe inline them later
-
-
-    let energy = function (index) {
-      return [arrEnergySumX[index] * arrEnergySumX[index] + arrEnergySumY[index] * arrEnergySumY[index], arrEnergySumX[index], arrEnergySumY[index]];
-    };
-
-    let highestEnergy = function () {
-      let maxEnergy = 0.0;
-      let maxEnergyId = 0;
-      let maxDEX = 0.0;
-      let maxDEY = 0.0;
-      i = length;
-
-      while (i--) {
-        let [delta, dEX, dEY] = energy(i);
-
-        if (delta > maxEnergy && arrPositioned[i] === false) {
-          maxEnergy = delta;
-          maxEnergyId = i;
-          maxDEX = dEX;
-          maxDEY = dEY;
-        }
-      }
-
-      return [maxEnergyId, maxEnergy, maxDEX, maxDEY];
-    };
-
-    let update = function (index, dEX, dEY) {
-      let dxx = 0.0;
-      let dyy = 0.0;
-      let dxy = 0.0;
-      let ux = arrPositionX[index];
-      let uy = arrPositionY[index];
-      let arrL = matLength[index];
-      let arrK = matStrength[index];
-      i = length;
-
-      while (i--) {
-        if (i === index) {
-          continue;
-        }
-
-        let vx = arrPositionX[i];
-        let vy = arrPositionY[i];
-        let l = arrL[i];
-        let k = arrK[i];
-        let m = (ux - vx) * (ux - vx);
-        let denom = 1.0 / Math.pow(m + (uy - vy) * (uy - vy), 1.5);
-        dxx += k * (1 - l * (uy - vy) * (uy - vy) * denom);
-        dyy += k * (1 - l * m * denom);
-        dxy += k * (l * (ux - vx) * (uy - vy) * denom);
-      } // Prevent division by zero
-
-
-      if (dxx === 0) {
-        dxx = 0.1;
-      }
-
-      if (dyy === 0) {
-        dyy = 0.1;
-      }
-
-      if (dxy === 0) {
-        dxy = 0.1;
-      }
-
-      let dy = dEX / dxx + dEY / dxy;
-      dy /= dxy / dxx - dyy / dxy; // had to split this onto two lines because the syntax highlighter went crazy.
-
-      let dx = -(dxy * dy + dEX) / dxx;
-      arrPositionX[index] += dx;
-      arrPositionY[index] += dy; // Update the energies
-
-      let arrE = matEnergy[index];
-      dEX = 0.0;
-      dEY = 0.0;
-      ux = arrPositionX[index];
-      uy = arrPositionY[index];
-      let vx, vy, prevEx, prevEy, denom;
-      i = length;
-
-      while (i--) {
-        if (index === i) {
-          continue;
-        }
-
-        vx = arrPositionX[i];
-        vy = arrPositionY[i]; // Store old energies
-
-        prevEx = arrE[i][0];
-        prevEy = arrE[i][1];
-        denom = 1.0 / Math.sqrt((ux - vx) * (ux - vx) + (uy - vy) * (uy - vy));
-        dx = arrK[i] * (ux - vx - arrL[i] * (ux - vx) * denom);
-        dy = arrK[i] * (uy - vy - arrL[i] * (uy - vy) * denom);
-        arrE[i] = [dx, dy];
-        dEX += dx;
-        dEY += dy;
-        arrEnergySumX[i] += dx - prevEx;
-        arrEnergySumY[i] += dy - prevEy;
-      }
-
-      arrEnergySumX[index] = dEX;
-      arrEnergySumY[index] = dEY;
-    }; // Setting up variables for the while loops
-
-
-    let maxEnergyId = 0;
-    let dEX = 0.0;
-    let dEY = 0.0;
-    let delta = 0.0;
-    let iteration = 0;
-    let innerIteration = 0;
-
-    while (maxEnergy > threshold && maxIteration > iteration) {
-      iteration++;
-      [maxEnergyId, maxEnergy, dEX, dEY] = highestEnergy();
-      delta = maxEnergy;
-      innerIteration = 0;
-
-      while (delta > innerThreshold && maxInnerIteration > innerIteration) {
-        innerIteration++;
-        update(maxEnergyId, dEX, dEY);
-        [delta, dEX, dEY] = energy(maxEnergyId);
-      }
-    }
-
-    i = length;
-
-    while (i--) {
-      let index = vertexIds[i];
-      let vertex = this.vertices[index];
-      vertex.position.x = arrPositionX[i];
-      vertex.position.y = arrPositionY[i];
-      vertex.positioned = true;
-      vertex.forcePositioned = true;
-    }
-  }
-  /**
-   * PRIVATE FUNCTION used by getBridges().
-   */
-
-
-  _bridgeDfs(u, visited, disc, low, parent, adj, outBridges) {
-    visited[u] = true;
-    disc[u] = low[u] = ++this._time;
-
-    for (var i = 0; i < adj[u].length; i++) {
-      let v = adj[u][i];
-
-      if (!visited[v]) {
-        parent[v] = u;
-
-        this._bridgeDfs(v, visited, disc, low, parent, adj, outBridges);
-
-        low[u] = Math.min(low[u], low[v]); // If low > disc, we have a bridge
-
-        if (low[v] > disc[u]) {
-          outBridges.push([u, v]);
-        }
-      } else if (v !== parent[u]) {
-        low[u] = Math.min(low[u], disc[v]);
-      }
-    }
-  }
-  /**
-   * Returns the connected components of the graph.
-   *
-   * @param {Array[]} adjacencyMatrix An adjacency matrix.
-   * @returns {Set[]} Connected components as sets.
-   */
-
-
-  static getConnectedComponents(adjacencyMatrix) {
-    let length = adjacencyMatrix.length;
-    let visited = new Array(length);
-    let components = new Array();
-    let count = 0;
-    visited.fill(false);
-
-    for (var u = 0; u < length; u++) {
-      if (!visited[u]) {
-        let component = Array();
-        visited[u] = true;
-        component.push(u);
-        count++;
-
-        Graph._ccGetDfs(u, visited, adjacencyMatrix, component);
-
-        if (component.length > 1) {
-          components.push(component);
-        }
-      }
-    }
-
-    return components;
-  }
-  /**
-   * Returns the number of connected components for the graph.
-   *
-   * @param {Array[]} adjacencyMatrix An adjacency matrix.
-   * @returns {Number} The number of connected components of the supplied graph.
-   */
-
-
-  static getConnectedComponentCount(adjacencyMatrix) {
-    let length = adjacencyMatrix.length;
-    let visited = new Array(length);
-    let count = 0;
-    visited.fill(false);
-
-    for (var u = 0; u < length; u++) {
-      if (!visited[u]) {
-        visited[u] = true;
-        count++;
-
-        Graph._ccCountDfs(u, visited, adjacencyMatrix);
-      }
-    }
-
-    return count;
-  }
-  /**
-   * PRIVATE FUNCTION used by getConnectedComponentCount().
-   */
-
-
-  static _ccCountDfs(u, visited, adjacencyMatrix) {
-    for (var v = 0; v < adjacencyMatrix[u].length; v++) {
-      let c = adjacencyMatrix[u][v];
-
-      if (!c || visited[v] || u === v) {
-        continue;
-      }
-
-      visited[v] = true;
-
-      Graph._ccCountDfs(v, visited, adjacencyMatrix);
-    }
-  }
-  /**
-   * PRIVATE FUNCTION used by getConnectedComponents().
-   */
-
-
-  static _ccGetDfs(u, visited, adjacencyMatrix, component) {
-    for (var v = 0; v < adjacencyMatrix[u].length; v++) {
-      let c = adjacencyMatrix[u][v];
-
-      if (!c || visited[v] || u === v) {
-        continue;
-      }
-
-      visited[v] = true;
-      component.push(v);
-
-      Graph._ccGetDfs(v, visited, adjacencyMatrix, component);
-    }
-  }
 
 }
 
-module.exports = Graph;
+module.exports = GraphMatrixOperations;
 
-},{"../utils/MathHelper":48,"./Atom":24,"./Edge":25,"./Vertex":31}],27:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -9989,7 +10094,7 @@ class Line {
 
 module.exports = Line;
 
-},{"./Vector2":30}],28:[function(require,module,exports){
+},{"./Vector2":33}],31:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
@@ -10208,7 +10313,7 @@ class Ring {
 
 module.exports = Ring;
 
-},{"../utils/ArrayHelper":46,"./RingConnection":29,"./Vector2":30}],29:[function(require,module,exports){
+},{"../utils/ArrayHelper":49,"./RingConnection":32,"./Vector2":33}],32:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a ring connection.
@@ -10376,7 +10481,7 @@ class RingConnection {
 
 module.exports = RingConnection;
 
-},{}],30:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a 2D vector.
@@ -10996,7 +11101,7 @@ class Vector2 {
 
 module.exports = Vector2;
 
-},{}],31:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -11373,7 +11478,7 @@ class Vertex {
 
 module.exports = Vertex;
 
-},{"../utils/ArrayHelper":46,"../utils/MathHelper":48,"./Vector2":30}],32:[function(require,module,exports){
+},{"../utils/ArrayHelper":49,"../utils/MathHelper":51,"./Vector2":33}],35:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
@@ -11562,7 +11667,7 @@ class BridgedRingHandler {
 
 module.exports = BridgedRingHandler;
 
-},{"../graph/Ring":28,"../graph/RingConnection":29,"../utils/ArrayHelper":46}],33:[function(require,module,exports){
+},{"../graph/Ring":31,"../graph/RingConnection":32,"../utils/ArrayHelper":49}],36:[function(require,module,exports){
 "use strict"; // WHEN REPLACING, CHECK FOR:
 // KEEP THIS WHEN REGENERATING THE PARSER !!
 
@@ -13460,7 +13565,7 @@ module.exports = function () {
   };
 }();
 
-},{}],34:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 "use strict";
 
 const Reaction = require("../reactions/Reaction");
@@ -13481,7 +13586,7 @@ class ReactionParser {
 
 module.exports = ReactionParser;
 
-},{"../reactions/Reaction":44}],35:[function(require,module,exports){
+},{"../reactions/Reaction":47}],38:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -13618,7 +13723,7 @@ class GraphProcessingManager {
 
 module.exports = GraphProcessingManager;
 
-},{"../utils/MathHelper":48}],36:[function(require,module,exports){
+},{"../utils/MathHelper":51}],39:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -13673,7 +13778,7 @@ class InitializationManager {
 
 module.exports = InitializationManager;
 
-},{"../graph/Graph":26}],37:[function(require,module,exports){
+},{"../graph/Graph":27}],40:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -13765,7 +13870,7 @@ class MolecularInfoManager {
 
 module.exports = MolecularInfoManager;
 
-},{"../graph/Atom":24,"../graph/Graph":26}],38:[function(require,module,exports){
+},{"../graph/Atom":25,"../graph/Graph":27}],41:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -14553,7 +14658,7 @@ class MolecularPreprocessor {
 
 module.exports = MolecularPreprocessor;
 
-},{"../config/OptionsManager":7,"../drawing/DrawingManager":11,"./GraphProcessingManager":35,"./InitializationManager":36,"./MolecularInfoManager":37,"./OverlapResolutionManager":39,"./PositioningManager":40,"./PseudoElementManager":41,"./RingManager":42,"./StereochemistryManager":43}],39:[function(require,module,exports){
+},{"../config/OptionsManager":8,"../drawing/DrawingManager":12,"./GraphProcessingManager":38,"./InitializationManager":39,"./MolecularInfoManager":40,"./OverlapResolutionManager":42,"./PositioningManager":43,"./PseudoElementManager":44,"./RingManager":45,"./StereochemistryManager":46}],42:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../graph/Vector2");
@@ -14855,7 +14960,7 @@ class OverlapResolutionManager {
 
 module.exports = OverlapResolutionManager;
 
-},{"../graph/Vector2":30,"../utils/ArrayHelper":46,"../utils/MathHelper":48}],40:[function(require,module,exports){
+},{"../graph/Vector2":33,"../utils/ArrayHelper":49,"../utils/MathHelper":51}],43:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../graph/Vector2");
@@ -15298,7 +15403,7 @@ class PositioningManager {
 
 module.exports = PositioningManager;
 
-},{"../graph/Vector2":30,"../utils/ArrayHelper":46,"../utils/MathHelper":48}],41:[function(require,module,exports){
+},{"../graph/Vector2":33,"../utils/ArrayHelper":49,"../utils/MathHelper":51}],44:[function(require,module,exports){
 "use strict";
 
 const Atom = require("../graph/Atom");
@@ -15434,7 +15539,7 @@ class PseudoElementManager {
 
 module.exports = PseudoElementManager;
 
-},{"../graph/Atom":24}],42:[function(require,module,exports){
+},{"../graph/Atom":25}],45:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -16055,7 +16160,7 @@ class RingManager {
 
 module.exports = RingManager;
 
-},{"../algorithms/SSSR":4,"../graph/Edge":25,"../graph/Ring":28,"../graph/RingConnection":29,"../graph/Vector2":30,"../handlers/BridgedRingHandler":32,"../utils/ArrayHelper":46,"../utils/MathHelper":48}],43:[function(require,module,exports){
+},{"../algorithms/SSSR":5,"../graph/Edge":26,"../graph/Ring":31,"../graph/RingConnection":32,"../graph/Vector2":33,"../handlers/BridgedRingHandler":35,"../utils/ArrayHelper":49,"../utils/MathHelper":51}],46:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -16279,7 +16384,7 @@ class StereochemistryManager {
 
 module.exports = StereochemistryManager;
 
-},{"../utils/MathHelper":48}],44:[function(require,module,exports){
+},{"../utils/MathHelper":51}],47:[function(require,module,exports){
 "use strict";
 
 const Parser = require("../parsing/Parser");
@@ -16335,7 +16440,7 @@ class Reaction {
 
 module.exports = Reaction;
 
-},{"../parsing/Parser":33}],45:[function(require,module,exports){
+},{"../parsing/Parser":36}],48:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("../drawing/SvgDrawer");
@@ -16709,7 +16814,7 @@ class ReactionDrawer {
 
 module.exports = ReactionDrawer;
 
-},{"../config/Options":6,"../config/ThemeManager":8,"../drawing/SvgDrawer":13,"../drawing/helpers/SvgTextHelper":22,"../drawing/helpers/SvgUnicodeHelper":23,"../utils/FormulaToCommonName":47}],46:[function(require,module,exports){
+},{"../config/Options":7,"../config/ThemeManager":9,"../drawing/SvgDrawer":14,"../drawing/helpers/SvgTextHelper":23,"../drawing/helpers/SvgUnicodeHelper":24,"../utils/FormulaToCommonName":50}],49:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for array-related tasks.
@@ -17110,7 +17215,7 @@ class ArrayHelper {
 
 module.exports = ArrayHelper;
 
-},{}],47:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 "use strict";
 
 const formulaToCommonName = {
@@ -17148,7 +17253,7 @@ const formulaToCommonName = {
 };
 module.exports = formulaToCommonName;
 
-},{}],48:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for math-related tasks.
@@ -17321,7 +17426,7 @@ class MathHelper {
 
 module.exports = MathHelper;
 
-},{}],49:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 "use strict"; // Adapted from https://codepen.io/shshaw/pen/XbxvNj by
 
 function convertImage(img) {

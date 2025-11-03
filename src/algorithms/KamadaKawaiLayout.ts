@@ -13,7 +13,7 @@ class KamadaKawaiLayout {
     constructor(private readonly graph: Graph) {
     }
 
-    layout(vertexIds: number[], center: import("/Users/ch/Develop/smilesDrawer/src/graph/Vector2"), startVertexId: number, ring: import("/Users/ch/Develop/smilesDrawer/src/graph/Ring"), bondLength: number, threshold: number, innerThreshold: number, maxIteration: number, maxInnerIteration: number, maxEnergy: number): void {
+    layout(vertexIds: number[], center: Vector2, startVertexId: number, ring: Ring, bondLength: number, threshold: number, innerThreshold: number, maxIteration: number, maxInnerIteration: number, maxEnergy: number): void {
         let edgeStrength = bondLength;
 
         // Add vertices that are directly connected to the ring
