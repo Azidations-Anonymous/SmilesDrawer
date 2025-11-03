@@ -185,7 +185,7 @@ class StereochemistryManager {
         }
     }
 
-    visitStereochemistry(vertexId: number, previousVertexId: number, visited: Uint8Array<ArrayBufferLike>, priority: any[], maxDepth: number, depth: number, parentAtomicNumber: number = 0): void {
+    visitStereochemistry(vertexId: number, previousVertexId: number, visited: Uint8Array<ArrayBufferLike>, priority: number[][], maxDepth: number, depth: number, parentAtomicNumber: number = 0): void {
         visited[vertexId] = 1;
         let vertex = this.drawer.graph.vertices[vertexId];
         let atomicNumber = vertex.value.getAtomicNumber();

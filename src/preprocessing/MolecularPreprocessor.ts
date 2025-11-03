@@ -9,7 +9,7 @@ import GraphProcessingManager from "./GraphProcessingManager";
 import OptionsManager from "../config/OptionsManager";
 import RingManager = require("./RingManager");
 import IMolecularData = require("./IMolecularData");
-import { SideChoice, AtomHighlight, OverlapScore, SubtreeOverlapScore, VertexOverlapScoreEntry } from "./MolecularDataTypes";
+import { SideChoice, AtomHighlight, OverlapScore, SubtreeOverlapScore, VertexOverlapScoreEntry, PositionData } from "./MolecularDataTypes";
 import { IMoleculeOptions, IThemeColors } from "../config/IOptions";
 
 import MathHelper = require('../utils/MathHelper');
@@ -42,13 +42,13 @@ import Options = require('../config/Options');
 class MolecularPreprocessor implements IMolecularData {
   graph: Graph;
   doubleBondConfigCount: number | null;
-  doubleBondConfig: any;
+  doubleBondConfig: '/' | '\\' | null;
   canvasWrapper: CanvasDrawer | null;
   totalOverlapScore: number;
   opts: IMoleculeOptions;
   theme: IThemeColors;
   themeManager: ThemeManager;
-  data: any;
+  data: any;  // Parse tree data from SMILES parser
   infoOnly: boolean;
   highlight_atoms: AtomHighlight[];
 
@@ -88,7 +88,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {String} themeName='dark' The name of the theme to use. Built-in themes are 'light' and 'dark'.
    * @param {Boolean} infoOnly=false Only output info on the molecule without drawing anything to the canvas.
    */
-  draw(data: any, target: any, themeName: string = 'light', infoOnly: boolean = false): void {
+  draw(data: any, target: string | HTMLCanvasElement | HTMLElement, themeName: string = 'light', infoOnly: boolean = false): void {
       this.drawingManager.draw(data, target, themeName, infoOnly);
   }
 
@@ -211,7 +211,7 @@ class MolecularPreprocessor implements IMolecularData {
    * // posData.vertices[0].position === { x: 150.5, y: 200.3 }
    * // posData.edges[0].bondType === '='
    */
-  getPositionData(): any {
+  getPositionData(): PositionData {
       if (!this.graph) {
           return {
               version: 1,
@@ -228,7 +228,7 @@ class MolecularPreprocessor implements IMolecularData {
       }
 
       // Serialize vertices with comprehensive atom data
-      const vertices = this.graph.vertices.map((v: any) => ({
+      const vertices = this.graph.vertices.map((v) => ({
           // Vertex topology
           id: v.id,
           parentVertexId: v.parentVertexId,
@@ -294,7 +294,7 @@ class MolecularPreprocessor implements IMolecularData {
       }));
 
       // Serialize edges with comprehensive bond data
-      const edges = this.graph.edges.map((e: any) => ({
+      const edges = this.graph.edges.map((e) => ({
           id: e.id,
           sourceId: e.sourceId,
           targetId: e.targetId,
@@ -306,7 +306,7 @@ class MolecularPreprocessor implements IMolecularData {
       }));
 
       // Serialize ring data
-      const rings = this.rings ? this.rings.map((ring: any) => ({
+      const rings = this.rings ? this.rings.map((ring) => ({
           id: ring.id,
           members: ring.members ? [...ring.members] : [],
           isBridged: ring.isBridged,
@@ -810,7 +810,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Number} maxDepth The maximum depth.
    * @param {Number} depth The current depth.
    */
-  visitStereochemistry(vertexId: number, previousVertexId: number, visited: Uint8Array, priority: any[], maxDepth: number, depth: number, parentAtomicNumber: number = 0): void {
+  visitStereochemistry(vertexId: number, previousVertexId: number, visited: Uint8Array, priority: number[][], maxDepth: number, depth: number, parentAtomicNumber: number = 0): void {
       this.stereochemistryManager.visitStereochemistry(vertexId, previousVertexId, visited, priority, maxDepth, depth, parentAtomicNumber);
   }
 

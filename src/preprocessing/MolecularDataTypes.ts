@@ -40,4 +40,21 @@ export interface SubtreeOverlapScore {
   center: Vector2;
 }
 
+/**
+ * Serialized position data for rendering
+ */
+export interface PositionData {
+  version: number;
+  vertices: any[];  // Serialized vertex data
+  edges: any[];     // Serialized edge data
+  rings: any[];     // Serialized ring data
+  metadata: {
+    vertexCount: number;
+    edgeCount: number;
+    ringCount: number;
+    atomIdxToVertexId?: number[];
+    isomeric: boolean;
+  };
+}
+
 import Vector2 = require('../graph/Vector2');
