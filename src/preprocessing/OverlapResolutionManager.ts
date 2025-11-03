@@ -3,7 +3,7 @@ import Vector2 = require("../graph/Vector2");
 import Vertex = require('../graph/Vertex');
 import ArrayHelper = require("../utils/ArrayHelper");
 import MathHelper = require("../utils/MathHelper");
-import { SideChoice } from './MolecularDataTypes';
+import { SideChoice, OverlapScore, SubtreeOverlapScore, VertexOverlapScoreEntry } from './MolecularDataTypes';
 
 class OverlapResolutionManager {
     private drawer: MolecularPreprocessor;
@@ -12,7 +12,7 @@ class OverlapResolutionManager {
         this.drawer = drawer;
     }
 
-    getOverlapScore(): any {
+    getOverlapScore(): OverlapScore {
         let total = 0.0;
         let overlapScores = new Float32Array(this.drawer.graph.vertices.length);
 
@@ -202,7 +202,7 @@ class OverlapResolutionManager {
         }
     }
 
-    resolveSecondaryOverlaps(scores: any[]): void {
+    resolveSecondaryOverlaps(scores: VertexOverlapScoreEntry[]): void {
         for (var i = 0; i < scores.length; i++) {
           if (scores[i].score > this.drawer.opts.overlapSensitivity) {
             let vertex = this.drawer.graph.vertices[scores[i].id];
@@ -230,7 +230,7 @@ class OverlapResolutionManager {
         }
     }
 
-    rotateSubtree(vertexId: number, parentVertexId: number, angle: number, center: any): void {
+    rotateSubtree(vertexId: number, parentVertexId: number, angle: number, center: Vector2): void {
         let that = this;
 
         this.drawer.graph.traverseTree(vertexId, parentVertexId, function (vertex) {
@@ -246,7 +246,7 @@ class OverlapResolutionManager {
         });
     }
 
-    getSubtreeOverlapScore(vertexId: number, parentVertexId: number, vertexOverlapScores: any): any {
+    getSubtreeOverlapScore(vertexId: number, parentVertexId: number, vertexOverlapScores: Float32Array): SubtreeOverlapScore {
         let that = this;
         let score = 0;
         let center = new Vector2(0, 0);
@@ -276,7 +276,7 @@ class OverlapResolutionManager {
         };
     }
 
-    getCurrentCenterOfMass(): any {
+    getCurrentCenterOfMass(): Vector2 {
         let total = new Vector2(0, 0);
         let count = 0;
 
@@ -292,7 +292,7 @@ class OverlapResolutionManager {
         return total.divide(count);
     }
 
-    getCurrentCenterOfMassInNeigbourhood(vec: any, r: number = this.drawer.opts.bondLength * 2.0): any {
+    getCurrentCenterOfMassInNeigbourhood(vec: Vector2, r: number = this.drawer.opts.bondLength * 2.0): Vector2 {
         let total = new Vector2(0, 0);
         let count = 0;
         let rSq = r * r;

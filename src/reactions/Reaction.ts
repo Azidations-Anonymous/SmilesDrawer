@@ -1,15 +1,17 @@
 import Parser = require('../parsing/Parser');
 
+type ParseTree = any;
+
 class Reaction {
     reactantsSmiles: string[];
     reagentsSmiles: string[];
     productsSmiles: string[];
-    reactantsWeights: any[];
-    reagentsWeights: any[];
-    productsWeights: any[];
-    reactants: any[];
-    reagents: any[];
-    products: any[];
+    reactantsWeights: number[][];
+    reagentsWeights: number[][];
+    productsWeights: number[][];
+    reactants: ParseTree[];
+    reagents: ParseTree[];
+    products: ParseTree[];
 
     /**
      * The constructor for the class Reaction.
