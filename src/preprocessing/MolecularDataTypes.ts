@@ -1,3 +1,5 @@
+import Atom = require('../graph/Atom');
+
 /**
  * Atom highlighting configuration: [atomClass, color]
  */
@@ -60,7 +62,7 @@ export interface SerializedAtomValue {
   isDrawn: boolean;
   bondType: string | null;
   branchBond: string | null;
-  ringbonds: any[];
+  ringbonds: Atom.RingbondType[];
   rings: number[];
   bondCount: number;
   class: number | null;

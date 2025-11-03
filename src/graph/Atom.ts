@@ -591,4 +591,9 @@ class Atom {
   }
 }
 
+// Export types for external use
+namespace Atom {
+  export type RingbondType = Ringbond;
+}
+
 export = Atom;

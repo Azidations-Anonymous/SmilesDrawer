@@ -5,6 +5,8 @@ type DistanceMatrix = number[][];
 type PathElement = [number, number];  // [sourceVertexId, targetVertexId]
 type PathMatrix = PathElement[][][][];  // Very nested path structure
 type RingCandidate = [number, PathElement[][][], PathElement[][][]];  // [size, pe, pe_prime]
+// Bonds can be PathElement[][] or (PathElement | PathElement[])[][] due to algorithm workarounds
+type BondList = (PathElement | PathElement[])[][];
 
 /** A class encapsulating the functionality to find the smallest set of smallest rings in a graph. */
 class SSSR {
@@ -333,12 +335,12 @@ class SSSR {
         for (let i = 0; i < c.length; i++) {
             if (c[i][0] % 2 !== 0) {
                 for (let j = 0; j < c[i][2].length; j++) {
-                    let bonds: any = c[i][1][0].concat(c[i][2][j]);
+                    let bonds: BondList = c[i][1][0].concat(c[i][2][j]);
                     // Some bonds are added twice, resulting in [[u, v], [u, v]] instead of [u, v].
                     // TODO: This is a workaround, fix later. Probably should be a set rather than an array, however the computational overhead
                     //       is probably bigger compared to leaving it like this.
                     for (var k = 0; k < bonds.length; k++) {
-                        if (bonds[k][0].constructor === Array) bonds[k] = bonds[k][0];
+                        if (bonds[k][0].constructor === Array) (bonds as any)[k] = bonds[k][0];
                     }
 
                     let atoms = SSSR.bondsToAtoms(bonds);
@@ -354,12 +356,12 @@ class SSSR {
                 }
             } else {
                 for (let j = 0; j < c[i][1].length - 1; j++) {
-                    let bonds: any = c[i][1][j].concat(c[i][1][j + 1]);
+                    let bonds: BondList = c[i][1][j].concat(c[i][1][j + 1]);
                     // Some bonds are added twice, resulting in [[u, v], [u, v]] instead of [u, v].
                     // TODO: This is a workaround, fix later. Probably should be a set rather than an array, however the computational overhead
                     //       is probably bigger compared to leaving it like this.
                     for (var k = 0; k < bonds.length; k++) {
-                        if (bonds[k][0].constructor === Array) bonds[k] = bonds[k][0];
+                        if (bonds[k][0].constructor === Array) (bonds as any)[k] = bonds[k][0];
                     }
 
                     let atoms = SSSR.bondsToAtoms(bonds);
@@ -474,7 +476,7 @@ class SSSR {
      * @param {Uint16Array} arrRingCount A matrix containing the number of rings associated with each vertex.
      * @returns {Boolean} A boolean indicating whether or not a give path is contained within a set.
      */
-    static pathSetsContain(pathSets: Set<number>[], pathSet: Set<number>, bonds: any[], allBonds: any[], arrBondCount: Uint16Array, arrRingCount: Uint16Array): boolean {
+    static pathSetsContain(pathSets: Set<number>[], pathSet: Set<number>, bonds: BondList, allBonds: BondList, arrBondCount: Uint16Array, arrRingCount: Uint16Array): boolean {
         var i = pathSets.length;
         while (i--) {
             if (SSSR.isSupersetOf(pathSet, pathSets[i])) {
