@@ -11687,7 +11687,11 @@ class BridgedRingHandler {
       let connections = this.ringManager.getRingConnections(id, ringIds);
 
       for (var j = 0; j < connections.length; j++) {
-        this.ringManager.getRingConnection(connections[j]).updateOther(ring.id, id);
+        let connection = this.ringManager.getRingConnection(connections[j]);
+
+        if (connection) {
+          connection.updateOther(ring.id, id);
+        }
       }
 
       this.ringManager.getRing(id).neighbours.push(ring.id);
@@ -15949,9 +15953,9 @@ class RingManager {
           // If the bonds are equal, it doesn't matter which bond is returned.
           // if they are not equal, return the one that is not the default ("-")
           if (vertexA.value.ringbonds[i].bondType === '-') {
-            return vertexB.value.ringbonds[j].bond;
+            return vertexB.value.ringbonds[j].bondType;
           } else {
-            return vertexA.value.ringbonds[i].bond;
+            return vertexA.value.ringbonds[i].bondType;
           }
         }
       }

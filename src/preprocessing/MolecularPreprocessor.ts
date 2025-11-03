@@ -9,7 +9,8 @@ import GraphProcessingManager from "./GraphProcessingManager";
 import OptionsManager from "../config/OptionsManager";
 import RingManager = require("./RingManager");
 import IMolecularData = require("./IMolecularData");
-import { SideChoice } from "./MolecularDataTypes";
+import { SideChoice, AtomHighlight } from "./MolecularDataTypes";
+import { IMoleculeOptions, IThemeColors } from "../config/IOptions";
 
 import MathHelper = require('../utils/MathHelper');
 import ArrayHelper = require('../utils/ArrayHelper');
@@ -39,24 +40,24 @@ import Options = require('../config/Options');
  * @property {Object} theme The current theme.
  */
 class MolecularPreprocessor implements IMolecularData {
-  graph: any;
+  graph: Graph;
   doubleBondConfigCount: number | null;
   doubleBondConfig: any;
-  canvasWrapper: any;
+  canvasWrapper: CanvasDrawer | null;
   totalOverlapScore: number;
-  opts: any;
-  theme: any;
-  themeManager: any;
+  opts: IMoleculeOptions;
+  theme: IThemeColors;
+  themeManager: ThemeManager;
   data: any;
   infoOnly: boolean;
-  highlight_atoms: any;
+  highlight_atoms: AtomHighlight[];
 
   /**
    * The constructor for the class SmilesDrawer.
    *
    * @param {Object} options An object containing custom values for different options. It is merged with the default options.
    */
-  constructor(options: any) {
+  constructor(options: Partial<IMoleculeOptions>) {
       this.ringManager = new RingManager(this);
         this.stereochemistryManager = new StereochemistryManager(this);
         this.overlapResolver = new OverlapResolutionManager(this);
@@ -106,7 +107,7 @@ class MolecularPreprocessor implements IMolecularData {
    *
    * @returns {Ring[]} An array containing all bridged rings associated with this molecule.
    */
-  getBridgedRings(): any[] {
+  getBridgedRings(): Ring[] {
       return this.ringManager.getBridgedRings();
   }
 
@@ -115,7 +116,7 @@ class MolecularPreprocessor implements IMolecularData {
    *
    * @returns {Ring[]} An array containing all fused rings associated with this molecule.
    */
-  getFusedRings(): any[] {
+  getFusedRings(): Ring[] {
       return this.ringManager.getFusedRings();
   }
 
@@ -124,7 +125,7 @@ class MolecularPreprocessor implements IMolecularData {
    *
    * @returns {Ring[]} An array containing all spiros associated with this molecule.
    */
-  getSpiros(): any[] {
+  getSpiros(): Ring[] {
       return this.ringManager.getSpiros();
   }
 
@@ -338,11 +339,11 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Vertex} vertexB A vertex.
    * @returns {(String|null)} Returns the ringbond type or null, if the two supplied vertices are not connected by a ringbond.
    */
-  getRingbondType(vertexA: any, vertexB: any): string | null {
+  getRingbondType(vertexA: Vertex, vertexB: Vertex): string | null {
       return this.ringManager.getRingbondType(vertexA, vertexB);
   }
 
-  initDraw(data: any, themeName: string, infoOnly: boolean, highlight_atoms: any): void {
+  initDraw(data: any, themeName: string, infoOnly: boolean, highlight_atoms: AtomHighlight[]): void {
       this.initializationManager.initDraw(data, themeName, infoOnly, highlight_atoms);
   }
 
@@ -399,7 +400,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Vertex} vertexB A vertex.
    * @returns {Boolean} A boolean indicating whether or not the two vertices are in the same ring.
    */
-  areVerticesInSameRing(vertexA: any, vertexB: any): boolean {
+  areVerticesInSameRing(vertexA: Vertex, vertexB: Vertex): boolean {
       return this.ringManager.areVerticesInSameRing(vertexA, vertexB);
   }
 
@@ -410,7 +411,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Vertex} vertexB A vertex.
    * @returns {Number[]} An array of ids of rings shared by the two vertices.
    */
-  getCommonRings(vertexA: any, vertexB: any): number[] {
+  getCommonRings(vertexA: Vertex, vertexB: Vertex): number[] {
       return this.ringManager.getCommonRings(vertexA, vertexB);
   }
 
@@ -421,7 +422,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Vertex} vertexB A vertex.
    * @returns {(Ring|null)} If an aromatic common ring exists, that ring, else the largest (non-aromatic) ring, else null.
    */
-  getLargestOrAromaticCommonRing(vertexA: any, vertexB: any): any {
+  getLargestOrAromaticCommonRing(vertexA: Vertex, vertexB: Vertex): Ring | null {
       return this.ringManager.getLargestOrAromaticCommonRing(vertexA, vertexB);
   }
 
