@@ -1,5 +1,6 @@
 import ArrayHelper = require('../../utils/ArrayHelper');
 import Vector2 = require('../../graph/Vector2');
+import Ring = require('../../graph/Ring');
 import Line = require('../../graph/Line');
 import SvgDrawer = require('../SvgDrawer');
 
@@ -13,7 +14,7 @@ class SvgEdgeDrawer {
    *
    * @param {Ring} ring A ring.
    */
-  drawAromaticityRing(ring: any): void {
+  drawAromaticityRing(ring: Ring): void {
     let svgWrapper = this.drawer.svgWrapper;
     svgWrapper.drawRing(ring.center.x, ring.center.y, ring.getSize());
   }
@@ -191,7 +192,7 @@ class SvgEdgeDrawer {
    * @param {Array} normals list of normals to multiply
    * @param {Number} spacing value to multiply normals by
    */
-  multiplyNormals(normals: any[], spacing: number): void {
+  multiplyNormals(normals: Vector2[], spacing: number): void {
     normals[0].multiplyScalar(spacing);
     normals[1].multiplyScalar(spacing);
   }

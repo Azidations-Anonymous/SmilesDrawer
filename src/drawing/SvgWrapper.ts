@@ -1,9 +1,22 @@
 import SvgConversionHelper = require('./helpers/SvgConversionHelper');
 import SvgTextHelper = require('./helpers/SvgTextHelper');
 import Line = require('../graph/Line');
+import Vertex = require('../graph/Vertex');
 import SvgUnicodeHelper = require('./helpers/SvgUnicodeHelper');
 import Vector2 = require('../graph/Vector2');
 import MathHelper = require('../utils/MathHelper');
+import { IMoleculeOptions } from '../config/IOptions';
+import ThemeManager = require('../config/ThemeManager');
+
+interface AttachedPseudoElement {
+  element: string;
+  count: number;
+  hydrogenCount: number;
+  previousElement: string;
+  charge: string;
+}
+
+type AttachedPseudoElements = Record<string, AttachedPseudoElement>;
 
 function makeid(length: number): string {
   var result = '';
@@ -18,26 +31,26 @@ function makeid(length: number): string {
 class SvgWrapper {
   svg: SVGElement;
   container: SVGElement | null;
-  opts: any;
+  opts: IMoleculeOptions;
   uid: string;
   gradientId: number;
-  backgroundItems: any[];
-  paths: any[];
-  vertices: any[];
-  gradients: any[];
-  highlights: any[];
+  backgroundItems: SVGElement[];
+  paths: SVGElement[];
+  vertices: SVGElement[];
+  gradients: SVGElement[];
+  highlights: SVGElement[];
   drawingWidth: number;
   drawingHeight: number;
   halfBondThickness: number;
-  themeManager: any;
-  maskElements: any[];
+  themeManager: ThemeManager;
+  maskElements: SVGElement[];
   maxX: number;
   maxY: number;
   minX: number;
   minY: number;
   style: SVGStyleElement;
 
-  constructor(themeManager: any, target: string | SVGElement, options: any, clear: boolean = true) {
+  constructor(themeManager: ThemeManager, target: string | SVGElement, options: IMoleculeOptions, clear: boolean = true) {
     if (typeof target === 'string') {
       this.svg = document.getElementById(target) as unknown as SVGElement;
     } else {
@@ -173,8 +186,8 @@ class SvgWrapper {
   /**
    * Add a background to the svg.
    */
-  addLayer(svg: any): void {
-    this.backgroundItems.push(svg.firstChild);
+  addLayer(svg: SVGElement): void {
+    this.backgroundItems.push(svg.firstChild as SVGElement);
   }
 
   /**
@@ -182,7 +195,7 @@ class SvgWrapper {
    *
    * @param {Line} line the line to apply the gradiation to.
    */
-  createGradient(line: any): string {
+  createGradient(line: Line): string {
     // create the gradient and add it
     let gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient'),
       gradientUrl = this.uid + `-line-${this.gradientId++}`,
@@ -237,7 +250,7 @@ class SvgWrapper {
    *
    * @param {Vertex[]} vertices An array of vertices containing the vertices associated with the current molecule.
    */
-  determineDimensions(vertices: any[]): void {
+  determineDimensions(vertices: Vertex[]): void {
     for (var i = 0; i < vertices.length; i++) {
       if (!vertices[i].value.isDrawn) {
         continue;
@@ -326,7 +339,7 @@ class SvgWrapper {
   /**
    * @param {Line} line the line object to create the wedge from
    */
-  drawWedge(line: any): void {
+  drawWedge(line: Line): void {
     let l = line.getLeftVector().clone(),
       r = line.getRightVector().clone();
 
@@ -378,7 +391,7 @@ class SvgWrapper {
    *
    * @param {Line} line A line.
    */
-  drawDashedWedge(line: any): void {
+  drawDashedWedge(line: Line): void {
     if (isNaN(line.from.x) || isNaN(line.from.y) ||
       isNaN(line.to.x) || isNaN(line.to.y)) {
       return;
@@ -491,7 +504,7 @@ class SvgWrapper {
    * @param {Boolean} dashed defaults to false.
    * @param {String} gradient gradient url. Defaults to null.
    */
-  drawLine(line: any, dashed: boolean = false, gradient: string | null = null, linecap: string = 'round'): void {
+  drawLine(line: Line, dashed: boolean = false, gradient: string | null = null, linecap: string = 'round'): void {
     let opts = this.opts,
       stylesArr = [
         ['stroke-width', this.opts.bondThickness],
@@ -581,7 +594,7 @@ class SvgWrapper {
    * @param {Number} attachedPseudoElement.count The number of occurences that match the key.
    * @param {Number} attachedPseudoElement.hyrogenCount The number of hydrogens attached to each atom matching the key.
    */
-  drawText(x: number, y: number, elementName: string, hydrogens: number, direction: string, isTerminal: boolean, charge: number, isotope: number, totalVertices: number, attachedPseudoElement: any = {}): void {
+  drawText(x: number, y: number, elementName: string, hydrogens: number, direction: string, isTerminal: boolean, charge: number | string, isotope: number, totalVertices: number, attachedPseudoElement: AttachedPseudoElements = {}): void {
     let text = [];
     let display = elementName;
 
@@ -637,7 +650,7 @@ class SvgWrapper {
     this.write(text, direction, x, y, totalVertices === 1);
   }
 
-  write(text: any[], direction: string, x: number, y: number, singleVertex: boolean): void {
+  write(text: [string, string][], direction: string, x: number, y: number, singleVertex: boolean): void {
     // Measure element name only, without charge or isotope ...
     let bbox = SvgTextHelper.measureText(text[0][1], this.opts.fontSizeLarge, this.opts.fontFamily);
 

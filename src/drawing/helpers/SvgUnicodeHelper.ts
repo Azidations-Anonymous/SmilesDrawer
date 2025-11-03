@@ -1,7 +1,12 @@
 class SvgUnicodeHelper {
 
 
-  static createUnicodeCharge(n: number): string {
+  static createUnicodeCharge(n: number | string): string {
+    // Handle string charge formats like '+', '++', '--'
+    if (typeof n === 'string') {
+      return n;
+    }
+
     if (n === 1) {
       return '⁺';
     }
