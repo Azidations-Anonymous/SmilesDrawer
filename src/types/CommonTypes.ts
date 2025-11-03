@@ -35,6 +35,11 @@ export type SmilesChirality = '@' | '@@' | '';
 export type Chirality = 'R' | 'S' | '';
 
 /**
+ * Text rendering direction for atom labels
+ */
+export type TextDirection = 'up' | 'down' | 'left' | 'right';
+
+/**
  * Hydrogen direction for stereochemistry
  */
 export type HydrogenDirection = 'up' | 'down' | 'left' | 'right' | '';

@@ -7,6 +7,7 @@ import Vector2 = require('../graph/Vector2');
 import MathHelper = require('../utils/MathHelper');
 import { IMoleculeOptions, AttachedPseudoElements } from '../config/IOptions';
 import ThemeManager = require('../config/ThemeManager');
+import { TextDirection } from '../types/CommonTypes';
 
 function makeid(length: number): string {
   var result = '';
@@ -584,7 +585,7 @@ class SvgWrapper {
    * @param {Number} attachedPseudoElement.count The number of occurences that match the key.
    * @param {Number} attachedPseudoElement.hyrogenCount The number of hydrogens attached to each atom matching the key.
    */
-  drawText(x: number, y: number, elementName: string, hydrogens: number, direction: string, isTerminal: boolean, charge: number, isotope: number, totalVertices: number, attachedPseudoElement: AttachedPseudoElements = {}): void {
+  drawText(x: number, y: number, elementName: string, hydrogens: number, direction: TextDirection, isTerminal: boolean, charge: number, isotope: number, totalVertices: number, attachedPseudoElement: AttachedPseudoElements = {}): void {
     let text = [];
     let display = elementName;
 
@@ -640,7 +641,7 @@ class SvgWrapper {
     this.write(text, direction, x, y, totalVertices === 1);
   }
 
-  write(text: [string, string][], direction: string, x: number, y: number, singleVertex: boolean): void {
+  write(text: [string, string][], direction: TextDirection, x: number, y: number, singleVertex: boolean): void {
     // Measure element name only, without charge or isotope ...
     let bbox = SvgTextHelper.measureText(text[0][1], this.opts.fontSizeLarge, this.opts.fontFamily);
 

@@ -9,6 +9,7 @@ import CanvasPrimitiveDrawer = require('./draw/CanvasPrimitiveDrawer');
 import CanvasTextDrawer = require('./draw/CanvasTextDrawer');
 import ThemeManager = require('../config/ThemeManager');
 import { IMoleculeOptions, IThemeColors, AttachedPseudoElements } from '../config/IOptions';
+import { TextDirection } from '../types/CommonTypes';
 
 /**
  * A class wrapping a canvas element.
@@ -244,7 +245,7 @@ class CanvasDrawer {
         this.primitiveDrawer.drawDebugText(x, y, text);
     }
 
-    drawText(x: number, y: number, elementName: string, hydrogens: number, direction: string, isTerminal: boolean, charge: number, isotope: number, vertexCount: number, attachedPseudoElement: AttachedPseudoElements = {}): void {
+    drawText(x: number, y: number, elementName: string, hydrogens: number, direction: TextDirection, isTerminal: boolean, charge: number, isotope: number, vertexCount: number, attachedPseudoElement: AttachedPseudoElements = {}): void {
         this.textDrawer.drawText(x, y, elementName, hydrogens, direction, isTerminal, charge, isotope, vertexCount, attachedPseudoElement);
     }
 

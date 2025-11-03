@@ -1,5 +1,6 @@
 import MathHelper = require('../../utils/MathHelper');
 import CanvasDrawer = require('../CanvasDrawer');
+import { TextDirection } from '../../types/CommonTypes';
 
 type AttachedPseudoElement = {
   [key: string]: {
@@ -33,7 +34,7 @@ class CanvasTextDrawer {
      * @param {Number} attachedPseudoElement.count The number of occurences that match the key.
      * @param {Number} attachedPseudoElement.hyrogenCount The number of hydrogens attached to each atom matching the key.
      */
-    drawText(x: number, y: number, elementName: string, hydrogens: number, direction: string, isTerminal: boolean, charge: number, isotope: number, vertexCount: number, attachedPseudoElement: AttachedPseudoElement = {}): void {
+    drawText(x: number, y: number, elementName: string, hydrogens: number, direction: TextDirection, isTerminal: boolean, charge: number, isotope: number, vertexCount: number, attachedPseudoElement: AttachedPseudoElement = {}): void {
         let ctx = this.wrapper.ctx;
         let offsetX = this.wrapper.offsetX;
         let offsetY = this.wrapper.offsetY;

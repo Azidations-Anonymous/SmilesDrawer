@@ -2,6 +2,7 @@ import MathHelper = require('../utils/MathHelper');
 import ArrayHelper = require('../utils/ArrayHelper');
 import Vector2 = require('./Vector2');
 import Atom = require('./Atom');
+import { TextDirection } from '../types/CommonTypes';
 
 /** 
  * A class representing a vertex.
@@ -232,7 +233,7 @@ class Vertex {
    * @param {Boolean} onlyHorizontal In case the text direction should be limited to either left or right.
    * @returns {String} The suggested direction of the text.
    */
-  getTextDirection(vertices: Vertex[], onlyHorizontal: boolean = false): string {
+  getTextDirection(vertices: Vertex[], onlyHorizontal: boolean = false): TextDirection {
     let neighbours = this.getDrawnNeighbours(vertices);
     let angles = Array();
 
