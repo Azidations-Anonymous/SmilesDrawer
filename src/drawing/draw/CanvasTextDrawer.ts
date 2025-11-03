@@ -1,6 +1,16 @@
 import MathHelper = require('../../utils/MathHelper');
 import CanvasDrawer = require('../CanvasDrawer');
 
+type AttachedPseudoElement = {
+  [key: string]: {
+    element: string;
+    count: number;
+    hydrogenCount: number;
+    previousElement?: string;
+    charge?: string | number;
+  };
+};
+
 class CanvasTextDrawer {
   constructor(private wrapper: CanvasDrawer) {}
 
@@ -23,7 +33,7 @@ class CanvasTextDrawer {
      * @param {Number} attachedPseudoElement.count The number of occurences that match the key.
      * @param {Number} attachedPseudoElement.hyrogenCount The number of hydrogens attached to each atom matching the key.
      */
-    drawText(x: number, y: number, elementName: string, hydrogens: number, direction: string, isTerminal: boolean, charge: number, isotope: number, vertexCount: number, attachedPseudoElement: any = {}): void {
+    drawText(x: number, y: number, elementName: string, hydrogens: number, direction: string, isTerminal: boolean, charge: number, isotope: number, vertexCount: number, attachedPseudoElement: AttachedPseudoElement = {}): void {
         let ctx = this.wrapper.ctx;
         let offsetX = this.wrapper.offsetX;
         let offsetY = this.wrapper.offsetY;
@@ -209,10 +219,10 @@ class CanvasTextDrawer {
             ctx.font = this.wrapper.fontSmall;
 
             if (elementCount > 1) {
-                elementCountWidth = ctx.measureText(elementCount).width;
+                elementCountWidth = ctx.measureText(elementCount.toString()).width;
             }
 
-            if (elementCharge !== 0) {
+            if (typeof elementCharge === 'number' && elementCharge !== 0) {
                 elementChargeText = this.getChargeText(elementCharge);
                 elementChargeWidth = ctx.measureText(elementChargeText).width;
             }
@@ -220,7 +230,7 @@ class CanvasTextDrawer {
             hydrogenCountWidth = 0;
 
             if (hydrogenCount > 1) {
-                hydrogenCountWidth = ctx.measureText(hydrogenCount).width;
+                hydrogenCountWidth = ctx.measureText(hydrogenCount.toString()).width;
             }
 
             ctx.font = this.wrapper.fontLarge;
@@ -259,7 +269,7 @@ class CanvasTextDrawer {
 
                     if (hydrogenCount > 1) {
                         ctx.font = this.wrapper.fontSmall;
-                        ctx.fillText(hydrogenCount, hx + cursorPosLeft + hydrogenWidth, hy + this.wrapper.opts.fifthFontSizeSmall);
+                        ctx.fillText(hydrogenCount.toString(), hx + cursorPosLeft + hydrogenWidth, hy + this.wrapper.opts.fifthFontSizeSmall);
                     }
                 } else {
                     ctx.fillText('H', hx + cursorPos, hy)
@@ -267,7 +277,7 @@ class CanvasTextDrawer {
 
                     if (hydrogenCount > 1) {
                         ctx.font = this.wrapper.fontSmall;
-                        ctx.fillText(hydrogenCount, hx + cursorPos, hy + this.wrapper.opts.fifthFontSizeSmall);
+                        ctx.fillText(hydrogenCount.toString(), hx + cursorPos, hy + this.wrapper.opts.fifthFontSizeSmall);
                         cursorPos += hydrogenCountWidth;
                     }
                 }
@@ -289,11 +299,11 @@ class CanvasTextDrawer {
 
             if (elementCount > 1) {
                 if (direction === 'left') {
-                    ctx.fillText(elementCount, hx + cursorPosLeft +
+                    ctx.fillText(elementCount.toString(), hx + cursorPosLeft +
                         openParenthesisWidth + closeParenthesisWidth + hydrogenWidth +
                         hydrogenCountWidth + elementWidth, hy + this.wrapper.opts.fifthFontSizeSmall);
                 } else {
-                    ctx.fillText(elementCount, hx + cursorPos, hy + this.wrapper.opts.fifthFontSizeSmall);
+                    ctx.fillText(elementCount.toString(), hx + cursorPos, hy + this.wrapper.opts.fifthFontSizeSmall);
                     cursorPos += elementCountWidth;
                 }
             }

@@ -1,5 +1,6 @@
 import Vector2 = require('../../graph/Vector2');
 import CanvasDrawer = require('../CanvasDrawer');
+import Line = require('../../graph/Line');
 
 class CanvasWedgeDrawer {
   constructor(private wrapper: CanvasDrawer) {}
@@ -12,7 +13,7 @@ class CanvasWedgeDrawer {
      * @param {Line} line A line.
      * @param {Number} width The wedge width.
      */
-    drawWedge(line: any, width: number = 1.0): void {
+    drawWedge(line: Line, width: number = 1.0): void {
         if (isNaN(line.from.x) || isNaN(line.from.y) ||
             isNaN(line.to.x) || isNaN(line.to.y)) {
             return;
@@ -90,7 +91,7 @@ class CanvasWedgeDrawer {
      *
      * @param {Line} line A line.
      */
-    drawDashedWedge(line: any): void {
+    drawDashedWedge(line: Line): void {
         if (isNaN(line.from.x) || isNaN(line.from.y) ||
             isNaN(line.to.x) || isNaN(line.to.y)) {
             return;

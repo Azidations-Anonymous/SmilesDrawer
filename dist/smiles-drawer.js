@@ -7545,10 +7545,10 @@ class CanvasTextDrawer {
       ctx.font = this.wrapper.fontSmall;
 
       if (elementCount > 1) {
-        elementCountWidth = ctx.measureText(elementCount).width;
+        elementCountWidth = ctx.measureText(elementCount.toString()).width;
       }
 
-      if (elementCharge !== 0) {
+      if (typeof elementCharge === 'number' && elementCharge !== 0) {
         elementChargeText = this.getChargeText(elementCharge);
         elementChargeWidth = ctx.measureText(elementChargeText).width;
       }
@@ -7556,7 +7556,7 @@ class CanvasTextDrawer {
       hydrogenCountWidth = 0;
 
       if (hydrogenCount > 1) {
-        hydrogenCountWidth = ctx.measureText(hydrogenCount).width;
+        hydrogenCountWidth = ctx.measureText(hydrogenCount.toString()).width;
       }
 
       ctx.font = this.wrapper.fontLarge;
@@ -7593,7 +7593,7 @@ class CanvasTextDrawer {
 
           if (hydrogenCount > 1) {
             ctx.font = this.wrapper.fontSmall;
-            ctx.fillText(hydrogenCount, hx + cursorPosLeft + hydrogenWidth, hy + this.wrapper.opts.fifthFontSizeSmall);
+            ctx.fillText(hydrogenCount.toString(), hx + cursorPosLeft + hydrogenWidth, hy + this.wrapper.opts.fifthFontSizeSmall);
           }
         } else {
           ctx.fillText('H', hx + cursorPos, hy);
@@ -7601,7 +7601,7 @@ class CanvasTextDrawer {
 
           if (hydrogenCount > 1) {
             ctx.font = this.wrapper.fontSmall;
-            ctx.fillText(hydrogenCount, hx + cursorPos, hy + this.wrapper.opts.fifthFontSizeSmall);
+            ctx.fillText(hydrogenCount.toString(), hx + cursorPos, hy + this.wrapper.opts.fifthFontSizeSmall);
             cursorPos += hydrogenCountWidth;
           }
         }
@@ -7623,9 +7623,9 @@ class CanvasTextDrawer {
 
       if (elementCount > 1) {
         if (direction === 'left') {
-          ctx.fillText(elementCount, hx + cursorPosLeft + openParenthesisWidth + closeParenthesisWidth + hydrogenWidth + hydrogenCountWidth + elementWidth, hy + this.wrapper.opts.fifthFontSizeSmall);
+          ctx.fillText(elementCount.toString(), hx + cursorPosLeft + openParenthesisWidth + closeParenthesisWidth + hydrogenWidth + hydrogenCountWidth + elementWidth, hy + this.wrapper.opts.fifthFontSizeSmall);
         } else {
-          ctx.fillText(elementCount, hx + cursorPos, hy + this.wrapper.opts.fifthFontSizeSmall);
+          ctx.fillText(elementCount.toString(), hx + cursorPos, hy + this.wrapper.opts.fifthFontSizeSmall);
           cursorPos += elementCountWidth;
         }
       }
@@ -15685,7 +15685,7 @@ class PositioningManager {
   }
 
   getNonRingNeighbours(vertexId) {
-    let nrneighbours = Array();
+    let nrneighbours = [];
     let vertex = this.drawer.graph.vertices[vertexId];
     let neighbours = vertex.neighbours;
 

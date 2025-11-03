@@ -1,5 +1,7 @@
 import MathHelper = require('../../utils/MathHelper');
 import CanvasDrawer = require('../CanvasDrawer');
+import Line = require('../../graph/Line');
+import Ring = require('../../graph/Ring');
 
 class CanvasPrimitiveDrawer {
   constructor(private wrapper: CanvasDrawer) {}
@@ -59,7 +61,7 @@ class CanvasPrimitiveDrawer {
      * @param {Boolean} [dashed=false] Whether or not the line is dashed.
      * @param {Number} [alpha=1.0] The alpha value of the color.
      */
-    drawLine(line: any, dashed: boolean = false, alpha: number = 1.0): void {
+    drawLine(line: Line, dashed: boolean = false, alpha: number = 1.0): void {
         let ctx = this.wrapper.ctx;
         let offsetX = this.wrapper.offsetX;
         let offsetY = this.wrapper.offsetY;
@@ -184,7 +186,7 @@ class CanvasPrimitiveDrawer {
      *
      * @param {Ring} ring A ring.
      */
-    drawAromaticityRing(ring: any): void {
+    drawAromaticityRing(ring: Ring): void {
         let ctx = this.wrapper.ctx;
         let radius = MathHelper.apothemFromSideLength(this.wrapper.opts.bondLength, ring.getSize());
 

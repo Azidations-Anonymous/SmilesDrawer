@@ -1,5 +1,9 @@
 import SvgDrawer = require('./SvgDrawer');
 import IMolecularData = require('../preprocessing/IMolecularData');
+import { AtomHighlight } from '../preprocessing/MolecularDataTypes';
+import { IMoleculeOptions } from '../config/IOptions';
+
+type ParseTree = any;
 
 /**
  * The main class of the application representing the smiles drawer
@@ -14,14 +18,14 @@ import IMolecularData = require('../preprocessing/IMolecularData');
  * @property {Object} theme The current theme.
  */
 class Drawer {
-  svgDrawer: any;
+  svgDrawer: SvgDrawer;
 
   /**
    * The constructor for the class SmilesDrawer.
    *
    * @param {Object} options An object containing custom values for different options. It is merged with the default options.
    */
-  constructor(options: any) {
+  constructor(options: Partial<IMoleculeOptions>) {
     this.svgDrawer = new SvgDrawer(options);
   }
 
@@ -33,7 +37,7 @@ class Drawer {
    * @param {String} themeName='dark' The name of the theme to use. Built-in themes are 'light' and 'dark'.
    * @param {Boolean} infoOnly=false Only output info on the molecule without drawing anything to the canvas.
    */
-  draw(data: any, target: string | HTMLCanvasElement, themeName: string = 'light', infoOnly: boolean = false, highlight_atoms: any[] = []): void {
+  draw(data: ParseTree, target: string | HTMLCanvasElement, themeName: string = 'light', infoOnly: boolean = false, highlight_atoms: AtomHighlight[] = []): void {
     let canvas = null;
     if (typeof target === 'string') {
       canvas = document.getElementById(target);
