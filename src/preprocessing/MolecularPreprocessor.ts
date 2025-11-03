@@ -27,6 +27,8 @@ import SSSR = require('../algorithms/SSSR');
 import ThemeManager = require('../config/ThemeManager');
 import Options = require('../config/Options');
 
+type ParseTree = any;
+
 /**
  * The molecular structure preprocessor and coordinator
  *
@@ -186,7 +188,7 @@ class MolecularPreprocessor implements IMolecularData {
    *
    * @returns {String} The molecular formula.
    */
-  getMolecularFormula(data: any = null): string {
+  getMolecularFormula(data: ParseTree | Graph | null = null): string {
       return this.molecularInfoManager.getMolecularFormula(data);
   }
 
@@ -343,7 +345,7 @@ class MolecularPreprocessor implements IMolecularData {
       return this.ringManager.getRingbondType(vertexA, vertexB);
   }
 
-  initDraw(data: any, themeName: string, infoOnly: boolean, highlight_atoms: AtomHighlight[]): void {
+  initDraw(data: ParseTree, themeName: string, infoOnly: boolean, highlight_atoms: AtomHighlight[]): void {
       this.initializationManager.initDraw(data, themeName, infoOnly, highlight_atoms);
   }
 

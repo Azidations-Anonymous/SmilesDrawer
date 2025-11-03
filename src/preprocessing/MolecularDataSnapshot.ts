@@ -6,11 +6,13 @@ import Vertex = require('../graph/Vertex');
 import Edge = require('../graph/Edge');
 import Vector2 = require('../graph/Vector2');
 import { IMoleculeOptions } from '../config/IOptions';
-import { SideChoice, AtomHighlight } from './MolecularDataTypes';
+import { SideChoice, AtomHighlight, PositionData } from './MolecularDataTypes';
+
+type ParseTree = any;
 
 class MolecularDataSnapshot implements IMolecularData {
   private source: IMolecularData;
-  private serializedData: any;
+  private serializedData: PositionData;
 
   constructor(source: IMolecularData) {
     this.source = source;
@@ -65,7 +67,7 @@ class MolecularDataSnapshot implements IMolecularData {
     return this.source.getLargestOrAromaticCommonRing(vertexA, vertexB);
   }
 
-  initDraw(data: any, themeName: string, infoOnly: boolean, highlight_atoms: AtomHighlight[]): void {
+  initDraw(data: ParseTree, themeName: string, infoOnly: boolean, highlight_atoms: AtomHighlight[]): void {
     throw new Error('MolecularDataSnapshot is read-only. initDraw() cannot be called.');
   }
 
@@ -77,15 +79,15 @@ class MolecularDataSnapshot implements IMolecularData {
     return this.source.getTotalOverlapScore();
   }
 
-  getMolecularFormula(data: any = null): string {
+  getMolecularFormula(data: ParseTree | Graph | null = null): string {
     return this.source.getMolecularFormula(data);
   }
 
-  getPositionData(): any {
+  getPositionData(): PositionData {
     return this.serializedData;
   }
 
-  toJSON(): any {
+  toJSON(): PositionData {
     return this.serializedData;
   }
 }

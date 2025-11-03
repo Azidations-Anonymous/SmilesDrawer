@@ -2,6 +2,8 @@ import MolecularPreprocessor from "./MolecularPreprocessor";
 import Graph = require("../graph/Graph");
 import Atom = require("../graph/Atom");
 
+type ParseTree = any;
+
 class MolecularInfoManager {
     private drawer: MolecularPreprocessor;
 
@@ -21,7 +23,7 @@ class MolecularInfoManager {
         return hac;
     }
 
-    getMolecularFormula(data: any = null): string {
+    getMolecularFormula(data: ParseTree | Graph | null = null): string {
         let molecularFormula = '';
         let counts = new Map();
 

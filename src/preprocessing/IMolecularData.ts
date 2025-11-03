@@ -5,7 +5,9 @@ import Vertex = require('../graph/Vertex');
 import Edge = require('../graph/Edge');
 import Vector2 = require('../graph/Vector2');
 import { IMoleculeOptions } from '../config/IOptions';
-import { AtomHighlight, SideChoice } from './MolecularDataTypes';
+import { AtomHighlight, SideChoice, PositionData } from './MolecularDataTypes';
+
+type ParseTree = any;
 
 interface IMolecularData {
   graph: Graph;
@@ -21,11 +23,11 @@ interface IMolecularData {
   areVerticesInSameRing(vertexA: Vertex, vertexB: Vertex): boolean;
   chooseSide(vertexA: Vertex, vertexB: Vertex, sides: Vector2[]): SideChoice;
   getLargestOrAromaticCommonRing(vertexA: Vertex, vertexB: Vertex): Ring | null;
-  initDraw(data: any, themeName: string, infoOnly: boolean, highlight_atoms: AtomHighlight[]): void;
+  initDraw(data: ParseTree, themeName: string, infoOnly: boolean, highlight_atoms: AtomHighlight[]): void;
   processGraph(): void;
   getTotalOverlapScore(): number;
-  getMolecularFormula(data: any): string;
-  getPositionData(): any;
+  getMolecularFormula(data: ParseTree | Graph | null): string;
+  getPositionData(): PositionData;
 }
 
 export = IMolecularData;

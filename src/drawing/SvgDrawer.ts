@@ -160,8 +160,8 @@ class SvgDrawer {
    *
    * @returns {String} The molecular formula.
    */
-  getMolecularFormula(graph: Graph | null = null): string {
-    return this.preprocessor.getMolecularFormula(graph);
+  getMolecularFormula(data: ParseTree | Graph | null = null): string {
+    return this.preprocessor.getMolecularFormula(data);
   }
 
   /**

@@ -1,5 +1,8 @@
 import MolecularPreprocessor from "./MolecularPreprocessor";
 import Graph = require("../graph/Graph");
+import { AtomHighlight } from "./MolecularDataTypes";
+
+type ParseTree = any;
 
 class InitializationManager {
     private drawer: MolecularPreprocessor;
@@ -8,7 +11,7 @@ class InitializationManager {
         this.drawer = drawer;
     }
 
-    initDraw(data: any, themeName: string, infoOnly: boolean, highlight_atoms: any): void {
+    initDraw(data: ParseTree, themeName: string, infoOnly: boolean, highlight_atoms: AtomHighlight[]): void {
         this.drawer.data = data;
         this.drawer.infoOnly = infoOnly;
 
