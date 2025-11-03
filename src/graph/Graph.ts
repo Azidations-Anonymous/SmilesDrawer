@@ -1,4 +1,5 @@
 import MathHelper = require('../utils/MathHelper');
+import GraphMatrixOperations = require('./GraphMatrixOperations');
 import Vector2 = require('./Vector2');
 import Vertex = require('./Vertex');
 import Edge = require('./Edge');
@@ -42,6 +43,7 @@ class Graph {
     // Used for the bridge detection algorithm
     this._time = 0;
     this._init(parseTree);
+      this.matrixOps = new GraphMatrixOperations(this);
   }
 
   /**
@@ -263,22 +265,7 @@ class Graph {
    * @returns {Array[]} The adjancency matrix of the molecular graph.
    */
   getAdjacencyMatrix(): number[][] {
-    let length = this.vertices.length;
-    let adjacencyMatrix = Array(length);
-
-    for (var i = 0; i < length; i++) {
-      adjacencyMatrix[i] = new Array(length);
-      adjacencyMatrix[i].fill(0);
-    }
-
-    for (var i = 0; i < this.edges.length; i++) {
-      let edge = this.edges[i];
-
-      adjacencyMatrix[edge.sourceId][edge.targetId] = 1;
-      adjacencyMatrix[edge.targetId][edge.sourceId] = 1;
-    }
-
-    return adjacencyMatrix;
+      return this.matrixOps.getAdjacencyMatrix();
   }
 
   /**
@@ -287,28 +274,7 @@ class Graph {
    * @returns {Array[]} The adjancency matrix of the molecular graph with all bridges removed.
    */
   getComponentsAdjacencyMatrix(): number[][] {
-    let length = this.vertices.length;
-    let adjacencyMatrix = Array(length);
-    let bridges = this.getBridges();
-
-    for (var i = 0; i < length; i++) {
-      adjacencyMatrix[i] = new Array(length);
-      adjacencyMatrix[i].fill(0);
-    }
-
-    for (var i = 0; i < this.edges.length; i++) {
-      let edge = this.edges[i];
-
-      adjacencyMatrix[edge.sourceId][edge.targetId] = 1;
-      adjacencyMatrix[edge.targetId][edge.sourceId] = 1;
-    }
-
-    for (var i = 0; i < bridges.length; i++) {
-      adjacencyMatrix[bridges[i][0]][bridges[i][1]] = 0;
-      adjacencyMatrix[bridges[i][1]][bridges[i][0]] = 0;
-    }
-
-    return adjacencyMatrix;
+      return this.matrixOps.getComponentsAdjacencyMatrix();
   }
 
   /**
@@ -318,25 +284,7 @@ class Graph {
    * @returns {Array[]} The adjancency matrix of the subgraph.
    */
   getSubgraphAdjacencyMatrix(vertexIds: number[]): number[][] {
-    let length = vertexIds.length;
-    let adjacencyMatrix = Array(length);
-
-    for (var i = 0; i < length; i++) {
-      adjacencyMatrix[i] = new Array(length);
-      adjacencyMatrix[i].fill(0);
-
-      for (var j = 0; j < length; j++) {
-        if (i === j) {
-          continue;
-        }
-
-        if (this.hasEdge(vertexIds[i], vertexIds[j])) {
-          adjacencyMatrix[i][j] = 1;
-        }
-      }
-    }
-
-    return adjacencyMatrix;
+      return this.matrixOps.getSubgraphAdjacencyMatrix(vertexIds);
   }
 
   /**
@@ -345,34 +293,7 @@ class Graph {
    * @returns {Array[]} The distance matrix of the graph.
    */
   getDistanceMatrix(): number[][] {
-    let length = this.vertices.length;
-    let adja = this.getAdjacencyMatrix();
-    let dist = Array(length);
-
-    for (var i = 0; i < length; i++) {
-      dist[i] = Array(length);
-      dist[i].fill(Infinity);
-    }
-
-    for (var i = 0; i < length; i++) {
-      for (var j = 0; j < length; j++) {
-        if (adja[i][j] === 1) {
-          dist[i][j] = 1;
-        }
-      }
-    }
-
-    for (var k = 0; k < length; k++) {
-      for (var i = 0; i < length; i++) {
-        for (var j = 0; j < length; j++) {
-          if (dist[i][j] > dist[i][k] + dist[k][j]) {
-            dist[i][j] = dist[i][k] + dist[k][j]
-          }
-        }
-      }
-    }
-
-    return dist;
+      return this.matrixOps.getDistanceMatrix();
   }
 
   /**
@@ -382,34 +303,7 @@ class Graph {
    * @returns {Array[]} The distance matrix of the subgraph.
    */
   getSubgraphDistanceMatrix(vertexIds: number[]): number[][] {
-    let length = vertexIds.length;
-    let adja = this.getSubgraphAdjacencyMatrix(vertexIds);
-    let dist = Array(length);
-
-    for (var i = 0; i < length; i++) {
-      dist[i] = Array(length);
-      dist[i].fill(Infinity);
-    }
-
-    for (var i = 0; i < length; i++) {
-      for (var j = 0; j < length; j++) {
-        if (adja[i][j] === 1) {
-          dist[i][j] = 1;
-        }
-      }
-    }
-
-    for (var k = 0; k < length; k++) {
-      for (var i = 0; i < length; i++) {
-        for (var j = 0; j < length; j++) {
-          if (dist[i][j] > dist[i][k] + dist[k][j]) {
-            dist[i][j] = dist[i][k] + dist[k][j]
-          }
-        }
-      }
-    }
-
-    return dist;
+      return this.matrixOps.getSubgraphDistanceMatrix(vertexIds);
   }
 
   /**
@@ -418,24 +312,7 @@ class Graph {
    * @returns {Array[]} The adjancency list of the graph.
    */
   getAdjacencyList(): number[][] {
-    let length = this.vertices.length;
-    let adjacencyList = Array(length);
-
-    for (var i = 0; i < length; i++) {
-      adjacencyList[i] = [];
-
-      for (var j = 0; j < length; j++) {
-        if (i === j) {
-          continue;
-        }
-
-        if (this.hasEdge(this.vertices[i].id, this.vertices[j].id)) {
-          adjacencyList[i].push(j);
-        }
-      }
-    }
-
-    return adjacencyList;
+      return this.matrixOps.getAdjacencyList();
   }
 
   /**
@@ -445,24 +322,7 @@ class Graph {
    * @returns {Array[]} The adjancency list of the subgraph.
    */
   getSubgraphAdjacencyList(vertexIds: number[]): number[][] {
-    let length = vertexIds.length;
-    let adjacencyList = Array(length);
-
-    for (var i = 0; i < length; i++) {
-      adjacencyList[i] = Array();
-
-      for (var j = 0; j < length; j++) {
-        if (i === j) {
-          continue;
-        }
-
-        if (this.hasEdge(vertexIds[i], vertexIds[j])) {
-          adjacencyList[i].push(j);
-        }
-      }
-    }
-
-    return adjacencyList;
+      return this.matrixOps.getSubgraphAdjacencyList(vertexIds);
   }
 
   /**
@@ -941,6 +801,8 @@ class Graph {
       Graph._ccGetDfs(v, visited, adjacencyMatrix, component);
     }
   }
+
+    matrixOps: GraphMatrixOperations;
 }
 
 export = Graph
