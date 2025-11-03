@@ -398,8 +398,7 @@ function escapeHtml(text) {
 function collapseJsonDiff(html) {
     if (!html) return '';
 
-    const MIN_COLLAPSE = 4;  // Minimum unchanged fields to collapse
-    const CONTEXT_FIELDS = 2; // Fields to show before/after changes
+    const MIN_COLLAPSE = 2;  // Minimum unchanged fields to collapse (collapse everything)
 
     // Match <li> elements with their full content including nested <ul>
     const liPattern = /<li class="jsondiffpatch-(unchanged|added|deleted|modified|node)"[^>]*>.*?<\/li>/gs;
@@ -414,7 +413,6 @@ function collapseJsonDiff(html) {
     for (let i = 0; i < matches.length; i++) {
         const match = matches[i];
         const isUnchanged = match[1] === 'unchanged';
-        const nextIndex = matches[i + 1]?.index || html.length;
 
         if (isUnchanged) {
             unchangedChunk.push({
@@ -428,21 +426,9 @@ function collapseJsonDiff(html) {
                 // Add text before first unchanged item
                 result += html.substring(lastEnd, unchangedChunk[0].start);
 
-                // Show first CONTEXT_FIELDS items
-                for (let j = 0; j < CONTEXT_FIELDS && j < unchangedChunk.length; j++) {
-                    result += unchangedChunk[j].content;
-                }
-
-                // Add collapse marker
-                const collapsedCount = unchangedChunk.length - (2 * CONTEXT_FIELDS);
-                if (collapsedCount > 0) {
-                    result += `<li class="jsondiffpatch-unchanged jsondiffpatch-collapsed"><div class="jsondiffpatch-property-name">...</div><div class="jsondiffpatch-value"><pre>(${collapsedCount} unchanged field${collapsedCount > 1 ? 's' : ''})</pre></div></li>`;
-                }
-
-                // Show last CONTEXT_FIELDS items
-                for (let j = Math.max(CONTEXT_FIELDS, unchangedChunk.length - CONTEXT_FIELDS); j < unchangedChunk.length; j++) {
-                    result += unchangedChunk[j].content;
-                }
+                // Add collapse marker for ALL unchanged fields
+                const collapsedCount = unchangedChunk.length;
+                result += `<li class="jsondiffpatch-unchanged jsondiffpatch-collapsed"><div class="jsondiffpatch-property-name">...</div><div class="jsondiffpatch-value"><pre>(${collapsedCount} unchanged field${collapsedCount > 1 ? 's' : ''})</pre></div></li>`;
 
                 lastEnd = unchangedChunk[unchangedChunk.length - 1].end;
             } else {
@@ -464,14 +450,8 @@ function collapseJsonDiff(html) {
     if (unchangedChunk.length >= MIN_COLLAPSE) {
         result += html.substring(lastEnd, unchangedChunk[0].start);
 
-        for (let j = 0; j < CONTEXT_FIELDS && j < unchangedChunk.length; j++) {
-            result += unchangedChunk[j].content;
-        }
-
-        const collapsedCount = unchangedChunk.length - CONTEXT_FIELDS;
-        if (collapsedCount > 0) {
-            result += `<li class="jsondiffpatch-unchanged jsondiffpatch-collapsed"><div class="jsondiffpatch-property-name">...</div><div class="jsondiffpatch-value"><pre>(${collapsedCount} unchanged field${collapsedCount > 1 ? 's' : ''})</pre></div></li>`;
-        }
+        const collapsedCount = unchangedChunk.length;
+        result += `<li class="jsondiffpatch-unchanged jsondiffpatch-collapsed"><div class="jsondiffpatch-property-name">...</div><div class="jsondiffpatch-value"><pre>(${collapsedCount} unchanged field${collapsedCount > 1 ? 's' : ''})</pre></div></li>`;
 
         lastEnd = unchangedChunk[unchangedChunk.length - 1].end;
     } else if (unchangedChunk.length > 0) {
