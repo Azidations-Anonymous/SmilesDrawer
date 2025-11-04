@@ -1,5 +1,5 @@
 import Atom = require('../graph/Atom');
-import { BondType, WedgeType, Chirality, HydrogenDirection } from '../types/CommonTypes';
+import { BondType, WedgeType, Chirality, HydrogenDirection, PlanePosition } from '../types/CommonTypes';
 import { IAttachedPseudoElement } from '../config/IOptions';
 
 /**
@@ -83,7 +83,7 @@ export interface SerializedAtomValue {
   bracket: SerializedBracket | null;
 
   // Stereochemistry
-  plane: number;
+  plane: PlanePosition;
   chirality: Chirality;
   isStereoCenter: boolean;
   priority: number;

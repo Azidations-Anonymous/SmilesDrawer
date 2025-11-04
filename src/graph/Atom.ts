@@ -1,7 +1,7 @@
 import ArrayHelper = require('../utils/ArrayHelper');
 import Vertex = require('./Vertex');
 import Ring = require('./Ring');
-import { BondType, Chirality, SmilesChirality, HydrogenDirection } from '../types/CommonTypes';
+import { BondType, Chirality, SmilesChirality, HydrogenDirection, PlanePosition } from '../types/CommonTypes';
 
 interface Ringbond {
   id: number;
@@ -73,7 +73,7 @@ class Atom {
   bridgedRing: number | null;
   anchoredRings: number[];
   bracket: BracketInfo | null;
-  plane: number;
+  plane: PlanePosition;
   attachedPseudoElements: Record<string, AttachedPseudoElement>;
   hasAttachedPseudoElements: boolean;
   isDrawn: boolean;

@@ -43,3 +43,8 @@ export type TextDirection = 'up' | 'down' | 'left' | 'right';
  * Hydrogen direction for stereochemistry
  */
 export type HydrogenDirection = 'up' | 'down' | 'left' | 'right' | null;
+
+/**
+ * Stereochemical plane position (-1 back, 0 middle, 1 front)
+ */
+export type PlanePosition = -1 | 0 | 1;
