@@ -137,7 +137,7 @@ if (!oldCodePath || !newCodePath) {
     console.error('  -all         Test all datasets (default: fastregression only)');
     console.error('  -failearly   Stop at first difference (default: continue)');
     console.error('  -novisual    Skip SVG generation (default: generate visual comparisons)');
-    console.error('  -bisect      Test single SMILES for bisect mode (returns 0=match, 1=difference)');
+    console.error('  -bisect      Test single SMILES and generate comparison report (returns 0=match, 1=difference)');
     console.error('');
     console.error('Example: node regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer');
     console.error('Example: node regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer -all -failearly');
@@ -145,51 +145,126 @@ if (!oldCodePath || !newCodePath) {
     process.exit(2);
 }
 
-// Bisect mode: test single SMILES and exit with 0=match, 1=difference
+// Bisect mode: test single SMILES, generate comparison report, and exit with 0=match, 1=difference
 if (bisectMode) {
     const smiles = sanitizeSmiles(bisectSmiles);
 
-    // Generate JSON for comparison
+    // Create output directory
+    const outputDir = path.join(process.cwd(), 'regression-results');
+    if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    // Get git information
+    const oldCommitHash = getCommitHash(oldCodePath);
+    const newCommitHash = getCommitHash(newCodePath);
+    const newHasChanges = hasUncommittedChanges(newCodePath);
+    const newSrcDiff = newHasChanges ? getSrcDiff(newCodePath) : '';
+
+    // Generate SVG files with timing
+    const oldSvgFile = path.join(os.tmpdir(), 'smiles-drawer-bisect-old.svg');
+    const newSvgFile = path.join(os.tmpdir(), 'smiles-drawer-bisect-new.svg');
+
+    const oldSvgStartTime = performance.now();
+    const oldSvgResult = spawnSync('node', ['test/generate-svg.js', smiles, oldSvgFile], {
+        cwd: oldCodePath,
+        encoding: 'utf8'
+    });
+    const oldSvgRenderTime = performance.now() - oldSvgStartTime;
+
+    const newSvgStartTime = performance.now();
+    const newSvgResult = spawnSync('node', ['test/generate-svg.js', smiles, newSvgFile], {
+        cwd: newCodePath,
+        encoding: 'utf8'
+    });
+    const newSvgRenderTime = performance.now() - newSvgStartTime;
+
+    if (oldSvgResult.error || oldSvgResult.status !== 0 || newSvgResult.error || newSvgResult.status !== 0) {
+        console.error('ERROR: Failed to generate SVG files');
+        process.exit(1);
+    }
+
+    // Generate JSON files with timing
     const oldJsonFile = path.join(os.tmpdir(), 'smiles-drawer-bisect-old.json');
     const newJsonFile = path.join(os.tmpdir(), 'smiles-drawer-bisect-new.json');
 
+    const oldJsonStartTime = performance.now();
     const oldJsonResult = spawnSync('node', ['test/generate-json.js', smiles, oldJsonFile], {
         cwd: oldCodePath,
         encoding: 'utf8'
     });
+    const oldJsonRenderTime = performance.now() - oldJsonStartTime;
 
-    if (oldJsonResult.error || oldJsonResult.status !== 0) {
-        // Old code failed - treat as difference
-        process.exit(1);
-    }
-
+    const newJsonStartTime = performance.now();
     const newJsonResult = spawnSync('node', ['test/generate-json.js', smiles, newJsonFile], {
         cwd: newCodePath,
         encoding: 'utf8'
     });
+    const newJsonRenderTime = performance.now() - newJsonStartTime;
 
-    if (newJsonResult.error || newJsonResult.status !== 0) {
-        // New code failed - treat as difference
+    if (oldJsonResult.error || oldJsonResult.status !== 0 || newJsonResult.error || newJsonResult.status !== 0) {
+        console.error('ERROR: Failed to generate JSON files');
         process.exit(1);
     }
 
-    // Read and compare JSON
-    let oldJson, newJson;
+    // Read generated files
+    let oldSvg, newSvg, oldJson, newJson;
     try {
+        oldSvg = fs.readFileSync(oldSvgFile, 'utf8');
+        newSvg = fs.readFileSync(newSvgFile, 'utf8');
         oldJson = fs.readFileSync(oldJsonFile, 'utf8');
         newJson = fs.readFileSync(newJsonFile, 'utf8');
-    } catch (err) {
-        // File read error - treat as difference
-        process.exit(1);
-    } finally {
+
         // Clean up temp files
-        try {
-            fs.unlinkSync(oldJsonFile);
-            fs.unlinkSync(newJsonFile);
-        } catch (err) {
-            // Ignore cleanup errors
-        }
+        fs.unlinkSync(oldSvgFile);
+        fs.unlinkSync(newSvgFile);
+        fs.unlinkSync(oldJsonFile);
+        fs.unlinkSync(newJsonFile);
+    } catch (err) {
+        console.error('ERROR: Failed to read generated files');
+        process.exit(1);
     }
+
+    // Parse JSON and generate diff (reusing existing code pattern)
+    const oldJsonObj = JSON.parse(oldJson);
+    const newJsonObj = JSON.parse(newJson);
+    const delta = jsondiffpatch.diff(oldJsonObj, newJsonObj);
+    const rawJsonDiffHtml = htmlFormatter.format(delta, oldJsonObj);
+    const jsonDiffHtml = collapseJsonDiff(rawJsonDiffHtml);
+
+    // Save JSON diff file
+    const jsonFilePath = path.join(outputDir, 'bisect.json');
+    const jsonOutput = {
+        old: oldJsonObj,
+        new: newJsonObj,
+        delta: delta
+    };
+    fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
+
+    // Generate HTML report (reusing existing function)
+    const htmlFilePath = path.join(outputDir, 'bisect.html');
+    const html = generateIndividualHTMLReport({
+        dataset: 'bisect',
+        index: 1,
+        total: 1,
+        smiles: smiles,
+        oldSvg: oldSvg,
+        newSvg: newSvg,
+        oldJsonLength: oldJson.length,
+        newJsonLength: newJson.length,
+        jsonDiffHtml: jsonDiffHtml,
+        diffNumber: 'bisect',
+        oldCommitHash: oldCommitHash,
+        newCommitHash: newCommitHash,
+        newHasChanges: newHasChanges,
+        newSrcDiff: newSrcDiff,
+        oldSvgRenderTime: oldSvgRenderTime,
+        newSvgRenderTime: newSvgRenderTime,
+        oldJsonRenderTime: oldJsonRenderTime,
+        newJsonRenderTime: newJsonRenderTime
+    });
+
+    fs.writeFileSync(htmlFilePath, html, 'utf8');
 
     // Exit 0 if match, 1 if difference
     if (oldJson === newJson) {

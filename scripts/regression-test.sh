@@ -258,6 +258,42 @@ if [ "$BISECT_MODE" = "YES" ]; then
         git show --stat --pretty=format:"%C(yellow)Date:%C(reset) %ad%nAuthor: %an%n%n%s%n%n%b" --date=format:'%Y-%m-%d %H:%M:%S' "${FOUND_COMMIT}"
         echo ""
         echo -e "\033[1;36m================================================================================\033[0m"
+        echo ""
+
+        # Generate comparison report for the boundary
+        if [ $RIGHT -gt 0 ]; then
+            PREV_COMMIT=${COMMITS[$((RIGHT - 1))]}
+            PREV_COMMIT_SHORT=$(git rev-parse --short "${PREV_COMMIT}")
+
+            echo -e "\033[93mStep 6:\033[0m Generating comparison report..."
+            echo -e "Comparing last differing commit (\033[1;36m${PREV_COMMIT_SHORT}\033[0m) vs current"
+            echo ""
+
+            # Checkout and build the previous commit
+            cd "${BASELINE_DIR}"
+            if git checkout "${PREV_COMMIT}" > /dev/null 2>&1; then
+                npx tsc > /dev/null 2>&1 || true
+                if npx gulp build > /dev/null 2>&1; then
+                    # Generate comparison report
+                    cd "${CURRENT_DIR}/test"
+                    if node regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" -bisect "${BISECT_SMILES}" > /dev/null 2>&1; then
+                        echo -e "\033[1;32m✓\033[0m Comparison files saved:"
+                        echo -e "  regression-results/bisect.html"
+                        echo -e "  regression-results/bisect.json"
+                    else
+                        echo -e "\033[93mWARNING:\033[0m Failed to generate comparison report"
+                    fi
+                else
+                    echo -e "\033[93mWARNING:\033[0m Could not build previous commit for comparison"
+                fi
+            else
+                echo -e "\033[93mWARNING:\033[0m Could not checkout previous commit for comparison"
+            fi
+        else
+            echo -e "\033[93mNOTE:\033[0m No previous commit to compare (boundary is at first commit)"
+        fi
+
+        echo -e "\033[1;36m================================================================================\033[0m"
         exit 0
     else
         echo -e "\033[1;36m================================================================================\033[0m"
