@@ -82,9 +82,9 @@ cleanup() {
 cleanup_and_exit() {
     cleanup
     echo ""
-    echo "================================================================================"
-    echo "INTERRUPTED: Test cancelled by user"
-    echo "================================================================================"
+    echo -e "\033[1;36m================================================================================\033[0m"
+    echo -e "\033[1;31mINTERRUPTED:\033[0m Test cancelled by user"
+    echo -e "\033[1;36m================================================================================\033[0m"
     exit 130
 }
 
@@ -116,10 +116,10 @@ echo ""
 echo -e "\033[93mStep 3:\033[0m Building baseline library..."
 npx tsc > /dev/null 2>&1 || true  # Allow TS errors during migration
 if ! npx gulp build > /dev/null 2>&1; then
-    echo "✗ Baseline build failed!"
-    echo "================================================================================"
-    echo "ERROR: Baseline build failed - cannot proceed with regression testing"
-    echo "================================================================================"
+    echo -e "\033[1;31m✗\033[0m Baseline build failed!"
+    echo -e "\033[1;36m================================================================================\033[0m"
+    echo -e "\033[1;31mERROR:\033[0m Baseline build failed - cannot proceed with regression testing"
+    echo -e "\033[1;36m================================================================================\033[0m"
     exit 1
 fi
 echo -e "\033[1;32m✓\033[0m Baseline build complete"
@@ -129,10 +129,10 @@ echo -e "\033[93mStep 4:\033[0m Building current library..."
 cd "${CURRENT_DIR}"
 npx tsc > /dev/null 2>&1 || true  # Allow TS errors during migration
 if ! npx gulp build > /dev/null 2>&1; then
-    echo "✗ Current build failed!"
-    echo "================================================================================"
-    echo "ERROR: Current build failed - cannot proceed with regression testing"
-    echo "================================================================================"
+    echo -e "\033[1;31m✗\033[0m Current build failed!"
+    echo -e "\033[1;36m================================================================================\033[0m"
+    echo -e "\033[1;31mERROR:\033[0m Current build failed - cannot proceed with regression testing"
+    echo -e "\033[1;36m================================================================================\033[0m"
     exit 1
 fi
 echo -e "\033[1;32m✓\033[0m Current build complete"
@@ -147,19 +147,19 @@ node regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" ${FLAGS}
 REGRESSION_EXIT_CODE=$?
 
 if [ ${REGRESSION_EXIT_CODE} -eq 0 ]; then
-    echo "================================================================================"
-    echo "SUCCESS: No differences detected!"
-    echo "================================================================================"
+    echo -e "\033[1;36m================================================================================\033[0m"
+    echo -e "\033[1;32mSUCCESS:\033[0m No differences detected!"
+    echo -e "\033[1;36m================================================================================\033[0m"
     exit 0
 elif [ ${REGRESSION_EXIT_CODE} -eq 1 ]; then
-    echo "================================================================================"
-    echo "DIFFERENCES FOUND: Regression reports generated"
+    echo -e "\033[1;36m================================================================================\033[0m"
+    echo -e "\033[93mDIFFERENCES FOUND:\033[0m Regression reports generated"
     echo "Check regression-results/ for details"
-    echo "================================================================================"
+    echo -e "\033[1;36m================================================================================\033[0m"
     exit 1
 else
-    echo "================================================================================"
-    echo "ERROR: Test infrastructure failure (exit code ${REGRESSION_EXIT_CODE})"
-    echo "================================================================================"
+    echo -e "\033[1;36m================================================================================\033[0m"
+    echo -e "\033[1;31mERROR:\033[0m Test infrastructure failure (exit code ${REGRESSION_EXIT_CODE})"
+    echo -e "\033[1;36m================================================================================\033[0m"
     exit 2
 fi
