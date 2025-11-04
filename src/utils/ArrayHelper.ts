@@ -1,6 +1,9 @@
 /**
  * A static class containing helper functions for array-related tasks.
  */
+type TupleElements<T extends readonly unknown[][]> = { [K in keyof T]: T[K] extends readonly (infer U)[] ? U : never };
+type CallbackArgs<T extends readonly unknown[][]> = [...TupleElements<T>, number];
+
 class ArrayHelper {
     /**
      * Clone an array or an object. If an object is passed, a shallow clone will be created.
@@ -378,6 +381,64 @@ class ArrayHelper {
         }
 
         return newArr;
+    }
+
+    /**
+     * Iterate indices from 0 to length - 1, invoking the callback with the current index.
+     */
+    static forEachIndex(length: number, callback: (index: number) => void): void {
+        for (let i = 0; i < length; i++) {
+            callback(i);
+        }
+    }
+
+    /**
+     * Iterate indices from length - 1 to 0, invoking the callback with the current index.
+     */
+    static forEachIndexReverse(length: number, callback: (index: number) => void): void {
+        for (let i = length - 1; i >= 0; i--) {
+            callback(i);
+        }
+    }
+
+    /**
+     * Iterate all arrays in lockstep in forward direction, invoking the callback with the current elements.
+     *
+     * @static
+     * @param arrays Heterogeneous arrays to traverse.
+     * @param callback Receives the element from each array at the current index.
+     */
+    static forEach<T extends readonly unknown[][]>(arrays: [...T], callback: (...items: CallbackArgs<T>) => void): void {
+        if (arrays.length === 0) {
+            return;
+        }
+
+        const length = arrays[0].length;
+        for (let i = 0; i < length; i++) {
+            const items = arrays.map(arr => arr[i]) as TupleElements<T>;
+            const args = [...(items as unknown[]), i] as unknown as CallbackArgs<T>;
+            callback(...args);
+        }
+    }
+
+    /**
+     * Iterate all arrays in lockstep in reverse direction, invoking the callback with the current elements.
+     *
+     * @static
+     * @param arrays Heterogeneous arrays to traverse.
+     * @param callback Receives the element from each array at the current index.
+     */
+    static forEachReverse<T extends readonly unknown[][]>(arrays: [...T], callback: (...items: CallbackArgs<T>) => void): void {
+        if (arrays.length === 0) {
+            return;
+        }
+
+        const length = arrays[0].length;
+        for (let i = length - 1; i >= 0; i--) {
+            const items = arrays.map(arr => arr[i]) as TupleElements<T>;
+            const args = [...(items as unknown[]), i] as unknown as CallbackArgs<T>;
+            callback(...args);
+        }
     }
 
 }

@@ -11,6 +11,7 @@
     "test:regression": "./scripts/regression-test.sh",
     "test:smoke": "node test/smoke-test.js",
     "test:sssr": "node test/sssr.js",
+    "test:array-helper": "node test/array-helper.js",
     "type-check": "tsc",
     "type-check:watch": "tsc --watch"
   },
