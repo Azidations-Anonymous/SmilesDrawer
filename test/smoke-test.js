@@ -31,6 +31,7 @@
 const { spawnSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const { performance } = require('perf_hooks');
 
 /**
  * Get the short commit hash for a git repository
@@ -252,10 +253,14 @@ for (const dataset of datasets) {
         try {
             // Generate SVG to temporary file (avoids stdout buffer issues with large molecules)
             const tempSvgFile = path.join(outputDir, `temp-${outputNum}.svg`);
+
+            const svgStartTime = performance.now();
             const svgResult = spawnSync('node', ['generate-svg.js', smiles, tempSvgFile], {
                 cwd: __dirname,
                 encoding: 'utf8'
             });
+            const svgEndTime = performance.now();
+            const svgRenderTime = svgEndTime - svgStartTime;
 
             if (svgResult.error || svgResult.status !== 0) {
                 console.error('  ERROR: Failed to generate SVG');
@@ -278,10 +283,14 @@ for (const dataset of datasets) {
 
             // Generate JSON to temporary file (avoids stdout buffer issues with large molecules)
             const tempJsonFile = path.join(outputDir, `temp-${outputNum}.json`);
+
+            const jsonStartTime = performance.now();
             const jsonResult = spawnSync('node', ['generate-json.js', smiles, tempJsonFile], {
                 cwd: __dirname,
                 encoding: 'utf8'
             });
+            const jsonEndTime = performance.now();
+            const jsonRenderTime = jsonEndTime - jsonStartTime;
 
             if (jsonResult.error || jsonResult.status !== 0) {
                 console.error('  ERROR: Failed to generate JSON');
@@ -309,6 +318,8 @@ for (const dataset of datasets) {
             <h3>Uncommitted Changes in src/</h3>
             <pre class="diff-content"><code>${escapeHtml(collapsedDiff)}</code></pre>
         </div>` : '';
+
+            const totalRenderTime = svgRenderTime + jsonRenderTime;
 
             const html = `<!DOCTYPE html>
 <html lang="en">
@@ -356,6 +367,27 @@ for (const dataset of datasets) {
             border-radius: 3px;
             font-size: 0.85em;
             margin-left: 8px;
+        }
+        .benchmark-info {
+            background: #e8f5e9;
+            padding: 12px 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+        .benchmark-info .benchmark-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .benchmark-info .benchmark-value {
+            font-family: 'Courier New', monospace;
+            color: #27ae60;
+            font-weight: 600;
+        }
+        .benchmark-detail {
+            margin-left: 20px;
+            font-size: 0.85em;
+            color: #7f8c8d;
         }
         .smiles-display {
             background: #2c3e50;
@@ -435,6 +467,14 @@ for (const dataset of datasets) {
             <span class="commit-hash">${escapeHtml(commitHash)}</span>${hasChanges ? '<span class="uncommitted-badge">+ uncommitted</span>' : ''}
         </div>
 
+        <div class="benchmark-info">
+            <span class="benchmark-label">Total Render Time:</span>
+            <span class="benchmark-value">${totalRenderTime.toFixed(2)} ms</span>
+            <div class="benchmark-detail">
+                SVG: ${svgRenderTime.toFixed(2)} ms &nbsp;|&nbsp; JSON: ${jsonRenderTime.toFixed(2)} ms
+            </div>
+        </div>
+
         <div class="smiles-display">
             <strong>SMILES:</strong> <code>${escapeHtml(smiles)}</code>
         </div>
@@ -463,6 +503,7 @@ for (const dataset of datasets) {
             fs.writeFileSync(jsonPath, json, 'utf8');
 
             console.log('  SUCCESS: Saved ' + outputNum + '.html and ' + outputNum + '.json');
+            console.log('  TIMING: Total ' + totalRenderTime.toFixed(2) + ' ms (SVG: ' + svgRenderTime.toFixed(2) + ' ms, JSON: ' + jsonRenderTime.toFixed(2) + ' ms)');
             totalOutputs++;
 
         } catch (error) {

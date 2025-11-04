@@ -34,6 +34,7 @@ const fs = require('fs');
 const os = require('os');
 const jsondiffpatch = require('jsondiffpatch');
 const htmlFormatter = require('jsondiffpatch/formatters/html');
+const { performance } = require('perf_hooks');
 
 /**
  * Get the short commit hash for a git repository
@@ -189,10 +190,13 @@ for (const dataset of datasets) {
         const oldJsonFile = path.join(os.tmpdir(), 'smiles-drawer-old-json-' + Date.now() + '-' + Math.random().toString(36).substring(7) + '.json');
         const newJsonFile = path.join(os.tmpdir(), 'smiles-drawer-new-json-' + Date.now() + '-' + Math.random().toString(36).substring(7) + '.json');
 
+        const oldJsonStartTime = performance.now();
         const oldJsonResult = spawnSync('node', ['test/generate-json.js', smiles, oldJsonFile], {
             cwd: oldCodePath,
             encoding: 'utf8'
         });
+        const oldJsonEndTime = performance.now();
+        const oldJsonRenderTime = oldJsonEndTime - oldJsonStartTime;
 
         if (oldJsonResult.error || oldJsonResult.status !== 0) {
             if (oldJsonResult.stderr && oldJsonResult.stderr.includes('PARSE_ERROR')) {
@@ -205,10 +209,13 @@ for (const dataset of datasets) {
             continue;
         }
 
+        const newJsonStartTime = performance.now();
         const newJsonResult = spawnSync('node', ['test/generate-json.js', smiles, newJsonFile], {
             cwd: newCodePath,
             encoding: 'utf8'
         });
+        const newJsonEndTime = performance.now();
+        const newJsonRenderTime = newJsonEndTime - newJsonStartTime;
 
         if (newJsonResult.error || newJsonResult.status !== 0) {
             if (newJsonResult.stderr && newJsonResult.stderr.includes('PARSE_ERROR')) {
@@ -244,15 +251,21 @@ for (const dataset of datasets) {
                 const oldSvgFile = path.join(os.tmpdir(), 'smiles-drawer-old-svg-' + Date.now() + '-' + Math.random().toString(36).substring(7) + '.svg');
                 const newSvgFile = path.join(os.tmpdir(), 'smiles-drawer-new-svg-' + Date.now() + '-' + Math.random().toString(36).substring(7) + '.svg');
 
+                const oldSvgStartTime = performance.now();
                 spawnSync('node', ['test/generate-svg.js', smiles, oldSvgFile], {
                     cwd: oldCodePath,
                     encoding: 'utf8'
                 });
+                const oldSvgEndTime = performance.now();
+                const oldSvgRenderTime = oldSvgEndTime - oldSvgStartTime;
 
+                const newSvgStartTime = performance.now();
                 spawnSync('node', ['test/generate-svg.js', smiles, newSvgFile], {
                     cwd: newCodePath,
                     encoding: 'utf8'
                 });
+                const newSvgEndTime = performance.now();
+                const newSvgRenderTime = newSvgEndTime - newSvgStartTime;
 
                 let oldSvg = '';
                 let newSvg = '';
@@ -297,7 +310,11 @@ for (const dataset of datasets) {
                     oldCommitHash: oldCommitHash,
                     newCommitHash: newCommitHash,
                     newHasChanges: newHasChanges,
-                    newSrcDiff: newSrcDiff
+                    newSrcDiff: newSrcDiff,
+                    oldSvgRenderTime: oldSvgRenderTime,
+                    newSvgRenderTime: newSvgRenderTime,
+                    oldJsonRenderTime: oldJsonRenderTime,
+                    newJsonRenderTime: newJsonRenderTime
                 });
 
                 fs.writeFileSync(htmlFilePath, html, 'utf8');
@@ -537,6 +554,13 @@ function generateIndividualHTMLReport(diff) {
             <pre class="diff-content"><code>${escapeHtml(collapsedDiff)}</code></pre>
         </div>` : '';
 
+    const oldTotalTime = diff.oldSvgRenderTime + diff.oldJsonRenderTime;
+    const newTotalTime = diff.newSvgRenderTime + diff.newJsonRenderTime;
+    const timeDiff = newTotalTime - oldTotalTime;
+    const percentChange = oldTotalTime > 0 ? ((timeDiff / oldTotalTime) * 100) : 0;
+    const isFaster = timeDiff < 0;
+    const performanceClass = isFaster ? 'performance-improvement' : 'performance-regression';
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -578,6 +602,10 @@ function generateIndividualHTMLReport(diff) {
             grid-template-columns: 1fr 1fr;
             gap: 20px;
             font-size: 0.9em;
+        }
+
+        .commit-info > div:last-child {
+            text-align: right;
         }
 
         .commit-info .commit-label {
@@ -750,12 +778,101 @@ function generateIndividualHTMLReport(diff) {
             overflow-y: auto;
         }
 
+        .benchmark-info {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        .performance-improvement {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+
+        .performance-regression {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+
+        .benchmark-info h3 {
+            color: #2c3e50;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+        }
+
+        .benchmark-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .benchmark-column {
+            padding: 10px;
+            background: white;
+            border-radius: 3px;
+        }
+
+        .benchmark-label {
+            font-weight: 600;
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .benchmark-value {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            display: block;
+        }
+
+        .benchmark-old {
+            color: #e74c3c;
+        }
+
+        .benchmark-new {
+            color: #27ae60;
+        }
+
+        .benchmark-delta {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .benchmark-detail {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .performance-summary {
+            padding: 10px;
+            background: white;
+            border-radius: 3px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.05em;
+        }
+
+        .performance-summary.faster {
+            color: #27ae60;
+        }
+
+        .performance-summary.slower {
+            color: #e74c3c;
+        }
+
         @media (max-width: 768px) {
             .comparison-container {
                 grid-template-columns: 1fr;
             }
 
             .commit-info {
+                grid-template-columns: 1fr;
+            }
+
+            .benchmark-comparison {
                 grid-template-columns: 1fr;
             }
         }
@@ -776,6 +893,38 @@ function generateIndividualHTMLReport(diff) {
 
         <div class="smiles-display">
             <code>${escapeHtml(diff.smiles)}</code>
+        </div>
+
+        <div class="benchmark-info ${performanceClass}">
+            <h3>Performance Comparison</h3>
+            <div class="benchmark-comparison">
+                <div class="benchmark-column">
+                    <span class="benchmark-label">Baseline (Old)</span>
+                    <span class="benchmark-value benchmark-old">${oldTotalTime.toFixed(2)} ms</span>
+                    <div class="benchmark-detail">
+                        SVG: ${diff.oldSvgRenderTime.toFixed(2)} ms<br>
+                        JSON: ${diff.oldJsonRenderTime.toFixed(2)} ms
+                    </div>
+                </div>
+                <div class="benchmark-column">
+                    <span class="benchmark-label">Current (New)</span>
+                    <span class="benchmark-value benchmark-new">${newTotalTime.toFixed(2)} ms</span>
+                    <div class="benchmark-detail">
+                        SVG: ${diff.newSvgRenderTime.toFixed(2)} ms<br>
+                        JSON: ${diff.newJsonRenderTime.toFixed(2)} ms
+                    </div>
+                </div>
+                <div class="benchmark-column">
+                    <span class="benchmark-label">Change</span>
+                    <span class="benchmark-value benchmark-delta">${timeDiff >= 0 ? '+' : ''}${timeDiff.toFixed(2)} ms</span>
+                    <div class="benchmark-detail">
+                        ${Math.abs(percentChange).toFixed(1)}% ${isFaster ? 'faster' : 'slower'}
+                    </div>
+                </div>
+            </div>
+            <div class="performance-summary ${isFaster ? 'faster' : 'slower'}">
+                ${isFaster ? '\u2713 Performance Improvement' : '\u26A0 Performance Regression'}
+            </div>
         </div>
 
         <div class="comparison-container">

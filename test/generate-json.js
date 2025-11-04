@@ -24,7 +24,13 @@
  * node test/generate-json.js "CCO" /tmp/output.json
  */
 
+const scriptStartTime = Date.now();
+
+const jsdomLoadStart = Date.now();
 const { JSDOM } = require('jsdom');
+const jsdomLoadEnd = Date.now();
+console.log(`TIMING: JSDOM load took ${jsdomLoadEnd - jsdomLoadStart}ms`);
+
 const fs = require('fs');
 
 const smilesInput = process.argv[2];
@@ -38,12 +44,18 @@ if (!smilesInput) {
 
 console.log(`PROCESSING: ${smilesInput}`);
 
+const domSetupStart = Date.now();
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
 global.window = dom.window;
 global.document = dom.window.document;
 global.navigator = dom.window.navigator;
+const domSetupEnd = Date.now();
+console.log(`TIMING: DOM setup took ${domSetupEnd - domSetupStart}ms`);
 
+const smilesDrawerLoadStart = Date.now();
 const SmilesDrawer = require('../app.js');
+const smilesDrawerLoadEnd = Date.now();
+console.log(`TIMING: SmilesDrawer load took ${smilesDrawerLoadEnd - smilesDrawerLoadStart}ms`);
 
 const options = {
     width: 500,
@@ -101,12 +113,15 @@ const options = {
 
 try {
     console.log('PARSING: Starting parse');
+    const parseStartTime = Date.now();
     const svgDrawer = new SmilesDrawer.SvgDrawer(options);
 
     SmilesDrawer.parse(smilesInput, function(tree) {
-        console.log('PARSE_SUCCESS: Tree generated');
+        const parseEndTime = Date.now();
+        console.log(`PARSE_SUCCESS: Tree generated (took ${parseEndTime - parseStartTime}ms)`);
 
         console.log('PROCESSING: Generating graph data');
+        const drawStartTime = Date.now();
 
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
@@ -117,8 +132,9 @@ try {
 
         // Use the new public API to get positioning data
         const graphData = svgDrawer.getPositionData();
+        const drawEndTime = Date.now();
 
-        console.log('PROCESS_SUCCESS: Graph data extracted using getPositionData() API');
+        console.log(`PROCESS_SUCCESS: Graph data extracted using getPositionData() API (took ${drawEndTime - drawStartTime}ms)`);
 
         const jsonOutput = JSON.stringify(graphData, null, 2);
 
@@ -131,6 +147,9 @@ try {
             console.log(jsonOutput);
             console.log('JSON_END_MARKER');
         }
+
+        const scriptEndTime = Date.now();
+        console.log(`TIMING: Total script execution time: ${scriptEndTime - scriptStartTime}ms`);
 
         process.exit(0);
     }, function(err) {
