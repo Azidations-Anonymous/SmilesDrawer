@@ -17,13 +17,6 @@ class KamadaKawaiLayout {
     layout(vertexIds: number[], center: Vector2, startVertexId: number, ring: Ring, bondLength: number, threshold: number, innerThreshold: number, maxIteration: number, maxInnerIteration: number, maxEnergy: number): void {
         let edgeStrength = bondLength;
 
-        // Add vertices that are directly connected to the ring
-        ArrayHelper.forEachIndexReverse(vertexIds.length, (idx) => {
-          const vertex = this.graph.vertices[vertexIds[idx]];
-          const neighbourCount = vertex.neighbours.length;
-          void neighbourCount;
-        });
-
         let matDist = this.graph.getSubgraphDistanceMatrix(vertexIds);
         let length = vertexIds.length;
 
