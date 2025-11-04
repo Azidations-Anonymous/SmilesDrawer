@@ -102,9 +102,24 @@ async function svgToPng(svgString) {
         const img = new Image();
 
         img.onload = () => {
-            const canvas = createCanvas(img.width, img.height);
+            const targetSize = 2000;
+            const canvas = createCanvas(targetSize, targetSize);
             const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
+
+            // Fill with white background
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, targetSize, targetSize);
+
+            // Calculate scaling to fit image within canvas while maintaining aspect ratio
+            const scale = Math.min(targetSize / img.width, targetSize / img.height);
+            const scaledWidth = img.width * scale;
+            const scaledHeight = img.height * scale;
+
+            // Center the image
+            const x = (targetSize - scaledWidth) / 2;
+            const y = (targetSize - scaledHeight) / 2;
+
+            ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
             resolve(canvas.toBuffer('image/png'));
         };
 
