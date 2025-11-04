@@ -30,26 +30,14 @@ class SSSR {
             let connectedComponent = connectedComponents[i];
             let ccAdjacencyMatrix = graph.getSubgraphAdjacencyMatrix([...connectedComponent]);
 
-            let arrBondCount = new Uint16Array(ccAdjacencyMatrix.length);
             let arrRingCount = new Uint16Array(ccAdjacencyMatrix.length);
-
-            for (var j = 0; j < ccAdjacencyMatrix.length; j++) {
-                arrRingCount[j] = 0;
-                arrBondCount[j] = 0;
-
-                for (var k = 0; k < ccAdjacencyMatrix[j].length; k++) {
-                    arrBondCount[j] += ccAdjacencyMatrix[j][k];
-                }
-            }
+            let arrBondCount = Uint16Array.from({ length: ccAdjacencyMatrix.length }, (_, rowIdx) =>
+                ccAdjacencyMatrix[rowIdx].reduce((sum, value) => sum + value, 0)
+            );
 
             // Get the edge number and the theoretical number of rings in SSSR
-            let nEdges = 0;
-
-            for (var j = 0; j < ccAdjacencyMatrix.length; j++) {
-                for (var k = j + 1; k < ccAdjacencyMatrix.length; k++) {
-                    nEdges += ccAdjacencyMatrix[j][k];
-                }
-            }
+            let nEdges = ccAdjacencyMatrix.reduce((sum, row, rowIndex) =>
+                sum + row.slice(rowIndex + 1).reduce((rowSum, value) => rowSum + value, 0), 0);
 
             let nSssr = nEdges - ccAdjacencyMatrix.length + 1;
 
@@ -58,12 +46,7 @@ class SSSR {
             // console.log(ccAdjacencyMatrix);
 
             // If all vertices have 3 incident edges, calculate with different formula (see Euler)
-            let allThree = true;
-            for (var j = 0; j < arrBondCount.length; j++) {
-                if (arrBondCount[j] !== 3) {
-                    allThree = false;
-                }
-            }
+            let allThree = arrBondCount.every(bondCount => bondCount === 3);
 
             if (allThree) {
                 nSssr = 2.0 + nEdges - ccAdjacencyMatrix.length;
