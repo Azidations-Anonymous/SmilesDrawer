@@ -16,6 +16,7 @@
  * ## Output
  * - smoketest/[N].html - HTML report with SVG rendering
  * - smoketest/[N].json - JSON position data
+ * - smoketest/[N].png - PNG image of the molecule
  *
  * ## Usage
  * npm run test:smoke                        # Uses fastregression dataset
@@ -34,6 +35,7 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const { performance } = require('perf_hooks');
+const { createCanvas, Image } = require('canvas');
 
 /**
  * Get the short commit hash for a git repository
@@ -88,6 +90,30 @@ function getSrcDiff(repoPath) {
     }
 
     return result.stdout;
+}
+
+/**
+ * Convert SVG string to PNG buffer using canvas
+ * @param {string} svgString - SVG content as string
+ * @returns {Promise<Buffer>} PNG image buffer
+ */
+async function svgToPng(svgString) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+
+        img.onload = () => {
+            const canvas = createCanvas(img.width, img.height);
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toBuffer('image/png'));
+        };
+
+        img.onerror = (err) => {
+            reject(new Error('Failed to load SVG: ' + err));
+        };
+
+        img.src = 'data:image/svg+xml;base64,' + Buffer.from(svgString).toString('base64');
+    });
 }
 
 /**
@@ -191,31 +217,32 @@ const isKnownDataset = providedArg && knownDatasets.some(ds => ds.name === provi
 
 // If argument is provided but not a known dataset, treat it as a SMILES string
 if (providedArg && !isKnownDataset && !allMode) {
-    const smiles = providedArg;
+    (async () => {
+        const smiles = providedArg;
 
-    // Create output directory
-    const outputDir = path.join(__dirname, 'smoketest');
-    if (fs.existsSync(outputDir)) {
-        fs.rmSync(outputDir, { recursive: true, force: true });
-    }
-    fs.mkdirSync(outputDir, { recursive: true });
+        // Create output directory
+        const outputDir = path.join(__dirname, 'smoketest');
+        if (fs.existsSync(outputDir)) {
+            fs.rmSync(outputDir, { recursive: true, force: true });
+        }
+        fs.mkdirSync(outputDir, { recursive: true });
 
-    // Get git information
-    const currentDir = path.join(__dirname, '..');
-    const commitHash = getCommitHash(currentDir);
-    const hasChanges = hasUncommittedChanges(currentDir);
-    const srcDiff = hasChanges ? getSrcDiff(currentDir) : '';
+        // Get git information
+        const currentDir = path.join(__dirname, '..');
+        const commitHash = getCommitHash(currentDir);
+        const hasChanges = hasUncommittedChanges(currentDir);
+        const srcDiff = hasChanges ? getSrcDiff(currentDir) : '';
 
-    console.log('='.repeat(80));
-    console.log('SMILES DRAWER SMOKE TEST - SINGLE SMILES');
-    console.log('='.repeat(80));
-    console.log('COMMIT: ' + commitHash + (hasChanges ? ' (+ uncommitted changes)' : ''));
-    console.log('SMILES: ' + (smiles.length > 60 ? smiles.substring(0, 57) + '...' : smiles));
-    console.log('OUTPUT DIRECTORY: ' + outputDir);
-    console.log('='.repeat(80));
-    console.log('');
+        console.log('='.repeat(80));
+        console.log('SMILES DRAWER SMOKE TEST - SINGLE SMILES');
+        console.log('='.repeat(80));
+        console.log('COMMIT: ' + commitHash + (hasChanges ? ' (+ uncommitted changes)' : ''));
+        console.log('SMILES: ' + (smiles.length > 60 ? smiles.substring(0, 57) + '...' : smiles));
+        console.log('OUTPUT DIRECTORY: ' + outputDir);
+        console.log('='.repeat(80));
+        console.log('');
 
-    try {
+        try {
         // Generate SVG
         const tempSvgFile = path.join(outputDir, 'temp-1.svg');
         const svgStartTime = performance.now();
@@ -234,6 +261,11 @@ if (providedArg && !isKnownDataset && !allMode) {
 
         const svg = fs.readFileSync(tempSvgFile, 'utf8');
         fs.unlinkSync(tempSvgFile);
+
+        // Convert SVG to PNG
+        const pngBuffer = await svgToPng(svg);
+        const pngPath = path.join(outputDir, '1.png');
+        fs.writeFileSync(pngPath, pngBuffer);
 
         // Generate JSON
         const tempJsonFile = path.join(outputDir, 'temp-1.json');
@@ -448,14 +480,16 @@ if (providedArg && !isKnownDataset && !allMode) {
         console.log('SUCCESS: Generated output files');
         console.log('  ' + htmlPath);
         console.log('  ' + jsonPath);
+        console.log('  ' + pngPath);
         console.log('TIMING: Total ' + totalRenderTime.toFixed(2) + ' ms (SVG: ' + svgRenderTime.toFixed(2) + ' ms, JSON: ' + jsonRenderTime.toFixed(2) + ' ms)');
         console.log('='.repeat(80));
 
-        process.exit(0);
-    } catch (error) {
-        console.error('ERROR: ' + error.message);
-        process.exit(1);
-    }
+            process.exit(0);
+        } catch (error) {
+            console.error('ERROR: ' + error.message);
+            process.exit(1);
+        }
+    })();
 }
 
 // Determine dataset
@@ -502,6 +536,7 @@ console.log('');
 let totalOutputs = 0;
 let totalErrors = 0;
 
+(async () => {
 for (const dataset of datasets) {
     console.log('='.repeat(80));
     console.log('TESTING DATASET: ' + dataset.name);
@@ -552,6 +587,19 @@ for (const dataset of datasets) {
                 fs.unlinkSync(tempSvgFile);
             } catch (err) {
                 console.error('  ERROR: Could not read SVG file');
+                console.error('  ' + err.message);
+                totalErrors++;
+                continue;
+            }
+
+            // Convert SVG to PNG
+            let pngBuffer;
+            try {
+                pngBuffer = await svgToPng(svg);
+                const pngPath = path.join(outputDir, outputNum + '.png');
+                fs.writeFileSync(pngPath, pngBuffer);
+            } catch (err) {
+                console.error('  ERROR: Could not convert SVG to PNG');
                 console.error('  ' + err.message);
                 totalErrors++;
                 continue;
@@ -778,7 +826,7 @@ for (const dataset of datasets) {
             fs.writeFileSync(htmlPath, html, 'utf8');
             fs.writeFileSync(jsonPath, json, 'utf8');
 
-            console.log('  SUCCESS: Saved ' + outputNum + '.html and ' + outputNum + '.json');
+            console.log('  SUCCESS: Saved ' + outputNum + '.html, ' + outputNum + '.json, and ' + outputNum + '.png');
             console.log('  TIMING: Total ' + totalRenderTime.toFixed(2) + ' ms (SVG: ' + svgRenderTime.toFixed(2) + ' ms, JSON: ' + jsonRenderTime.toFixed(2) + ' ms)');
             totalOutputs++;
 
@@ -791,16 +839,17 @@ for (const dataset of datasets) {
     console.log('');
 }
 
-console.log('='.repeat(80));
-console.log('SMOKE TEST COMPLETE');
-console.log('='.repeat(80));
-console.log('Total outputs generated: ' + totalOutputs);
-console.log('Total errors: ' + totalErrors);
-console.log('Output directory: ' + outputDir);
-console.log('='.repeat(80));
+    console.log('='.repeat(80));
+    console.log('SMOKE TEST COMPLETE');
+    console.log('='.repeat(80));
+    console.log('Total outputs generated: ' + totalOutputs);
+    console.log('Total errors: ' + totalErrors);
+    console.log('Output directory: ' + outputDir);
+    console.log('='.repeat(80));
 
-if (totalErrors > 0) {
-    process.exit(1);
-} else {
-    process.exit(0);
-}
+    if (totalErrors > 0) {
+        process.exit(1);
+    } else {
+        process.exit(0);
+    }
+})();
