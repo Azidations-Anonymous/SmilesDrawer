@@ -232,8 +232,12 @@ class OverlapResolutionManager {
 
     rotateSubtree(vertexId: number, parentVertexId: number, angle: number, center: Vector2): void {
         let that = this;
+        const centerVertexId = parentVertexId;
 
         this.drawer.graph.traverseTree(vertexId, parentVertexId, function (vertex) {
+          if (vertex.id === centerVertexId) {
+            return;
+          }
           vertex.position.rotateAround(angle, center);
 
           for (var i = 0; i < vertex.value.anchoredRings.length; i++) {
