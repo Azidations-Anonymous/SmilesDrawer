@@ -350,7 +350,7 @@ class SSSR {
                         allBonds = allBonds.concat(bonds);
                     }
 
-                    if (cSssr.length > nsssr) {
+                    if (cSssr.length >= nsssr) {
                         return cSssr;
                     }
                 }
@@ -371,7 +371,7 @@ class SSSR {
                         allBonds = allBonds.concat(bonds);
                     }
 
-                    if (cSssr.length > nsssr) {
+                    if (cSssr.length >= nsssr) {
                         return cSssr;
                     }
                 }
