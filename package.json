@@ -12,6 +12,7 @@
     "test:smoke": "node test/smoke-test.js",
     "test:sssr": "node test/sssr.js",
     "test:array-helper": "node test/array-helper.js",
+    "test:layout": "node test/layout.js",
     "type-check": "tsc",
     "type-check:watch": "tsc --watch"
   },
