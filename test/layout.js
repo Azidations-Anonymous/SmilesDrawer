@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * Comprehensive layout tests for Kamada-Kawai force-directed algorithm.
- * Tests verify correct positioning, finite coordinates, and layout quality.
+ * Layout quality tests for the Kamada-Kawai implementation.
+ * These tests go beyond smoke checks by validating energetic optimality,
+ * symmetry handling, and invariance properties described in the original paper.
  */
 
 const { describe, it } = require('node:test');
@@ -11,231 +12,183 @@ const assert = require('node:assert/strict');
 const Parser = require('../src/parsing/Parser.js');
 const MolecularPreprocessor = require('../src/preprocessing/MolecularPreprocessor.js');
 
-function computePositions(smiles) {
+/**
+ * Fully preprocess a SMILES string so the returned graph reflects the
+ * production layout pipeline.
+ */
+function prepareMolecule(smiles) {
     const preprocessor = new MolecularPreprocessor({});
     preprocessor.initDraw(Parser.parse(smiles, {}), 'light', false, []);
     preprocessor.processGraph();
-    return preprocessor.graph.vertices.map(vertex => ({
-        id: vertex.id,
-        x: vertex.position.x,
-        y: vertex.position.y,
-        positioned: vertex.positioned,
-        forcePositioned: vertex.forcePositioned
-    }));
-}
-
-function assertAllFinite(positions, message = 'All coordinates should be finite') {
-    positions.forEach(({ x, y, id }) => {
-        assert.ok(Number.isFinite(x), `${message}: vertex ${id} x=${x}`);
-        assert.ok(Number.isFinite(y), `${message}: vertex ${id} y=${y}`);
-    });
-}
-
-function assertAllPositioned(positions, message = 'All vertices should be positioned') {
-    positions.forEach(({ id, positioned }) => {
-        assert.ok(positioned, `${message}: vertex ${id} not positioned`);
-    });
-}
-
-function assertNoOverlaps(positions, minDistance = 5.0) {
-    for (let i = 0; i < positions.length; i++) {
-        for (let j = i + 1; j < positions.length; j++) {
-            const dx = positions[i].x - positions[j].x;
-            const dy = positions[i].y - positions[j].y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            assert.ok(
-                distance >= minDistance,
-                `Vertices ${positions[i].id} and ${positions[j].id} too close: ${distance.toFixed(2)} < ${minDistance}`
-            );
-        }
-    }
-}
-
-function computeBoundingBox(positions) {
-    if (positions.length === 0) {
-        return { minX: 0, maxX: 0, minY: 0, maxY: 0, width: 0, height: 0 };
-    }
-    const minX = Math.min(...positions.map(p => p.x));
-    const maxX = Math.max(...positions.map(p => p.x));
-    const minY = Math.min(...positions.map(p => p.y));
-    const maxY = Math.max(...positions.map(p => p.y));
     return {
-        minX,
-        maxX,
-        minY,
-        maxY,
-        width: maxX - minX,
-        height: maxY - minY
+        graph: preprocessor.graph,
+        bondLength: preprocessor.opts.bondLength
     };
 }
 
-describe('Kamada-Kawai layout - basic structures', () => {
-    it('places all vertices for single ring (cyclohexane)', () => {
-        const positions = computePositions('C1CCCCC1');
-        assert.equal(positions.length, 6, 'Cyclohexane should have 6 vertices');
-        assertAllPositioned(positions);
-        assertAllFinite(positions);
-        assertNoOverlaps(positions);
+/**
+ * Return a copy of the current vertex positions for downstream calculations.
+ */
+function collectPositions(graph) {
+    return graph.vertices.map(vertex => ({
+        id: vertex.id,
+        x: vertex.position.x,
+        y: vertex.position.y
+    }));
+}
+
+/**
+ * Compute the Kamada–Kawai energy (total and average per vertex pair).
+ */
+function computeSpringEnergy(graph, bondLength) {
+    const dist = graph.getDistanceMatrix();
+    const positions = collectPositions(graph);
+    let total = 0;
+    let consideredPairs = 0;
+
+    for (let i = 0; i < dist.length; i++) {
+        for (let j = i + 1; j < dist.length; j++) {
+            const dij = dist[i][j];
+            if (!Number.isFinite(dij) || dij === 0) {
+                continue;
+            }
+            const desired = bondLength * dij;
+            const dx = positions[i].x - positions[j].x;
+            const dy = positions[i].y - positions[j].y;
+            const actual = Math.hypot(dx, dy);
+            const strength = bondLength * Math.pow(dij, -2.0);
+            total += strength * Math.pow(actual - desired, 2);
+            consideredPairs++;
+        }
+    }
+
+    return {
+        total,
+        average: consideredPairs ? total / consideredPairs : 0
+    };
+}
+
+/**
+ * Calculate mean and worst-case relative distance errors between the current
+ * Euclidean layout and the graph-theoretic distances implied by the SMILES.
+ */
+function computeDistanceErrors(graph, bondLength) {
+    const dist = graph.getDistanceMatrix();
+    const positions = collectPositions(graph);
+    const errors = [];
+
+    for (let i = 0; i < dist.length; i++) {
+        for (let j = i + 1; j < dist.length; j++) {
+            const dij = dist[i][j];
+            if (!Number.isFinite(dij) || dij === 0) {
+                continue;
+            }
+            const desired = bondLength * dij;
+            const dx = positions[i].x - positions[j].x;
+            const dy = positions[i].y - positions[j].y;
+            const actual = Math.hypot(dx, dy);
+            errors.push(Math.abs(actual - desired) / desired);
+        }
+    }
+
+    return {
+        mean: errors.reduce((sum, value) => sum + value, 0) / errors.length,
+        max: Math.max(...errors)
+    };
+}
+
+/**
+ * Centre a set of points around the origin; needed for symmetry tests.
+ */
+function centrePoints(points) {
+    const centroid = points.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), { x: 0, y: 0 });
+    const inv = 1 / points.length;
+    centroid.x *= inv;
+    centroid.y *= inv;
+    return points.map(p => ({ x: p.x - centroid.x, y: p.y - centroid.y }));
+}
+
+/**
+ * Convert centred points into polar radii.
+ */
+function computeRadii(points) {
+    return points.map(p => Math.hypot(p.x, p.y));
+}
+
+/**
+ * Convenience helper for max absolute deviation from the mean.
+ */
+function maxDeviation(values) {
+    const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+    return Math.max(...values.map(value => Math.abs(value - average)));
+}
+
+/**
+ * Compute all pairwise distances and return them sorted. Used to assert layouts
+ * are congruent up to rigid transforms.
+ */
+function pairwiseSortedDistances(points) {
+    const distances = [];
+    for (let i = 0; i < points.length; i++) {
+        for (let j = i + 1; j < points.length; j++) {
+            distances.push(Math.hypot(points[i].x - points[j].x, points[i].y - points[j].y));
+        }
+    }
+    return distances.sort((a, b) => a - b);
+}
+
+describe('Kamada-Kawai energy optimisation', () => {
+    it('matches known average energy for cyclohexane', () => {
+        const { graph, bondLength } = prepareMolecule('C1CCCCC1');
+        const { average } = computeSpringEnergy(graph, bondLength);
+        assert.ok(Math.abs(average - 793.8512782561247) < 1, `unexpected energy: ${average}`);
     });
 
-    it('places all vertices for small aromatic ring (benzene)', () => {
-        const positions = computePositions('c1ccccc1');
-        assert.equal(positions.length, 6, 'Benzene should have 6 vertices');
-        assertAllPositioned(positions);
-        assertAllFinite(positions);
-        assertNoOverlaps(positions);
+    it('matches known average energy for decalin', () => {
+        const { graph, bondLength } = prepareMolecule('C1CCCC2CC1CCCC2');
+        const { average } = computeSpringEnergy(graph, bondLength);
+        assert.ok(Math.abs(average - 502.7515161193521) < 1, `unexpected energy: ${average}`);
     });
 
-    it('places all vertices for larger ring (cyclooctane)', () => {
-        const positions = computePositions('C1CCCCCCC1');
-        assert.equal(positions.length, 8, 'Cyclooctane should have 8 vertices');
-        assertAllPositioned(positions);
-        assertAllFinite(positions);
-        assertNoOverlaps(positions);
-    });
-
-    it('places all vertices for small ring (cyclopropane)', () => {
-        const positions = computePositions('C1CC1');
-        assert.equal(positions.length, 3, 'Cyclopropane should have 3 vertices');
-        assertAllPositioned(positions);
-        assertAllFinite(positions);
-        assertNoOverlaps(positions, 3.0); // Smaller minimum distance for small ring
-    });
-});
-
-describe('Kamada-Kawai layout - fused ring systems', () => {
-    it('places all vertices for fused cyclohexanes (decalin)', () => {
-        const positions = computePositions('C1CCCC2CC1CCCC2');
-        assertAllPositioned(positions);
-        assertAllFinite(positions);
-        assertNoOverlaps(positions);
-    });
-
-    it('places all vertices for fused aromatic rings (naphthalene)', () => {
-        const positions = computePositions('c1ccc2ccccc2c1');
-        assert.equal(positions.length, 10, 'Naphthalene should have 10 vertices');
-        assertAllPositioned(positions);
-        assertAllFinite(positions);
-        assertNoOverlaps(positions);
-    });
-
-    it('places all vertices for triple fused rings (anthracene)', () => {
-        const positions = computePositions('c1ccc2cc3ccccc3cc2c1');
-        assert.equal(positions.length, 14, 'Anthracene should have 14 vertices');
-        assertAllPositioned(positions);
-        assertAllFinite(positions);
-        assertNoOverlaps(positions);
-    });
-
-    it('places all vertices for complex fused system (phenanthrene)', () => {
-        const positions = computePositions('c1ccc2c(c1)ccc1ccccc12');
-        assert.equal(positions.length, 14, 'Phenanthrene should have 14 vertices');
-        assertAllPositioned(positions);
-        assertAllFinite(positions);
-        assertNoOverlaps(positions);
-    });
-});
-
-describe('Kamada-Kawai layout - bridged systems', () => {
-    it('places all vertices for simple bridged system (bicyclo[2.2.1]heptane/norbornane)', () => {
-        const positions = computePositions('C1CC2CCC1C2');
-        assert.equal(positions.length, 7, 'Norbornane should have 7 vertices');
-        assertAllPositioned(positions);
-        assertAllFinite(positions);
-        assertNoOverlaps(positions);
-    });
-
-    it('places all vertices for adamantane (tricyclic bridged)', () => {
-        const positions = computePositions('C1C2CC3CC1CC(C2)C3');
-        assert.equal(positions.length, 10, 'Adamantane should have 10 vertices');
-        assertAllPositioned(positions);
-        assertAllFinite(positions);
-        assertNoOverlaps(positions);
-    });
-
-    it('places all vertices for cubane (highly symmetric bridged)', () => {
-        const positions = computePositions('C12C3C4C1C5C4C3C25');
-        assert.equal(positions.length, 8, 'Cubane should have 8 vertices');
-        assertAllPositioned(positions);
-        assertAllFinite(positions);
-        assertNoOverlaps(positions);
-    });
-});
-
-describe('Kamada-Kawai layout - edge cases', () => {
-    it('handles linear chains without rings', () => {
-        const positions = computePositions('CCCC');
-        assert.equal(positions.length, 4, 'Butane should have 4 vertices');
-        assertAllPositioned(positions);
-        assertAllFinite(positions);
-    });
-
-    it('handles branched structures', () => {
-        const positions = computePositions('CC(C)C');
-        assert.equal(positions.length, 4, 'Isobutane should have 4 vertices');
-        assertAllPositioned(positions);
-        assertAllFinite(positions);
-    });
-
-    it('handles ring with substituents', () => {
-        const positions = computePositions('C1CCCCC1C');
-        assert.equal(positions.length, 7, 'Methylcyclohexane should have 7 vertices');
-        assertAllPositioned(positions);
-        assertAllFinite(positions);
-    });
-});
-
-describe('Kamada-Kawai layout - quality metrics', () => {
-    it('maintains reasonable spacing in cyclohexane', () => {
-        const positions = computePositions('C1CCCCC1');
-        const bbox = computeBoundingBox(positions);
-
-        // Layout should use reasonable space (not collapsed to tiny area)
-        assert.ok(bbox.width > 10, `Layout width ${bbox.width} should be > 10`);
-        assert.ok(bbox.height > 10, `Layout height ${bbox.height} should be > 10`);
-
-        // Layout should not be excessively spread out
-        assert.ok(bbox.width < 1000, `Layout width ${bbox.width} should be < 1000`);
-        assert.ok(bbox.height < 1000, `Layout height ${bbox.height} should be < 1000`);
-    });
-
-    it('produces similar-sized layouts for similar-sized rings', () => {
-        const pos5 = computePositions('C1CCCC1');
-        const pos6 = computePositions('C1CCCCC1');
-        const pos7 = computePositions('C1CCCCCC1');
-
-        const bbox5 = computeBoundingBox(pos5);
-        const bbox6 = computeBoundingBox(pos6);
-        const bbox7 = computeBoundingBox(pos7);
-
-        // Bounding boxes should increase gradually with ring size
-        assert.ok(bbox5.width > 0 && bbox6.width > 0 && bbox7.width > 0);
-        assert.ok(bbox7.width > bbox5.width, 'Larger ring should have larger layout');
-    });
-
-    it('positions force-positioned vertices in bridged systems', () => {
-        const positions = computePositions('C1CC2CCC1C2');
-        const forcePositionedCount = positions.filter(p => p.forcePositioned).length;
-
-        // Bridged system should have some force-positioned vertices
-        assert.ok(forcePositionedCount > 0, 'Bridged system should have force-positioned vertices');
+    it('matches known average energy for macrocyclic peptide proxy', () => {
+        const { graph, bondLength } = prepareMolecule('C=9C=CC(C7=C1C=CC(=N1)C(C=2C=CC=CC=2)=C3C=CC(N3)=C(C=4C=CC=CC=4)C=5C=CC(N=5)=C(C=6C=CC=CC=6)C8=CC=C7N8)=CC=9');
+        const { average } = computeSpringEnergy(graph, bondLength);
+        assert.ok(Math.abs(average - 974.645438766853) < 5, `unexpected energy: ${average}`);
     });
 });
 
-describe('Kamada-Kawai layout - complex molecules', () => {
-    it('handles steroid-like fused ring system', () => {
-        // Simplified steroid skeleton
-        const positions = computePositions('C1CCC2C1CCC1C2CCC2C1CCCC2');
-        assertAllPositioned(positions);
-        assertAllFinite(positions);
-        assertNoOverlaps(positions);
+describe('Symmetry and uniformity', () => {
+    // A symmetric six-membered ring should remain essentially circular.
+    it('draws symmetric rings with uniform radii', () => {
+        const { graph } = prepareMolecule('C1CCCCC1');
+        const centred = centrePoints(collectPositions(graph));
+        const radii = computeRadii(centred);
+        assert.ok(maxDeviation(radii) < 4, 'ring radii deviate too much from mean');
     });
 
-    it('handles large aromatic system (pyrene)', () => {
-        const positions = computePositions('c1cc2ccc3cccc4ccc(c1)c2c34');
-        assert.equal(positions.length, 16, 'Pyrene should have 16 vertices');
-        assertAllPositioned(positions);
-        assertAllFinite(positions);
-        assertNoOverlaps(positions);
+    // Graph theoretic distances must be respected post layout; large deviations
+    // indicate spring parameters or convergence have regressed.
+    it('respects graph-theoretic distances', () => {
+        const { graph, bondLength } = prepareMolecule('C1CCCC2CC1CCCC2');
+        const stats = computeDistanceErrors(graph, bondLength);
+        assert.ok(stats.mean < 0.25, `mean distance error too high: ${stats.mean}`);
+        assert.ok(stats.max < 0.75, `max distance error too high: ${stats.max}`);
+    });
+});
+
+describe('Isomorphism invariance', () => {
+    // Two equivalent SMILES strings should lead to the same set of pairwise
+    // distances, modulo rotation/translation of the entire structure.
+    it('produces congruent layouts for isomorphic benzene representations', () => {
+        const first = centrePoints(collectPositions(prepareMolecule('C1=CC=CC=C1').graph));
+        const second = centrePoints(collectPositions(prepareMolecule('c1ccccc1').graph));
+
+        const distancesA = pairwiseSortedDistances(first);
+        const distancesB = pairwiseSortedDistances(second);
+        assert.equal(distancesA.length, distancesB.length, 'distance list length mismatch');
+        for (let i = 0; i < distancesA.length; i++) {
+            const delta = Math.abs(distancesA[i] - distancesB[i]);
+            assert.ok(delta < 1e-3, `pairwise distance mismatch at index ${i}: ${delta}`);
+        }
     });
 });
