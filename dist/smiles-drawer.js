@@ -4098,6 +4098,8 @@ module.exports = SmilesDrawer;
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
+
+const ArrayHelper = require("../utils/ArrayHelper");
 /**
  * Implements the Kamada-Kawai force-directed graph layout algorithm.
  * Used for positioning bridged ring systems.
@@ -4112,15 +4114,7 @@ class KamadaKawaiLayout {
   }
 
   layout(vertexIds, center, startVertexId, ring, bondLength, threshold, innerThreshold, maxIteration, maxInnerIteration, maxEnergy) {
-    let edgeStrength = bondLength; // Add vertices that are directly connected to the ring
-
-    var i = vertexIds.length;
-
-    while (i--) {
-      let vertex = this.graph.vertices[vertexIds[i]];
-      var j = vertex.neighbours.length;
-    }
-
+    let edgeStrength = bondLength;
     let matDist = this.graph.getSubgraphDistanceMatrix(vertexIds);
     let length = vertexIds.length; // Initialize the positions. Place all vertices on a ring around the center
 
@@ -4130,87 +4124,52 @@ class KamadaKawaiLayout {
     let arrPositionX = new Float32Array(length);
     let arrPositionY = new Float32Array(length);
     let arrPositioned = Array(length);
-    i = length;
-
-    while (i--) {
-      let vertex = this.graph.vertices[vertexIds[i]];
+    ArrayHelper.forEachReverse([vertexIds], (vertexId, idx) => {
+      const vertex = this.graph.vertices[vertexId];
 
       if (!vertex.positioned) {
-        arrPositionX[i] = center.x + Math.cos(a) * radius;
-        arrPositionY[i] = center.y + Math.sin(a) * radius;
+        arrPositionX[idx] = center.x + Math.cos(a) * radius;
+        arrPositionY[idx] = center.y + Math.sin(a) * radius;
       } else {
-        arrPositionX[i] = vertex.position.x;
-        arrPositionY[i] = vertex.position.y;
+        arrPositionX[idx] = vertex.position.x;
+        arrPositionY[idx] = vertex.position.y;
       }
 
-      arrPositioned[i] = vertex.positioned;
+      arrPositioned[idx] = vertex.positioned;
       a += angle;
-    } // Create the matrix containing the lengths
+    }); // Create the matrix containing the lengths
 
+    let matLength = matDist.map(row => row.map(value => bondLength * value)); // Create the matrix containing the spring strenghts
 
-    let matLength = Array(length);
-    i = length;
+    let matStrength = matDist.map(row => row.map(value => edgeStrength * Math.pow(value, -2.0))); // Create the matrix containing the energies
 
-    while (i--) {
-      matLength[i] = new Array(length);
-      var j = length;
-
-      while (j--) {
-        matLength[i][j] = bondLength * matDist[i][j];
-      }
-    } // Create the matrix containing the spring strenghts
-
-
-    let matStrength = Array(length);
-    i = length;
-
-    while (i--) {
-      matStrength[i] = Array(length);
-      var j = length;
-
-      while (j--) {
-        matStrength[i][j] = edgeStrength * Math.pow(matDist[i][j], -2.0);
-      }
-    } // Create the matrix containing the energies
-
-
-    let matEnergy = Array(length);
+    let matEnergy = Array.from({
+      length
+    }, () => Array(length));
     let arrEnergySumX = new Float32Array(length);
     let arrEnergySumY = new Float32Array(length);
-    i = length;
-
-    while (i--) {
-      matEnergy[i] = Array(length);
-    }
-
-    i = length;
     let ux, uy, dEx, dEy, vx, vy, denom;
-
-    while (i--) {
-      ux = arrPositionX[i];
-      uy = arrPositionY[i];
+    ArrayHelper.forEachIndexReverse(length, rowIdx => {
+      ux = arrPositionX[rowIdx];
+      uy = arrPositionY[rowIdx];
       dEx = 0.0;
       dEy = 0.0;
-      let j = length;
-
-      while (j--) {
-        if (i === j) {
-          continue;
+      ArrayHelper.forEachIndexReverse(length, colIdx => {
+        if (rowIdx === colIdx) {
+          return;
         }
 
-        vx = arrPositionX[j];
-        vy = arrPositionY[j];
+        vx = arrPositionX[colIdx];
+        vy = arrPositionY[colIdx];
         denom = 1.0 / Math.sqrt((ux - vx) * (ux - vx) + (uy - vy) * (uy - vy));
-        matEnergy[i][j] = [matStrength[i][j] * (ux - vx - matLength[i][j] * (ux - vx) * denom), matStrength[i][j] * (uy - vy - matLength[i][j] * (uy - vy) * denom)];
-        matEnergy[j][i] = matEnergy[i][j];
-        dEx += matEnergy[i][j][0];
-        dEy += matEnergy[i][j][1];
-      }
-
-      arrEnergySumX[i] = dEx;
-      arrEnergySumY[i] = dEy;
-    } // Utility functions, maybe inline them later
-
+        matEnergy[rowIdx][colIdx] = [matStrength[rowIdx][colIdx] * (ux - vx - matLength[rowIdx][colIdx] * (ux - vx) * denom), matStrength[rowIdx][colIdx] * (uy - vy - matLength[rowIdx][colIdx] * (uy - vy) * denom)];
+        matEnergy[colIdx][rowIdx] = matEnergy[rowIdx][colIdx];
+        dEx += matEnergy[rowIdx][colIdx][0];
+        dEy += matEnergy[rowIdx][colIdx][1];
+      });
+      arrEnergySumX[rowIdx] = dEx;
+      arrEnergySumY[rowIdx] = dEy;
+    }); // Utility functions, maybe inline them later
 
     let energy = function (index) {
       return [arrEnergySumX[index] * arrEnergySumX[index] + arrEnergySumY[index] * arrEnergySumY[index], arrEnergySumX[index], arrEnergySumY[index]];
@@ -4221,19 +4180,16 @@ class KamadaKawaiLayout {
       let maxEnergyId = 0;
       let maxDEX = 0.0;
       let maxDEY = 0.0;
-      i = length;
+      ArrayHelper.forEachIndexReverse(length, idx => {
+        let [delta, dEX, dEY] = energy(idx);
 
-      while (i--) {
-        let [delta, dEX, dEY] = energy(i);
-
-        if (delta > maxEnergy && arrPositioned[i] === false) {
+        if (delta > maxEnergy && arrPositioned[idx] === false) {
           maxEnergy = delta;
-          maxEnergyId = i;
+          maxEnergyId = idx;
           maxDEX = dEX;
           maxDEY = dEY;
         }
-      }
-
+      });
       return [maxEnergyId, maxEnergy, maxDEX, maxDEY];
     };
 
@@ -4245,24 +4201,21 @@ class KamadaKawaiLayout {
       let uy = arrPositionY[index];
       let arrL = matLength[index];
       let arrK = matStrength[index];
-      i = length;
-
-      while (i--) {
-        if (i === index) {
-          continue;
+      ArrayHelper.forEachIndexReverse(length, idx => {
+        if (idx === index) {
+          return;
         }
 
-        let vx = arrPositionX[i];
-        let vy = arrPositionY[i];
-        let l = arrL[i];
-        let k = arrK[i];
+        let vx = arrPositionX[idx];
+        let vy = arrPositionY[idx];
+        let l = arrL[idx];
+        let k = arrK[idx];
         let m = (ux - vx) * (ux - vx);
         let denom = 1.0 / Math.pow(m + (uy - vy) * (uy - vy), 1.5);
         dxx += k * (1 - l * (uy - vy) * (uy - vy) * denom);
         dyy += k * (1 - l * m * denom);
         dxy += k * (l * (ux - vx) * (uy - vy) * denom);
-      } // Prevent division by zero
-
+      }); // Prevent division by zero
 
       if (dxx === 0) {
         dxx = 0.1;
@@ -4288,29 +4241,25 @@ class KamadaKawaiLayout {
       dEY = 0.0;
       ux = arrPositionX[index];
       uy = arrPositionY[index];
-      let vx, vy, prevEx, prevEy, denom;
-      i = length;
-
-      while (i--) {
-        if (index === i) {
-          continue;
+      ArrayHelper.forEachIndexReverse(length, idx => {
+        if (index === idx) {
+          return;
         }
 
-        vx = arrPositionX[i];
-        vy = arrPositionY[i]; // Store old energies
+        const vx = arrPositionX[idx];
+        const vy = arrPositionY[idx]; // Store old energies
 
-        prevEx = arrE[i][0];
-        prevEy = arrE[i][1];
-        denom = 1.0 / Math.sqrt((ux - vx) * (ux - vx) + (uy - vy) * (uy - vy));
-        dx = arrK[i] * (ux - vx - arrL[i] * (ux - vx) * denom);
-        dy = arrK[i] * (uy - vy - arrL[i] * (uy - vy) * denom);
-        arrE[i] = [dx, dy];
-        dEX += dx;
-        dEY += dy;
-        arrEnergySumX[i] += dx - prevEx;
-        arrEnergySumY[i] += dy - prevEy;
-      }
-
+        const prevEx = arrE[idx][0];
+        const prevEy = arrE[idx][1];
+        const denom = 1.0 / Math.sqrt((ux - vx) * (ux - vx) + (uy - vy) * (uy - vy));
+        const dxLocal = arrK[idx] * (ux - vx - arrL[idx] * (ux - vx) * denom);
+        const dyLocal = arrK[idx] * (uy - vy - arrL[idx] * (uy - vy) * denom);
+        arrE[idx] = [dxLocal, dyLocal];
+        dEX += dxLocal;
+        dEY += dyLocal;
+        arrEnergySumX[idx] += dxLocal - prevEx;
+        arrEnergySumY[idx] += dyLocal - prevEy;
+      });
       arrEnergySumX[index] = dEX;
       arrEnergySumY[index] = dEY;
     }; // Setting up variables for the while loops
@@ -4336,23 +4285,20 @@ class KamadaKawaiLayout {
       }
     }
 
-    i = length;
-
-    while (i--) {
-      let index = vertexIds[i];
-      let vertex = this.graph.vertices[index];
-      vertex.position.x = arrPositionX[i];
-      vertex.position.y = arrPositionY[i];
+    ArrayHelper.forEachReverse([vertexIds], (vertexId, idx) => {
+      let vertex = this.graph.vertices[vertexId];
+      vertex.position.x = arrPositionX[idx];
+      vertex.position.y = arrPositionY[idx];
       vertex.positioned = true;
       vertex.forcePositioned = true;
-    }
+    });
   }
 
 }
 
 module.exports = KamadaKawaiLayout;
 
-},{"../utils/MathHelper":52}],5:[function(require,module,exports){
+},{"../utils/ArrayHelper":50,"../utils/MathHelper":52}],5:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -4380,39 +4326,18 @@ class SSSR {
     for (var i = 0; i < connectedComponents.length; i++) {
       let connectedComponent = connectedComponents[i];
       let ccAdjacencyMatrix = graph.getSubgraphAdjacencyMatrix([...connectedComponent]);
-      let arrBondCount = new Uint16Array(ccAdjacencyMatrix.length);
       let arrRingCount = new Uint16Array(ccAdjacencyMatrix.length);
+      let arrBondCount = Uint16Array.from({
+        length: ccAdjacencyMatrix.length
+      }, (_, rowIdx) => ccAdjacencyMatrix[rowIdx].reduce((sum, value) => sum + value, 0)); // Get the edge number and the theoretical number of rings in SSSR
 
-      for (var j = 0; j < ccAdjacencyMatrix.length; j++) {
-        arrRingCount[j] = 0;
-        arrBondCount[j] = 0;
-
-        for (var k = 0; k < ccAdjacencyMatrix[j].length; k++) {
-          arrBondCount[j] += ccAdjacencyMatrix[j][k];
-        }
-      } // Get the edge number and the theoretical number of rings in SSSR
-
-
-      let nEdges = 0;
-
-      for (var j = 0; j < ccAdjacencyMatrix.length; j++) {
-        for (var k = j + 1; k < ccAdjacencyMatrix.length; k++) {
-          nEdges += ccAdjacencyMatrix[j][k];
-        }
-      }
-
+      let nEdges = ccAdjacencyMatrix.reduce((sum, row, rowIndex) => sum + row.slice(rowIndex + 1).reduce((rowSum, value) => rowSum + value, 0), 0);
       let nSssr = nEdges - ccAdjacencyMatrix.length + 1; // console.log(nEdges, ccAdjacencyMatrix.length, nSssr);
       // console.log(SSSR.getEdgeList(ccAdjacencyMatrix));
       // console.log(ccAdjacencyMatrix);
       // If all vertices have 3 incident edges, calculate with different formula (see Euler)
 
-      let allThree = true;
-
-      for (var j = 0; j < arrBondCount.length; j++) {
-        if (arrBondCount[j] !== 3) {
-          allThree = false;
-        }
-      }
+      let allThree = arrBondCount.every(bondCount => bondCount === 3);
 
       if (allThree) {
         nSssr = 2.0 + nEdges - ccAdjacencyMatrix.length;
@@ -4719,7 +4644,7 @@ class SSSR {
             allBonds = allBonds.concat(bonds);
           }
 
-          if (cSssr.length > nsssr) {
+          if (cSssr.length >= nsssr) {
             return cSssr;
           }
         }
@@ -4740,7 +4665,7 @@ class SSSR {
             allBonds = allBonds.concat(bonds);
           }
 
-          if (cSssr.length > nsssr) {
+          if (cSssr.length >= nsssr) {
             return cSssr;
           }
         }
@@ -17119,9 +17044,6 @@ module.exports = ReactionDrawer;
 
 },{"../config/Options":7,"../config/ThemeManager":9,"../drawing/SvgDrawer":14,"../drawing/helpers/SvgTextHelper":23,"../drawing/helpers/SvgUnicodeHelper":24,"../utils/FormulaToCommonName":51}],50:[function(require,module,exports){
 "use strict";
-/**
- * A static class containing helper functions for array-related tasks.
- */
 
 class ArrayHelper {
   /**
@@ -17514,6 +17436,70 @@ class ArrayHelper {
     }
 
     return newArr;
+  }
+  /**
+   * Iterate indices from 0 to length - 1, invoking the callback with the current index.
+   */
+
+
+  static forEachIndex(length, callback) {
+    for (let i = 0; i < length; i++) {
+      callback(i);
+    }
+  }
+  /**
+   * Iterate indices from length - 1 to 0, invoking the callback with the current index.
+   */
+
+
+  static forEachIndexReverse(length, callback) {
+    for (let i = length - 1; i >= 0; i--) {
+      callback(i);
+    }
+  }
+  /**
+   * Iterate all arrays in lockstep in forward direction, invoking the callback with the current elements.
+   *
+   * @static
+   * @param arrays Heterogeneous arrays to traverse.
+   * @param callback Receives the element from each array at the current index.
+   */
+
+
+  static forEach(arrays, callback) {
+    if (arrays.length === 0) {
+      return;
+    }
+
+    const length = arrays[0].length;
+
+    for (let i = 0; i < length; i++) {
+      const items = arrays.map(arr => arr[i]);
+      const args = [...items, i];
+      callback(...args);
+    }
+  }
+  /**
+   * Iterate all arrays in lockstep in reverse direction, invoking the callback with the current elements.
+   *
+   * @static
+   * @param arrays Heterogeneous arrays to traverse.
+   * @param callback Receives the element from each array at the current index.
+   */
+
+
+  static forEachReverse(arrays, callback) {
+    if (arrays.length === 0) {
+      return;
+    }
+
+    const length = arrays[0].length;
+
+    for (let i = length - 1; i >= 0; i--) {
+      const items = arrays.map(arr => arr[i]);
+      const args = [...items, i];
+      callback(...args);
+    }
   }
 
 }
