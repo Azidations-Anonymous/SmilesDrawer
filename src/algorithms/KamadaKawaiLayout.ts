@@ -155,23 +155,23 @@ class KamadaKawaiLayout {
         // The optimisation always targets the node that is currently "unhappiest", i.e. subject
         // to the largest displacement forces.
         const findHighestEnergy = (): { index: number; energy: VertexEnergy } => {
-          let maxEnergyMagnitude = 0.0;
-          let maxEnergyIndex = 0;
-          let maxEnergy: VertexEnergy = { magnitude: 0.0, gradient: zeroForce() };
+          let bestIndex = 0;
+          let bestEnergy: VertexEnergy = { magnitude: 0.0, gradient: zeroForce() };
+          let foundCandidate = false;
 
-          ArrayHelper.forEachIndexReverse(length, (idx) => {
-            const currentEnergy = computeVertexEnergy(idx);
-
-            if (currentEnergy.magnitude > maxEnergyMagnitude && arrPositioned[idx] === false) {
-              // Once a vertex has been marked as "positioned" we skip it so that pre-existing anchors
-              // such as previously drawn rings remain stable.
-              maxEnergyMagnitude = currentEnergy.magnitude;
-              maxEnergyIndex = idx;
-              maxEnergy = currentEnergy;
+          for (let idx = 0; idx < length; idx++) {
+            if (arrPositioned[idx]) {
+              continue;
             }
-          });
+            const currentEnergy = computeVertexEnergy(idx);
+            if (!foundCandidate || currentEnergy.magnitude > bestEnergy.magnitude) {
+              bestIndex = idx;
+              bestEnergy = currentEnergy;
+              foundCandidate = true;
+            }
+          }
 
-          return { index: maxEnergyIndex, energy: maxEnergy };
+          return { index: bestIndex, energy: bestEnergy };
         };
 
         // Performs a two-dimensional Newton-Raphson update for a single vertex (Section 3.2).
