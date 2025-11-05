@@ -4191,25 +4191,38 @@ class KamadaKawaiLayout {
     // Spring stiffness constant (K in the paper). In the molecular drawing context one unit of
     // length already corresponds to an ideal bond length, so reusing bondLength keeps distances
     // and strengths in the same scale.
-    let edgeStrength = bondLength; // Pair-wise shortest path distances between all vertices in the sub graph (d_ij in the paper).
+    const edgeStrength = bondLength; // Pair-wise shortest path distances between all vertices in the sub graph (d_ij in the paper).
     // These graph distances are the input that drives how far apart the nodes should sit in 2D.
 
-    let matDist = this.graph.getSubgraphDistanceMatrix(vertexIds);
-    let length = vertexIds.length; // --- Initial placement -------------------------------------------------------------
+    const matDist = this.graph.getSubgraphDistanceMatrix(vertexIds);
+    const length = vertexIds.length;
+
+    const zeroForce = () => ({
+      x: 0,
+      y: 0
+    });
+
+    const addForces = (a, b) => ({
+      x: a.x + b.x,
+      y: a.y + b.y
+    });
+
+    const energyMagnitude = force => force.x * force.x + force.y * force.y; // --- Initial placement -------------------------------------------------------------
     //
     // Before the optimisation starts we need a concrete 2D position for every vertex.
     // Following Section 3.3 of the paper, we distribute the nodes evenly on the
     // circumference of a large circle centred on the requested drawing centre.
     // This avoids the algorithm getting stuck in a degenerate layout (e.g. everything on a line).
 
-    let radius = MathHelper.polyCircumradius(500, length);
-    let angle = MathHelper.centralAngle(length);
+
+    const radius = MathHelper.polyCircumradius(500, length);
+    const angle = MathHelper.centralAngle(length);
     let a = 0.0;
-    let arrPositionX = new Float32Array(length);
-    let arrPositionY = new Float32Array(length); // Tracks whether the caller already anchored a vertex. Anchored vertices provide better
+    const arrPositionX = new Float32Array(length);
+    const arrPositionY = new Float32Array(length); // Tracks whether the caller already anchored a vertex. Anchored vertices provide better
     // continuity with the rest of the molecule (bridged rings are often partially positioned already).
 
-    let arrPositioned = Array(length);
+    const arrPositioned = Array(length);
     ArrayHelper.forEachReverse([vertexIds], (vertexId, idx) => {
       // ArrayHelper.forEachReverse expects an array of arrays, hence the [vertexIds] wrapper.
       // The helper simply walks the list in reverse order, giving us one vertex id per call.
@@ -4232,20 +4245,20 @@ class KamadaKawaiLayout {
     // Each graph-theoretical distance gets translated into how far the points should sit apart
     // in the final drawing. If d_ij == 1 we end up with the base bond length.
 
-    let matLength = matDist.map(row => row.map(value => bondLength * value)); // Equation (4): spring strength k_ij = K / d_ij^2. We use bondLength as K because the
+    const matLength = matDist.map(row => row.map(value => bondLength * value)); // Equation (4): spring strength k_ij = K / d_ij^2. We use bondLength as K because the
     // molecular input is already scaled to bond lengths in the drawing space.
 
-    let matStrength = matDist.map(row => row.map(value => edgeStrength * Math.pow(value, -2.0))); // Stores the first-order partial derivatives dE/dx and dE/dy for each pair. These values
+    const matStrength = matDist.map(row => row.map(value => edgeStrength * Math.pow(value, -2.0))); // Stores the first-order partial derivatives dE/dx and dE/dy for each pair. These values
     // are repeatedly reused and updated after each Newton step (see Section 3.2).
 
-    let matEnergy = Array.from({
+    const matEnergy = Array.from({
       length
-    }, () => Array(length)); // Keep track of the net force components acting on each vertex. When both values are close
+    }, () => new Array(length)); // Keep track of the net force components acting on each vertex. When both values are close
     // to zero the vertex is considered to be in equilibrium.
 
-    let arrEnergySumX = new Float32Array(length);
-    let arrEnergySumY = new Float32Array(length);
-    let ux, uy, dEx, dEy, vx, vy, denom; // Populate the initial energy/force contributions for all vertex pairs. Conceptually each
+    const arrEnergySumX = new Float32Array(length);
+    const arrEnergySumY = new Float32Array(length);
+    let ux, uy, dEx, dEy; // Populate the initial energy/force contributions for all vertex pairs. Conceptually each
     // pair of vertices is connected by a spring that wants to sit at length l_ij. The values
     // stored in matEnergy correspond to the net x/y force the spring exerts on vertex i.
 
@@ -4259,16 +4272,20 @@ class KamadaKawaiLayout {
           return;
         }
 
-        vx = arrPositionX[colIdx];
-        vy = arrPositionY[colIdx]; // denom = 1 / |u - v| converts Cartesian coordinates into unit direction vectors.
+        const vx = arrPositionX[colIdx];
+        const vy = arrPositionY[colIdx]; // denom = 1 / |u - v| converts Cartesian coordinates into unit direction vectors.
         // The value recurs throughout the derivatives, so we compute it once here.
 
-        denom = 1.0 / Math.sqrt((ux - vx) * (ux - vx) + (uy - vy) * (uy - vy));
-        matEnergy[rowIdx][colIdx] = [matStrength[rowIdx][colIdx] * (ux - vx - matLength[rowIdx][colIdx] * (ux - vx) * denom), matStrength[rowIdx][colIdx] * (uy - vy - matLength[rowIdx][colIdx] * (uy - vy) * denom)]; // The energy contribution is symmetric: the force that i exerts on j equals the opposite force j exerts on i.
+        const denom = 1.0 / Math.sqrt((ux - vx) * (ux - vx) + (uy - vy) * (uy - vy));
+        const force = {
+          x: matStrength[rowIdx][colIdx] * (ux - vx - matLength[rowIdx][colIdx] * (ux - vx) * denom),
+          y: matStrength[rowIdx][colIdx] * (uy - vy - matLength[rowIdx][colIdx] * (uy - vy) * denom)
+        };
+        matEnergy[rowIdx][colIdx] = force; // The energy contribution is symmetric: the force that i exerts on j equals the opposite force j exerts on i.
 
-        matEnergy[colIdx][rowIdx] = matEnergy[rowIdx][colIdx];
-        dEx += matEnergy[rowIdx][colIdx][0];
-        dEy += matEnergy[rowIdx][colIdx][1];
+        matEnergy[colIdx][rowIdx] = force;
+        dEx += force.x;
+        dEy += force.y;
       }); // Store the net force components for vertex rowIdx. These values are re-used when the
       // algorithm decides which vertex to optimise next.
 
@@ -4276,14 +4293,14 @@ class KamadaKawaiLayout {
       arrEnergySumY[rowIdx] = dEy;
     }); // Returns both gradient components and the squared gradient magnitude ||Δ_m||^2.
 
-    let energy = function (index) {
+    const energy = index => {
       return [arrEnergySumX[index] * arrEnergySumX[index] + arrEnergySumY[index] * arrEnergySumY[index], arrEnergySumX[index], arrEnergySumY[index]];
     }; // Identifies the vertex with the highest residual energy (see equation (9) in the paper).
     // The optimisation always targets the node that is currently "unhappiest", i.e. subject
     // to the largest displacement forces.
 
 
-    let highestEnergy = function () {
+    const highestEnergy = () => {
       let maxEnergy = 0.0;
       let maxEnergyId = 0;
       let maxDEX = 0.0;
@@ -4306,14 +4323,14 @@ class KamadaKawaiLayout {
     // position update we refresh the cached energy contributions to keep the global sums valid.
 
 
-    let update = function (index, dEX, dEY) {
+    const update = function (index, dEX, dEY) {
       let dxx = 0.0;
       let dyy = 0.0;
       let dxy = 0.0;
       let ux = arrPositionX[index];
       let uy = arrPositionY[index];
-      let arrL = matLength[index];
-      let arrK = matStrength[index]; // Compute the Hessian entries around vertex m (Kamada-Kawai eq. 15). Each neighbouring vertex
+      const arrL = matLength[index];
+      const arrK = matStrength[index]; // Compute the Hessian entries around vertex m (Kamada-Kawai eq. 15). Each neighbouring vertex
       // contributes to the second derivatives d²E/dx², d²E/dy² and d²E/dxdy used by the Newton update.
 
       ArrayHelper.forEachIndexReverse(length, idx => {
@@ -4321,12 +4338,12 @@ class KamadaKawaiLayout {
           return;
         }
 
-        let vx = arrPositionX[idx];
-        let vy = arrPositionY[idx];
-        let l = arrL[idx];
-        let k = arrK[idx];
-        let m = (ux - vx) * (ux - vx);
-        let denom = 1.0 / Math.pow(m + (uy - vy) * (uy - vy), 1.5);
+        const vx = arrPositionX[idx];
+        const vy = arrPositionY[idx];
+        const l = arrL[idx];
+        const k = arrK[idx];
+        const m = (ux - vx) * (ux - vx);
+        const denom = 1.0 / Math.pow(m + (uy - vy) * (uy - vy), 1.5);
         dxx += k * (1 - l * (uy - vy) * (uy - vy) * denom);
         dyy += k * (1 - l * m * denom);
         dxy += k * (l * (ux - vx) * (uy - vy) * denom);
@@ -4355,7 +4372,7 @@ class KamadaKawaiLayout {
       arrPositionX[index] += dx;
       arrPositionY[index] += dy; // Update the energies
 
-      let arrE = matEnergy[index];
+      const arrE = matEnergy[index];
       dEX = 0.0;
       dEY = 0.0;
       ux = arrPositionX[index];
@@ -4368,12 +4385,15 @@ class KamadaKawaiLayout {
         const vx = arrPositionX[idx];
         const vy = arrPositionY[idx]; // Store old energies
 
-        const prevEx = arrE[idx][0];
-        const prevEy = arrE[idx][1];
+        const prevEx = arrE[idx].x;
+        const prevEy = arrE[idx].y;
         const denom = 1.0 / Math.sqrt((ux - vx) * (ux - vx) + (uy - vy) * (uy - vy));
         const dxLocal = arrK[idx] * (ux - vx - arrL[idx] * (ux - vx) * denom);
         const dyLocal = arrK[idx] * (uy - vy - arrL[idx] * (uy - vy) * denom);
-        arrE[idx] = [dxLocal, dyLocal];
+        arrE[idx] = {
+          x: dxLocal,
+          y: dyLocal
+        };
         dEX += dxLocal;
         dEY += dyLocal; // Adjust the global force sums by the delta between old and new partial derivatives.
 
