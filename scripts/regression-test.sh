@@ -43,10 +43,16 @@ if [ "${BASELINE_COMMIT}" = "HEAD" ]; then
         if [ "$BISECT_MODE" = "NO" ]; then
             echo "Working directory is clean - comparing against previous commit (HEAD^)"
         fi
-    else
-        # Working directory has changes - compare against current commit
+    elif [ -n "$(git diff HEAD src/)" ]; then
+        # Working directory has changes in src/ - compare against current commit
         if [ "$BISECT_MODE" = "NO" ]; then
-            echo "Working directory has uncommitted changes - comparing against HEAD"
+            echo "Working directory has uncommitted changes in src/ - comparing against HEAD"
+        fi
+    else
+        # Working directory has changes, but not in src/ - compare against previous commit
+        BASELINE_COMMIT="HEAD^"
+        if [ "$BISECT_MODE" = "NO" ]; then
+            echo "Working directory has uncommitted changes (not in src/) - comparing against previous commit (HEAD^)"
         fi
     fi
 fi
