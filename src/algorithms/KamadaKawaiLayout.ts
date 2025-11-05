@@ -62,21 +62,18 @@ class KamadaKawaiLayout {
         // This avoids the algorithm getting stuck in a degenerate layout (e.g. everything on a line).
         const radius = MathHelper.polyCircumradius(500, length);
         const angle = MathHelper.centralAngle(length);
-        let a = 0.0;
         const arrPositionX = new Float32Array(length);
         const arrPositionY = new Float32Array(length);
         // Tracks whether the caller already anchored a vertex. Anchored vertices provide better
         // continuity with the rest of the molecule (bridged rings are often partially positioned already).
         const arrPositioned = Array(length);
 
-        ArrayHelper.forEachReverse([vertexIds], (vertexId, idx) => {
-          // ArrayHelper.forEachReverse expects an array of arrays, hence the [vertexIds] wrapper.
-          // The helper simply walks the list in reverse order, giving us one vertex id per call.
+        const placeVertex = (currentAngle: number, vertexId: number, idx: number): number => {
           const vertex = this.graph.vertices[vertexId];
           if (!vertex.positioned) {
             // Vertex has no previous coordinates: place it on the current angle on the circle.
-            arrPositionX[idx] = center.x + Math.cos(a) * radius;
-            arrPositionY[idx] = center.y + Math.sin(a) * radius;
+            arrPositionX[idx] = center.x + Math.cos(currentAngle) * radius;
+            arrPositionY[idx] = center.y + Math.sin(currentAngle) * radius;
           } else {
             // A coordinate already exists (e.g. due to earlier layout passes). Reuse it so the
             // optimiser nudges from an informed starting point rather than overwriting it.
@@ -84,8 +81,9 @@ class KamadaKawaiLayout {
             arrPositionY[idx] = vertex.position.y;
           }
           arrPositioned[idx] = vertex.positioned;
-          a += angle;
-        });
+          return currentAngle + angle;
+        };
+        vertexIds.reduceRight(placeVertex, 0.0);
 
         // Equivalent of equation (2) in the paper: desired Euclidean distance l_ij = L * d_ij.
         // Each graph-theoretical distance gets translated into how far the points should sit apart
