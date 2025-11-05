@@ -43,6 +43,9 @@ class KamadaKawaiLayout {
         // These graph distances are the input that drives how far apart the nodes should sit in 2D.
         const matDist = this.graph.getSubgraphDistanceMatrix(vertexIds);
         const length = vertexIds.length;
+        if (length === 0) {
+          return;
+        }
 
         type VertexState = { id: number; anchored: boolean; x: number; y: number };
         type ForceVector = { x: number; y: number };
@@ -111,19 +114,20 @@ class KamadaKawaiLayout {
         // pair of vertices is connected by a spring that wants to sit at length l_ij. The values
         // stored in matEnergy correspond to the net x/y force the spring exerts on vertex i.
         const calculatePairForce = (
-          sourceIndex: number,
-          targetIndex: number,
-          positionsX: Float32Array,
-          positionsY: Float32Array,
-          strengths: number[][],
-          desiredLengths: number[][]
+          sourceX: number,
+          sourceY: number,
+          targetX: number,
+          targetY: number,
+          strength: number,
+          desiredLength: number,
+          isSameVertex: boolean
         ): ForceVector => {
-          if (sourceIndex === targetIndex) {
+          if (isSameVertex || strength === 0) {
             return zeroForce();
           }
 
-          const dx = positionsX[sourceIndex] - positionsX[targetIndex];
-          const dy = positionsY[sourceIndex] - positionsY[targetIndex];
+          const dx = sourceX - targetX;
+          const dy = sourceY - targetY;
           const distanceSquared = dx * dx + dy * dy;
 
           if (distanceSquared === 0) {
@@ -131,8 +135,6 @@ class KamadaKawaiLayout {
           }
 
           const invDistance = 1.0 / Math.sqrt(distanceSquared);
-          const desiredLength = desiredLengths[sourceIndex][targetIndex];
-          const strength = strengths[sourceIndex][targetIndex];
 
           return {
             x: strength * (dx - desiredLength * dx * invDistance),
@@ -143,12 +145,23 @@ class KamadaKawaiLayout {
         const initializeEnergyRow = (rowIdx: number): void => {
           const sourceX = arrPositionX[rowIdx];
           const sourceY = arrPositionY[rowIdx];
+          const strengthsRow = matStrength[rowIdx];
+          const desiredLengthsRow = matLength[rowIdx];
+          const energyRow = matEnergy[rowIdx];
           let rowGradientX = 0.0;
           let rowGradientY = 0.0;
 
           for (let colIdx = length - 1; colIdx >= 0; colIdx--) {
-            const force = calculatePairForce(rowIdx, colIdx, arrPositionX, arrPositionY, matStrength, matLength);
-            matEnergy[rowIdx][colIdx] = force;
+            const force = calculatePairForce(
+              sourceX,
+              sourceY,
+              arrPositionX[colIdx],
+              arrPositionY[colIdx],
+              strengthsRow[colIdx],
+              desiredLengthsRow[colIdx],
+              rowIdx === colIdx
+            );
+            energyRow[colIdx] = force;
             matEnergy[colIdx][rowIdx] = force;
             rowGradientX += force.x;
             rowGradientY += force.y;
