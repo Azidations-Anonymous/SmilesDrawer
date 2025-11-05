@@ -16677,7 +16677,7 @@ class StereochemistryManager {
         wedgeB = 'down';
       }
 
-      if (vertex.value.hasHydrogen) {
+      if (vertex.value.hasHydrogen && this.drawer.opts.explicitHydrogens) {
         this.drawer.graph.getEdge(vertex.id, neighbours[order[order.length - 1]]).wedge = wedgeA;
       } // Get the shortest subtree to flip up / down. Ignore lowest priority
       // The rules are following:
@@ -16688,7 +16688,7 @@ class StereochemistryManager {
 
 
       let wedgeOrder = new Array(neighbours.length - 1);
-      let showHydrogen = vertex.value.rings.length > 1 && vertex.value.hasHydrogen;
+      let showHydrogen = vertex.value.rings.length > 1 && vertex.value.hasHydrogen && this.drawer.opts.explicitHydrogens;
       let offset = vertex.value.hasHydrogen ? 1 : 0;
 
       for (var j = 0; j < order.length - offset; j++) {
