@@ -344,7 +344,9 @@ class KamadaKawaiLayout {
 
         // Outer loop mirrors the stopping criterion in Section 3.2: iterate until the residual energy
         // (initially supplied via the maxEnergy parameter) drops below threshold or we hit the iteration cap.
-        for (let iteration = 0; maxEnergy > threshold && iteration < maxIteration; iteration++) {
+        const layoutConverged = (): boolean => maxEnergy <= threshold;
+
+        for (let iteration = 0; !layoutConverged() && iteration < maxIteration; iteration++) {
           maxEnergy = iterateLayoutOnce();
         }
 
