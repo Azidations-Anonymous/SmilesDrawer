@@ -347,13 +347,17 @@ class KamadaKawaiLayout {
           return energyBeforeRelaxation;
         };
 
+        const iterateLayout = (maxIterationCount: number): void => {
+          for (let iteration = 0; !layoutConverged() && iteration < maxIterationCount; iteration++) {
+            maxEnergy = iterateLayoutOnce();
+          }
+        };
+
         // Outer loop mirrors the stopping criterion in Section 3.2: iterate until the residual energy
         // (initially supplied via the maxEnergy parameter) drops below threshold or we hit the iteration cap.
         const layoutConverged = (): boolean => maxEnergy <= threshold;
 
-        for (let iteration = 0; !layoutConverged() && iteration < maxIteration; iteration++) {
-          maxEnergy = iterateLayoutOnce();
-        }
+        iterateLayout(maxIteration);
 
         const transferOptimisedPositions = (): void => {
           vertexIds.forEach((vertexId, idx) => {
