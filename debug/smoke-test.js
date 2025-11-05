@@ -2,7 +2,7 @@
 
 /**
  * @file Smoke test runner for SmilesDrawer
- * @module test/smoke-test
+ * @module debug/smoke-test
  * @description
  * Generates SVG and JSON position data for SMILES strings without comparison.
  * Useful for quick sanity checks, debugging, and generating reference outputs.
@@ -25,10 +25,10 @@
  * npm run test:smoke "C1CCCCC1"             # Single SMILES string
  *
  * @example
- * node test/smoke-test.js
- * node test/smoke-test.js -dataset chembl
- * node test/smoke-test.js -all
- * node test/smoke-test.js "C1=CC=CC=C1"
+ * node debug/smoke-test.js
+ * node debug/smoke-test.js -dataset chembl
+ * node debug/smoke-test.js -all
+ * node debug/smoke-test.js "C1=CC=CC=C1"
  */
 
 const { spawnSync } = require('child_process');
@@ -285,8 +285,8 @@ if (providedArg && !hasDatasetFlag && !allMode) {
         // Generate SVG
         const tempSvgFile = path.join(outputDir, 'temp-1.svg');
         const svgStartTime = performance.now();
-        const svgResult = spawnSync('node', ['generate-svg.js', smiles, tempSvgFile], {
-            cwd: __dirname,
+        const svgResult = spawnSync('node', ['test/generate-svg.js', smiles, tempSvgFile], {
+            cwd: path.join(__dirname, '..'),
             encoding: 'utf8'
         });
         const svgEndTime = performance.now();
@@ -309,8 +309,8 @@ if (providedArg && !hasDatasetFlag && !allMode) {
         // Generate JSON
         const tempJsonFile = path.join(outputDir, 'temp-1.json');
         const jsonStartTime = performance.now();
-        const jsonResult = spawnSync('node', ['generate-json.js', smiles, tempJsonFile], {
-            cwd: __dirname,
+        const jsonResult = spawnSync('node', ['test/generate-json.js', smiles, tempJsonFile], {
+            cwd: path.join(__dirname, '..'),
             encoding: 'utf8'
         });
         const jsonEndTime = performance.now();
@@ -578,7 +578,7 @@ for (const dataset of datasets) {
     console.log('TESTING DATASET: ' + dataset.name);
     console.log('='.repeat(80));
 
-    const datasetPath = path.join(__dirname, dataset.file);
+    const datasetPath = path.join(__dirname, '..', 'test', dataset.file);
     if (!fs.existsSync(datasetPath)) {
         console.error('ERROR: Dataset file not found: ' + datasetPath);
         totalErrors++;
@@ -602,8 +602,8 @@ for (const dataset of datasets) {
             const tempSvgFile = path.join(outputDir, `temp-${outputNum}.svg`);
 
             const svgStartTime = performance.now();
-            const svgResult = spawnSync('node', ['generate-svg.js', smiles, tempSvgFile], {
-                cwd: __dirname,
+            const svgResult = spawnSync('node', ['test/generate-svg.js', smiles, tempSvgFile], {
+                cwd: path.join(__dirname, '..'),
                 encoding: 'utf8'
             });
             const svgEndTime = performance.now();
@@ -645,8 +645,8 @@ for (const dataset of datasets) {
             const tempJsonFile = path.join(outputDir, `temp-${outputNum}.json`);
 
             const jsonStartTime = performance.now();
-            const jsonResult = spawnSync('node', ['generate-json.js', smiles, tempJsonFile], {
-                cwd: __dirname,
+            const jsonResult = spawnSync('node', ['test/generate-json.js', smiles, tempJsonFile], {
+                cwd: path.join(__dirname, '..'),
                 encoding: 'utf8'
             });
             const jsonEndTime = performance.now();

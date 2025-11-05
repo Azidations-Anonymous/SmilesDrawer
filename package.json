@@ -9,7 +9,7 @@
   "private": false,
   "scripts": {
     "test:regression": "./scripts/regression-test.sh",
-    "test:smoke": "node test/smoke-test.js",
+    "test:smoke": "node debug/smoke-test.js",
     "test:sssr": "node test/sssr.js",
     "test:array-helper": "node test/array-helper.js",
     "test:layout": "node test/layout.js",
