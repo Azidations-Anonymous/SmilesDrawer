@@ -10,13 +10,13 @@
  * ## Features
  * - Generates SVG and JSON for current codebase
  * - Supports single SMILES string or multiple datasets (fastregression, chembl, etc.)
- * - Saves outputs to smoketest/ directory
+ * - Saves outputs to timestamped directories
  * - No baseline comparison (faster than regression tests)
  *
  * ## Output
- * - smoketest/[N].html - HTML report with SVG rendering
- * - smoketest/[N].json - JSON position data
- * - smoketest/[N].png - PNG image of the molecule
+ * - debug/output/smoke/[timestamp]/[N].html - HTML report with SVG rendering
+ * - debug/output/smoke/[timestamp]/[N].json - JSON position data
+ * - debug/output/smoke/[timestamp]/[N].png - PNG image of the molecule
  *
  * ## Usage
  * npm run test:smoke                        # Uses fastregression dataset
@@ -36,6 +36,14 @@ const path = require('path');
 const fs = require('fs');
 const { performance } = require('perf_hooks');
 const { createCanvas, Image } = require('canvas');
+
+/**
+ * Get current timestamp in ISO8601 format (without milliseconds)
+ * @returns {string} ISO8601 timestamp like "2025-11-05T14:30:22"
+ */
+function getTimestamp() {
+    return new Date().toISOString().split('.')[0];
+}
 
 /**
  * Get the short commit hash for a git repository
@@ -210,16 +218,16 @@ function collapseDiff(diffText) {
 }
 
 const fastDatasets = [
-    { name: 'fastregression', file: './fastregression.js' }
+    { name: 'fastregression', file: '../test/fastregression.js' }
 ];
 
 const fullDatasets = [
-    { name: 'chembl', file: './chembl.js' },
-    { name: 'drugbank', file: './drugbank.js' },
-    { name: 'fdb', file: './fdb.js' },
-    { name: 'force', file: './force.js' },
-    { name: 'gdb17', file: './gdb17.js' },
-    { name: 'schembl', file: './schembl.js' }
+    { name: 'chembl', file: '../test/chembl.js' },
+    { name: 'drugbank', file: '../test/drugbank.js' },
+    { name: 'fdb', file: '../test/fdb.js' },
+    { name: 'force', file: '../test/force.js' },
+    { name: 'gdb17', file: '../test/gdb17.js' },
+    { name: 'schembl', file: '../test/schembl.js' }
 ];
 
 const args = process.argv.slice(2);
@@ -246,6 +254,9 @@ if (gulpResult.error || gulpResult.status !== 0) {
 
 console.log('Build complete\n');
 
+// Generate timestamp once at the beginning
+const timestamp = getTimestamp();
+
 // Check for -dataset flag
 const datasetFlagIndex = args.indexOf('-dataset');
 const hasDatasetFlag = datasetFlagIndex !== -1;
@@ -259,11 +270,8 @@ if (providedArg && !hasDatasetFlag && !allMode) {
     (async () => {
         const smiles = providedArg;
 
-        // Create output directory
-        const outputDir = path.join(__dirname, 'smoketest');
-        if (fs.existsSync(outputDir)) {
-            fs.rmSync(outputDir, { recursive: true, force: true });
-        }
+        // Create output directory with timestamp
+        const outputDir = path.join(__dirname, 'output', 'smoke', timestamp);
         fs.mkdirSync(outputDir, { recursive: true });
 
         // Get git information
@@ -285,7 +293,7 @@ if (providedArg && !hasDatasetFlag && !allMode) {
         // Generate SVG
         const tempSvgFile = path.join(outputDir, 'temp-1.svg');
         const svgStartTime = performance.now();
-        const svgResult = spawnSync('node', ['test/generate-svg.js', smiles, tempSvgFile], {
+        const svgResult = spawnSync('node', ['debug/generate-svg.js', smiles, tempSvgFile], {
             cwd: path.join(__dirname, '..'),
             encoding: 'utf8'
         });
@@ -309,7 +317,7 @@ if (providedArg && !hasDatasetFlag && !allMode) {
         // Generate JSON
         const tempJsonFile = path.join(outputDir, 'temp-1.json');
         const jsonStartTime = performance.now();
-        const jsonResult = spawnSync('node', ['test/generate-json.js', smiles, tempJsonFile], {
+        const jsonResult = spawnSync('node', ['debug/generate-json.js', smiles, tempJsonFile], {
             cwd: path.join(__dirname, '..'),
             encoding: 'utf8'
         });
@@ -547,11 +555,8 @@ if (allMode) {
     datasets = fastDatasets;
 }
 
-// Create output directory (delete old results)
-const outputDir = path.join(__dirname, 'smoketest');
-if (fs.existsSync(outputDir)) {
-    fs.rmSync(outputDir, { recursive: true, force: true });
-}
+// Create output directory with timestamp
+const outputDir = path.join(__dirname, 'output', 'smoke', timestamp);
 fs.mkdirSync(outputDir, { recursive: true });
 
 // Get git information for current codebase
@@ -602,7 +607,7 @@ for (const dataset of datasets) {
             const tempSvgFile = path.join(outputDir, `temp-${outputNum}.svg`);
 
             const svgStartTime = performance.now();
-            const svgResult = spawnSync('node', ['test/generate-svg.js', smiles, tempSvgFile], {
+            const svgResult = spawnSync('node', ['debug/generate-svg.js', smiles, tempSvgFile], {
                 cwd: path.join(__dirname, '..'),
                 encoding: 'utf8'
             });
@@ -645,7 +650,7 @@ for (const dataset of datasets) {
             const tempJsonFile = path.join(outputDir, `temp-${outputNum}.json`);
 
             const jsonStartTime = performance.now();
-            const jsonResult = spawnSync('node', ['test/generate-json.js', smiles, tempJsonFile], {
+            const jsonResult = spawnSync('node', ['debug/generate-json.js', smiles, tempJsonFile], {
                 cwd: path.join(__dirname, '..'),
                 encoding: 'utf8'
             });

@@ -8,6 +8,7 @@
   "license": "MIT",
   "private": false,
   "scripts": {
+    "test": "node --test test/**/*.js",
     "test:regression": "./scripts/regression-test.sh",
     "test:smoke": "node debug/smoke-test.js",
     "test:sssr": "node test/sssr.js",

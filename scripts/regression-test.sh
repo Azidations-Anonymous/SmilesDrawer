@@ -114,7 +114,7 @@ else
     echo -e "\033[93mVISUAL:\033[0m $([ "$NO_VISUAL" = "YES" ] && echo "NO (skip SVG generation)" || echo "YES (generate side-by-side comparisons)")"
     echo -e "\033[93mBASELINE COMMIT:\033[0m ${BASELINE_COMMIT}"
     echo -e "\033[93mCURRENT COMMIT:\033[0m ${CURRENT_COMMIT}${UNCOMMITTED_CHANGES}"
-    echo -e "\033[93mOUTPUT DIRECTORY:\033[0m ${CURRENT_DIR}/test/regression-results"
+    echo -e "\033[93mOUTPUT DIRECTORY:\033[0m ${CURRENT_DIR}/debug/output/regression/[timestamp]"
 fi
 echo ""
 
@@ -234,7 +234,7 @@ if [ "$BISECT_MODE" = "YES" ]; then
         fi
 
         # Test with single SMILES
-        cd "${CURRENT_DIR}/test"
+        cd "${CURRENT_DIR}/debug"
         if node regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" -bisect "${BISECT_SMILES}" > /dev/null 2>&1; then
             echo -e "  \033[1;32m✓\033[0m Output matches current"
             RIGHT=$MID
@@ -279,11 +279,12 @@ if [ "$BISECT_MODE" = "YES" ]; then
                 npx tsc > /dev/null 2>&1 || true
                 if npx gulp build > /dev/null 2>&1; then
                     # Generate comparison report
-                    cd "${CURRENT_DIR}/test"
-                    if node regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" -bisect "${BISECT_SMILES}" > /dev/null 2>&1; then
+                    cd "${CURRENT_DIR}/debug"
+                    BISECT_OUTPUT=$(node regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" -bisect "${BISECT_SMILES}" 2>/dev/null)
+                    if [ $? -eq 0 ] || [ $? -eq 1 ]; then
                         echo -e "\033[1;32m✓\033[0m Comparison files saved:"
-                        echo -e "  regression-results/bisect.html"
-                        echo -e "  regression-results/bisect.json"
+                        echo -e "  ${BISECT_OUTPUT}/bisect.html"
+                        echo -e "  ${BISECT_OUTPUT}/bisect.json"
                     else
                         echo -e "\033[93mWARNING:\033[0m Failed to generate comparison report"
                     fi
@@ -312,7 +313,7 @@ else
     echo -e "\033[93mStep 5:\033[0m Running regression tests..."
     echo "Flags:${FLAGS:-" (none)"}"
 
-    cd "${CURRENT_DIR}/test"
+    cd "${CURRENT_DIR}/debug"
     node regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" ${FLAGS}
 
     REGRESSION_EXIT_CODE=$?
@@ -325,7 +326,7 @@ else
     elif [ ${REGRESSION_EXIT_CODE} -eq 1 ]; then
         echo -e "\033[1;36m================================================================================\033[0m"
         echo -e "\033[93mDIFFERENCES FOUND:\033[0m Regression reports generated"
-        echo "Check regression-results/ for details"
+        echo "Check debug/output/regression/ for details"
         echo -e "\033[1;36m================================================================================\033[0m"
         exit 1
     else

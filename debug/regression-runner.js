@@ -2,7 +2,7 @@
 
 /**
  * @file Regression test runner for SmilesDrawer
- * @module test/regression-runner
+ * @module debug/regression-runner
  * @description
  * Compares molecular structure renderings between two versions of SmilesDrawer.
  * By default, continues testing even when differences are found and generates
@@ -12,20 +12,20 @@
  * - Tests all SMILES (with optional fail-early mode)
  * - Generates SVG for both old and new versions (optional with -novisual)
  * - Creates interactive HTML reports showing differences
- * - Saves JSON output to regression-results/ directory
+ * - Saves JSON output to timestamped directories
  * - Allows manual visual inspection of changes
  *
  * ## Output
- * - regression-results/[N].html - Side-by-side SVG comparison (unless -novisual)
- * - regression-results/[N].json - JSON with {old, new} fields for data comparison
+ * - debug/output/regression/[timestamp]/[N].html - Side-by-side SVG comparison (unless -novisual)
+ * - debug/output/regression/[timestamp]/[N].json - JSON with {old, new} fields for data comparison
  *
  * ## Usage
- * node test/regression-runner.js <old-code-path> <new-code-path> [-all] [-failearly] [-novisual]
+ * node debug/regression-runner.js <old-code-path> <new-code-path> [-all] [-failearly] [-novisual]
  *
  * @example
- * node test/regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer
- * node test/regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer -all
- * node test/regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer -failearly -novisual
+ * node debug/regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer
+ * node debug/regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer -all
+ * node debug/regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer -failearly -novisual
  */
 
 const { spawnSync } = require('child_process');
@@ -35,6 +35,14 @@ const os = require('os');
 const jsondiffpatch = require('jsondiffpatch');
 const htmlFormatter = require('jsondiffpatch/formatters/html');
 const { performance } = require('perf_hooks');
+
+/**
+ * Get current timestamp in ISO8601 format (without milliseconds)
+ * @returns {string} ISO8601 timestamp like "2025-11-05T14:30:22"
+ */
+function getTimestamp() {
+    return new Date().toISOString().split('.')[0];
+}
 
 /**
  * Get the short commit hash for a git repository
@@ -91,17 +99,37 @@ function getSrcDiff(repoPath) {
     return result.stdout;
 }
 
+/**
+ * Get the path to a generation script, checking both debug/ and test/ locations
+ * Provides backward compatibility for old commits that have scripts in test/
+ * @param {string} repoPath - Path to the git repository
+ * @param {string} scriptName - Name of the script file (e.g., 'generate-svg.js')
+ * @returns {string} Relative path to the script from the repo root
+ */
+function getScriptPath(repoPath, scriptName) {
+    const debugPath = path.join(repoPath, 'debug', scriptName);
+    const testPath = path.join(repoPath, 'test', scriptName);
+
+    if (fs.existsSync(debugPath)) {
+        return 'debug/' + scriptName;
+    } else if (fs.existsSync(testPath)) {
+        return 'test/' + scriptName;
+    } else {
+        return 'debug/' + scriptName;
+    }
+}
+
 const fastDatasets = [
-    { name: 'fastregression', file: './fastregression.js' }
+    { name: 'fastregression', file: '../test/fastregression.js' }
 ];
 
 const fullDatasets = [
-    { name: 'chembl', file: './chembl.js' },
-    { name: 'drugbank', file: './drugbank.js' },
-    { name: 'fdb', file: './fdb.js' },
-    { name: 'force', file: './force.js' },
-    { name: 'gdb17', file: './gdb17.js' },
-    { name: 'schembl', file: './schembl.js' }
+    { name: 'chembl', file: '../test/chembl.js' },
+    { name: 'drugbank', file: '../test/drugbank.js' },
+    { name: 'fdb', file: '../test/fdb.js' },
+    { name: 'force', file: '../test/force.js' },
+    { name: 'gdb17', file: '../test/gdb17.js' },
+    { name: 'schembl', file: '../test/schembl.js' }
 ];
 
 const args = process.argv.slice(2);
@@ -145,15 +173,19 @@ if (!oldCodePath || !newCodePath) {
     process.exit(2);
 }
 
+// Generate timestamp once at the beginning
+const timestamp = getTimestamp();
+
 // Bisect mode: test single SMILES, generate comparison report, and exit with 0=match, 1=difference
 if (bisectMode) {
     const smiles = sanitizeSmiles(bisectSmiles);
 
-    // Create output directory
-    const outputDir = path.join(process.cwd(), 'regression-results');
-    if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir, { recursive: true });
-    }
+    // Create output directory with timestamp
+    const debugDir = path.join(__dirname, 'output', 'regression', timestamp);
+    fs.mkdirSync(debugDir, { recursive: true });
+
+    // Use this as output directory
+    const outputDir = debugDir;
 
     // Get git information
     const oldCommitHash = getCommitHash(oldCodePath);
@@ -166,14 +198,14 @@ if (bisectMode) {
     const newSvgFile = path.join(os.tmpdir(), 'smiles-drawer-bisect-new.svg');
 
     const oldSvgStartTime = performance.now();
-    const oldSvgResult = spawnSync('node', ['test/generate-svg.js', smiles, oldSvgFile], {
+    const oldSvgResult = spawnSync('node', [getScriptPath(oldCodePath, 'generate-svg.js'), smiles, oldSvgFile], {
         cwd: oldCodePath,
         encoding: 'utf8'
     });
     const oldSvgRenderTime = performance.now() - oldSvgStartTime;
 
     const newSvgStartTime = performance.now();
-    const newSvgResult = spawnSync('node', ['test/generate-svg.js', smiles, newSvgFile], {
+    const newSvgResult = spawnSync('node', [getScriptPath(newCodePath, 'generate-svg.js'), smiles, newSvgFile], {
         cwd: newCodePath,
         encoding: 'utf8'
     });
@@ -189,14 +221,14 @@ if (bisectMode) {
     const newJsonFile = path.join(os.tmpdir(), 'smiles-drawer-bisect-new.json');
 
     const oldJsonStartTime = performance.now();
-    const oldJsonResult = spawnSync('node', ['test/generate-json.js', smiles, oldJsonFile], {
+    const oldJsonResult = spawnSync('node', [getScriptPath(oldCodePath, 'generate-json.js'), smiles, oldJsonFile], {
         cwd: oldCodePath,
         encoding: 'utf8'
     });
     const oldJsonRenderTime = performance.now() - oldJsonStartTime;
 
     const newJsonStartTime = performance.now();
-    const newJsonResult = spawnSync('node', ['test/generate-json.js', smiles, newJsonFile], {
+    const newJsonResult = spawnSync('node', [getScriptPath(newCodePath, 'generate-json.js'), smiles, newJsonFile], {
         cwd: newCodePath,
         encoding: 'utf8'
     });
@@ -266,6 +298,9 @@ if (bisectMode) {
 
     fs.writeFileSync(htmlFilePath, html, 'utf8');
 
+    // Print output directory for shell script to capture
+    console.log(outputDir);
+
     // Exit 0 if match, 1 if difference
     if (oldJson === newJson) {
         process.exit(0);
@@ -277,11 +312,8 @@ if (bisectMode) {
 // Regular regression test mode
 const datasets = allMode ? fullDatasets : fastDatasets;
 
-// Create output directory for reports (delete old results)
-const outputDir = path.join(process.cwd(), 'regression-results');
-if (fs.existsSync(outputDir)) {
-    fs.rmSync(outputDir, { recursive: true, force: true });
-}
+// Create output directory with timestamp
+const outputDir = path.join(__dirname, 'output', 'regression', timestamp);
 fs.mkdirSync(outputDir, { recursive: true });
 
 // Get git information for both codebases
@@ -322,11 +354,11 @@ for (const dataset of datasets) {
     const warmupOldJsonFile = path.join(os.tmpdir(), 'smiles-drawer-warmup-old.json');
     const warmupNewJsonFile = path.join(os.tmpdir(), 'smiles-drawer-warmup-new.json');
 
-    spawnSync('node', ['test/generate-json.js', warmupSmiles, warmupOldJsonFile], {
+    spawnSync('node', [getScriptPath(oldCodePath, 'generate-json.js'), warmupSmiles, warmupOldJsonFile], {
         cwd: oldCodePath,
         encoding: 'utf8'
     });
-    spawnSync('node', ['test/generate-json.js', warmupSmiles, warmupNewJsonFile], {
+    spawnSync('node', [getScriptPath(newCodePath, 'generate-json.js'), warmupSmiles, warmupNewJsonFile], {
         cwd: newCodePath,
         encoding: 'utf8'
     });
@@ -335,11 +367,11 @@ for (const dataset of datasets) {
         const warmupOldSvgFile = path.join(os.tmpdir(), 'smiles-drawer-warmup-old.svg');
         const warmupNewSvgFile = path.join(os.tmpdir(), 'smiles-drawer-warmup-new.svg');
 
-        spawnSync('node', ['test/generate-svg.js', warmupSmiles, warmupOldSvgFile], {
+        spawnSync('node', [getScriptPath(oldCodePath, 'generate-svg.js'), warmupSmiles, warmupOldSvgFile], {
             cwd: oldCodePath,
             encoding: 'utf8'
         });
-        spawnSync('node', ['test/generate-svg.js', warmupSmiles, warmupNewSvgFile], {
+        spawnSync('node', [getScriptPath(newCodePath, 'generate-svg.js'), warmupSmiles, warmupNewSvgFile], {
             cwd: newCodePath,
             encoding: 'utf8'
         });
@@ -375,7 +407,7 @@ for (const dataset of datasets) {
         const newJsonFile = path.join(os.tmpdir(), 'smiles-drawer-new-json-' + Date.now() + '-' + Math.random().toString(36).substring(7) + '.json');
 
         const oldJsonStartTime = performance.now();
-        const oldJsonResult = spawnSync('node', ['test/generate-json.js', smiles, oldJsonFile], {
+        const oldJsonResult = spawnSync('node', [getScriptPath(oldCodePath, 'generate-json.js'), smiles, oldJsonFile], {
             cwd: oldCodePath,
             encoding: 'utf8'
         });
@@ -394,7 +426,7 @@ for (const dataset of datasets) {
         }
 
         const newJsonStartTime = performance.now();
-        const newJsonResult = spawnSync('node', ['test/generate-json.js', smiles, newJsonFile], {
+        const newJsonResult = spawnSync('node', [getScriptPath(newCodePath, 'generate-json.js'), smiles, newJsonFile], {
             cwd: newCodePath,
             encoding: 'utf8'
         });
@@ -436,7 +468,7 @@ for (const dataset of datasets) {
                 const newSvgFile = path.join(os.tmpdir(), 'smiles-drawer-new-svg-' + Date.now() + '-' + Math.random().toString(36).substring(7) + '.svg');
 
                 const oldSvgStartTime = performance.now();
-                spawnSync('node', ['test/generate-svg.js', smiles, oldSvgFile], {
+                spawnSync('node', [getScriptPath(oldCodePath, 'generate-svg.js'), smiles, oldSvgFile], {
                     cwd: oldCodePath,
                     encoding: 'utf8'
                 });
@@ -444,7 +476,7 @@ for (const dataset of datasets) {
                 const oldSvgRenderTime = oldSvgEndTime - oldSvgStartTime;
 
                 const newSvgStartTime = performance.now();
-                spawnSync('node', ['test/generate-svg.js', smiles, newSvgFile], {
+                spawnSync('node', [getScriptPath(newCodePath, 'generate-svg.js'), smiles, newSvgFile], {
                     cwd: newCodePath,
                     encoding: 'utf8'
                 });
