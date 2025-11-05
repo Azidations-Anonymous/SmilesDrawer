@@ -33,6 +33,8 @@ console.log(`TIMING: JSDOM load took ${jsdomLoadEnd - jsdomLoadStart}ms`);
 
 const fs = require('fs');
 
+const { createMoleculeOptions } = require('./molecule-options');
+
 const smilesInput = process.argv[2];
 const outputFile = process.argv[3];
 
@@ -57,7 +59,7 @@ const SmilesDrawer = require('../app.js');
 const smilesDrawerLoadEnd = Date.now();
 console.log(`TIMING: SmilesDrawer load took ${smilesDrawerLoadEnd - smilesDrawerLoadStart}ms`);
 
-const options = {
+const options = createMoleculeOptions({
     width: 500,
     height: 500,
     bondThickness: 1.0,
@@ -76,7 +78,6 @@ const options = {
     fontSizeLarge: 6,
     fontSizeSmall: 4,
     padding: 20.0,
-    experimental: false,
     themes: {
         dark: {
             C: '#fff',
@@ -109,7 +110,7 @@ const options = {
             BACKGROUND: '#fff'
         }
     }
-};
+});
 
 try {
     console.log('PARSING: Starting parse');

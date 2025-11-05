@@ -1,0 +1,5219 @@
+{
+  "version": 2,
+  "vertices": [
+    {
+      "id": 0,
+      "parentVertexId": null,
+      "children": [
+        1
+      ],
+      "spanningTreeChildren": [
+        1
+      ],
+      "edges": [
+        0
+      ],
+      "neighbours": [
+        1
+      ],
+      "neighbourCount": 1,
+      "position": {
+        "x": 504.6346077437771,
+        "y": 367.2698324578656
+      },
+      "previousPosition": {
+        "x": 483.5959512062653,
+        "y": 388.6561582548932
+      },
+      "positioned": true,
+      "forcePositioned": false,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 0,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [],
+        "bondCount": 1,
+        "neighbouringElements": [
+          "C"
+        ],
+        "isBridge": false,
+        "isBridgeNode": false,
+        "bridgedRing": null,
+        "originalRings": [],
+        "anchoredRings": [],
+        "isConnectedToRing": true,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 1,
+      "parentVertexId": 0,
+      "children": [
+        2,
+        5
+      ],
+      "spanningTreeChildren": [
+        2
+      ],
+      "edges": [
+        0,
+        1,
+        59,
+        59
+      ],
+      "neighbours": [
+        0,
+        2,
+        5
+      ],
+      "neighbourCount": 3,
+      "position": {
+        "x": 483.5959512062653,
+        "y": 388.6561582548932
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 1,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "=",
+        "ringbonds": [
+          {
+            "bond": "-",
+            "id": 1
+          }
+        ],
+        "rings": [
+          0,
+          5,
+          8,
+          10,
+          11
+        ],
+        "bondCount": 4,
+        "neighbouringElements": [
+          "C",
+          "O",
+          "N"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          0,
+          5,
+          8,
+          10,
+          11
+        ],
+        "anchoredRings": [
+          5,
+          8,
+          10,
+          11
+        ],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 2,
+      "parentVertexId": 1,
+      "children": [
+        3
+      ],
+      "spanningTreeChildren": [
+        3
+      ],
+      "edges": [
+        1,
+        2
+      ],
+      "neighbours": [
+        1,
+        3
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 488.0650167427842,
+        "y": 427.4545079028313
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 2,
+        "element": "O",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          0,
+          5,
+          8,
+          10,
+          11
+        ],
+        "bondCount": 3,
+        "class": null,
+        "neighbouringElements": [
+          "C",
+          "Fe"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          0,
+          5,
+          8,
+          10,
+          11
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": {
+          "hcount": null,
+          "charge": null,
+          "isotope": null,
+          "class": null
+        },
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 3,
+      "parentVertexId": 2,
+      "children": [
+        4,
+        35,
+        38,
+        48,
+        51
+      ],
+      "spanningTreeChildren": [
+        4
+      ],
+      "edges": [
+        2,
+        3,
+        55,
+        55,
+        56,
+        56,
+        57,
+        57,
+        58,
+        58
+      ],
+      "neighbours": [
+        2,
+        51,
+        48,
+        35,
+        38,
+        4
+      ],
+      "neighbourCount": 6,
+      "position": {
+        "x": 462.04913588312525,
+        "y": 458.126609951311
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 3,
+        "element": "Fe",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [
+          {
+            "bond": "-",
+            "id": 2
+          },
+          {
+            "bond": "-",
+            "id": 3
+          },
+          {
+            "bond": "-",
+            "id": 4
+          },
+          {
+            "bond": "-",
+            "id": 5
+          }
+        ],
+        "rings": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          10,
+          11,
+          12
+        ],
+        "bondCount": 6,
+        "class": null,
+        "neighbouringElements": [
+          "O",
+          "O",
+          "O",
+          "O",
+          "O",
+          "O"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          10,
+          11,
+          12
+        ],
+        "anchoredRings": [
+          6
+        ],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": {
+          "hcount": null,
+          "charge": null,
+          "isotope": null,
+          "class": null
+        },
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 4,
+      "parentVertexId": 3,
+      "children": [
+        5
+      ],
+      "spanningTreeChildren": [
+        5
+      ],
+      "edges": [
+        3,
+        4
+      ],
+      "neighbours": [
+        3,
+        5
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 455.05293578166777,
+        "y": 415.2479023937183
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 4,
+        "element": "O",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          0,
+          4,
+          12
+        ],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "Fe",
+          "N"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          0,
+          4,
+          12
+        ],
+        "anchoredRings": [
+          0,
+          4
+        ],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 5,
+      "parentVertexId": 4,
+      "children": [
+        6,
+        1
+      ],
+      "spanningTreeChildren": [
+        6
+      ],
+      "edges": [
+        4,
+        5,
+        59,
+        59
+      ],
+      "neighbours": [
+        4,
+        6,
+        1
+      ],
+      "neighbourCount": 3,
+      "position": {
+        "x": 452.30203653253164,
+        "y": 377.1259453381057
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 5,
+        "element": "N",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [
+          {
+            "bond": "-",
+            "id": 1
+          }
+        ],
+        "rings": [
+          0,
+          4,
+          5,
+          8,
+          10,
+          11,
+          12
+        ],
+        "bondCount": 3,
+        "neighbouringElements": [
+          "O",
+          "C",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          0,
+          4,
+          5,
+          8,
+          10,
+          11,
+          12
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 6,
+      "parentVertexId": 5,
+      "children": [
+        7
+      ],
+      "spanningTreeChildren": [
+        7
+      ],
+      "edges": [
+        5,
+        6
+      ],
+      "neighbours": [
+        5,
+        7
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 428.69435245858546,
+        "y": 346.8655940093359
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 6,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          4,
+          5,
+          8,
+          10,
+          11,
+          12
+        ],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "N",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          4,
+          5,
+          8,
+          10,
+          11,
+          12
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 7,
+      "parentVertexId": 6,
+      "children": [
+        8
+      ],
+      "spanningTreeChildren": [
+        8
+      ],
+      "edges": [
+        6,
+        7
+      ],
+      "neighbours": [
+        6,
+        8
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 396.67620006513215,
+        "y": 325.7630334400449
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 7,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          4,
+          5,
+          8,
+          10,
+          11,
+          12
+        ],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          4,
+          5,
+          8,
+          10,
+          11,
+          12
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 8,
+      "parentVertexId": 7,
+      "children": [
+        9
+      ],
+      "spanningTreeChildren": [
+        9
+      ],
+      "edges": [
+        7,
+        8
+      ],
+      "neighbours": [
+        7,
+        9
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 360.0527259450417,
+        "y": 315.25413839485446
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 8,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          4,
+          5,
+          8,
+          10,
+          11,
+          12
+        ],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          4,
+          5,
+          8,
+          10,
+          11,
+          12
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 9,
+      "parentVertexId": 8,
+      "children": [
+        10,
+        11,
+        53
+      ],
+      "spanningTreeChildren": [
+        10,
+        11
+      ],
+      "edges": [
+        8,
+        9,
+        10,
+        54,
+        54
+      ],
+      "neighbours": [
+        8,
+        10,
+        53,
+        11
+      ],
+      "neighbourCount": 4,
+      "position": {
+        "x": 322.10657879538735,
+        "y": 317.5106159922107
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 9,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [
+          {
+            "bond": "-",
+            "id": 1
+          }
+        ],
+        "rings": [
+          4,
+          5,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "bondCount": 4,
+        "class": null,
+        "neighbouringElements": [
+          "C",
+          "H",
+          "N",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          4,
+          5,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": {
+          "hcount": 1,
+          "charge": null,
+          "isotope": null,
+          "class": null
+        },
+        "plane": 0,
+        "chirality": "R",
+        "isStereoCenter": true,
+        "priority": 3,
+        "mainChain": false,
+        "hydrogenDirection": "up",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 10,
+      "parentVertexId": 9,
+      "children": [],
+      "spanningTreeChildren": [],
+      "edges": [
+        9
+      ],
+      "neighbours": [
+        9
+      ],
+      "neighbourCount": 1,
+      "position": {
+        "x": 340.75403364635474,
+        "y": 294.01013881447807
+      },
+      "previousPosition": {
+        "x": 322.10657879538735,
+        "y": 317.5106159922107
+      },
+      "positioned": true,
+      "forcePositioned": false,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": null,
+        "element": "H",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [],
+        "bondCount": 1,
+        "neighbouringElements": [
+          "C"
+        ],
+        "isBridge": false,
+        "isBridgeNode": false,
+        "bridgedRing": null,
+        "originalRings": [],
+        "anchoredRings": [],
+        "isConnectedToRing": true,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 11,
+      "parentVertexId": 9,
+      "children": [
+        12
+      ],
+      "spanningTreeChildren": [
+        12
+      ],
+      "edges": [
+        10,
+        11
+      ],
+      "neighbours": [
+        9,
+        12
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 289.7971419784785,
+        "y": 299.31521898835257
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 10,
+        "element": "N",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          9,
+          11,
+          12
+        ],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          9,
+          11,
+          12
+        ],
+        "anchoredRings": [
+          9
+        ],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 12,
+      "parentVertexId": 11,
+      "children": [
+        13,
+        14
+      ],
+      "spanningTreeChildren": [
+        13,
+        14
+      ],
+      "edges": [
+        11,
+        12,
+        13
+      ],
+      "neighbours": [
+        11,
+        13,
+        14
+      ],
+      "neighbourCount": 3,
+      "position": {
+        "x": 253.273519857581,
+        "y": 294.9368935977841
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 11,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          9,
+          12
+        ],
+        "bondCount": 4,
+        "neighbouringElements": [
+          "N",
+          "O",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          9,
+          12
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 13,
+      "parentVertexId": 12,
+      "children": [],
+      "spanningTreeChildren": [],
+      "edges": [
+        12
+      ],
+      "neighbours": [
+        12
+      ],
+      "neighbourCount": 1,
+      "position": {
+        "x": 252.38117880614067,
+        "y": 264.9501677437014
+      },
+      "previousPosition": {
+        "x": 253.273519857581,
+        "y": 294.9368935977841
+      },
+      "positioned": true,
+      "forcePositioned": false,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 12,
+        "element": "O",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "branchBond": "=",
+        "ringbonds": [],
+        "rings": [],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C"
+        ],
+        "isBridge": false,
+        "isBridgeNode": false,
+        "bridgedRing": null,
+        "originalRings": [],
+        "anchoredRings": [],
+        "isConnectedToRing": true,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 14,
+      "parentVertexId": 12,
+      "children": [
+        15
+      ],
+      "spanningTreeChildren": [
+        15
+      ],
+      "edges": [
+        13,
+        14
+      ],
+      "neighbours": [
+        12,
+        15
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 217.08798484321426,
+        "y": 301.91983569790955
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 13,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          9,
+          12
+        ],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C",
+          "N"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          9,
+          12
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 15,
+      "parentVertexId": 14,
+      "children": [
+        16
+      ],
+      "spanningTreeChildren": [
+        16
+      ],
+      "edges": [
+        14,
+        15
+      ],
+      "neighbours": [
+        14,
+        16
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 184.91968866298555,
+        "y": 320.0429689189781
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 14,
+        "element": "N",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          9,
+          12
+        ],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          9,
+          12
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 16,
+      "parentVertexId": 15,
+      "children": [
+        17,
+        18
+      ],
+      "spanningTreeChildren": [
+        17,
+        18
+      ],
+      "edges": [
+        15,
+        16,
+        17
+      ],
+      "neighbours": [
+        15,
+        17,
+        18
+      ],
+      "neighbourCount": 3,
+      "position": {
+        "x": 160.02292840049427,
+        "y": 347.307325675493
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 15,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          9,
+          12
+        ],
+        "bondCount": 4,
+        "neighbouringElements": [
+          "N",
+          "O",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          9,
+          12
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 17,
+      "parentVertexId": 16,
+      "children": [],
+      "spanningTreeChildren": [],
+      "edges": [
+        16
+      ],
+      "neighbours": [
+        16
+      ],
+      "neighbourCount": 1,
+      "position": {
+        "x": 134.82340882454588,
+        "y": 331.02898997612266
+      },
+      "previousPosition": {
+        "x": 160.02292840049427,
+        "y": 347.307325675493
+      },
+      "positioned": true,
+      "forcePositioned": false,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 16,
+        "element": "O",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "branchBond": "=",
+        "ringbonds": [],
+        "rings": [],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C"
+        ],
+        "isBridge": false,
+        "isBridgeNode": false,
+        "bridgedRing": null,
+        "originalRings": [],
+        "anchoredRings": [],
+        "isConnectedToRing": true,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 18,
+      "parentVertexId": 16,
+      "children": [
+        19,
+        20,
+        22
+      ],
+      "spanningTreeChildren": [
+        19,
+        20,
+        22
+      ],
+      "edges": [
+        17,
+        18,
+        19,
+        21
+      ],
+      "neighbours": [
+        16,
+        19,
+        20,
+        22
+      ],
+      "neighbourCount": 4,
+      "position": {
+        "x": 145.3583129618371,
+        "y": 381.1814230607905
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 17,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          9,
+          12
+        ],
+        "bondCount": 4,
+        "class": null,
+        "neighbouringElements": [
+          "C",
+          "H",
+          "C",
+          "N"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          9,
+          12
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": {
+          "hcount": 1,
+          "charge": null,
+          "isotope": null,
+          "class": null
+        },
+        "plane": 0,
+        "chirality": "S",
+        "isStereoCenter": true,
+        "priority": 3,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 19,
+      "parentVertexId": 18,
+      "children": [],
+      "spanningTreeChildren": [],
+      "edges": [
+        18
+      ],
+      "neighbours": [
+        18
+      ],
+      "neighbourCount": 1,
+      "position": {
+        "x": 116.70073955318517,
+        "y": 390.0551757239948
+      },
+      "previousPosition": {
+        "x": 145.3583129618371,
+        "y": 381.1814230607905
+      },
+      "positioned": true,
+      "forcePositioned": false,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": null,
+        "element": "H",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [],
+        "bondCount": 1,
+        "neighbouringElements": [
+          "C"
+        ],
+        "isBridge": false,
+        "isBridgeNode": false,
+        "bridgedRing": null,
+        "originalRings": [],
+        "anchoredRings": [],
+        "isConnectedToRing": true,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 20,
+      "parentVertexId": 18,
+      "children": [
+        21
+      ],
+      "spanningTreeChildren": [
+        21
+      ],
+      "edges": [
+        19,
+        20
+      ],
+      "neighbours": [
+        18,
+        21
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 123.3446310242764,
+        "y": 360.8001128096827
+      },
+      "previousPosition": {
+        "x": 145.3583129618371,
+        "y": 381.1814230607905
+      },
+      "positioned": true,
+      "forcePositioned": false,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 18,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "branchBond": "-",
+        "ringbonds": [],
+        "rings": [],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C",
+          "O"
+        ],
+        "isBridge": false,
+        "isBridgeNode": false,
+        "bridgedRing": null,
+        "originalRings": [],
+        "anchoredRings": [],
+        "isConnectedToRing": true,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 21,
+      "parentVertexId": 20,
+      "children": [],
+      "spanningTreeChildren": [],
+      "edges": [
+        20
+      ],
+      "neighbours": [
+        20
+      ],
+      "neighbourCount": 1,
+      "position": {
+        "x": 94.6870576156245,
+        "y": 369.67386547288703
+      },
+      "previousPosition": {
+        "x": 123.3446310242764,
+        "y": 360.8001128096827
+      },
+      "positioned": true,
+      "forcePositioned": false,
+      "angle": 1.0471975511965976,
+      "dir": 1,
+      "value": {
+        "idx": 19,
+        "element": "O",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [],
+        "bondCount": 1,
+        "neighbouringElements": [
+          "C"
+        ],
+        "isBridge": false,
+        "isBridgeNode": false,
+        "bridgedRing": null,
+        "originalRings": [],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 22,
+      "parentVertexId": 18,
+      "children": [
+        23
+      ],
+      "spanningTreeChildren": [
+        23
+      ],
+      "edges": [
+        21,
+        22
+      ],
+      "neighbours": [
+        18,
+        23
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 143.87554824107298,
+        "y": 418.0491487904988
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 20,
+        "element": "N",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          9,
+          12
+        ],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          9,
+          12
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 23,
+      "parentVertexId": 22,
+      "children": [
+        24,
+        25
+      ],
+      "spanningTreeChildren": [
+        24,
+        25
+      ],
+      "edges": [
+        22,
+        23,
+        24
+      ],
+      "neighbours": [
+        22,
+        24,
+        25
+      ],
+      "neighbourCount": 3,
+      "position": {
+        "x": 154.50388338670942,
+        "y": 453.3565345246544
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 21,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          9,
+          12
+        ],
+        "bondCount": 4,
+        "neighbouringElements": [
+          "N",
+          "O",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          9,
+          12
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 24,
+      "parentVertexId": 23,
+      "children": [],
+      "spanningTreeChildren": [],
+      "edges": [
+        23
+      ],
+      "neighbours": [
+        23
+      ],
+      "neighbourCount": 1,
+      "position": {
+        "x": 127.51619484571742,
+        "y": 466.458620893413
+      },
+      "previousPosition": {
+        "x": 154.50388338670942,
+        "y": 453.3565345246544
+      },
+      "positioned": true,
+      "forcePositioned": false,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 22,
+        "element": "O",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "branchBond": "=",
+        "ringbonds": [],
+        "rings": [],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C"
+        ],
+        "isBridge": false,
+        "isBridgeNode": false,
+        "bridgedRing": null,
+        "originalRings": [],
+        "anchoredRings": [],
+        "isConnectedToRing": true,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 25,
+      "parentVertexId": 23,
+      "children": [
+        26
+      ],
+      "spanningTreeChildren": [
+        26
+      ],
+      "edges": [
+        24,
+        25
+      ],
+      "neighbours": [
+        23,
+        26
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 175.66220198383132,
+        "y": 483.55178357346904
+      },
+      "previousPosition": {
+        "x": 15.000000000000004,
+        "y": -25.980762113533157
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": -1.0471975511965976,
+      "dir": 1,
+      "value": {
+        "idx": 23,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          9,
+          12
+        ],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C",
+          "N"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          9,
+          12
+        ],
+        "anchoredRings": [
+          12
+        ],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 26,
+      "parentVertexId": 25,
+      "children": [
+        27
+      ],
+      "spanningTreeChildren": [
+        27
+      ],
+      "edges": [
+        25,
+        26
+      ],
+      "neighbours": [
+        25,
+        27
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 205.27802031463892,
+        "y": 505.3479593698927
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 24,
+        "element": "N",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          9,
+          12
+        ],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          9,
+          12
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 27,
+      "parentVertexId": 26,
+      "children": [
+        28,
+        29
+      ],
+      "spanningTreeChildren": [
+        28,
+        29
+      ],
+      "edges": [
+        26,
+        27,
+        28
+      ],
+      "neighbours": [
+        26,
+        28,
+        29
+      ],
+      "neighbourCount": 3,
+      "position": {
+        "x": 240.05221432326016,
+        "y": 516.9464643337393
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 25,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          9,
+          10,
+          12
+        ],
+        "bondCount": 4,
+        "neighbouringElements": [
+          "N",
+          "O",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          9,
+          10,
+          12
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 28,
+      "parentVertexId": 27,
+      "children": [],
+      "spanningTreeChildren": [],
+      "edges": [
+        27
+      ],
+      "neighbours": [
+        27
+      ],
+      "neighbourCount": 1,
+      "position": {
+        "x": 235.62648836948352,
+        "y": 546.6182177329247
+      },
+      "previousPosition": {
+        "x": 240.05221432326016,
+        "y": 516.9464643337393
+      },
+      "positioned": true,
+      "forcePositioned": false,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 26,
+        "element": "O",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "branchBond": "=",
+        "ringbonds": [],
+        "rings": [],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C"
+        ],
+        "isBridge": false,
+        "isBridgeNode": false,
+        "bridgedRing": null,
+        "originalRings": [],
+        "anchoredRings": [],
+        "isConnectedToRing": true,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 29,
+      "parentVertexId": 27,
+      "children": [
+        30,
+        31,
+        39
+      ],
+      "spanningTreeChildren": [
+        30,
+        31,
+        39
+      ],
+      "edges": [
+        28,
+        29,
+        30,
+        38
+      ],
+      "neighbours": [
+        27,
+        30,
+        31,
+        39
+      ],
+      "neighbourCount": 4,
+      "position": {
+        "x": 276.9352416900408,
+        "y": 514.4065468067205
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 27,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          3,
+          6,
+          7,
+          9,
+          10,
+          11,
+          12
+        ],
+        "bondCount": 4,
+        "class": null,
+        "neighbouringElements": [
+          "C",
+          "H",
+          "C",
+          "N"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          3,
+          6,
+          7,
+          9,
+          10,
+          11,
+          12
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": {
+          "hcount": 1,
+          "charge": null,
+          "isotope": null,
+          "class": null
+        },
+        "plane": 0,
+        "chirality": "R",
+        "isStereoCenter": true,
+        "priority": 3,
+        "mainChain": false,
+        "hydrogenDirection": "up",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 30,
+      "parentVertexId": 29,
+      "children": [],
+      "spanningTreeChildren": [],
+      "edges": [
+        29
+      ],
+      "neighbours": [
+        29
+      ],
+      "neighbourCount": 1,
+      "position": {
+        "x": 283.3216906839941,
+        "y": 543.7188866868398
+      },
+      "previousPosition": {
+        "x": 276.9352416900408,
+        "y": 514.4065468067205
+      },
+      "positioned": true,
+      "forcePositioned": false,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": null,
+        "element": "H",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [],
+        "bondCount": 1,
+        "neighbouringElements": [
+          "C"
+        ],
+        "isBridge": false,
+        "isBridgeNode": false,
+        "bridgedRing": null,
+        "originalRings": [],
+        "anchoredRings": [],
+        "isConnectedToRing": true,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 31,
+      "parentVertexId": 29,
+      "children": [
+        32
+      ],
+      "spanningTreeChildren": [
+        32
+      ],
+      "edges": [
+        30,
+        31
+      ],
+      "neighbours": [
+        29,
+        32
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 309.4250554571437,
+        "y": 533.6796722322304
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 28,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "branchBond": "-",
+        "ringbonds": [],
+        "rings": [
+          3,
+          6,
+          7,
+          10,
+          11,
+          12
+        ],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          3,
+          6,
+          7,
+          10,
+          11,
+          12
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 32,
+      "parentVertexId": 31,
+      "children": [
+        33
+      ],
+      "spanningTreeChildren": [
+        33
+      ],
+      "edges": [
+        31,
+        32
+      ],
+      "neighbours": [
+        31,
+        33
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 346.41508538398233,
+        "y": 540.95158280027
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 29,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          3,
+          6,
+          7,
+          10,
+          11,
+          12
+        ],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          3,
+          6,
+          7,
+          10,
+          11,
+          12
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 33,
+      "parentVertexId": 32,
+      "children": [
+        34
+      ],
+      "spanningTreeChildren": [
+        34
+      ],
+      "edges": [
+        32,
+        33
+      ],
+      "neighbours": [
+        32,
+        34
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 383.9287344676438,
+        "y": 536.6647823916169
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 30,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          3,
+          6,
+          7,
+          10,
+          11,
+          12
+        ],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C",
+          "N"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          3,
+          6,
+          7,
+          10,
+          11,
+          12
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 34,
+      "parentVertexId": 33,
+      "children": [
+        35,
+        36
+      ],
+      "spanningTreeChildren": [
+        35,
+        36
+      ],
+      "edges": [
+        33,
+        34,
+        35
+      ],
+      "neighbours": [
+        33,
+        35,
+        36
+      ],
+      "neighbourCount": 3,
+      "position": {
+        "x": 417.92425264277875,
+        "y": 520.7567880295435
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 31,
+        "element": "N",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          1,
+          3,
+          6,
+          7,
+          10,
+          11,
+          12
+        ],
+        "bondCount": 3,
+        "neighbouringElements": [
+          "C",
+          "O",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          1,
+          3,
+          6,
+          7,
+          10,
+          11,
+          12
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 35,
+      "parentVertexId": 34,
+      "children": [
+        3
+      ],
+      "spanningTreeChildren": [],
+      "edges": [
+        34,
+        55,
+        55
+      ],
+      "neighbours": [
+        34,
+        3
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 438.0399461696829,
+        "y": 489.9214227157762
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 32,
+        "element": "O",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "branchBond": "-",
+        "ringbonds": [
+          {
+            "bond": "-",
+            "id": 2
+          }
+        ],
+        "rings": [
+          1,
+          3,
+          6,
+          10,
+          11,
+          12
+        ],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "N",
+          "Fe"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          1,
+          3,
+          6,
+          10,
+          11,
+          12
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 36,
+      "parentVertexId": 34,
+      "children": [
+        37,
+        38
+      ],
+      "spanningTreeChildren": [
+        37,
+        38
+      ],
+      "edges": [
+        35,
+        36,
+        37
+      ],
+      "neighbours": [
+        34,
+        37,
+        38
+      ],
+      "neighbourCount": 3,
+      "position": {
+        "x": 450.3625888383202,
+        "y": 525.0311353925965
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 33,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "=",
+        "ringbonds": [],
+        "rings": [
+          1,
+          7
+        ],
+        "bondCount": 4,
+        "neighbouringElements": [
+          "N",
+          "C",
+          "O"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          1,
+          7
+        ],
+        "anchoredRings": [
+          1
+        ],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 37,
+      "parentVertexId": 36,
+      "children": [],
+      "spanningTreeChildren": [],
+      "edges": [
+        36
+      ],
+      "neighbours": [
+        36
+      ],
+      "neighbourCount": 1,
+      "position": {
+        "x": 460.11989064229255,
+        "y": 553.4000455145274
+      },
+      "previousPosition": {
+        "x": 450.3625888383202,
+        "y": 525.0311353925965
+      },
+      "positioned": true,
+      "forcePositioned": false,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 34,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "branchBond": "-",
+        "ringbonds": [],
+        "rings": [],
+        "bondCount": 1,
+        "neighbouringElements": [
+          "C"
+        ],
+        "isBridge": false,
+        "isBridgeNode": false,
+        "bridgedRing": null,
+        "originalRings": [],
+        "anchoredRings": [],
+        "isConnectedToRing": true,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 38,
+      "parentVertexId": 36,
+      "children": [
+        3
+      ],
+      "spanningTreeChildren": [],
+      "edges": [
+        37,
+        56,
+        56
+      ],
+      "neighbours": [
+        36,
+        3
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 470.4500219436639,
+        "y": 493.3957951463289
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 35,
+        "element": "O",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [
+          {
+            "bond": "-",
+            "id": 3
+          }
+        ],
+        "rings": [
+          1,
+          7
+        ],
+        "bondCount": 3,
+        "class": null,
+        "neighbouringElements": [
+          "C",
+          "Fe"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          1,
+          7
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": {
+          "hcount": null,
+          "charge": null,
+          "isotope": null,
+          "class": null
+        },
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 39,
+      "parentVertexId": 29,
+      "children": [
+        40
+      ],
+      "spanningTreeChildren": [
+        40
+      ],
+      "edges": [
+        38,
+        39
+      ],
+      "neighbours": [
+        29,
+        40
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 278.8219995637289,
+        "y": 481.0894454636463
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 36,
+        "element": "N",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          3,
+          6,
+          7,
+          9,
+          10,
+          11
+        ],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          3,
+          6,
+          7,
+          9,
+          10,
+          11
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 40,
+      "parentVertexId": 39,
+      "children": [
+        41,
+        42
+      ],
+      "spanningTreeChildren": [
+        41,
+        42
+      ],
+      "edges": [
+        39,
+        40,
+        41
+      ],
+      "neighbours": [
+        39,
+        41,
+        42
+      ],
+      "neighbourCount": 3,
+      "position": {
+        "x": 284.65215224692633,
+        "y": 447.2379646938067
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 37,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          3,
+          6,
+          7,
+          9,
+          10,
+          11
+        ],
+        "bondCount": 4,
+        "neighbouringElements": [
+          "N",
+          "O",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          3,
+          6,
+          7,
+          9,
+          10,
+          11
+        ],
+        "anchoredRings": [
+          3
+        ],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 41,
+      "parentVertexId": 40,
+      "children": [],
+      "spanningTreeChildren": [],
+      "edges": [
+        40
+      ],
+      "neighbours": [
+        40
+      ],
+      "neighbourCount": 1,
+      "position": {
+        "x": 255.52082426524973,
+        "y": 440.07097578464925
+      },
+      "previousPosition": {
+        "x": 284.65215224692633,
+        "y": 447.2379646938067
+      },
+      "positioned": true,
+      "forcePositioned": false,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 38,
+        "element": "O",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "branchBond": "=",
+        "ringbonds": [],
+        "rings": [],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C"
+        ],
+        "isBridge": false,
+        "isBridgeNode": false,
+        "bridgedRing": null,
+        "originalRings": [],
+        "anchoredRings": [],
+        "isConnectedToRing": true,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 42,
+      "parentVertexId": 40,
+      "children": [
+        43,
+        44,
+        52
+      ],
+      "spanningTreeChildren": [
+        43,
+        44,
+        52
+      ],
+      "edges": [
+        41,
+        42,
+        43,
+        51
+      ],
+      "neighbours": [
+        40,
+        43,
+        44,
+        52
+      ],
+      "neighbourCount": 4,
+      "position": {
+        "x": 301.7822436974849,
+        "y": 416.1665334936528
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 39,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        "bondCount": 4,
+        "class": null,
+        "neighbouringElements": [
+          "C",
+          "H",
+          "C",
+          "N"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": {
+          "hcount": 1,
+          "charge": null,
+          "isotope": null,
+          "class": null
+        },
+        "plane": 0,
+        "chirality": "R",
+        "isStereoCenter": true,
+        "priority": 3,
+        "mainChain": false,
+        "hydrogenDirection": "up",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 43,
+      "parentVertexId": 42,
+      "children": [],
+      "spanningTreeChildren": [],
+      "edges": [
+        42
+      ],
+      "neighbours": [
+        42
+      ],
+      "neighbourCount": 1,
+      "position": {
+        "x": 272.2753855657088,
+        "y": 410.749401116533
+      },
+      "previousPosition": {
+        "x": 301.7822436974849,
+        "y": 416.1665334936528
+      },
+      "positioned": true,
+      "forcePositioned": false,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": null,
+        "element": "H",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [],
+        "bondCount": 1,
+        "neighbouringElements": [
+          "C"
+        ],
+        "isBridge": false,
+        "isBridgeNode": false,
+        "bridgedRing": null,
+        "originalRings": [],
+        "anchoredRings": [],
+        "isConnectedToRing": true,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 44,
+      "parentVertexId": 42,
+      "children": [
+        45
+      ],
+      "spanningTreeChildren": [
+        45
+      ],
+      "edges": [
+        43,
+        44
+      ],
+      "neighbours": [
+        42,
+        45
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 333.2771347488337,
+        "y": 422.5117659951585
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 40,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "branchBond": "-",
+        "ringbonds": [],
+        "rings": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 45,
+      "parentVertexId": 44,
+      "children": [
+        46
+      ],
+      "spanningTreeChildren": [
+        46
+      ],
+      "edges": [
+        44,
+        45
+      ],
+      "neighbours": [
+        44,
+        46
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 364.218846931414,
+        "y": 426.9050855026701
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 41,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "anchoredRings": [
+          7
+        ],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 46,
+      "parentVertexId": 45,
+      "children": [
+        47
+      ],
+      "spanningTreeChildren": [
+        47
+      ],
+      "edges": [
+        45,
+        46
+      ],
+      "neighbours": [
+        45,
+        47
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 395.4165952893036,
+        "y": 429.11820085304964
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 42,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C",
+          "N"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 47,
+      "parentVertexId": 46,
+      "children": [
+        48,
+        49
+      ],
+      "spanningTreeChildren": [
+        48,
+        49
+      ],
+      "edges": [
+        46,
+        47,
+        48
+      ],
+      "neighbours": [
+        46,
+        48,
+        49
+      ],
+      "neighbourCount": 3,
+      "position": {
+        "x": 428.07406852593925,
+        "y": 433.35334308949473
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 43,
+        "element": "N",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "bondCount": 3,
+        "neighbouringElements": [
+          "C",
+          "O",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 48,
+      "parentVertexId": 47,
+      "children": [
+        3
+      ],
+      "spanningTreeChildren": [],
+      "edges": [
+        47,
+        57,
+        57
+      ],
+      "neighbours": [
+        47,
+        3
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 437.65094660846495,
+        "y": 457.93994848872507
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 44,
+        "element": "O",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "branchBond": "-",
+        "ringbonds": [
+          {
+            "bond": "-",
+            "id": 4
+          }
+        ],
+        "rings": [
+          2,
+          3,
+          4,
+          5,
+          7
+        ],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "N",
+          "Fe"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          2,
+          3,
+          4,
+          5,
+          7
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 49,
+      "parentVertexId": 47,
+      "children": [
+        50,
+        51
+      ],
+      "spanningTreeChildren": [
+        50,
+        51
+      ],
+      "edges": [
+        48,
+        49,
+        50
+      ],
+      "neighbours": [
+        47,
+        50,
+        51
+      ],
+      "neighbourCount": 3,
+      "position": {
+        "x": 468.352925134584,
+        "y": 435.9769598880507
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 45,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "=",
+        "ringbonds": [],
+        "rings": [
+          2,
+          6,
+          8
+        ],
+        "bondCount": 4,
+        "neighbouringElements": [
+          "N",
+          "C",
+          "O"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          2,
+          6,
+          8
+        ],
+        "anchoredRings": [
+          2
+        ],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 50,
+      "parentVertexId": 49,
+      "children": [],
+      "spanningTreeChildren": [],
+      "edges": [
+        49
+      ],
+      "neighbours": [
+        49
+      ],
+      "neighbourCount": 1,
+      "position": {
+        "x": 479.0513065381716,
+        "y": 407.94939068657754
+      },
+      "previousPosition": {
+        "x": 468.352925134584,
+        "y": 435.9769598880507
+      },
+      "positioned": true,
+      "forcePositioned": false,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 46,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "branchBond": "-",
+        "ringbonds": [],
+        "rings": [],
+        "bondCount": 1,
+        "neighbouringElements": [
+          "C"
+        ],
+        "isBridge": false,
+        "isBridgeNode": false,
+        "bridgedRing": null,
+        "originalRings": [],
+        "anchoredRings": [],
+        "isConnectedToRing": true,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 51,
+      "parentVertexId": 49,
+      "children": [
+        3
+      ],
+      "spanningTreeChildren": [],
+      "edges": [
+        50,
+        58,
+        58
+      ],
+      "neighbours": [
+        49,
+        3
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 489.8619183946986,
+        "y": 460.2749723151095
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 47,
+        "element": "O",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [
+          {
+            "bond": "-",
+            "id": 5
+          }
+        ],
+        "rings": [
+          2,
+          6,
+          8
+        ],
+        "bondCount": 3,
+        "class": null,
+        "neighbouringElements": [
+          "C",
+          "Fe"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          2,
+          6,
+          8
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": {
+          "hcount": null,
+          "charge": null,
+          "isotope": null,
+          "class": null
+        },
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 52,
+      "parentVertexId": 42,
+      "children": [
+        53
+      ],
+      "spanningTreeChildren": [
+        53
+      ],
+      "edges": [
+        51,
+        52
+      ],
+      "neighbours": [
+        42,
+        53
+      ],
+      "neighbourCount": 2,
+      "position": {
+        "x": 298.8820121664522,
+        "y": 380.854637524397
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 48,
+        "element": "N",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [
+          4,
+          5,
+          8,
+          9,
+          10,
+          11
+        ],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          4,
+          5,
+          8,
+          9,
+          10,
+          11
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 53,
+      "parentVertexId": 52,
+      "children": [
+        54,
+        9
+      ],
+      "spanningTreeChildren": [
+        54
+      ],
+      "edges": [
+        52,
+        53,
+        54,
+        54
+      ],
+      "neighbours": [
+        52,
+        54,
+        9
+      ],
+      "neighbourCount": 3,
+      "position": {
+        "x": 308.6005095531266,
+        "y": 347.87985952846014
+      },
+      "previousPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "positioned": true,
+      "forcePositioned": true,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 49,
+        "element": "C",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "=",
+        "ringbonds": [
+          {
+            "bond": "-",
+            "id": 1
+          }
+        ],
+        "rings": [
+          4,
+          5,
+          8,
+          9,
+          10,
+          11
+        ],
+        "bondCount": 4,
+        "neighbouringElements": [
+          "N",
+          "O",
+          "C"
+        ],
+        "isBridge": true,
+        "isBridgeNode": false,
+        "bridgedRing": 13,
+        "originalRings": [
+          4,
+          5,
+          8,
+          9,
+          10,
+          11
+        ],
+        "anchoredRings": [],
+        "isConnectedToRing": false,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    },
+    {
+      "id": 54,
+      "parentVertexId": 53,
+      "children": [],
+      "spanningTreeChildren": [],
+      "edges": [
+        53
+      ],
+      "neighbours": [
+        53
+      ],
+      "neighbourCount": 1,
+      "position": {
+        "x": 283.8840626064964,
+        "y": 330.8769994650939
+      },
+      "previousPosition": {
+        "x": 308.6005095531266,
+        "y": 347.87985952846014
+      },
+      "positioned": true,
+      "forcePositioned": false,
+      "angle": null,
+      "dir": 1,
+      "value": {
+        "idx": 50,
+        "element": "O",
+        "drawExplicit": false,
+        "isDrawn": true,
+        "bondType": "-",
+        "ringbonds": [],
+        "rings": [],
+        "bondCount": 2,
+        "neighbouringElements": [
+          "C"
+        ],
+        "isBridge": false,
+        "isBridgeNode": false,
+        "bridgedRing": null,
+        "originalRings": [],
+        "anchoredRings": [],
+        "isConnectedToRing": true,
+        "isPartOfAromaticRing": false,
+        "bracket": null,
+        "plane": 0,
+        "chirality": null,
+        "isStereoCenter": false,
+        "priority": 0,
+        "mainChain": false,
+        "hydrogenDirection": "down",
+        "hasHydrogen": false,
+        "subtreeDepth": 1,
+        "attachedPseudoElements": {},
+        "hasAttachedPseudoElements": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": 0,
+      "sourceId": 0,
+      "targetId": 1,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 1,
+      "sourceId": 1,
+      "targetId": 2,
+      "weight": 2,
+      "bondType": "=",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 2,
+      "sourceId": 2,
+      "targetId": 3,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 3,
+      "sourceId": 3,
+      "targetId": 4,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 4,
+      "sourceId": 4,
+      "targetId": 5,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 5,
+      "sourceId": 5,
+      "targetId": 6,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 6,
+      "sourceId": 6,
+      "targetId": 7,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 7,
+      "sourceId": 7,
+      "targetId": 8,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 8,
+      "sourceId": 8,
+      "targetId": 9,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 9,
+      "sourceId": 9,
+      "targetId": 10,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": "up"
+    },
+    {
+      "id": 10,
+      "sourceId": 9,
+      "targetId": 11,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 11,
+      "sourceId": 11,
+      "targetId": 12,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 12,
+      "sourceId": 12,
+      "targetId": 13,
+      "weight": 2,
+      "bondType": "=",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 13,
+      "sourceId": 12,
+      "targetId": 14,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 14,
+      "sourceId": 14,
+      "targetId": 15,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 15,
+      "sourceId": 15,
+      "targetId": 16,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 16,
+      "sourceId": 16,
+      "targetId": 17,
+      "weight": 2,
+      "bondType": "=",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 17,
+      "sourceId": 16,
+      "targetId": 18,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 18,
+      "sourceId": 18,
+      "targetId": 19,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 19,
+      "sourceId": 18,
+      "targetId": 20,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": "up"
+    },
+    {
+      "id": 20,
+      "sourceId": 20,
+      "targetId": 21,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 21,
+      "sourceId": 18,
+      "targetId": 22,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 22,
+      "sourceId": 22,
+      "targetId": 23,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 23,
+      "sourceId": 23,
+      "targetId": 24,
+      "weight": 2,
+      "bondType": "=",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 24,
+      "sourceId": 23,
+      "targetId": 25,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 25,
+      "sourceId": 25,
+      "targetId": 26,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 26,
+      "sourceId": 26,
+      "targetId": 27,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 27,
+      "sourceId": 27,
+      "targetId": 28,
+      "weight": 2,
+      "bondType": "=",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 28,
+      "sourceId": 27,
+      "targetId": 29,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 29,
+      "sourceId": 29,
+      "targetId": 30,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": "up"
+    },
+    {
+      "id": 30,
+      "sourceId": 29,
+      "targetId": 31,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 31,
+      "sourceId": 31,
+      "targetId": 32,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 32,
+      "sourceId": 32,
+      "targetId": 33,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 33,
+      "sourceId": 33,
+      "targetId": 34,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 34,
+      "sourceId": 34,
+      "targetId": 35,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 35,
+      "sourceId": 34,
+      "targetId": 36,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 36,
+      "sourceId": 36,
+      "targetId": 37,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 37,
+      "sourceId": 36,
+      "targetId": 38,
+      "weight": 2,
+      "bondType": "=",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 38,
+      "sourceId": 29,
+      "targetId": 39,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 39,
+      "sourceId": 39,
+      "targetId": 40,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 40,
+      "sourceId": 40,
+      "targetId": 41,
+      "weight": 2,
+      "bondType": "=",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 41,
+      "sourceId": 40,
+      "targetId": 42,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 42,
+      "sourceId": 42,
+      "targetId": 43,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": "up"
+    },
+    {
+      "id": 43,
+      "sourceId": 42,
+      "targetId": 44,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 44,
+      "sourceId": 44,
+      "targetId": 45,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 45,
+      "sourceId": 45,
+      "targetId": 46,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 46,
+      "sourceId": 46,
+      "targetId": 47,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 47,
+      "sourceId": 47,
+      "targetId": 48,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 48,
+      "sourceId": 47,
+      "targetId": 49,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 49,
+      "sourceId": 49,
+      "targetId": 50,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 50,
+      "sourceId": 49,
+      "targetId": 51,
+      "weight": 2,
+      "bondType": "=",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 51,
+      "sourceId": 42,
+      "targetId": 52,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 52,
+      "sourceId": 52,
+      "targetId": 53,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 53,
+      "sourceId": 53,
+      "targetId": 54,
+      "weight": 2,
+      "bondType": "=",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 54,
+      "sourceId": 9,
+      "targetId": 53,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 55,
+      "sourceId": 3,
+      "targetId": 35,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 56,
+      "sourceId": 3,
+      "targetId": 38,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 57,
+      "sourceId": 3,
+      "targetId": 48,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 58,
+      "sourceId": 3,
+      "targetId": 51,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    },
+    {
+      "id": 59,
+      "sourceId": 1,
+      "targetId": 5,
+      "weight": 1,
+      "bondType": "-",
+      "isPartOfAromaticRing": false,
+      "center": false,
+      "wedge": null
+    }
+  ],
+  "rings": [
+    {
+      "id": 0,
+      "members": [
+        4,
+        3,
+        1,
+        5,
+        2
+      ],
+      "isBridged": false,
+      "isPartOfBridged": true,
+      "isFused": false,
+      "isSpiro": false,
+      "neighbours": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        10,
+        11
+      ],
+      "center": {
+        "x": 468.2130152292748,
+        "y": 413.3222247681719
+      }
+    },
+    {
+      "id": 1,
+      "members": [
+        36,
+        34,
+        3,
+        38,
+        35
+      ],
+      "isBridged": false,
+      "isPartOfBridged": true,
+      "isFused": false,
+      "isSpiro": false,
+      "neighbours": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        10,
+        11
+      ],
+      "center": {
+        "x": 447.76518909551424,
+        "y": 497.44635024711124
+      }
+    },
+    {
+      "id": 2,
+      "members": [
+        49,
+        47,
+        3,
+        51,
+        48
+      ],
+      "isBridged": false,
+      "isPartOfBridged": true,
+      "isFused": false,
+      "isSpiro": false,
+      "neighbours": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        10,
+        11
+      ],
+      "center": {
+        "x": 457.1977989093624,
+        "y": 449.1343667465382
+      }
+    },
+    {
+      "id": 3,
+      "members": [
+        40,
+        39,
+        44,
+        42,
+        46,
+        45,
+        48,
+        47,
+        3,
+        29,
+        32,
+        31,
+        34,
+        33,
+        35
+      ],
+      "isBridged": false,
+      "isPartOfBridged": true,
+      "isFused": false,
+      "isSpiro": false,
+      "neighbours": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "center": {
+        "x": 363.90742928709955,
+        "y": 473.9219795005115
+      }
+    },
+    {
+      "id": 4,
+      "members": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        53,
+        52,
+        3,
+        42,
+        45,
+        44,
+        47,
+        46,
+        48
+      ],
+      "isBridged": false,
+      "isPartOfBridged": true,
+      "isFused": false,
+      "isSpiro": false,
+      "neighbours": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "center": {
+        "x": 382.98908819883275,
+        "y": 391.3748809330126
+      }
+    },
+    {
+      "id": 5,
+      "members": [
+        1,
+        5,
+        6,
+        7,
+        8,
+        9,
+        53,
+        52,
+        2,
+        44,
+        42,
+        46,
+        45,
+        48,
+        47,
+        3
+      ],
+      "isBridged": false,
+      "isPartOfBridged": true,
+      "isFused": false,
+      "isSpiro": false,
+      "neighbours": [
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "center": {
+        "x": 391.34027219686703,
+        "y": 391.9678736099497
+      }
+    },
+    {
+      "id": 6,
+      "members": [
+        3,
+        51,
+        49,
+        29,
+        31,
+        32,
+        33,
+        34,
+        35,
+        39,
+        40,
+        42,
+        44,
+        45,
+        46,
+        47
+      ],
+      "isBridged": false,
+      "isPartOfBridged": true,
+      "isFused": false,
+      "isSpiro": false,
+      "neighbours": [
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "center": {
+        "x": 373.6984585142069,
+        "y": 471.69635476388174
+      }
+    },
+    {
+      "id": 7,
+      "members": [
+        45,
+        44,
+        47,
+        46,
+        3,
+        48,
+        42,
+        36,
+        38,
+        29,
+        39,
+        40,
+        32,
+        31,
+        34,
+        33
+      ],
+      "isBridged": false,
+      "isPartOfBridged": true,
+      "isFused": false,
+      "isSpiro": false,
+      "neighbours": [
+        8,
+        9,
+        10,
+        11
+      ],
+      "center": {
+        "x": 371.33650649492466,
+        "y": 477.33345002067637
+      }
+    },
+    {
+      "id": 8,
+      "members": [
+        1,
+        2,
+        3,
+        51,
+        49,
+        6,
+        5,
+        8,
+        7,
+        9,
+        42,
+        44,
+        45,
+        46,
+        47,
+        53,
+        52
+      ],
+      "isBridged": false,
+      "isPartOfBridged": true,
+      "isFused": false,
+      "isSpiro": false,
+      "neighbours": [
+        9,
+        10,
+        11
+      ],
+      "center": {
+        "x": 398.9416618865112,
+        "y": 394.693997733743
+      }
+    },
+    {
+      "id": 9,
+      "members": [
+        11,
+        12,
+        14,
+        15,
+        16,
+        18,
+        22,
+        23,
+        25,
+        9,
+        26,
+        29,
+        27,
+        40,
+        39,
+        52,
+        42,
+        53
+      ],
+      "isBridged": false,
+      "isPartOfBridged": true,
+      "isFused": false,
+      "isSpiro": false,
+      "neighbours": [
+        10,
+        11
+      ],
+      "center": {
+        "x": 235.6451212592917,
+        "y": 401.5056200019142
+      }
+    },
+    {
+      "id": 10,
+      "members": [
+        1,
+        2,
+        31,
+        29,
+        33,
+        32,
+        35,
+        34,
+        3,
+        27,
+        6,
+        5,
+        7,
+        8,
+        39,
+        42,
+        40,
+        53,
+        52,
+        9
+      ],
+      "isBridged": false,
+      "isPartOfBridged": true,
+      "isFused": false,
+      "isSpiro": false,
+      "neighbours": [
+        11
+      ],
+      "center": {
+        "x": 363.9500722495552,
+        "y": 434.16561516487235
+      }
+    },
+    {
+      "id": 11,
+      "members": [
+        1,
+        2,
+        35,
+        34,
+        3,
+        33,
+        6,
+        5,
+        8,
+        7,
+        11,
+        9,
+        39,
+        29,
+        42,
+        40,
+        53,
+        52,
+        31,
+        32
+      ],
+      "isBridged": false,
+      "isPartOfBridged": true,
+      "isFused": false,
+      "isSpiro": false,
+      "neighbours": [],
+      "center": {
+        "x": 366.4373186323162,
+        "y": 423.28405289760303
+      }
+    },
+    {
+      "id": 12,
+      "members": [
+        25,
+        23,
+        27,
+        26,
+        31,
+        29,
+        33,
+        32,
+        35,
+        34,
+        3,
+        22,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        12,
+        14,
+        15,
+        16,
+        18
+      ],
+      "isBridged": false,
+      "isPartOfBridged": true,
+      "isFused": false,
+      "isSpiro": false,
+      "neighbours": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "center": {
+        "x": 300.80973859278527,
+        "y": 417.2595912928042
+      }
+    }
+  ],
+  "metadata": {
+    "vertexCount": 55,
+    "edgeCount": 60,
+    "ringCount": 13,
+    "atomIdxToVertexId": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54
+    ],
+    "isomeric": true
+  }
+}

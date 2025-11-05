@@ -47,6 +47,7 @@ class BridgedRingHandler {
     }
 
     createBridgedRing(ringIds: number[], sourceVertexId: number): Ring {
+        console.log('[createBridgedRing] start', { ringIds, sourceVertexId });
         let ringMembers = new Set();
         let vertices = new Set();
         let neighbours = new Set();
@@ -159,6 +160,7 @@ class BridgedRingHandler {
           this.ringManager.getRing(id as number).neighbours.push(ring.id);
         }
 
+        console.log('[createBridgedRing] created', { id: ring.id, members: ring.members.length, neighbours: ring.neighbours });
         return ring;
     }
 
@@ -181,14 +183,18 @@ class BridgedRingHandler {
 
           let involvedRings = this.getBridgedRingRings(ring.id);
 
+          console.log('[processBridgedRingsInInitRings] creating bridged ring', { id, involvedRings });
           this.ringManager.bridgedRing = true;
           this.createBridgedRing(involvedRings, ring.members[0]);
           this.ringManager.bridgedRing = false;
 
           for (var i = 0; i < involvedRings.length; i++) {
             this.ringManager.removeRing(involvedRings[i]);
+            console.log('[processBridgedRingsInInitRings] removed ring', involvedRings[i]);
           }
         }
+
+        console.log('[processBridgedRingsInInitRings] final rings', this.ringManager.rings.map(r => ({ id: r.id, isBridged: r.isBridged, members: r.members.length })));
     }
 }
 

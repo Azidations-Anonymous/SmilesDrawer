@@ -86,7 +86,7 @@
                             <article class="tile is-child notification">
                                 <p class="title">Custom SMILES #2</p>
                                 <input id="input-2" class="input" type="text" placeholder="Custom SMILES"
-                                    value="NC1=C(Br)C=C(Br)C=C1CN[C@]1CC[C@](O)CC1">
+                                    value="CC1=[O][Fe]2345ON1CCC[C@H]1NC(=O)CNC(=O)[C@H](CO)NC(=O)CNC(=O)[C@@H](CCCN(O2)C(C)=[O]3)NC(=O)[C@@H](CCCN(O4)C(C)=[O]5)NC1=O">
                                 <div class="content" style="overflow-x: auto; overflow-y: auto">
                                     <svg id="display-2" data-smiles="NC1=C(Br)C=C(Br)C=C1CN[C@]1CC[C@](O)CC1" />
                                 </div>
@@ -126,6 +126,15 @@
         </div>
     </section>
 
+    <section class="section pt-0">
+        <div class="container">
+            <h2 class="title is-5">Runtime Log</h2>
+            <textarea id="runtime-log" class="textarea is-family-monospace" rows="12" readonly>
+[console]
+            </textarea>
+        </div>
+    </section>
+
     <div id="export-modal" class="modal">
         <div class="modal-background"></div>
         <div class="modal-card">
@@ -158,6 +167,26 @@
 
     <script>
         const pane = new Tweakpane.Pane();
+
+        const logBuffer = [];
+        const runtimeLog = document.getElementById('runtime-log');
+        const originalConsoleLog = console.log.bind(console);
+        console.log = function (...args) {
+            const message = args.map((arg) => {
+                if (typeof arg === 'object') {
+                    try {
+                        return JSON.stringify(arg);
+                    } catch (err) {
+                        return String(arg);
+                    }
+                }
+                return String(arg);
+            }).join(' ');
+            logBuffer.push(message);
+            runtimeLog.value = logBuffer.slice(-200).join('\n');
+            runtimeLog.scrollTop = runtimeLog.scrollHeight;
+            originalConsoleLog(...args);
+        };
 
         let theme = 'custom';
 
@@ -600,11 +629,45 @@
             };
         };
 
+        function patchRingManager(ringManager) {
+            if (ringManager.__debugPatched) {
+                return;
+            }
+
+            const originalInitRings = ringManager.initRings;
+            ringManager.initRings = function (...args) {
+                console.log('[browser initRings] start', this.rings.map((r) => r.id));
+                const result = originalInitRings.apply(this, args);
+                console.log('[browser initRings] after', this.rings.map((r) => r.id));
+                return result;
+            };
+
+            const handler = ringManager.bridgedRingHandler;
+            const originalProcess = handler.processBridgedRingsInInitRings;
+            handler.processBridgedRingsInInitRings = function (...args) {
+                console.log('[browser processBridgedRingsInInitRings] rings before', this.ringManager.rings.map((r) => r.id));
+                const result = originalProcess.apply(this, args);
+                console.log('[browser processBridgedRingsInInitRings] rings after', this.ringManager.rings.map((r) => ({ id: r.id, isBridged: r.isBridged, members: r.members.length })));
+                return result;
+            };
+
+            const originalCreate = handler.createBridgedRing;
+            handler.createBridgedRing = function (ringIds, sourceVertexId) {
+                console.log('[browser createBridgedRing] start', { ringIds, sourceVertexId });
+                const result = originalCreate.call(this, ringIds, sourceVertexId);
+                console.log('[browser createBridgedRing] created', { id: result.id, members: result.members.length });
+                return result;
+            };
+
+            ringManager.__debugPatched = true;
+        }
+
         function drawAndCollect(smiles, displaySelector, textareaId) {
             const sd = new SmiDrawer(moleculeOptions, reactionOptions);
+            patchRingManager(sd.drawer.preprocessor.ringManager);
             try {
                 sd.draw(smiles, displaySelector, theme);
-                const data = sd.drawer ? sd.drawer.getPositionData() : null;
+                const data = collectPositionData(sd.drawer ? sd.drawer.preprocessor : null);
 
                 if (textareaId) {
                     const output = document.getElementById(textareaId);
