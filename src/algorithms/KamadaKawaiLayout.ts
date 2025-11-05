@@ -140,33 +140,36 @@ class KamadaKawaiLayout {
         });
 
         // Returns both gradient components and the squared gradient magnitude ||Δ_m||^2.
-        const energy = (index: number): [number, number, number] => {
-          return [arrEnergySumX[index] * arrEnergySumX[index] + arrEnergySumY[index] * arrEnergySumY[index], arrEnergySumX[index], arrEnergySumY[index]];
+        type VertexEnergy = { magnitude: number; gradient: ForceVector };
+        const computeVertexEnergy = (index: number): VertexEnergy => {
+          const gradient = { x: arrEnergySumX[index], y: arrEnergySumY[index] };
+          return {
+            magnitude: energyMagnitude(gradient),
+            gradient
+          };
         };
 
         // Identifies the vertex with the highest residual energy (see equation (9) in the paper).
         // The optimisation always targets the node that is currently "unhappiest", i.e. subject
         // to the largest displacement forces.
-        const highestEnergy = (): [number, number, number, number] => {
-          let maxEnergy = 0.0;
-          let maxEnergyId = 0;
-          let maxDEX = 0.0;
-          let maxDEY = 0.0;
+        const findHighestEnergy = (): { index: number; energy: VertexEnergy } => {
+          let maxEnergyMagnitude = 0.0;
+          let maxEnergyIndex = 0;
+          let maxEnergy: VertexEnergy = { magnitude: 0.0, gradient: zeroForce() };
 
           ArrayHelper.forEachIndexReverse(length, (idx) => {
-            let [delta, dEX, dEY] = energy(idx);
+            const currentEnergy = computeVertexEnergy(idx);
 
-            if (delta > maxEnergy && arrPositioned[idx] === false) {
+            if (currentEnergy.magnitude > maxEnergyMagnitude && arrPositioned[idx] === false) {
               // Once a vertex has been marked as "positioned" we skip it so that pre-existing anchors
               // such as previously drawn rings remain stable.
-              maxEnergy = delta;
-              maxEnergyId = idx;
-              maxDEX = dEX;
-              maxDEY = dEY;
+              maxEnergyMagnitude = currentEnergy.magnitude;
+              maxEnergyIndex = idx;
+              maxEnergy = currentEnergy;
             }
           });
 
-          return [maxEnergyId, maxEnergy, maxDEX, maxDEY];
+          return { index: maxEnergyIndex, energy: maxEnergy };
         };
 
         // Performs a two-dimensional Newton-Raphson update for a single vertex (Section 3.2).
@@ -269,7 +272,11 @@ class KamadaKawaiLayout {
         // (initially supplied via the maxEnergy parameter) drops below threshold or we hit the iteration cap.
         while (maxEnergy > threshold && maxIteration > iteration) {
           iteration++;
-          [maxEnergyId, maxEnergy, dEX, dEY] = highestEnergy();
+          const candidate = findHighestEnergy();
+          maxEnergyId = candidate.index;
+          maxEnergy = candidate.energy.magnitude;
+          dEX = candidate.energy.gradient.x;
+          dEY = candidate.energy.gradient.y;
           delta = maxEnergy;
           innerIteration = 0;
           // Inner loop: apply Newton updates to the selected vertex until the forces acting on it are
@@ -277,7 +284,10 @@ class KamadaKawaiLayout {
           while (delta > innerThreshold && maxInnerIteration > innerIteration) {
             innerIteration++;
             update(maxEnergyId, dEX, dEY);
-            [delta, dEX, dEY] = energy(maxEnergyId);
+            const energyAfterUpdate = computeVertexEnergy(maxEnergyId);
+            delta = energyAfterUpdate.magnitude;
+            dEX = energyAfterUpdate.gradient.x;
+            dEY = energyAfterUpdate.gradient.y;
           }
         }
 
