@@ -2,18 +2,22 @@
 
 const fs = require('fs');
 const path = require('path');
-const { JSDOM } = require('jsdom');
+const { parseHTML } = require('linkedom');
 
 const { SMILES, MOLECULE_OPTIONS } = require('./config');
 
-const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', { pretendToBeVisual: true });
-global.window = dom.window;
-global.document = dom.window.document;
-global.navigator = dom.window.navigator;
-global.HTMLElement = dom.window.HTMLElement;
-global.SVGElement = dom.window.SVGElement;
-global.HTMLCanvasElement = dom.window.HTMLCanvasElement;
-global.HTMLImageElement = dom.window.HTMLImageElement;
+const { window } = parseHTML('<!DOCTYPE html><html><body></body></html>');
+global.window = window;
+global.document = window.document;
+global.navigator = window.navigator;
+global.HTMLElement = window.HTMLElement;
+global.SVGElement = window.SVGElement;
+global.HTMLCanvasElement = window.HTMLCanvasElement;
+global.HTMLImageElement = window.HTMLImageElement;
+global.Element = window.Element;
+global.Node = window.Node;
+global.DOMParser = window.DOMParser;
+global.XMLSerializer = window.XMLSerializer;
 
 const SmilesDrawer = require('../../app.js');
 const SmiDrawer = SmilesDrawer.SmiDrawer;

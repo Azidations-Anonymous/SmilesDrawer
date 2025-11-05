@@ -14,10 +14,10 @@
 
 const scriptStartTime = Date.now();
 
-const jsdomLoadStart = Date.now();
-const { JSDOM } = require('jsdom');
-const jsdomLoadEnd = Date.now();
-console.log(`TIMING: JSDOM load took ${jsdomLoadEnd - jsdomLoadStart}ms`);
+const domLibLoadStart = Date.now();
+const { parseHTML } = require('linkedom');
+const domLibLoadEnd = Date.now();
+console.log(`TIMING: linkedom load took ${domLibLoadEnd - domLibLoadStart}ms`);
 
 const fs = require('fs');
 
@@ -35,10 +35,18 @@ if (!smilesInput) {
 console.log(`PROCESSING: ${smilesInput}`);
 
 const domSetupStart = Date.now();
-const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
-global.window = dom.window;
-global.document = dom.window.document;
-global.navigator = dom.window.navigator;
+const { window } = parseHTML('<!DOCTYPE html><html><body></body></html>');
+global.window = window;
+global.document = window.document;
+global.navigator = window.navigator;
+global.HTMLElement = window.HTMLElement;
+global.SVGElement = window.SVGElement;
+global.HTMLCanvasElement = window.HTMLCanvasElement;
+global.HTMLImageElement = window.HTMLImageElement;
+global.Element = window.Element;
+global.Node = window.Node;
+global.DOMParser = window.DOMParser;
+global.XMLSerializer = window.XMLSerializer;
 const domSetupEnd = Date.now();
 console.log(`TIMING: DOM setup took ${domSetupEnd - domSetupStart}ms`);
 

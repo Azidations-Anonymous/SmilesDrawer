@@ -2,16 +2,24 @@
 
 const fs = require('fs');
 const path = require('path');
-const { JSDOM } = require('jsdom');
+const { parseHTML } = require('linkedom');
 
 const Parser = require('../../src/parsing/Parser');
 const MolecularPreprocessor = require('../../src/preprocessing/MolecularPreprocessor');
 const { SMILES, MOLECULE_OPTIONS } = require('./config');
 
-const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
-global.window = dom.window;
-global.document = dom.window.document;
-global.navigator = dom.window.navigator;
+const { window } = parseHTML('<!DOCTYPE html><html><body></body></html>');
+global.window = window;
+global.document = window.document;
+global.navigator = window.navigator;
+global.HTMLElement = window.HTMLElement;
+global.SVGElement = window.SVGElement;
+global.HTMLCanvasElement = window.HTMLCanvasElement;
+global.HTMLImageElement = window.HTMLImageElement;
+global.Element = window.Element;
+global.Node = window.Node;
+global.DOMParser = window.DOMParser;
+global.XMLSerializer = window.XMLSerializer;
 
 function cloneRing(ring) {
     return {
