@@ -280,25 +280,20 @@ class KamadaKawaiLayout {
         let maxEnergyId = 0;
         let dEX = 0.0;
         let dEY = 0.0;
-          let delta = 0.0;
-        let iteration = 0;
-        let innerIteration = 0;
 
         // Outer loop mirrors the stopping criterion in Section 3.2: iterate until the residual energy
         // (initially supplied via the maxEnergy parameter) drops below threshold or we hit the iteration cap.
-        while (maxEnergy > threshold && maxIteration > iteration) {
-          iteration++;
+        for (let iteration = 0; maxEnergy > threshold && iteration < maxIteration; iteration++) {
           const candidate = findHighestEnergy();
           maxEnergyId = candidate.index;
           maxEnergy = candidate.energy.magnitude;
           dEX = candidate.energy.gradient.x;
           dEY = candidate.energy.gradient.y;
-          delta = maxEnergy;
-          innerIteration = 0;
+          let delta = maxEnergy;
+
           // Inner loop: apply Newton updates to the selected vertex until the forces acting on it are
           // below the requested tolerance or a hard iteration limit is reached to avoid infinite loops.
-          while (delta > innerThreshold && maxInnerIteration > innerIteration) {
-            innerIteration++;
+          for (let innerIteration = 0; delta > innerThreshold && innerIteration < maxInnerIteration; innerIteration++) {
             applyNewtonUpdate({ index: maxEnergyId, gradient: { x: dEX, y: dEY } });
             const energyAfterUpdate = computeVertexEnergy(maxEnergyId);
             delta = energyAfterUpdate.magnitude;
