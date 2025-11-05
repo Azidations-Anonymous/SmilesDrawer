@@ -25,24 +25,29 @@ class SvgWeightsDrawer {
       throw new Error('The number of weights supplied must be equal to the number of (heavy) atoms in the molecule.');
     }
 
+    const renderer = this.drawer.getRenderer();
+    const bounds = renderer.getBounds();
+
     let points = [];
 
     for (const atomIdx of this.drawer.preprocessor.graph.atomIdxToVertexId) {
       let vertex = this.drawer.preprocessor.graph.vertices[atomIdx];
       points.push(new Vector2(
-        vertex.position.x - this.drawer.svgWrapper.minX,
-        vertex.position.y - this.drawer.svgWrapper.minY)
+        vertex.position.x - bounds.minX,
+        vertex.position.y - bounds.minY)
       );
     }
 
     let gd = new GaussDrawer(
-      points, weights, this.drawer.svgWrapper.drawingWidth, this.drawer.svgWrapper.drawingHeight,
+      points, weights, bounds.width, bounds.height,
       this.drawer.opts.weights.sigma, this.drawer.opts.weights.interval, this.drawer.opts.weights.colormap,
       this.drawer.opts.weights.opacity, weightsNormalized
     );
 
     gd.draw();
-    this.drawer.svgWrapper.addLayer(gd.getSVG());
+    if (renderer.addLayer) {
+      renderer.addLayer(gd.getSVG());
+    }
   }
 }
 

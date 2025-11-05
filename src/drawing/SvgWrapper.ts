@@ -8,6 +8,7 @@ import MathHelper = require('../utils/MathHelper');
 import { IMoleculeOptions, AttachedPseudoElements } from '../config/IOptions';
 import ThemeManager = require('../config/ThemeManager');
 import { TextDirection } from '../types/CommonTypes';
+import IDrawingSurface = require('./renderers/IDrawingSurface');
 
 function makeid(length: number): string {
   var result = '';
@@ -19,7 +20,7 @@ function makeid(length: number): string {
   return result;
 }
 
-class SvgWrapper {
+class SvgWrapper implements IDrawingSurface {
   svg: SVGElement;
   container: SVGElement | null;
   opts: IMoleculeOptions;
@@ -174,6 +175,10 @@ class SvgWrapper {
     }
   }
 
+  finalize(): void {
+    this.constructSvg();
+  }
+
   /**
    * Add a background to the svg.
    */
@@ -264,6 +269,17 @@ class SvgWrapper {
 
     this.drawingWidth = this.maxX - this.minX;
     this.drawingHeight = this.maxY - this.minY;
+  }
+
+  getBounds(): IDrawingSurface.Bounds {
+    return {
+      minX: this.minX,
+      minY: this.minY,
+      maxX: this.maxX,
+      maxY: this.maxY,
+      width: this.drawingWidth,
+      height: this.drawingHeight
+    };
   }
 
   updateViewbox(scale: number): void {

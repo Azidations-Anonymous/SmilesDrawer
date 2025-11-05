@@ -17,6 +17,7 @@ import SvgVertexDrawer = require('./draw/SvgVertexDrawer');
 import SvgWeightsDrawer = require('./draw/SvgWeightsDrawer');
 import { IMoleculeOptions } from '../config/IOptions';
 import { AtomHighlight } from '../preprocessing/MolecularDataTypes';
+import IDrawingSurface = require('./renderers/IDrawingSurface');
 
 type ParseTree = any;
 
@@ -25,6 +26,8 @@ class SvgDrawer {
   opts: IMoleculeOptions;
   clear: boolean;
   svgWrapper: SvgWrapper | null;
+// ensure property typed? Eh.
+  renderer: IDrawingSurface | null;
   themeManager: ThemeManager | null;
   bridgedRing: boolean;
     private edgeDrawer: SvgEdgeDrawer;
@@ -36,6 +39,7 @@ class SvgDrawer {
       this.opts = this.preprocessor.opts;
       this.clear = clear;
       this.svgWrapper = null;
+      this.renderer = null;
       this.themeManager = null;
       this.edgeDrawer = new SvgEdgeDrawer(this);
         this.vertexDrawer = new SvgVertexDrawer(this);
@@ -53,6 +57,8 @@ class SvgDrawer {
    * @returns {SVGElement} The svg element
    */
   draw(data: ParseTree, target: string | SVGElement | null, themeName: string = 'light', weights: number[] | null = null, infoOnly: boolean = false, highlight_atoms: AtomHighlight[] = [], weightsNormalized: boolean = false): SVGElement {
+    const usingExternalRenderer = this.renderer !== null && this.renderer !== this.svgWrapper;
+
     if (target === null || target === 'svg') {
       target = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       target.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
@@ -80,32 +86,41 @@ class SvgDrawer {
 
     if (!infoOnly) {
       this.themeManager = new ThemeManager(this.opts.themes, themeName);
-      if (this.svgWrapper === null || this.clear) {
-        this.svgWrapper = new SvgWrapper(this.themeManager, target, this.opts, this.clear);
+      if (!usingExternalRenderer) {
+        if (this.svgWrapper === null || this.clear) {
+          this.svgWrapper = new SvgWrapper(this.themeManager, target, this.opts, this.clear);
+        }
+        this.renderer = this.svgWrapper;
+      }
+    } else {
+      if (!usingExternalRenderer) {
+        this.renderer = null;
       }
     }
 
     preprocessor.processGraph();
 
-    // Set the canvas to the appropriate size
-    this.svgWrapper.determineDimensions(preprocessor.graph.vertices);
+    if (!infoOnly) {
+      const renderer = this.getRenderer();
+      renderer.determineDimensions(preprocessor.graph.vertices);
 
-    // Do the actual drawing
-    this.drawAtomHighlights(preprocessor.opts.debug);
-    this.drawEdges(preprocessor.opts.debug);
-    this.drawVertices(preprocessor.opts.debug);
+      // Do the actual drawing
+      this.drawAtomHighlights(preprocessor.opts.debug);
+      this.drawEdges(preprocessor.opts.debug);
+      this.drawVertices(preprocessor.opts.debug);
 
-    if (weights !== null) {
-      this.drawWeights(weights, weightsNormalized);
+      if (weights !== null) {
+        this.drawWeights(weights, weightsNormalized);
+      }
+
+      if (preprocessor.opts.debug) {
+        console.log(preprocessor.graph);
+        console.log(preprocessor.rings);
+        console.log(preprocessor.ringConnections);
+      }
+
+      renderer.finalize();
     }
-
-    if (preprocessor.opts.debug) {
-      console.log(preprocessor.graph);
-      console.log(preprocessor.rings);
-      console.log(preprocessor.ringConnections);
-    }
-
-    this.svgWrapper.constructSvg();
 
     // Reset options in case weights were added.
     if (weights !== null) {
@@ -141,7 +156,9 @@ class SvgDrawer {
     svg.setAttributeNS(null, 'style', 'visibility: hidden: position: absolute; left: -1000px');
     document.body.appendChild(svg);
     this.draw(data, svg, themeName, null, infoOnly);
-    this.svgWrapper.toCanvas(canvas, this.opts.width, this.opts.height);
+    if (this.svgWrapper && this.svgWrapper.toCanvas) {
+      this.svgWrapper.toCanvas(canvas, this.opts.width, this.opts.height);
+    }
     document.body.removeChild(svg);
     return target;
   }
@@ -216,6 +233,17 @@ class SvgDrawer {
 
     drawWeights(weights: number[], weightsNormalized: boolean): void {
         this.weightsDrawer.drawWeights(weights, weightsNormalized);
+    }
+
+    useRenderer(renderer: IDrawingSurface | null): void {
+        this.renderer = renderer;
+    }
+
+    getRenderer(): IDrawingSurface {
+        if (!this.renderer) {
+            throw new Error('Renderer not initialized.');
+        }
+        return this.renderer;
     }
 }
 

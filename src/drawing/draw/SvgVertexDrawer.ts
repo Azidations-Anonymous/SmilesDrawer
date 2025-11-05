@@ -18,7 +18,7 @@ class SvgVertexDrawer {
     let opts = preprocessor.opts;
     let graph = preprocessor.graph;
     let rings = preprocessor.rings;
-    let svgWrapper = this.drawer.svgWrapper;
+    let renderer = this.drawer.getRenderer();
 
     for (var i = 0; i < graph.vertices.length; i++) {
       let vertex = graph.vertices[i];
@@ -27,7 +27,7 @@ class SvgVertexDrawer {
       for (var j = 0; j < preprocessor.highlight_atoms.length; j++) {
         let highlight = preprocessor.highlight_atoms[j]
         if (atom.class === highlight[0]) {
-          svgWrapper.drawAtomHighlight(vertex.position.x, vertex.position.y, highlight[1]);
+          renderer.drawAtomHighlight(vertex.position.x, vertex.position.y, highlight[1]);
         }
       }
     }
@@ -45,7 +45,7 @@ class SvgVertexDrawer {
       opts = preprocessor.opts,
       graph = preprocessor.graph,
       rings = preprocessor.rings,
-      svgWrapper = this.drawer.svgWrapper;
+      renderer = this.drawer.getRenderer();
 
     for (var i = 0; i < graph.vertices.length; i++) {
       let vertex = graph.vertices[i];
@@ -78,7 +78,7 @@ class SvgVertexDrawer {
       }
 
       if (opts.atomVisualization === 'allballs') {
-        svgWrapper.drawBall(vertex.position.x, vertex.position.y, element);
+        renderer.drawBall(vertex.position.x, vertex.position.y, element);
       } else if ((atom.isDrawn && (!isCarbon || atom.drawExplicit || isTerminal || atom.hasAttachedPseudoElements)) || graph.vertices.length === 1) {
         if (opts.atomVisualization === 'default') {
           let attachedPseudoElements = atom.getAttachedPseudoElements();
@@ -88,10 +88,10 @@ class SvgVertexDrawer {
             dir = 'right';
           }
 
-          svgWrapper.drawText(vertex.position.x, vertex.position.y,
+          renderer.drawText(vertex.position.x, vertex.position.y,
             element, hydrogens, dir, isTerminal, charge, isotope, graph.vertices.length, attachedPseudoElements);
         } else if (opts.atomVisualization === 'balls') {
-          svgWrapper.drawBall(vertex.position.x, vertex.position.y, element);
+          renderer.drawBall(vertex.position.x, vertex.position.y, element);
         }
       } else if (vertex.getNeighbourCount() === 2 && vertex.forcePositioned == true) {
         // If there is a carbon which bonds are in a straight line, draw a dot
@@ -100,13 +100,13 @@ class SvgVertexDrawer {
         let angle = Vector2.threePointangle(vertex.position, a, b);
 
         if (Math.abs(Math.PI - angle) < 0.1) {
-          svgWrapper.drawPoint(vertex.position.x, vertex.position.y, element);
+          renderer.drawPoint(vertex.position.x, vertex.position.y, element);
         }
       }
 
       if (debug) {
         let value = 'v: ' + vertex.id + ' ' + ArrayHelper.print(atom.ringbonds);
-        svgWrapper.drawDebugText(vertex.position.x, vertex.position.y, value);
+        renderer.drawDebugText(vertex.position.x, vertex.position.y, value);
       }
       // else {
       //   svgWrapper.drawDebugText(vertex.position.x, vertex.position.y, vertex.value.chirality);
@@ -117,7 +117,7 @@ class SvgVertexDrawer {
     if (opts.debug) {
       for (var j = 0; j < rings.length; j++) {
         let center = rings[j].center;
-        svgWrapper.drawDebugPoint(center.x, center.y, 'r: ' + rings[j].id);
+        renderer.drawDebugPoint(center.x, center.y, 'r: ' + rings[j].id);
       }
     }
   }
