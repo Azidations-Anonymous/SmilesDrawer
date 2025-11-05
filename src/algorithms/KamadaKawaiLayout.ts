@@ -47,11 +47,7 @@ class KamadaKawaiLayout {
           return;
         }
 
-        type VertexState = { id: number; anchored: boolean; x: number; y: number };
         type ForceVector = { x: number; y: number };
-        type EnergyState = { matrix: ForceVector[][]; sums: ForceVector[] };
-        type LayoutState = { vertices: VertexState[]; energy: EnergyState };
-        type Hessian = { dxx: number; dyy: number; dxy: number };
 
         const zeroForce = (): ForceVector => ({ x: 0, y: 0 });
         const squaredGradientMagnitude = (force: ForceVector): number => force.x * force.x + force.y * force.y;
@@ -86,6 +82,7 @@ class KamadaKawaiLayout {
           return currentAngle + angle;
         };
         vertexIds.reduceRight(placeVertex, 0.0);
+        const movableVertexIndices = Array.from({ length }, (_, vertexIndex) => vertexIndex).filter((vertexIndex) => !arrPositioned[vertexIndex]);
 
         // Equivalent of equation (2) in the paper: desired Euclidean distance l_ij = L * d_ij.
         // Each graph-theoretical distance gets translated into how far the points should sit apart
@@ -177,6 +174,7 @@ class KamadaKawaiLayout {
 
         // Returns both gradient components and the squared gradient magnitude ||Δ_m||^2.
         type VertexEnergy = { magnitude: number; gradient: ForceVector };
+        type VertexEnergyCandidate = { index: number; energy: VertexEnergy };
         const computeVertexEnergy = (index: number): VertexEnergy => {
           const gradient = { x: arrEnergySumX[index], y: arrEnergySumY[index] };
           return {
@@ -188,24 +186,24 @@ class KamadaKawaiLayout {
         // Identifies the vertex with the highest residual energy (see equation (9) in the paper).
         // The optimisation always targets the node that is currently "unhappiest", i.e. subject
         // to the largest displacement forces.
-        const findHighestEnergy = (): { index: number; energy: VertexEnergy } => {
-          let bestIndex = 0;
-          let bestEnergy: VertexEnergy = { magnitude: 0.0, gradient: zeroForce() };
-          let foundCandidate = false;
-
-          for (let idx = 0; idx < length; idx++) {
-            if (arrPositioned[idx]) {
-              continue;
-            }
-            const currentEnergy = computeVertexEnergy(idx);
-            if (!foundCandidate || currentEnergy.magnitude > bestEnergy.magnitude) {
-              bestIndex = idx;
-              bestEnergy = currentEnergy;
-              foundCandidate = true;
-            }
+        const findHighestEnergy = (): VertexEnergyCandidate => {
+          if (movableVertexIndices.length === 0) {
+            return { index: 0, energy: { magnitude: 0.0, gradient: zeroForce() } };
           }
 
-          return { index: bestIndex, energy: bestEnergy };
+          const [firstCandidateIndex, ...remainingCandidateIndices] = movableVertexIndices;
+          const initialCandidate: VertexEnergyCandidate = {
+            index: firstCandidateIndex,
+            energy: computeVertexEnergy(firstCandidateIndex)
+          };
+
+          return remainingCandidateIndices.reduce<VertexEnergyCandidate>((bestCandidate, candidateIndex) => {
+            const candidateEnergy = computeVertexEnergy(candidateIndex);
+            if (candidateEnergy.magnitude > bestCandidate.energy.magnitude) {
+              return { index: candidateIndex, energy: candidateEnergy };
+            }
+            return bestCandidate;
+          }, initialCandidate);
         };
 
         // Performs a two-dimensional Newton-Raphson update for a single vertex (Section 3.2).
