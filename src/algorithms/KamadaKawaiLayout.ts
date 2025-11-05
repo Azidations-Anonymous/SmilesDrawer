@@ -175,7 +175,8 @@ class KamadaKawaiLayout {
         // Performs a two-dimensional Newton-Raphson update for a single vertex (Section 3.2).
         // The Hessian is represented by dxx, dyy, dxy and the gradient is dEX/dEY. After the
         // position update we refresh the cached energy contributions to keep the global sums valid.
-        const update = function (index: number, dEX: number, dEY: number): void {
+        type NewtonContext = { index: number; gradient: ForceVector };
+        const update = function ({ index, gradient }: NewtonContext): void {
           let dxx = 0.0;
           let dyy = 0.0;
           let dxy = 0.0;
@@ -218,9 +219,9 @@ class KamadaKawaiLayout {
 
           // Solve the 2x2 linear system that Newton-Raphson requires. The formulas below are the
           // closed-form solutions for dx and dy when dealing with the symmetric Hessian in the paper.
-          let dy = (dEX / dxx + dEY / dxy);
+          let dy = (gradient.x / dxx + gradient.y / dxy);
           dy /= (dxy / dxx - dyy / dxy); // had to split this onto two lines because the syntax highlighter went crazy.
-          let dx = -(dxy * dy + dEX) / dxx;
+          let dx = -(dxy * dy + gradient.x) / dxx;
 
           // Apply the positional correction for vertex m. dx/dy describe how far we move the point
           // along the x and y axes to reduce the local spring energy.
@@ -229,8 +230,8 @@ class KamadaKawaiLayout {
 
           // Update the energies
           const arrE = matEnergy[index];
-          dEX = 0.0;
-          dEY = 0.0;
+          let updatedGradientX = 0.0;
+          let updatedGradientY = 0.0;
 
           ux = arrPositionX[index];
           uy = arrPositionY[index];
@@ -249,14 +250,14 @@ class KamadaKawaiLayout {
             const dyLocal = arrK[idx] * ((uy - vy) - arrL[idx] * (uy - vy) * denom);
 
             arrE[idx] = { x: dxLocal, y: dyLocal };
-            dEX += dxLocal;
-            dEY += dyLocal;
+            updatedGradientX += dxLocal;
+            updatedGradientY += dyLocal;
             // Adjust the global force sums by the delta between old and new partial derivatives.
             arrEnergySumX[idx] += dxLocal - prevEx;
             arrEnergySumY[idx] += dyLocal - prevEy;
           });
-          arrEnergySumX[index] = dEX;
-          arrEnergySumY[index] = dEY;
+          arrEnergySumX[index] = updatedGradientX;
+          arrEnergySumY[index] = updatedGradientY;
         };
 
         // Setting up variables for the nested optimisation loops (outer = vertex selection,
@@ -264,7 +265,7 @@ class KamadaKawaiLayout {
         let maxEnergyId = 0;
         let dEX = 0.0;
         let dEY = 0.0;
-        let delta = 0.0;
+          let delta = 0.0;
         let iteration = 0;
         let innerIteration = 0;
 
@@ -283,7 +284,7 @@ class KamadaKawaiLayout {
           // below the requested tolerance or a hard iteration limit is reached to avoid infinite loops.
           while (delta > innerThreshold && maxInnerIteration > innerIteration) {
             innerIteration++;
-            update(maxEnergyId, dEX, dEY);
+            update({ index: maxEnergyId, gradient: { x: dEX, y: dEY } });
             const energyAfterUpdate = computeVertexEnergy(maxEnergyId);
             delta = energyAfterUpdate.magnitude;
             dEX = energyAfterUpdate.gradient.x;
