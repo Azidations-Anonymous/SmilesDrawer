@@ -322,17 +322,22 @@ class KamadaKawaiLayout {
           arrEnergySumY[index] = updatedGradient.y;
         };
 
+        type NewtonState = { energy: VertexEnergy; iterations: number };
         const relaxCandidate = (candidate: VertexEnergyCandidate): VertexEnergyCandidate => {
-          let relaxedEnergy = candidate.energy;
-          let iterations = 0;
+          const iterateNewton = ({ energy, iterations }: NewtonState): NewtonState => {
+            if (energy.magnitude <= innerThreshold || iterations >= maxInnerIteration) {
+              return { energy, iterations };
+            }
 
-          while (relaxedEnergy.magnitude > innerThreshold && iterations < maxInnerIteration) {
-            applyNewtonUpdate({ index: candidate.index, gradient: relaxedEnergy.gradient });
-            relaxedEnergy = computeVertexEnergy(candidate.index);
-            iterations += 1;
-          }
+            applyNewtonUpdate({ index: candidate.index, gradient: energy.gradient });
+            return iterateNewton({
+              energy: computeVertexEnergy(candidate.index),
+              iterations: iterations + 1
+            });
+          };
 
-          return { index: candidate.index, energy: relaxedEnergy };
+          const relaxedState = iterateNewton({ energy: candidate.energy, iterations: 0 });
+          return { index: candidate.index, energy: relaxedState.energy };
         };
 
         const iterateLayoutOnce = (): number => {
