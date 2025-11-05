@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SmilesDrawer 2.0</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+        integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script type="text/javascript" src="smiles-drawer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tweakpane@3.0.8/dist/tweakpane.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.3/beautify.min.js"
+        integrity="sha512-16ZUuuM/OceXU7i8U6zQqtDsG+PCKcWX9XlmNN0z+lqUlBMzDmIzrKt6TOmW48EAU47XIU6Spaelz8tM9LgGKQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+
+<body>
+    <section class="section">
+        <div class="container">
+            <h1 class="title">
+                SmilesDrawer 2.0
+            </h1>
+            <p class="subtitle">
+                No server, no images, no templates, just a SMILES 😊
+            </p>
+            Using for academic work? Please <b>cite</b>: <a
+                href="https://doi.org/10.1021/acs.jcim.7b00425">10.1021/acs.jcim.7b00425</a>
+            <br />
+            <br />
+
+            <a class="button is-small" href="https://smilesdrawer.surge.sh/index.html">Home</a>
+            <a class="button is-small" href="https://smilesdrawer.surge.sh/use.html">Use</a>
+            <a class="button is-small" href="playground.html">Playground</a>
+            <a class="button is-small" href="https://github.com/reymond-group/smilesDrawer">
+                <span class="icon">
+                    <i class="fab fa-github"></i>
+                </span>
+                <span>Source</span>
+            </a>
+            <br />
+            <br />
+
+            <div class="field">
+                <label class="label is-small">Theme</label>
+                <div class="control has-icons-left">
+                    <div class="select is-small">
+                        <select id="theme-selector">
+                            <option selected>custom</option>
+                            <option>light</option>
+                            <option>dark</option>
+                            <option>oldschool</option>
+                            <option>solarized</option>
+                            <option>solarized-dark</option>
+                            <option>matrix</option>
+                            <option>github</option>
+                            <option>carbon</option>
+                            <option>cyberpunk</option>
+                            <option>gruvbox</option>
+                            <option>gruvbox-dark</option>
+                        </select>
+                    </div>
+                    <span class="icon is-small is-left">
+                        <i class="fas fa-swatchbook"></i>
+                    </span>
+                </div>
+            </div>
+            <br />
+
+            <div class="tile is-ancestor">
+                <div class="tile is-vertical is-12">
+                    <div class="tile">
+                        <div class="tile is-parent">
+                            <article class="tile is-child notification">
+                                <p class="title">Custom SMILES #1</p>
+                                <input id="input-1" class="input" type="text" placeholder="Custom SMILES"
+                                    value="OC(C(=O)O[C@H]1C[N+]2(CCCOC3=CC=CC=C3)CCC1CC2)(C1=CC=CS1)C1=CC=CS1">
+                                <div class="content" style="overflow-x: auto; overflow-y: auto">
+                                    <svg id="display-1"
+                                        data-smiles="OC(C(=O)O[C@H]1C[N+]2(CCCOC3=CC=CC=C3)CCC1CC2)(C1=CC=CS1)C1=CC=CS1" />
+                                </div>
+                            </article>
+                        </div>
+                        <div class="tile is-parent">
+                            <article class="tile is-child notification">
+                                <p class="title">Custom SMILES #2</p>
+                                <input id="input-2" class="input" type="text" placeholder="Custom SMILES"
+                                    value="NC1=C(Br)C=C(Br)C=C1CN[C@]1CC[C@](O)CC1">
+                                <div class="content" style="overflow-x: auto; overflow-y: auto">
+                                    <svg id="display-2" data-smiles="NC1=C(Br)C=C(Br)C=C1CN[C@]1CC[C@](O)CC1" />
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+                    <div class="tile is-parent">
+                        <article class="tile is-child notification">
+                            <p class="title">Custom SMILES #3</p>
+                            <input id="input-3" class="input" type="text" placeholder="Custom SMILES"
+                                value="C=CCBr.[Na+].[I-]>CC(=O)C>C=CCI.[Na+].[Br-]  __{'textBelowArrow': '90%'}__">
+                            <div class="content" style="overflow-x: auto">
+                                <svg id="display-3"
+                                    data-smiles="C=CCBr.[Na+].[I-]>CC(=O)C>C=CCI.[Na+].[Br-]  __{'textBelowArrow': '90%'}__" />
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section pt-0">
+        <div class="container">
+            <div class="columns">
+                <div class="column">
+                    <h2 class="title is-5">Position Data #1</h2>
+                    <textarea id="position-data-1" class="textarea is-family-monospace" rows="18"
+                        readonly>Render a molecule to view its position data.</textarea>
+                </div>
+                <div class="column">
+                    <h2 class="title is-5">Position Data #2</h2>
+                    <textarea id="position-data-2" class="textarea is-family-monospace" rows="18"
+                        readonly>Render a molecule to view its position data.</textarea>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="export-modal" class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Options export</p>
+                <button class="delete" aria-label="close"></button>
+            </header>
+            <section class="modal-card-body">
+                <div class="field">
+                    <label class="label">Molecule Options</label>
+                    <div class="control">
+                        <textarea id="molecule-options" class="textarea is-small"
+                            placeholder="Molecule options"></textarea>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Reaction Options</label>
+                    <div class="control">
+                        <textarea id="reaction-options" class="textarea is-small"
+                            placeholder="Reaction options"></textarea>
+                    </div>
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button">Close</button>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        const pane = new Tweakpane.Pane();
+
+        let theme = 'custom';
+
+        let reactionOptions = {
+            fontSize: 9,
+            fontFamily: 'Arial, Helvetica, sans-serif',
+            spacing: 10,
+            plus: {
+                size: 9,
+                thickness: 1
+            },
+            arrow: {
+                length: 120,
+                headSize: 6.0,
+                thickness: 1.0,
+                margin: 3
+            }
+        }
+
+        let moleculeOptions = {
+            scale: 0.0,
+            bondThickness: 1.0,
+            shortBondLength: 0.8,
+            bondSpacing: 0.17 * 30,
+            atomVisualization: 'default',
+            isomeric: true,
+            debug: false,
+            terminalCarbons: false,
+            explicitHydrogens: true,
+            overlapSensitivity: 0.42,
+            overlapResolutionIterations: 1,
+            compactDrawing: true,
+            fontFamily: 'Arial, Helvetica, sans-serif',
+            fontSizeLarge: 11,
+            fontSizeSmall: 3,
+            padding: 2.0,
+            experimentalSSSR: true,
+            kkThreshold: 0.1,
+            kkInnerThreshold: 0.1,
+            kkMaxIteration: 20000,
+            kkMaxInnerIteration: 50,
+            kkMaxEnergy: 1e9,
+            themes: {
+                dark: {
+                    C: '#fff',
+                    O: '#e74c3c',
+                    N: '#3498db',
+                    F: '#27ae60',
+                    CL: '#16a085',
+                    BR: '#d35400',
+                    I: '#8e44ad',
+                    P: '#d35400',
+                    S: '#f1c40f',
+                    B: '#e67e22',
+                    SI: '#e67e22',
+                    H: '#aaa',
+                    BACKGROUND: '#141414'
+                },
+                light: {
+                    C: '#222',
+                    O: '#e74c3c',
+                    N: '#3498db',
+                    F: '#27ae60',
+                    CL: '#16a085',
+                    BR: '#d35400',
+                    I: '#8e44ad',
+                    P: '#d35400',
+                    S: '#f1c40f',
+                    B: '#e67e22',
+                    SI: '#e67e22',
+                    H: '#666',
+                    BACKGROUND: '#fff'
+                },
+                oldschool: {
+                    C: '#000',
+                    O: '#000',
+                    N: '#000',
+                    F: '#000',
+                    CL: '#000',
+                    BR: '#000',
+                    I: '#000',
+                    P: '#000',
+                    S: '#000',
+                    B: '#000',
+                    SI: '#000',
+                    H: '#000',
+                    BACKGROUND: '#fff'
+                },
+                "solarized": {
+                    C: "#586e75",
+                    O: "#dc322f",
+                    N: "#268bd2",
+                    F: "#859900",
+                    CL: "#16a085",
+                    BR: "#cb4b16",
+                    I: "#6c71c4",
+                    P: "#d33682",
+                    S: "#b58900",
+                    B: "#2aa198",
+                    SI: "#2aa198",
+                    H: "#657b83",
+                    BACKGROUND: "#fff"
+                },
+                "solarized-dark": {
+                    C: "#93a1a1",
+                    O: "#dc322f",
+                    N: "#268bd2",
+                    F: "#859900",
+                    CL: "#16a085",
+                    BR: "#cb4b16",
+                    I: "#6c71c4",
+                    P: "#d33682",
+                    S: "#b58900",
+                    B: "#2aa198",
+                    SI: "#2aa198",
+                    H: "#839496",
+                    BACKGROUND: "#fff"
+                },
+                "matrix": {
+                    C: "#678c61",
+                    O: "#2fc079",
+                    N: "#4f7e7e",
+                    F: "#90d762",
+                    CL: "#82d967",
+                    BR: "#23755a",
+                    I: "#409931",
+                    P: "#c1ff8a",
+                    S: "#faff00",
+                    B: "#50b45a",
+                    SI: "#409931",
+                    H: "#426644",
+                    BACKGROUND: "#fff"
+                },
+                "github": {
+                    C: "#24292f",
+                    O: "#cf222e",
+                    N: "#0969da",
+                    F: "#2da44e",
+                    CL: "#6fdd8b",
+                    BR: "#bc4c00",
+                    I: "#8250df",
+                    P: "#bf3989",
+                    S: "#d4a72c",
+                    B: "#fb8f44",
+                    SI: "#bc4c00",
+                    H: "#57606a",
+                    BACKGROUND: "#fff"
+                },
+                "carbon": {
+                    C: "#161616",
+                    O: "#da1e28",
+                    N: "#0f62fe",
+                    F: "#198038",
+                    CL: "#007d79",
+                    BR: "#fa4d56",
+                    I: "#8a3ffc",
+                    P: "#ff832b",
+                    S: "#f1c21b",
+                    B: "#8a3800",
+                    SI: "#e67e22",
+                    H: "#525252",
+                    BACKGROUND: "#fff"
+                },
+                "cyberpunk": {
+                    C: "#ea00d9",
+                    O: "#ff3131",
+                    N: "#0abdc6",
+                    F: "#00ff9f",
+                    CL: "#00fe00",
+                    BR: "#fe9f20",
+                    I: "#ff00ff",
+                    P: "#fe7f00",
+                    S: "#fcee0c",
+                    B: "#ff00ff",
+                    SI: "#ffffff",
+                    H: "#913cb1",
+                    BACKGROUND: "#fff"
+                },
+                "gruvbox": {
+                    C: "#665c54",
+                    O: "#cc241d",
+                    N: "#458588",
+                    F: "#98971a",
+                    CL: "#79740e",
+                    BR: "#d65d0e",
+                    I: "#b16286",
+                    P: "#af3a03",
+                    S: "#d79921",
+                    B: "#689d6a",
+                    SI: "#427b58",
+                    H: "#7c6f64",
+                    BACKGROUND: "#fbf1c7"
+                },
+                "gruvbox-dark": {
+                    C: "#ebdbb2",
+                    O: "#cc241d",
+                    N: "#458588",
+                    F: "#98971a",
+                    CL: "#b8bb26",
+                    BR: "#d65d0e",
+                    I: "#b16286",
+                    P: "#fe8019",
+                    S: "#d79921",
+                    B: "#8ec07c",
+                    SI: "#83a598",
+                    H: "#bdae93",
+                    BACKGROUND: "#282828"
+                },
+                custom: {
+                    C: '#222',
+                    O: '#e74c3c',
+                    N: '#3498db',
+                    F: '#27ae60',
+                    CL: '#16a085',
+                    BR: '#d35400',
+                    I: '#8e44ad',
+                    P: '#d35400',
+                    S: '#f1c40f',
+                    B: '#e67e22',
+                    SI: '#e67e22',
+                    H: '#666',
+                    BACKGROUND: '#fff'
+                },
+            }
+        };
+
+        const folderBasic = pane.addFolder({
+            title: 'Basic',
+        });
+
+        const folderColours = pane.addFolder({
+            title: 'Colours',
+        });
+
+        const folderReaction = pane.addFolder({
+            title: 'Reaction',
+        });
+
+        const folderReactionPlus = pane.addFolder({
+            title: 'Reaction Plus',
+        });
+
+        const folderReactionArrow = pane.addFolder({
+            title: 'Reaction Arrow',
+        });
+
+        const folderExport = pane.addFolder({
+            title: 'Export',
+        });
+
+        folderBasic.addInput(moleculeOptions, 'atomVisualization', {
+            options: {
+                default: 'default',
+                balls: 'balls',
+                allballs: 'allballs'
+            },
+        });
+
+        folderBasic.addInput(moleculeOptions, 'scale', {
+            step: 0.1,
+            min: 0.0,
+            max: 5.0,
+        });
+
+        folderBasic.addInput(moleculeOptions, 'bondThickness', {
+            step: 0.1,
+            min: 0.1,
+            max: 5.0,
+        });
+
+        folderBasic.addInput(moleculeOptions, 'shortBondLength', {
+            step: 0.1,
+            min: 0.1,
+            max: 1.0,
+        });
+        folderBasic.addInput(moleculeOptions, 'bondSpacing', {
+            step: 0.1,
+            min: 0.0,
+            max: 10.0,
+        });
+        folderBasic.addInput(moleculeOptions, 'terminalCarbons');
+        folderBasic.addInput(moleculeOptions, 'compactDrawing');
+        folderBasic.addInput(moleculeOptions, 'fontSizeLarge', {
+            step: 0.1,
+            min: 1.0,
+            max: 20.0,
+        });
+
+        folderColours.addInput(moleculeOptions.themes.custom, 'C', {
+            input: 'color',
+        });
+        folderColours.addInput(moleculeOptions.themes.custom, 'O', {
+            input: 'color',
+        });
+        folderColours.addInput(moleculeOptions.themes.custom, 'N', {
+            input: 'color',
+        });
+        folderColours.addInput(moleculeOptions.themes.custom, 'F', {
+            input: 'color',
+        });
+        folderColours.addInput(moleculeOptions.themes.custom, 'CL', {
+            input: 'color',
+        });
+        folderColours.addInput(moleculeOptions.themes.custom, 'BR', {
+            input: 'color',
+        });
+        folderColours.addInput(moleculeOptions.themes.custom, 'I', {
+            input: 'color',
+        });
+        folderColours.addInput(moleculeOptions.themes.custom, 'P', {
+            input: 'color',
+        });
+        folderColours.addInput(moleculeOptions.themes.custom, 'S', {
+            input: 'color',
+        });
+        folderColours.addInput(moleculeOptions.themes.custom, 'B', {
+            input: 'color',
+        });
+        folderColours.addInput(moleculeOptions.themes.custom, 'SI', {
+            input: 'color',
+        });
+        folderColours.addInput(moleculeOptions.themes.custom, 'H', {
+            input: 'color',
+        });
+        folderColours.addInput(moleculeOptions.themes.custom, 'BACKGROUND', {
+            input: 'color',
+        });
+
+        folderReaction.addInput(reactionOptions, 'spacing', {
+            step: 0.1,
+            min: 0.0,
+            max: 20.0,
+        });
+
+        folderReaction.addInput(reactionOptions, 'fontSize', {
+            step: 0.1,
+            min: 0.0,
+            max: 20.0,
+        });
+
+        folderReactionPlus.addInput(reactionOptions.plus, 'size', {
+            step: 0.1,
+            min: 0.0,
+            max: 20.0,
+        });
+
+        folderReactionPlus.addInput(reactionOptions.plus, 'thickness', {
+            step: 0.1,
+            min: 0.0,
+            max: 5.0,
+        });
+
+        folderReactionArrow.addInput(reactionOptions.arrow, 'length', {
+            step: 1,
+            min: 0.0,
+            max: 500,
+        });
+
+        folderReactionArrow.addInput(reactionOptions.arrow, 'thickness', {
+            step: 0.1,
+            min: 0.1,
+            max: 10.0,
+        });
+
+        folderReactionArrow.addInput(reactionOptions.arrow, 'headSize', {
+            step: 0.1,
+            min: 1.0,
+            max: 10.0,
+        });
+
+        folderReactionArrow.addInput(reactionOptions.arrow, 'margin', {
+            step: 0.1,
+            min: 0.0,
+            max: 10.0,
+        });
+
+
+        const btnExport = folderExport.addButton({
+            title: 'Export Settings',
+        });
+
+        btnExport.on('click', () => {
+            document.getElementById('molecule-options').value = js_beautify(JSON.stringify(moleculeOptions));
+            document.getElementById('reaction-options').value = js_beautify(JSON.stringify(reactionOptions));
+            document.getElementById('export-modal').classList.add('is-active');
+        });
+
+        let input1 = document.getElementById('input-1');
+        let input2 = document.getElementById('input-2');
+        let input3 = document.getElementById('input-3');
+
+        let themeSelector = document.getElementById('theme-selector');
+        let articles = document.querySelectorAll('article.tile');
+
+        input1.addEventListener('input', () => {
+            redraw();
+        });
+
+        input2.addEventListener('input', () => {
+            redraw();
+        });
+
+        input3.addEventListener('input', () => {
+            redraw();
+        });
+
+        themeSelector.addEventListener('change', e => {
+            theme = e.target.value;
+            redraw();
+        });
+
+        pane.on('change', e => {
+            redraw();
+        });
+
+        const themeMap = new Map([
+            ['light', 'light'],
+            ['oldschool', 'light'],
+            ['dark', 'dark'],
+            ['solarized', 'light'],
+            ['solarized-dark', 'dark'],
+            ['matrix', 'dark'],
+            ['github', 'light'],
+            ['carbon', 'light'],
+            ['cyberpunk', 'dark'],
+            ['gruvbox', 'light'],
+            ['gruvbox-dark', 'dark'],
+            ['custom', 'light'],
+        ]);
+
+        const latestPositionData = {
+            display1: null,
+            display2: null,
+        };
+
+        window.getPositionData = function () {
+            return {
+                display1: latestPositionData.display1,
+                display2: latestPositionData.display2,
+            };
+        };
+
+        function collectPositionData(preprocessor) {
+            if (!preprocessor || !preprocessor.graph) {
+                return null;
+            }
+
+            const graph = preprocessor.graph;
+            const rings = preprocessor.rings || [];
+
+            const vertices = graph.vertices.map((v) => ({
+                id: v.id,
+                element: v.value.element,
+                rings: v.value.rings ? v.value.rings.slice() : [],
+                bridgedRing: v.value.bridgedRing !== undefined ? v.value.bridgedRing : null,
+                x: v.position.x,
+                y: v.position.y,
+                isDrawn: v.value.isDrawn,
+            }));
+
+            const edges = graph.edges.map((e) => ({
+                id: e.id,
+                sourceId: e.sourceId,
+                targetId: e.targetId,
+                bondType: e.bondType || '-',
+                weight: e.weight || 1,
+            }));
+
+            const ringData = rings.map((r) => ({
+                id: r.id,
+                members: r.members ? r.members.slice() : [],
+                isBridged: !!r.isBridged,
+                neighbours: r.neighbours ? r.neighbours.slice() : [],
+            }));
+
+            return { vertices, edges, rings: ringData };
+        }
+
+        function drawAndCollect(smiles, displaySelector, textareaId) {
+            const sd = new SmiDrawer(moleculeOptions, reactionOptions);
+            try {
+                sd.draw(smiles, displaySelector, theme);
+                const data = collectPositionData(sd.drawer ? sd.drawer.preprocessor : null);
+
+                if (textareaId) {
+                    const output = document.getElementById(textareaId);
+                    if (data) {
+                        output.value = JSON.stringify(data, null, 2);
+                    } else {
+                        output.value = 'No position data available.';
+                    }
+                }
+
+                return data;
+            } catch (err) {
+                if (textareaId) {
+                    const output = document.getElementById(textareaId);
+                    output.value = `Error: ${err.message}`;
+                }
+
+                console.error(err);
+                return null;
+            }
+        }
+
+        function redraw() {
+            // reset size in case scaling changed to > 0.0 and then back to 0.0
+            document.getElementById('display-1').style = '';
+            document.getElementById('display-2').style = '';
+            document.getElementById('display-3').style = '';
+
+            const data1 = drawAndCollect(input1.value, '#display-1', 'position-data-1');
+            const data2 = drawAndCollect(input2.value, '#display-2', 'position-data-2');
+            drawAndCollect(input3.value, '#display-3', null);
+
+            latestPositionData.display1 = data1;
+            latestPositionData.display2 = data2;
+
+            if (themeMap.get(theme) === 'light') {
+                articles.forEach(a => {
+                    a.classList.remove('is-dark');
+                });
+            } else {
+                articles.forEach(a => {
+                    a.classList.add('is-dark');
+                });
+            }
+        }
+
+        redraw();
+
+        // Close modals
+        (document.querySelectorAll('.modal-background, .modal-close, .modal-card-head .delete, .modal-card-foot .button') || []).forEach((close) => {
+            const target = close.closest('.modal');
+
+            close.addEventListener('click', () => {
+                target.classList.remove('is-active');
+            });
+        });
+    </script>
+</body>
+
+</html>
