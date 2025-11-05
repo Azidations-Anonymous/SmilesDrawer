@@ -51,7 +51,6 @@ class KamadaKawaiLayout {
         type Hessian = { dxx: number; dyy: number; dxy: number };
 
         const zeroForce = (): ForceVector => ({ x: 0, y: 0 });
-        const addForces = (a: ForceVector, b: ForceVector): ForceVector => ({ x: a.x + b.x, y: a.y + b.y });
         const squaredGradientMagnitude = (force: ForceVector): number => force.x * force.x + force.y * force.y;
 
         // --- Initial placement -------------------------------------------------------------
