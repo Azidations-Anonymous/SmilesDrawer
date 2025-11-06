@@ -14,18 +14,20 @@
  * - Creates interactive HTML reports showing differences
  * - Saves JSON output to timestamped directories
  * - Allows manual visual inspection of changes
+ * - Supports regex filtering to limit tested SMILES (-filter)
  *
  * ## Output
  * - debug/output/regression/[timestamp]/[N].html - Side-by-side SVG comparison (unless -novisual)
  * - debug/output/regression/[timestamp]/[N].json - JSON with {old, new} fields for data comparison
  *
  * ## Usage
- * node debug/regression-runner.js <old-code-path> <new-code-path> [-all] [-failearly] [-novisual]
+ * node debug/regression-runner.js <old-code-path> <new-code-path> [-all] [-failearly] [-novisual] [-filter <regex>]
  *
  * @example
  * node debug/regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer
  * node debug/regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer -all
  * node debug/regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer -failearly -novisual
+ * node debug/regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer -filter "O=O"
  */
 
 const { spawnSync } = require('child_process');
@@ -119,6 +121,33 @@ function getScriptPath(repoPath, scriptName) {
     }
 }
 
+/**
+ * Build a RegExp from CLI input, supporting /pattern/flags syntax.
+ * @param {string} pattern - Raw pattern string from CLI.
+ * @returns {RegExp} Compiled regular expression.
+ */
+function buildRegexFromInput(pattern) {
+    if (pattern.startsWith('/') && pattern.lastIndexOf('/') > 0) {
+        const lastSlash = pattern.lastIndexOf('/');
+        const source = pattern.slice(1, lastSlash);
+        const flags = pattern.slice(lastSlash + 1);
+        return new RegExp(source, flags);
+    }
+    return new RegExp(pattern);
+}
+
+/**
+ * Test a value against a regex while resetting lastIndex for global patterns.
+ * @param {RegExp|null} regex - Compiled filter regex.
+ * @param {string} value - SMILES string to test.
+ * @returns {boolean} True if value matches or regex is null.
+ */
+function matchesFilter(regex, value) {
+    if (!regex) return true;
+    regex.lastIndex = 0;
+    return regex.test(value);
+}
+
 const fastDatasets = [
     { name: 'fastregression', file: '../test/fastregression.js' }
 ];
@@ -133,44 +162,95 @@ const fullDatasets = [
 ];
 
 const args = process.argv.slice(2);
-const allMode = args.includes('-all');
-const failEarly = args.includes('-failearly');
-const noVisual = args.includes('-novisual');
-
-// Check for bisect mode
-const bisectIndex = args.indexOf('-bisect');
-const bisectMode = bisectIndex !== -1;
+let allMode = false;
+let failEarly = false;
+let noVisual = false;
+let bisectMode = false;
 let bisectSmiles = '';
+let filterPattern = null;
+const positionalArgs = [];
 
-if (bisectMode) {
-    if (bisectIndex + 1 >= args.length) {
-        console.error('ERROR: -bisect flag requires a SMILES string argument');
+for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+
+    if (arg === '-all') {
+        allMode = true;
+        continue;
+    }
+
+    if (arg === '-failearly') {
+        failEarly = true;
+        continue;
+    }
+
+    if (arg === '-novisual') {
+        noVisual = true;
+        continue;
+    }
+
+    if (arg === '-filter') {
+        if (i + 1 >= args.length) {
+            console.error('ERROR: -filter flag requires a regex pattern');
+            process.exit(2);
+        }
+        filterPattern = args[++i];
+        continue;
+    }
+
+    if (arg === '-bisect') {
+        if (i + 1 >= args.length) {
+            console.error('ERROR: -bisect flag requires a SMILES string argument');
+            process.exit(2);
+        }
+        bisectMode = true;
+        bisectSmiles = args[++i];
+        continue;
+    }
+
+    if (arg.startsWith('-')) {
+        console.error('ERROR: Unknown flag: ' + arg);
         process.exit(2);
     }
-    bisectSmiles = args[bisectIndex + 1];
+
+    positionalArgs.push(arg);
 }
 
-const pathArgs = args.filter((arg, index) => {
-    if (arg.startsWith('-')) return false;
-    if (index > 0 && args[index - 1] === '-bisect') return false;
-    return true;
-});
-
-const oldCodePath = pathArgs[0];
-const newCodePath = pathArgs[1];
+const oldCodePath = positionalArgs[0];
+const newCodePath = positionalArgs[1];
+const extraArg = positionalArgs[2];
 
 if (!oldCodePath || !newCodePath) {
     console.error('ERROR: Missing arguments');
-    console.error('Usage: node regression-runner.js <old-code-path> <new-code-path> [-all] [-failearly] [-novisual] [-bisect "<smiles>"]');
+    console.error('Usage: node regression-runner.js <old-code-path> <new-code-path> [-all] [-failearly] [-novisual] [-filter "<regex>"] [-bisect "<smiles>"]');
     console.error('  -all         Test all datasets (default: fastregression only)');
     console.error('  -failearly   Stop at first difference (default: continue)');
     console.error('  -novisual    Skip SVG generation (default: generate visual comparisons)');
+    console.error('  -filter      Only test SMILES matching the given regex (JavaScript syntax)');
     console.error('  -bisect      Test single SMILES and generate comparison report (returns 0=match, 1=difference)');
     console.error('');
     console.error('Example: node regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer');
     console.error('Example: node regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer -all -failearly');
     console.error('Example: node regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer -bisect "C1CCCCC1"');
     process.exit(2);
+}
+
+if (extraArg) {
+    console.error('ERROR: Unexpected argument: ' + extraArg);
+    process.exit(2);
+}
+
+if (bisectMode && filterPattern !== null) {
+    console.warn('WARNING: -filter flag is ignored in -bisect mode');
+}
+
+let filterRegex = null;
+if (filterPattern !== null && !bisectMode) {
+    try {
+        filterRegex = buildRegexFromInput(filterPattern);
+    } catch (err) {
+        console.error('ERROR: Invalid filter regex: ' + err.message);
+        process.exit(2);
+    }
 }
 
 // Generate timestamp once at the beginning
@@ -322,6 +402,10 @@ const newCommitHash = getCommitHash(newCodePath);
 const newHasChanges = hasUncommittedChanges(newCodePath);
 const newSrcDiff = newHasChanges ? getSrcDiff(newCodePath) : '';
 
+if (filterRegex) {
+    console.log('\x1b[93mFILTER PATTERN:\x1b[0m ' + filterPattern);
+}
+
 let totalTested = 0;
 let totalDatasets = 0;
 let totalSkipped = 0;
@@ -347,6 +431,16 @@ for (const dataset of datasets) {
     }
 
     console.log('\x1b[93mLOADED:\x1b[0m ' + smilesList.length + ' SMILES strings');
+
+    if (filterRegex) {
+        const beforeCount = smilesList.length;
+        smilesList = smilesList.filter(smiles => matchesFilter(filterRegex, smiles));
+        console.log('\x1b[93mFILTERED:\x1b[0m ' + smilesList.length + ' of ' + beforeCount + ' SMILES matched pattern');
+        if (smilesList.length === 0) {
+            console.log('\x1b[93mSKIP:\x1b[0m Dataset has no SMILES matching filter, skipping.\n');
+            continue;
+        }
+    }
 
     // Warmup phase: run a simple molecule through both old and new code to eliminate cold-start overhead
     console.log('\n\x1b[93mWARMUP:\x1b[0m Running simple molecule to load modules and JIT compile...');

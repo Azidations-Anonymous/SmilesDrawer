@@ -10,6 +10,7 @@
  * ## Features
  * - Generates SVG and JSON for current codebase
  * - Supports single SMILES string or multiple datasets (fastregression, chembl, etc.)
+ * - Optional regex filter to target specific SMILES (-filter)
  * - Saves outputs to timestamped directories
  * - No baseline comparison (faster than regression tests)
  *
@@ -22,6 +23,7 @@
  * npm run test:smoke                        # Uses fastregression dataset
  * npm run test:smoke -- -dataset chembl    # Uses chembl dataset
  * npm run test:smoke -- -all                # All datasets
+ * npm run test:smoke -- -filter "O=O"       # Only SMILES matching regex
  * npm run test:smoke "C1CCCCC1"             # Single SMILES string
  * npm run test:smoke "C" "[NH4+]" "O=O"     # Multiple SMILES strings
  *
@@ -29,6 +31,7 @@
  * node debug/smoke-test.js
  * node debug/smoke-test.js -dataset chembl
  * node debug/smoke-test.js -all
+ * node debug/smoke-test.js -filter "C=O"
  * node debug/smoke-test.js "C1=CC=CC=C1"
  */
 
@@ -218,6 +221,33 @@ function collapseDiff(diffText) {
     return result.join('\n');
 }
 
+/**
+ * Build a RegExp from CLI input, supporting /pattern/flags syntax.
+ * @param {string} pattern - Raw pattern string from CLI.
+ * @returns {RegExp} Compiled regular expression.
+ */
+function buildRegexFromInput(pattern) {
+    if (pattern.startsWith('/') && pattern.lastIndexOf('/') > 0) {
+        const lastSlash = pattern.lastIndexOf('/');
+        const source = pattern.slice(1, lastSlash);
+        const flags = pattern.slice(lastSlash + 1);
+        return new RegExp(source, flags);
+    }
+    return new RegExp(pattern);
+}
+
+/**
+ * Test a value against a regex while resetting lastIndex for global patterns.
+ * @param {RegExp|null} regex - Compiled filter regex.
+ * @param {string} value - SMILES string to test.
+ * @returns {boolean} True if value matches or regex is null.
+ */
+function matchesFilter(regex, value) {
+    if (!regex) return true;
+    regex.lastIndex = 0;
+    return regex.test(value);
+}
+
 const fastDatasets = [
     { name: 'fastregression', file: '../test/fastregression.js' }
 ];
@@ -232,24 +262,53 @@ const fullDatasets = [
 ];
 
 const args = process.argv.slice(2);
-const allMode = args.includes('-all');
-
-// Collect positional SMILES arguments (ignore flags and their values)
 const manualSmiles = [];
+let allMode = false;
+let datasetName = null;
+let filterPattern = null;
+
 for (let i = 0; i < args.length; i++) {
     const arg = args[i];
 
-    if (arg === '-dataset') {
-        // Skip dataset name to avoid treating it as SMILES
-        i++;
+    if (arg === '-all') {
+        allMode = true;
         continue;
     }
 
-    if (arg === '-all' || arg.startsWith('-')) {
+    if (arg === '-dataset') {
+        if (i + 1 >= args.length) {
+            console.error('ERROR: -dataset flag requires a dataset name');
+            process.exit(2);
+        }
+        datasetName = args[++i];
         continue;
+    }
+
+    if (arg === '-filter') {
+        if (i + 1 >= args.length) {
+            console.error('ERROR: -filter flag requires a regex pattern');
+            process.exit(2);
+        }
+        filterPattern = args[++i];
+        continue;
+    }
+
+    if (arg.startsWith('-')) {
+        console.error('ERROR: Unknown flag: ' + arg);
+        process.exit(2);
     }
 
     manualSmiles.push(arg);
+}
+
+let filterRegex = null;
+if (filterPattern !== null) {
+    try {
+        filterRegex = buildRegexFromInput(filterPattern);
+    } catch (err) {
+        console.error('ERROR: Invalid filter regex: ' + err.message);
+        process.exit(2);
+    }
 }
 
 // Build the project first
@@ -276,10 +335,7 @@ console.log('Build complete\n');
 // Generate timestamp once at the beginning
 const timestamp = getTimestamp();
 
-// Check for -dataset flag
-const datasetFlagIndex = args.indexOf('-dataset');
-const hasDatasetFlag = datasetFlagIndex !== -1;
-const datasetName = hasDatasetFlag && datasetFlagIndex + 1 < args.length ? args[datasetFlagIndex + 1] : null;
+const hasDatasetFlag = datasetName !== null;
 
 // Determine dataset
 let datasets;
@@ -318,6 +374,9 @@ const modeLabel = (!hasDatasetFlag && !allMode && manualSmiles.length > 0)
 console.log('MODE: ' + modeLabel);
 console.log('COMMIT: ' + commitHash + (hasChanges ? ' (+ uncommitted changes)' : ''));
 console.log('OUTPUT DIRECTORY: ' + outputDir);
+if (filterRegex) {
+    console.log('FILTER: ' + filterPattern);
+}
 console.log('='.repeat(80));
 console.log('');
 
@@ -343,6 +402,17 @@ for (const dataset of datasets) {
         smilesData = require(datasetPath);
     }
     console.log('LOADED: ' + smilesData.length + ' SMILES strings');
+
+    if (filterRegex) {
+        const beforeCount = smilesData.length;
+        smilesData = smilesData.filter(smiles => matchesFilter(filterRegex, smiles));
+        console.log('FILTERED: ' + smilesData.length + ' of ' + beforeCount + ' SMILES matched pattern');
+        if (smilesData.length === 0) {
+            console.log('');
+            console.log('SKIP: Dataset contains no SMILES matching filter, moving on...');
+            continue;
+        }
+    }
     console.log('');
 
     for (let i = 0; i < smilesData.length; i++) {

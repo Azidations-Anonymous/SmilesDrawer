@@ -3,14 +3,40 @@
 set -e
 
 BASELINE_COMMIT="HEAD"
-FLAGS=""
+declare -a FLAG_ARGS=()
 BISECT_MODE="NO"
 BISECT_SMILES=""
+ALL_MODE="NO"
+FAIL_EARLY="NO"
+NO_VISUAL="NO"
+FILTER_PATTERN=""
+FILTER_ENABLED="NO"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        -all|-failearly|-novisual)
-            FLAGS="${FLAGS} $1"
+        -all)
+            ALL_MODE="YES"
+            FLAG_ARGS+=("$1")
+            shift
+            ;;
+        -failearly)
+            FAIL_EARLY="YES"
+            FLAG_ARGS+=("$1")
+            shift
+            ;;
+        -novisual)
+            NO_VISUAL="YES"
+            FLAG_ARGS+=("$1")
+            shift
+            ;;
+        -filter)
+            shift
+            if [[ $# -eq 0 ]]; then
+                echo "ERROR: -filter flag requires a regex argument"
+                exit 1
+            fi
+            FILTER_PATTERN="$1"
+            FILTER_ENABLED="YES"
             shift
             ;;
         -bisect)
@@ -34,6 +60,10 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+if [ "$FILTER_ENABLED" = "YES" ]; then
+    FLAG_ARGS+=("-filter" "$FILTER_PATTERN")
+fi
 
 # Smart default: if no commit specified, choose based on working directory status
 if [ "${BASELINE_COMMIT}" = "HEAD" ]; then
@@ -80,19 +110,6 @@ TEMP_DIR=$(mktemp -d)
 BASELINE_DIR="${TEMP_DIR}/smiles-drawer-baseline"
 
 # Determine test mode
-ALL_MODE="NO"
-FAIL_EARLY="NO"
-NO_VISUAL="NO"
-if [[ " ${FLAGS} " =~ " -all " ]]; then
-    ALL_MODE="YES"
-fi
-if [[ " ${FLAGS} " =~ " -failearly " ]]; then
-    FAIL_EARLY="YES"
-fi
-if [[ " ${FLAGS} " =~ " -novisual " ]]; then
-    NO_VISUAL="YES"
-fi
-
 # Get current commit info
 CURRENT_COMMIT=$(git rev-parse --short HEAD)
 if [ -z "$(git status --porcelain)" ]; then
@@ -114,10 +131,14 @@ if [ "$BISECT_MODE" = "YES" ]; then
     echo -e "\033[93mSMILES:\033[0m ${BISECT_SMILES:0:60}$([ ${#BISECT_SMILES} -gt 60 ] && echo '...')"
     echo -e "\033[93mBASELINE COMMIT:\033[0m ${BASELINE_COMMIT}"
     echo -e "\033[93mCURRENT COMMIT:\033[0m ${CURRENT_COMMIT}${UNCOMMITTED_CHANGES}"
+    if [ "$FILTER_ENABLED" = "YES" ]; then
+        echo -e "\033[93mFILTER:\033[0m ${FILTER_PATTERN} (ignored in bisect mode)"
+    fi
 else
     echo -e "\033[93mMODE:\033[0m $([ "$ALL_MODE" = "YES" ] && echo "FULL (all datasets)" || echo "FAST (fastregression only)")"
     echo -e "\033[93mFAIL-EARLY:\033[0m $([ "$FAIL_EARLY" = "YES" ] && echo "YES (stop at first difference)" || echo "NO (collect all differences)")"
     echo -e "\033[93mVISUAL:\033[0m $([ "$NO_VISUAL" = "YES" ] && echo "NO (skip SVG generation)" || echo "YES (generate side-by-side comparisons)")"
+    echo -e "\033[93mFILTER:\033[0m $([ "$FILTER_ENABLED" = "YES" ] && echo "${FILTER_PATTERN}" || echo "(none)")"
     echo -e "\033[93mBASELINE COMMIT:\033[0m ${BASELINE_COMMIT}"
     echo -e "\033[93mCURRENT COMMIT:\033[0m ${CURRENT_COMMIT}${UNCOMMITTED_CHANGES}"
     echo -e "\033[93mOUTPUT DIRECTORY:\033[0m ${CURRENT_DIR}/debug/output/regression/[timestamp]"
@@ -317,10 +338,18 @@ if [ "$BISECT_MODE" = "YES" ]; then
 else
     # Regular regression test mode
     echo -e "\033[93mStep 5:\033[0m Running regression tests..."
-    echo "Flags:${FLAGS:-" (none)"}"
+    if [ ${#FLAG_ARGS[@]} -eq 0 ]; then
+        echo "Flags: (none)"
+    else
+        printf 'Flags:'
+        for arg in "${FLAG_ARGS[@]}"; do
+            printf ' %q' "$arg"
+        done
+        printf '\n'
+    fi
 
     cd "${CURRENT_DIR}/debug"
-    node regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" ${FLAGS}
+    node regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" "${FLAG_ARGS[@]}"
 
     REGRESSION_EXIT_CODE=$?
 
