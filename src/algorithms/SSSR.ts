@@ -574,6 +574,7 @@ class SSSR {
                     neighbours.push(candidate);
                 }
             }
+            neighbours.sort((a, b) => a - b);
 
             let next = neighbours.find((n) => n !== previous);
             if (next === undefined) {
