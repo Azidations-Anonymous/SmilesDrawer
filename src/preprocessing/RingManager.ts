@@ -164,10 +164,11 @@ class RingManager {
         }
 
         // Get the rings in the graph (the SSSR)
+        this.drawer.graph.cycles = this.drawer.graph.getAllCycles();
         let rings = SSSR.getRings(this.drawer.graph, this.drawer.opts.experimentalSSSR);
 
         if (rings === null) {
-          return;
+            return;
         }
 
         for (var i = 0; i < rings.length; i++) {

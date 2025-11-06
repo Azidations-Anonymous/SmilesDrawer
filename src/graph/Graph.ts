@@ -2,6 +2,7 @@ import MathHelper = require('../utils/MathHelper');
 import GraphMatrixOperations = require('./GraphMatrixOperations');
 import GraphAlgorithms = require('./GraphAlgorithms');
 import KamadaKawaiLayout = require('../algorithms/KamadaKawaiLayout');
+import { findAllCycles } from '../algorithms/JohnsonCycles';
 import Vector2 = require('./Vector2');
 import Vertex = require('./Vertex');
 import Edge = require('./Edge');
@@ -30,6 +31,7 @@ class Graph {
   matrixOps: GraphMatrixOperations;
   algorithms: GraphAlgorithms;
   layout: KamadaKawaiLayout;
+  cycles: number[][];
 
   /**
    * The constructor of the class Graph.
@@ -53,6 +55,7 @@ class Graph {
       this.matrixOps = new GraphMatrixOperations(this);
       this.algorithms = new GraphAlgorithms(this);
       this.layout = new KamadaKawaiLayout(this);
+      this.cycles = [];
   }
 
   /**
@@ -275,6 +278,14 @@ class Graph {
    */
   getAdjacencyMatrix(): number[][] {
       return this.matrixOps.getAdjacencyMatrix();
+  }
+
+  getAllCycles(maxCycleLength: number = 0): number[][] {
+      const adjacencyList = this.matrixOps.getAdjacencyList();
+      const cycles = findAllCycles(adjacencyList, {
+        maxCycleLength: maxCycleLength > 0 ? maxCycleLength : undefined
+      });
+      return cycles;
   }
 
   /**
