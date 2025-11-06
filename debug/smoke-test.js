@@ -23,6 +23,7 @@
  * npm run test:smoke -- -dataset chembl    # Uses chembl dataset
  * npm run test:smoke -- -all                # All datasets
  * npm run test:smoke "C1CCCCC1"             # Single SMILES string
+ * npm run test:smoke "C" "[NH4+]" "O=O"     # Multiple SMILES strings
  *
  * @example
  * node debug/smoke-test.js
@@ -233,6 +234,24 @@ const fullDatasets = [
 const args = process.argv.slice(2);
 const allMode = args.includes('-all');
 
+// Collect positional SMILES arguments (ignore flags and their values)
+const manualSmiles = [];
+for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+
+    if (arg === '-dataset') {
+        // Skip dataset name to avoid treating it as SMILES
+        i++;
+        continue;
+    }
+
+    if (arg === '-all' || arg.startsWith('-')) {
+        continue;
+    }
+
+    manualSmiles.push(arg);
+}
+
 // Build the project first
 console.log('Building project...');
 const buildResult = spawnSync('npx', ['tsc'], {
@@ -262,286 +281,11 @@ const datasetFlagIndex = args.indexOf('-dataset');
 const hasDatasetFlag = datasetFlagIndex !== -1;
 const datasetName = hasDatasetFlag && datasetFlagIndex + 1 < args.length ? args[datasetFlagIndex + 1] : null;
 
-// Get any non-flag argument (for SMILES string)
-const providedArg = args.find(arg => !arg.startsWith('-'));
-
-// If argument is provided and no -dataset flag, treat it as a SMILES string
-if (providedArg && !hasDatasetFlag && !allMode) {
-    (async () => {
-        const smiles = providedArg;
-
-        // Create output directory with timestamp
-        const outputDir = path.join(__dirname, 'output', 'smoke', timestamp);
-        fs.mkdirSync(outputDir, { recursive: true });
-
-        // Get git information
-        const currentDir = path.join(__dirname, '..');
-        const commitHash = getCommitHash(currentDir);
-        const hasChanges = hasUncommittedChanges(currentDir);
-        const srcDiff = hasChanges ? getSrcDiff(currentDir) : '';
-
-        console.log('='.repeat(80));
-        console.log('SMILES DRAWER SMOKE TEST - SINGLE SMILES');
-        console.log('='.repeat(80));
-        console.log('COMMIT: ' + commitHash + (hasChanges ? ' (+ uncommitted changes)' : ''));
-        console.log('SMILES: ' + (smiles.length > 60 ? smiles.substring(0, 57) + '...' : smiles));
-        console.log('OUTPUT DIRECTORY: ' + outputDir);
-        console.log('='.repeat(80));
-        console.log('');
-
-        try {
-        // Generate SVG
-        const tempSvgFile = path.join(outputDir, 'temp-1.svg');
-        const svgStartTime = performance.now();
-        const svgResult = spawnSync('node', ['debug/generate-svg.js', smiles, tempSvgFile], {
-            cwd: path.join(__dirname, '..'),
-            encoding: 'utf8'
-        });
-        const svgEndTime = performance.now();
-        const svgRenderTime = svgEndTime - svgStartTime;
-
-        if (svgResult.error || svgResult.status !== 0) {
-            console.error('ERROR: Failed to generate SVG');
-            console.error((svgResult.stderr || svgResult.error?.message || 'Unknown error'));
-            process.exit(1);
-        }
-
-        const svg = fs.readFileSync(tempSvgFile, 'utf8');
-        fs.unlinkSync(tempSvgFile);
-
-        // Convert SVG to PNG
-        const pngBuffer = await svgToPng(svg);
-        const pngPath = path.join(outputDir, '1.png');
-        fs.writeFileSync(pngPath, pngBuffer);
-
-        // Generate JSON
-        const tempJsonFile = path.join(outputDir, 'temp-1.json');
-        const jsonStartTime = performance.now();
-        const jsonResult = spawnSync('node', ['debug/generate-json.js', smiles, tempJsonFile], {
-            cwd: path.join(__dirname, '..'),
-            encoding: 'utf8'
-        });
-        const jsonEndTime = performance.now();
-        const jsonRenderTime = jsonEndTime - jsonStartTime;
-
-        if (jsonResult.error || jsonResult.status !== 0) {
-            console.error('ERROR: Failed to generate JSON');
-            console.error((jsonResult.stderr || jsonResult.error?.message || 'Unknown error'));
-            process.exit(1);
-        }
-
-        const json = fs.readFileSync(tempJsonFile, 'utf8');
-        fs.unlinkSync(tempJsonFile);
-
-        // Generate HTML
-        const collapsedDiff = hasChanges && srcDiff ? collapseDiff(srcDiff) : '';
-        const diffSection = hasChanges && collapsedDiff ? `
-        <div class="diff-section">
-            <h3>Uncommitted Changes in src/</h3>
-            <pre class="diff-content"><code>${escapeHtml(collapsedDiff)}</code></pre>
-        </div>` : '';
-
-        const totalRenderTime = svgRenderTime + jsonRenderTime;
-
-        const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smoke Test - Single SMILES</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: #f5f5f5;
-            padding: 20px;
-            margin: 0;
-        }
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .commit-info {
-            background: #ecf0f1;
-            padding: 12px 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            font-size: 0.9em;
-        }
-        .commit-info .commit-label {
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        .commit-info .commit-hash {
-            font-family: 'Courier New', monospace;
-            color: #34495e;
-        }
-        .commit-info .uncommitted-badge {
-            display: inline-block;
-            background: #e74c3c;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 0.85em;
-            margin-left: 8px;
-        }
-        .benchmark-info {
-            background: #e8f5e9;
-            padding: 12px 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            font-size: 0.9em;
-        }
-        .benchmark-info .benchmark-label {
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        .benchmark-info .benchmark-value {
-            font-family: 'Courier New', monospace;
-            color: #27ae60;
-            font-weight: 600;
-        }
-        .benchmark-detail {
-            margin-left: 20px;
-            font-size: 0.85em;
-            color: #7f8c8d;
-        }
-        .smiles-display {
-            background: #2c3e50;
-            color: #ecf0f1;
-            padding: 12px 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            overflow-x: auto;
-        }
-        .smiles-display code {
-            font-family: 'Courier New', monospace;
-            font-size: 0.95em;
-        }
-        .svg-container {
-            background: white;
-            border: 1px solid #ecf0f1;
-            border-radius: 3px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .svg-container svg {
-            max-width: 100%;
-            height: auto;
-        }
-        .diff-section {
-            margin-top: 30px;
-            background: #fff9e6;
-            border: 1px solid #f1c40f;
-            border-radius: 5px;
-            padding: 20px;
-        }
-        .diff-section h3 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-        }
-        .diff-content {
-            background: #f8f8f8;
-            border: 1px solid #bdc3c7;
-            border-radius: 5px;
-            padding: 15px;
-            overflow-x: auto;
-            max-height: 400px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85em;
-        }
-        .json-section {
-            margin-top: 30px;
-        }
-        .json-section h3 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-        }
-        .json-container {
-            background: #f8f8f8;
-            border: 1px solid #bdc3c7;
-            border-radius: 5px;
-            padding: 15px;
-            overflow-x: auto;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        pre {
-            margin: 0;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85em;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Smoke Test - Single SMILES</h1>
-
-        <div class="commit-info">
-            <span class="commit-label">Commit:</span>
-            <span class="commit-hash">${escapeHtml(commitHash)}</span>${hasChanges ? '<span class="uncommitted-badge">+ uncommitted</span>' : ''}
-        </div>
-
-        <div class="benchmark-info">
-            <span class="benchmark-label">Total Render Time:</span>
-            <span class="benchmark-value">${totalRenderTime.toFixed(2)} ms</span>
-            <div class="benchmark-detail">
-                SVG: ${svgRenderTime.toFixed(2)} ms &nbsp;|&nbsp; JSON: ${jsonRenderTime.toFixed(2)} ms
-            </div>
-        </div>
-
-        <div class="smiles-display">
-            <strong>SMILES:</strong> <code>${escapeHtml(smiles)}</code>
-        </div>
-
-        <div class="svg-container">
-            ${svg}
-        </div>
-
-        <div class="json-section">
-            <h3>JSON Position Data</h3>
-            <div class="json-container">
-                <pre>${escapeHtml(json)}</pre>
-            </div>
-        </div>
-
-        ${diffSection}
-    </div>
-</body>
-</html>`;
-
-        // Save outputs
-        const htmlPath = path.join(outputDir, '1.html');
-        const jsonPath = path.join(outputDir, '1.json');
-
-        fs.writeFileSync(htmlPath, html, 'utf8');
-        fs.writeFileSync(jsonPath, json, 'utf8');
-
-        console.log('SUCCESS: Generated output files');
-        console.log('  ' + htmlPath);
-        console.log('  ' + jsonPath);
-        console.log('  ' + pngPath);
-        console.log('TIMING: Total ' + totalRenderTime.toFixed(2) + ' ms (SVG: ' + svgRenderTime.toFixed(2) + ' ms, JSON: ' + jsonRenderTime.toFixed(2) + ' ms)');
-        console.log('='.repeat(80));
-
-            process.exit(0);
-        } catch (error) {
-            console.error('ERROR: ' + error.message);
-            process.exit(1);
-        }
-    })();
-}
-
 // Determine dataset
 let datasets;
-if (allMode) {
+if (!hasDatasetFlag && !allMode && manualSmiles.length > 0) {
+    datasets = [{ name: 'manual', entries: manualSmiles }];
+} else if (allMode) {
     datasets = fullDatasets;
 } else if (hasDatasetFlag && datasetName) {
     const found = fullDatasets.find(ds => ds.name === datasetName);
@@ -568,7 +312,10 @@ const srcDiff = hasChanges ? getSrcDiff(currentDir) : '';
 console.log('='.repeat(80));
 console.log('SMILES DRAWER SMOKE TEST');
 console.log('='.repeat(80));
-console.log('MODE: ' + (allMode ? 'FULL (all datasets)' : datasets[0].name));
+const modeLabel = (!hasDatasetFlag && !allMode && manualSmiles.length > 0)
+    ? `MANUAL (${manualSmiles.length} SMILES)`
+    : (allMode ? 'FULL (all datasets)' : datasets[0].name);
+console.log('MODE: ' + modeLabel);
 console.log('COMMIT: ' + commitHash + (hasChanges ? ' (+ uncommitted changes)' : ''));
 console.log('OUTPUT DIRECTORY: ' + outputDir);
 console.log('='.repeat(80));
@@ -583,14 +330,18 @@ for (const dataset of datasets) {
     console.log('TESTING DATASET: ' + dataset.name);
     console.log('='.repeat(80));
 
-    const datasetPath = path.join(__dirname, '..', 'test', dataset.file);
-    if (!fs.existsSync(datasetPath)) {
-        console.error('ERROR: Dataset file not found: ' + datasetPath);
-        totalErrors++;
-        continue;
+    let smilesData;
+    if (Array.isArray(dataset.entries)) {
+        smilesData = dataset.entries;
+    } else {
+        const datasetPath = path.join(__dirname, '..', 'test', dataset.file);
+        if (!fs.existsSync(datasetPath)) {
+            console.error('ERROR: Dataset file not found: ' + datasetPath);
+            totalErrors++;
+            continue;
+        }
+        smilesData = require(datasetPath);
     }
-
-    const smilesData = require(datasetPath);
     console.log('LOADED: ' + smilesData.length + ' SMILES strings');
     console.log('');
 
