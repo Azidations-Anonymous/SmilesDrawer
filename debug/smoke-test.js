@@ -249,6 +249,24 @@ function matchesFilter(regex, value) {
 }
 
 /**
+ * Check that a SMILES string contains only visible ASCII characters.
+ * @param {unknown} smiles - Candidate SMILES string.
+ * @returns {boolean} True if smiles is a non-empty string of printable chars.
+ */
+function isVisibleSmiles(smiles) {
+    if (typeof smiles !== 'string') {
+        return false;
+    }
+    for (let i = 0; i < smiles.length; i++) {
+        const code = smiles.charCodeAt(i);
+        if (code < 32 || code === 127) {
+            return false;
+        }
+    }
+    return smiles.length > 0;
+}
+
+/**
  * Load dataset entries from either inline array or file reference.
  * @param {{name: string, entries?: string[], file?: string}} dataset - Dataset descriptor.
  * @returns {string[]} Array of SMILES strings.
@@ -428,6 +446,18 @@ for (const dataset of datasets) {
 
     let smilesData = loadDatasetEntries(dataset);
     console.log('LOADED: ' + smilesData.length + ' SMILES strings');
+
+    const visibleSmiles = smilesData.filter(isVisibleSmiles);
+    const removedInvisible = smilesData.length - visibleSmiles.length;
+    if (removedInvisible > 0) {
+        console.log('SANITIZED: removed ' + removedInvisible + ' entries with non-visible characters');
+    }
+    smilesData = visibleSmiles;
+    if (smilesData.length === 0) {
+        console.log('');
+        console.log('SKIP: Dataset contains no SMILES with visible characters, moving on...');
+        continue;
+    }
 
     if (filterRegex) {
         const beforeCount = smilesData.length;
