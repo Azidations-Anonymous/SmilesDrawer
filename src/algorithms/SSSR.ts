@@ -2,11 +2,15 @@ import Graph = require('../graph/Graph');
 
 type AdjacencyMatrix = number[][];
 type DistanceMatrix = number[][];
-type PathElement = [number, number];  // [sourceVertexId, targetVertexId]
-type PathMatrix = PathElement[][][][];  // Very nested path structure
-type RingCandidate = [number, PathElement[][][], PathElement[][][]];  // [size, pe, pe_prime]
-// Bonds can be PathElement[][] or (PathElement | PathElement[])[][] due to algorithm workarounds
-type BondList = (PathElement | PathElement[])[][];
+type PathElement = [number, number];
+type Path = PathElement[];
+type PathMatrix = Path[][][]; // pe[i][j] -> Path[]
+type ExtendedPathMatrix = Path[][][]; // pe_prime
+interface RingCandidate {
+    size: number;
+    paths: Path[];
+    extendedPaths: Path[];
+}
 
 /** A class encapsulating the functionality to find the smallest set of smallest rings in a graph. */
 class SSSR {
@@ -63,14 +67,15 @@ class SSSR {
             }
 
             let { d, pe, pe_prime } = SSSR.getPathIncludedDistanceMatrices(ccAdjacencyMatrix);
-            let c = SSSR.getRingCandidates(d, pe, pe_prime);
-            let sssr = SSSR.getSSSR(c, d, ccAdjacencyMatrix, pe, pe_prime, arrBondCount, arrRingCount, nSssr);
+            let candidates = SSSR.getRingCandidates(d, pe, pe_prime);
+            let sssr = SSSR.getSSSR(candidates, ccAdjacencyMatrix, arrBondCount, arrRingCount, nSssr);
+            let limited = sssr.slice(0, nSssr);
 
-            for (var j = 0; j < sssr.length; j++) {
-                let ring = Array(sssr[j].size);
+            for (var j = 0; j < limited.length; j++) {
+                let ring = Array(limited[j].size);
                 let index = 0;
 
-                for (let val of sssr[j]) {
+                for (let val of limited[j]) {
                     // Get the original id of the vertex back
                     ring[index++] = connectedComponent[val];
                 }
@@ -112,139 +117,119 @@ class SSSR {
      * @param {Array[]} adjacencyMatrix An adjacency matrix.
      * @returns {Object} The path-included distance matrices. { p1, p2 }
      */
-    static getPathIncludedDistanceMatrices(adjacencyMatrix: AdjacencyMatrix): {d: DistanceMatrix, pe: PathMatrix, pe_prime: PathMatrix} {
-        let length = adjacencyMatrix.length;
-        let d = Array(length);
-        let pe = Array(length);
-        let pe_prime = Array(length);
-        var l = 0;
-        var m = 0;
-        var n = 0;
+    static getPathIncludedDistanceMatrices(adjacencyMatrix: AdjacencyMatrix): { d: DistanceMatrix, pe: PathMatrix, pe_prime: ExtendedPathMatrix } {
+        const length = adjacencyMatrix.length;
+        const d: DistanceMatrix = Array.from({ length }, () => Array(length).fill(Infinity));
+        const pe: PathMatrix = Array.from({ length }, () => Array.from({ length }, () => [] as Path[]));
+        const peKeys: Array<Array<Set<string>>> = Array.from({ length }, () => Array.from({ length }, () => new Set<string>()));
+        const pePrime: ExtendedPathMatrix = Array.from({ length }, () => Array.from({ length }, () => [] as Path[]));
+        const pePrimeKeys: Array<Array<Set<string>>> = Array.from({ length }, () => Array.from({ length }, () => new Set<string>()));
 
-        var i = length;
-        while (i--) {
-            d[i] = Array(length);
-            pe[i] = Array(length);
-            pe_prime[i] = Array(length);
-
-            var j = length;
-            while (j--) {
-                d[i][j] = (i === j || adjacencyMatrix[i][j] === 1) ? adjacencyMatrix[i][j] : Number.POSITIVE_INFINITY;
-
-                if (d[i][j] === 1) {
-                    pe[i][j] = [[[i, j]]];
-                } else {
-                    pe[i][j] = Array();
+        for (let i = 0; i < length; i++) {
+            for (let j = 0; j < length; j++) {
+                if (i === j) {
+                    d[i][j] = 0;
+                } else if (adjacencyMatrix[i][j] === 1) {
+                    d[i][j] = 1;
+                    const path: Path = [[i, j]];
+                    const key = SSSR.pathToKey(path);
+                    pe[i][j].push(path);
+                    peKeys[i][j].add(key);
                 }
-
-                pe_prime[i][j] = Array();
             }
         }
 
-        var k = length;
-        while (k--) {
-            i = length;
-            while (i--) {
-                j = length;
-                while (j--) {
-                    const previousPathLength = d[i][j];
-                    const newPathLength = d[i][k] + d[k][j];
+        for (let k = 0; k < length; k++) {
+            for (let i = 0; i < length; i++) {
+                if (d[i][k] === Infinity) {
+                    continue;
+                }
+                for (let j = 0; j < length; j++) {
+                    if (d[k][j] === Infinity) {
+                        continue;
+                    }
 
-                    if (previousPathLength > newPathLength) {
-                        var l: number, m: number, n: number;
-                        if (previousPathLength === newPathLength + 1) {
-                            pe_prime[i][j] = [pe[i][j].length];
-                            l = pe[i][j].length
-                            while (l--) {
-                                pe_prime[i][j][l] = [pe[i][j][l].length];
-                                m = pe[i][j][l].length
-                                while (m--) {
-                                    pe_prime[i][j][l][m] = [pe[i][j][l][m].length];
-                                    n = pe[i][j][l][m].length;
-                                    while (n--) {
-                                        pe_prime[i][j][l][m][n] = [pe[i][j][l][m][0], pe[i][j][l][m][1]];
-                                    }
+                    const previous = d[i][j];
+                    const throughK = d[i][k] + d[k][j];
+
+                    const leftPaths = pe[i][k].length > 0 ? pe[i][k] : (i === k ? [[]] : []);
+                    const rightPaths = pe[k][j].length > 0 ? pe[k][j] : (k === j ? [[]] : []);
+
+                    if (leftPaths.length === 0 || rightPaths.length === 0) {
+                        continue;
+                    }
+
+                    if (throughK < previous) {
+                        d[i][j] = throughK;
+                        pe[i][j] = [];
+                        peKeys[i][j].clear();
+                        for (const left of leftPaths) {
+                            for (const right of rightPaths) {
+                                const combined = SSSR.combinePaths(left, right);
+                                if (!combined.length) {
+                                    continue;
                                 }
-                            }
-                        } else {
-                            pe_prime[i][j] = Array();
-                        }
-
-                        d[i][j] = newPathLength;
-
-                        pe[i][j] = [[]];
-
-                        l = pe[i][k][0].length;
-                        while (l--) {
-                            pe[i][j][0].push(pe[i][k][0][l]);
-                        }
-
-                        l = pe[k][j][0].length;
-                        while (l--) {
-                            pe[i][j][0].push(pe[k][j][0][l]);
-                        }
-                    } else if (previousPathLength === newPathLength) {
-                        if (pe[i][k].length && pe[k][j].length) {
-                            var l: number;
-                            if (pe[i][j].length) {
-                                let tmp = Array();
-
-                                l = pe[i][k][0].length;
-                                while (l--) {
-                                    tmp.push(pe[i][k][0][l]);
+                                const key = SSSR.pathToKey(combined);
+                                if (!peKeys[i][j].has(key)) {
+                                    peKeys[i][j].add(key);
+                                    pe[i][j].push(combined);
                                 }
-
-                                l = pe[k][j][0].length;
-                                while (l--) {
-                                    tmp.push(pe[k][j][0][l]);
-                                }
-
-                                pe[i][j].push(tmp);
-                            } else {
-                                let tmp = Array();
-                                l = pe[i][k][0].length;
-                                while (l--) {
-                                    tmp.push(pe[i][k][0][l]);
-                                }
-
-                                l = pe[k][j][0].length;
-                                while (l--) {
-                                    tmp.push(pe[k][j][0][l]);
-                                }
-
-                                pe[i][j][0] = tmp
                             }
                         }
-                    } else if (previousPathLength === newPathLength - 1) {
-                        var l: number;
-                        if (pe_prime[i][j].length) {
-                            let tmp = Array();
-
-                            l = pe[i][k][0].length;
-                            while (l--) {
-                                tmp.push(pe[i][k][0][l]);
+                    } else if (throughK === previous) {
+                        for (const left of leftPaths) {
+                            for (const right of rightPaths) {
+                                const combined = SSSR.combinePaths(left, right);
+                                if (!combined.length) {
+                                    continue;
+                                }
+                                const key = SSSR.pathToKey(combined);
+                                if (!peKeys[i][j].has(key)) {
+                                    peKeys[i][j].add(key);
+                                    pe[i][j].push(combined);
+                                }
                             }
+                        }
+                    }
+                }
+            }
+        }
 
-                            l = pe[k][j][0].length;
-                            while (l--) {
-                                tmp.push(pe[k][j][0][l]);
+        for (let k = 0; k < length; k++) {
+            for (let i = 0; i < length; i++) {
+                if (d[i][k] === Infinity) {
+                    continue;
+                }
+                for (let j = 0; j < length; j++) {
+                    if (d[k][j] === Infinity) {
+                        continue;
+                    }
+
+                    const shortest = d[i][j];
+                    const throughK = d[i][k] + d[k][j];
+
+                    if (throughK - 1 !== shortest) {
+                        continue;
+                    }
+
+                    const leftPaths = pe[i][k].length > 0 ? pe[i][k] : (i === k ? [[]] : []);
+                    const rightPaths = pe[k][j].length > 0 ? pe[k][j] : (k === j ? [[]] : []);
+
+                    if (leftPaths.length === 0 || rightPaths.length === 0) {
+                        continue;
+                    }
+
+                    for (const left of leftPaths) {
+                        for (const right of rightPaths) {
+                            const combined = SSSR.combinePaths(left, right);
+                            if (!combined.length) {
+                                continue;
                             }
-
-                            pe_prime[i][j].push(tmp);
-                        } else {
-                            let tmp = Array();
-
-                            l = pe[i][k][0].length;
-                            while (l--) {
-                                tmp.push(pe[i][k][0][l]);
+                            const key = SSSR.pathToKey(combined);
+                            if (!pePrimeKeys[i][j].has(key)) {
+                                pePrimeKeys[i][j].add(key);
+                                pePrime[i][j].push(combined);
                             }
-
-                            l = pe[k][j][0].length;
-                            while (l--) {
-                                tmp.push(pe[k][j][0][l]);
-                            }
-
-                            pe_prime[i][j][0] = tmp;
                         }
                     }
                 }
@@ -252,12 +237,11 @@ class SSSR {
         }
 
         return {
-            d: d,
-            pe: pe,
-            pe_prime: pe_prime
+            d,
+            pe,
+            pe_prime: pePrime
         };
     }
-
     /**
      * Get the ring candidates from the path-included distance matrices.
      *
@@ -266,102 +250,107 @@ class SSSR {
      * @param {Array[]} pe_prime A matrix containing the shortest paths + one vertex.
      * @returns {Array[]} The ring candidates.
      */
-    static getRingCandidates(d: DistanceMatrix, pe: PathMatrix, pe_prime: PathMatrix): RingCandidate[] {
-        let length = d.length;
-        let candidates = Array();
-        let c = 0;
+    static getRingCandidates(d: DistanceMatrix, pe: PathMatrix, pe_prime: ExtendedPathMatrix): RingCandidate[] {
+        const length = d.length;
+        const candidates: RingCandidate[] = [];
 
         for (let i = 0; i < length; i++) {
             for (let j = 0; j < length; j++) {
                 if (d[i][j] === 0 || (pe[i][j].length === 1 && pe_prime[i][j].length === 0)) {
                     continue;
-                } else {
-                    // c is the number of vertices in the cycle.
-                    if (pe_prime[i][j].length !== 0) {
-                        c = 2 * (d[i][j] + 0.5);
-                    } else {
-                        c = 2 * d[i][j];
-                    }
-
-                    if (c !== Infinity) {
-                        candidates.push([c, pe[i][j], pe_prime[i][j]]);
-                    }
                 }
+
+                let cycleSize: number;
+                if (pe[i][j].length > 1) {
+                    cycleSize = 2 * d[i][j];
+                } else if (pe_prime[i][j].length !== 0) {
+                    cycleSize = 2 * d[i][j] + 1;
+                } else {
+                    cycleSize = 2 * d[i][j];
+                }
+
+                if (!Number.isFinite(cycleSize)) {
+                    continue;
+                }
+
+                candidates.push({
+                    size: cycleSize,
+                    paths: pe[i][j].map((path) => path.slice()),
+                    extendedPaths: pe_prime[i][j].map((path) => path.slice())
+                });
             }
         }
 
-        // Candidates have to be sorted by c
-        candidates.sort(function (a, b) {
-            return a[0] - b[0];
-        });
-
+        candidates.sort((a, b) => a.size - b.size);
         return candidates;
     }
 
     /**
      * Searches the candidates for the smallest set of smallest rings.
      *
-     * @param {Array[]} c The candidates.
-     * @param {Array[]} d The distance matrix.
+     * @param {RingCandidate[]} candidates The ring candidates.
      * @param {Array[]} adjacencyMatrix An adjacency matrix.
-     * @param {Array[]} pe A matrix containing the shortest paths.
-     * @param {Array[]} pe_prime A matrix containing the shortest paths + one vertex.
      * @param {Uint16Array} arrBondCount A matrix containing the bond count of each vertex.
      * @param {Uint16Array} arrRingCount A matrix containing the number of rings associated with each vertex.
      * @param {Number} nsssr The theoretical number of rings in the graph.
      * @returns {Set[]} The smallest set of smallest rings.
      */
-    static getSSSR(c: RingCandidate[], d: DistanceMatrix, adjacencyMatrix: AdjacencyMatrix, pe: PathMatrix, pe_prime: PathMatrix, arrBondCount: Uint16Array, arrRingCount: Uint16Array, nsssr: number): Set<number>[] {
-        let cSssr = Array();
-        let allBonds = Array();
+    static getSSSR(candidates: RingCandidate[], adjacencyMatrix: AdjacencyMatrix, arrBondCount: Uint16Array, arrRingCount: Uint16Array, nsssr: number): Set<number>[] {
+        const cSssr: Set<number>[] = [];
+        const allBondCounts = new Map<string, number>();
 
-        for (let i = 0; i < c.length; i++) {
-            if (c[i][0] % 2 !== 0) {
-                for (let j = 0; j < c[i][2].length; j++) {
-                    let bonds: BondList = c[i][1][0].concat(c[i][2][j]);
-                    // Some bonds are added twice, resulting in [[u, v], [u, v]] instead of [u, v].
-                    // TODO: This is a workaround, fix later. Probably should be a set rather than an array, however the computational overhead
-                    //       is probably bigger compared to leaving it like this.
-                    for (var k = 0; k < bonds.length; k++) {
-                        if (bonds[k][0].constructor === Array) (bonds as any)[k] = bonds[k][0];
-                    }
+        for (const candidate of candidates) {
+            const { size, paths, extendedPaths } = candidate;
 
-                    let atoms = SSSR.bondsToAtoms(bonds);
+            if (size % 2 !== 0) {
+                if (paths.length === 0) {
+                    continue;
+                }
 
-                    if (SSSR.getBondCount(atoms, adjacencyMatrix) === atoms.size && !SSSR.pathSetsContain(cSssr, atoms, bonds as any[], allBonds, arrBondCount, arrRingCount)) {
+                const basePath = paths[0];
+                for (const extended of extendedPaths) {
+                    const bonds: Path = [...basePath, ...extended];
+                    const atoms = SSSR.bondsToAtoms(bonds);
+
+                    if (SSSR.getBondCount(atoms, adjacencyMatrix) === atoms.size &&
+                        !SSSR.pathSetsContain(cSssr, atoms, bonds, allBondCounts, arrBondCount, arrRingCount)) {
                         cSssr.push(atoms);
-                        allBonds = allBonds.concat(bonds);
+                        for (const bond of bonds) {
+                            const key = SSSR.bondKey(bond);
+                            allBondCounts.set(key, (allBondCounts.get(key) ?? 0) + 1);
+                        }
                     }
 
                     if (cSssr.length >= nsssr) {
-                        return cSssr;
+                        return cSssr.slice(0, nsssr);
                     }
                 }
             } else {
-                for (let j = 0; j < c[i][1].length - 1; j++) {
-                    let bonds: BondList = c[i][1][j].concat(c[i][1][j + 1]);
-                    // Some bonds are added twice, resulting in [[u, v], [u, v]] instead of [u, v].
-                    // TODO: This is a workaround, fix later. Probably should be a set rather than an array, however the computational overhead
-                    //       is probably bigger compared to leaving it like this.
-                    for (var k = 0; k < bonds.length; k++) {
-                        if (bonds[k][0].constructor === Array) (bonds as any)[k] = bonds[k][0];
-                    }
+                if (paths.length < 2) {
+                    continue;
+                }
 
-                    let atoms = SSSR.bondsToAtoms(bonds);
+                for (let j = 0; j < paths.length - 1; j++) {
+                    const bonds: Path = [...paths[j], ...paths[j + 1]];
+                    const atoms = SSSR.bondsToAtoms(bonds);
 
-                    if (SSSR.getBondCount(atoms, adjacencyMatrix) === atoms.size && !SSSR.pathSetsContain(cSssr, atoms, bonds as any[], allBonds, arrBondCount, arrRingCount)) {
+                    if (SSSR.getBondCount(atoms, adjacencyMatrix) === atoms.size &&
+                        !SSSR.pathSetsContain(cSssr, atoms, bonds, allBondCounts, arrBondCount, arrRingCount)) {
                         cSssr.push(atoms);
-                        allBonds = allBonds.concat(bonds);
+                        for (const bond of bonds) {
+                            const key = SSSR.bondKey(bond);
+                            allBondCounts.set(key, (allBondCounts.get(key) ?? 0) + 1);
+                        }
                     }
 
                     if (cSssr.length >= nsssr) {
-                        return cSssr;
+                        return cSssr.slice(0, nsssr);
                     }
                 }
             }
         }
 
-        return cSssr;
+        return cSssr.slice(0, nsssr);
     }
 
     /**
@@ -454,14 +443,13 @@ class SSSR {
      * @param {Set[]} pathSets An array of sets each representing a path.
      * @param {Set<Number>} pathSet A set representing a path.
      * @param {Array[]} bonds The bonds associated with the current path.
-     * @param {Array[]} allBonds All bonds currently associated with rings in the SSSR set.
+     * @param {Map<string, number>} allBondCounts Bond multiplicities currently associated with rings in the SSSR set.
      * @param {Uint16Array} arrBondCount A matrix containing the bond count of each vertex.
      * @param {Uint16Array} arrRingCount A matrix containing the number of rings associated with each vertex.
-     * @returns {Boolean} A boolean indicating whether or not a give path is contained within a set.
+     * @returns {Boolean} A boolean indicating whether or not a given path is contained within a set.
      */
-    static pathSetsContain(pathSets: Set<number>[], pathSet: Set<number>, bonds: BondList, allBonds: BondList, arrBondCount: Uint16Array, arrRingCount: Uint16Array): boolean {
-        var i = pathSets.length;
-        while (i--) {
+    static pathSetsContain(pathSets: Set<number>[], pathSet: Set<number>, bonds: Path, allBondCounts: Map<string, number>, arrBondCount: Uint16Array, arrRingCount: Uint16Array): boolean {
+        for (let i = pathSets.length - 1; i >= 0; i--) {
             if (SSSR.isSupersetOf(pathSet, pathSets[i])) {
                 return true;
             }
@@ -475,30 +463,23 @@ class SSSR {
             }
         }
 
-        // Check if the edges from the candidate are already all contained within the paths of the set of paths.
-        // TODO: For some reason, this does not replace the isSupersetOf method above -> why?
-        let count = 0;
-        let allContained = false;
-        i = bonds.length;
-        while (i--) {
-            var j = allBonds.length;
-            while (j--) {
-                if (bonds[i][0] === allBonds[j][0] && bonds[i][1] === allBonds[j][1] ||
-                    bonds[i][1] === allBonds[j][0] && bonds[i][0] === allBonds[j][1]) {
-                    count++;
-                }
+        const bondKeys = bonds.map((bond) => SSSR.bondKey(bond));
+        const candidateBondCounts = new Map<string, number>();
+        for (const key of bondKeys) {
+            candidateBondCounts.set(key, (candidateBondCounts.get(key) ?? 0) + 1);
+        }
 
-                if (count === bonds.length) {
-                    allContained = true;
-                }
+        let allContained = true;
+        for (const [key, required] of candidateBondCounts.entries()) {
+            if ((allBondCounts.get(key) ?? 0) < required) {
+                allContained = false;
+                break;
             }
         }
 
-        // If all the bonds and thus vertices are already contained within other rings
-        // check if there's one vertex with ringCount < bondCount
         let specialCase = false;
         if (allContained) {
-            for (let element of pathSet) {
+            for (const element of pathSet) {
                 if (arrRingCount[element] < arrBondCount[element]) {
                     specialCase = true;
                     break;
@@ -510,12 +491,36 @@ class SSSR {
             return true;
         }
 
-        // Update the ring counts for the vertices
-        for (let element of pathSet) {
+        for (const element of pathSet) {
             arrRingCount[element]++;
         }
 
         return false;
+    }
+
+    private static combinePaths(pathA: Path, pathB: Path): Path {
+        if (pathA.length === 0) {
+            return pathB.slice();
+        }
+
+        if (pathB.length === 0) {
+            return pathA.slice();
+        }
+
+        return pathA.concat(pathB);
+    }
+
+    private static pathToKey(path: Path): string {
+        if (path.length === 0) {
+            return '';
+        }
+
+        return path.map((bond) => SSSR.bondKey(bond)).join('|');
+    }
+
+    private static bondKey(bond: PathElement): string {
+        const [a, b] = bond;
+        return a < b ? `${a}-${b}` : `${b}-${a}`;
     }
 
     /**

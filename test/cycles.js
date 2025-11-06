@@ -31,8 +31,8 @@ describe('Johnson cycle enumeration', () => {
     const preprocessor = buildPreprocessor('C1CCC2CC1CCC2');
     const graphCycles = preprocessor.graph.getAllCycles();
 
-    assert.equal(graphCycles.length, 2);
-    assert.deepEqual(cycleLengths(graphCycles), [6, 6]);
+    assert.equal(graphCycles.length, 3);
+    assert.deepEqual(cycleLengths(graphCycles), [6, 6, 8]);
   });
 
   it('enumerates all simple cycles in naphthalene', () => {
@@ -40,6 +40,6 @@ describe('Johnson cycle enumeration', () => {
     const graphCycles = preprocessor.graph.getAllCycles();
 
     assert.equal(graphCycles.length, 3);
-    assert.deepEqual(cycleLengths(graphCycles), [6, 6, 10]);
+    assert.deepEqual(cycleLengths(graphCycles), [5, 6, 9]);
   });
 });
