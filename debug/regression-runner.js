@@ -1315,19 +1315,19 @@ function generateIndividualHTMLReport(diff) {
         }
 
         .smiles-display {
-            background: #2c3e50;
-            color: #ecf0f1;
+            margin: 20px 0;
             padding: 12px 15px;
+            background: #eaf2fb;
             border-radius: 5px;
-            margin-bottom: 20px;
-            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            color: #2c3e50;
+            border: 1px solid #d0e1f9;
         }
 
         .smiles-display code {
-            font-family: 'Courier New', monospace;
-            font-size: 0.95em;
             display: block;
-            word-break: break-word;
+            word-break: break-all;
         }
 
         .comparison-container {
@@ -1369,44 +1369,6 @@ function generateIndividualHTMLReport(diff) {
         .meta {
             color: #7f8c8d;
             font-size: 0.9em;
-        }
-
-        .full-width-comparison {
-            margin-top: 30px;
-            border-top: 2px solid #ecf0f1;
-            padding-top: 20px;
-        }
-
-        .full-width-comparison h3 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-            font-size: 1.2em;
-        }
-
-        .full-width-svg-section {
-            margin-bottom: 30px;
-        }
-
-        .full-width-svg-section h4 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 1.1em;
-        }
-
-        .full-width-svg-container {
-            background: white;
-            border: 1px solid #bdc3c7;
-            border-radius: 5px;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 10px;
-        }
-
-        .full-width-svg-container svg {
-            max-width: 100%;
-            height: auto;
         }
 
         .json-diff-section {
@@ -1568,34 +1530,6 @@ function generateIndividualHTMLReport(diff) {
 </head>
 <body>
     <div class="container">
-        <div class="commit-info">
-            <div class="commit-entry">
-                <div class="commit-label-row">
-                    <span class="commit-label">Baseline Commit</span>
-                    <button class="copy-btn" data-copy-target="${oldCommitId}">Copy to Clipboard</button>
-                </div>
-                <div class="commit-hash-wrapper">
-                    <span class="commit-hash" id="${oldCommitId}">${escapeHtml(diff.oldCommitHash)}</span>
-                </div>
-            </div>
-            <div class="commit-entry">
-                <div class="commit-label-row">
-                    <span class="commit-label">Current Commit</span>
-                    <button class="copy-btn" data-copy-target="${newCommitId}">Copy to Clipboard</button>
-                </div>
-                <div class="commit-hash-wrapper">
-                    <span class="commit-hash" id="${newCommitId}">${escapeHtml(diff.newCommitHash)}</span>${diff.newHasChanges ? '<span class="uncommitted-badge">+ uncommitted</span>' : ''}
-                </div>
-            </div>
-        </div>
-
-        <div class="smiles-display">
-            <div class="section-header">
-                <strong>SMILES</strong>
-                <button class="copy-btn" data-copy-target="${smilesFieldId}">Copy to Clipboard</button>
-            </div>
-            <code id="${smilesFieldId}">${escapeHtml(diff.smiles)}</code>
-        </div>
 
         <div class="comparison-container">
             <div class="comparison-side">
@@ -1614,23 +1548,32 @@ function generateIndividualHTMLReport(diff) {
             </div>
         </div>
 
-        <div class="full-width-comparison">
-            <h3>Full-Width Comparison</h3>
-
-            <div class="full-width-svg-section">
-                <h4>Baseline (Old)</h4>
-                <div class="full-width-svg-container">
-                    ${diff.oldSvg}
-                </div>
-                <div class="meta">JSON: ${diff.oldJsonLength} bytes</div>
+        <div class="smiles-display">
+            <div class="section-header">
+                <strong>SMILES</strong>
+                <button class="copy-btn" data-copy-target="${smilesFieldId}">Copy to Clipboard</button>
             </div>
+            <code id="${smilesFieldId}">${escapeHtml(diff.smiles)}</code>
+        </div>
 
-            <div class="full-width-svg-section">
-                <h4>Current (New)</h4>
-                <div class="full-width-svg-container">
-                    ${diff.newSvg}
+        <div class="commit-info">
+            <div class="commit-entry">
+                <div class="commit-label-row">
+                    <span class="commit-label">Baseline Commit</span>
+                    <button class="copy-btn" data-copy-target="${oldCommitId}">Copy to Clipboard</button>
                 </div>
-                <div class="meta">JSON: ${diff.newJsonLength} bytes</div>
+                <div class="commit-hash-wrapper">
+                    <span class="commit-hash" id="${oldCommitId}">${escapeHtml(diff.oldCommitHash)}</span>
+                </div>
+            </div>
+            <div class="commit-entry">
+                <div class="commit-label-row">
+                    <span class="commit-label">Current Commit</span>
+                    <button class="copy-btn" data-copy-target="${newCommitId}">Copy to Clipboard</button>
+                </div>
+                <div class="commit-hash-wrapper">
+                    <span class="commit-hash" id="${newCommitId}">${escapeHtml(diff.newCommitHash)}</span>${diff.newHasChanges ? '<span class="uncommitted-badge">+ uncommitted</span>' : ''}
+                </div>
             </div>
         </div>
 
