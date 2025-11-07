@@ -1597,38 +1597,6 @@ function generateIndividualHTMLReport(diff) {
             <code id="${smilesFieldId}">${escapeHtml(diff.smiles)}</code>
         </div>
 
-        <div class="benchmark-info ${performanceClass}">
-            <h3>Performance Comparison</h3>
-            <div class="benchmark-comparison">
-                <div class="benchmark-column">
-                    <span class="benchmark-label">Baseline (Old)</span>
-                    <span class="benchmark-value benchmark-old">${oldTotalTime.toFixed(2)} ms</span>
-                    <div class="benchmark-detail">
-                        SVG: ${diff.oldSvgRenderTime.toFixed(2)} ms<br>
-                        JSON: ${diff.oldJsonRenderTime.toFixed(2)} ms
-                    </div>
-                </div>
-                <div class="benchmark-column">
-                    <span class="benchmark-label">Current (New)</span>
-                    <span class="benchmark-value benchmark-new">${newTotalTime.toFixed(2)} ms</span>
-                    <div class="benchmark-detail">
-                        SVG: ${diff.newSvgRenderTime.toFixed(2)} ms<br>
-                        JSON: ${diff.newJsonRenderTime.toFixed(2)} ms
-                    </div>
-                </div>
-                <div class="benchmark-column">
-                    <span class="benchmark-label">Change</span>
-                    <span class="benchmark-value benchmark-delta">${timeDiff >= 0 ? '+' : ''}${timeDiff.toFixed(2)} ms</span>
-                    <div class="benchmark-detail">
-                        ${Math.abs(percentChange).toFixed(1)}% ${isFaster ? 'faster' : 'slower'}
-                    </div>
-                </div>
-            </div>
-            <div class="performance-summary ${isFaster ? 'faster' : 'slower'}">
-                ${isFaster ? '\u2713 Performance Improvement' : '\u26A0 Performance Regression'}
-            </div>
-        </div>
-
         <div class="comparison-container">
             <div class="comparison-side">
                 <h4>Baseline (Old)</h4>
@@ -1663,6 +1631,38 @@ function generateIndividualHTMLReport(diff) {
                     ${diff.newSvg}
                 </div>
                 <div class="meta">JSON: ${diff.newJsonLength} bytes</div>
+            </div>
+        </div>
+
+        <div class="benchmark-info ${performanceClass}">
+            <h3>Performance Comparison</h3>
+            <div class="benchmark-comparison">
+                <div class="benchmark-column">
+                    <span class="benchmark-label">Baseline (Old)</span>
+                    <span class="benchmark-value benchmark-old">${oldTotalTime.toFixed(2)} ms</span>
+                    <div class="benchmark-detail">
+                        SVG: ${diff.oldSvgRenderTime.toFixed(2)} ms<br>
+                        JSON: ${diff.oldJsonRenderTime.toFixed(2)} ms
+                    </div>
+                </div>
+                <div class="benchmark-column">
+                    <span class="benchmark-label">Current (New)</span>
+                    <span class="benchmark-value benchmark-new">${newTotalTime.toFixed(2)} ms</span>
+                    <div class="benchmark-detail">
+                        SVG: ${diff.newSvgRenderTime.toFixed(2)} ms<br>
+                        JSON: ${diff.newJsonRenderTime.toFixed(2)} ms
+                    </div>
+                </div>
+                <div class="benchmark-column">
+                    <span class="benchmark-label">Change</span>
+                    <span class="benchmark-value benchmark-delta">${timeDiff >= 0 ? '+' : ''}${timeDiff.toFixed(2)} ms</span>
+                    <div class="benchmark-detail">
+                        ${Math.abs(percentChange).toFixed(1)}% ${isFaster ? 'faster' : 'slower'}
+                    </div>
+                </div>
+            </div>
+            <div class="performance-summary ${isFaster ? 'faster' : 'slower'}">
+                ${isFaster ? '\u2713 Performance Improvement' : '\u26A0 Performance Regression'}
             </div>
         </div>
 
