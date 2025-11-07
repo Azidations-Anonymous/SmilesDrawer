@@ -4,6 +4,7 @@ yarn-error.log
 # Build output
 dist/
 docs/
+doc/
 
 # TypeScript
 *.tsbuildinfo
