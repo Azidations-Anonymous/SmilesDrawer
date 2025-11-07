@@ -35,6 +35,7 @@ class InitializationManager {
 
         this.drawer.initRings();
         this.initHydrogens();
+        this.drawer.buildCisTransMetadata();
     }
 
     initHydrogens(): void {

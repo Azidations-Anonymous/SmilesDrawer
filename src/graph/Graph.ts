@@ -102,16 +102,18 @@ class Graph {
 
       // Add edge between this node and its parent
       let edge = new Edge(parentVertexId, vertex.id, 1);
-      let vertexId = null;
+      let stereoOwner: number | null = null;
 
       if (isBranch) {
         edge.setBondType(vertex.value.branchBond || '-');
-        vertexId = vertex.id;
-        edge.setBondType(vertex.value.branchBond || '-');
-        vertexId = vertex.id;
+        stereoOwner = vertex.id;
       } else {
         edge.setBondType(parentVertex.value.bondType || '-');
-        vertexId = parentVertex.id;
+        stereoOwner = parentVertex.id;
+      }
+
+      if (Edge.isDirectional(edge.bondType) && stereoOwner !== null) {
+        edge.stereoSourceId = stereoOwner;
       }
 
       let edgeId = this.addEdge(edge);

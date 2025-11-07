@@ -6,6 +6,7 @@ import PseudoElementManager from "./PseudoElementManager";
 import MolecularInfoManager from "./MolecularInfoManager";
 import InitializationManager from "./InitializationManager";
 import GraphProcessingManager from "./GraphProcessingManager";
+import CisTransManager from "./CisTransManager";
 import OptionsManager from "../config/OptionsManager";
 import RingManager = require("./RingManager");
 import IMolecularData = require("./IMolecularData");
@@ -57,6 +58,7 @@ class MolecularPreprocessor implements IMolecularData {
   highlight_atoms: AtomHighlight[];
   atomAnnotationDefaults: Map<string, unknown>;
   atomAnnotationNames: Set<string>;
+  cisTransManager: CisTransManager;
 
   /**
    * The constructor for the class SmilesDrawer.
@@ -73,6 +75,7 @@ class MolecularPreprocessor implements IMolecularData {
         this.molecularInfoManager = new MolecularInfoManager(this);
         this.initializationManager = new InitializationManager(this);
         this.graphProcessingManager = new GraphProcessingManager(this);
+        this.cisTransManager = new CisTransManager(this);
       this.graph = null;
       this.doubleBondConfigCount = 0;
       this.doubleBondConfig = null;
@@ -135,6 +138,20 @@ class MolecularPreprocessor implements IMolecularData {
    */
   getSpiros(): Ring[] {
       return this.ringManager.getSpiros();
+  }
+
+  /**
+   * Analyze the graph to derive cis/trans intent for every stereogenic double bond.
+   */
+  buildCisTransMetadata(): void {
+      this.cisTransManager.buildMetadata();
+  }
+
+  /**
+   * Enforce the captured cis/trans intent on the current layout.
+   */
+  correctCisTransBonds(): void {
+      this.cisTransManager.correctBondOrientations();
   }
 
   /**

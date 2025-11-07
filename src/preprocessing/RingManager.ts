@@ -147,7 +147,16 @@ class RingManager {
               let targetVertexId = openBonds.get(ringbondId)[0];
               let targetRingbondBond = openBonds.get(ringbondId)[1];
               let edge = new Edge(sourceVertexId, targetVertexId, 1);
-              edge.setBondType(targetRingbondBond || ringbondBond || '-');
+              let resolvedBondType = (targetRingbondBond || ringbondBond || '-') as BondType;
+              edge.setBondType(resolvedBondType);
+
+              if (Edge.isDirectional(edge.bondType)) {
+                if (targetRingbondBond && Edge.isDirectional(targetRingbondBond as BondType)) {
+                  edge.stereoSourceId = targetVertexId;
+                } else if (ringbondBond && Edge.isDirectional(ringbondBond as BondType)) {
+                  edge.stereoSourceId = vertex.id;
+                }
+              }
               let edgeId = this.drawer.graph.addEdge(edge);
               let targetVertex = this.drawer.graph.vertices[targetVertexId];
 

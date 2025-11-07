@@ -62,7 +62,7 @@
             let nSuccesses = 0;
             let totalSpeed = 0;
             let totalOverlap = 0;
-            let str = 'depictor,set,parsetime,rendertime,overlap,rings,hac,bridged,smiles\n';
+            let str = 'depictor,set,parsetime,rendertime,overlap,rings,hac,bridged,smiles\\n';
             
             let failed = '';
             for (let i = 0; i < set.length; i++) {                
@@ -78,7 +78,7 @@
                     td2 = performance.now() - t2;
                 }, function(err) {
                     nErrors++;
-                    failed += set[i] + '\n';
+                    failed += set[i] + '\\n';
                 });
 
                 if (td2 === null) {
@@ -93,7 +93,7 @@
                        smilesDrawer.getTotalOverlapScore() + ',' +
                        smilesDrawer.getRingCount() + ',' + 
                        smilesDrawer.getHeavyAtomCount() + ',' +
-                       smilesDrawer.hasBridgedRing() + ',' + set[i] + '\n';
+                       smilesDrawer.hasBridgedRing() + ',' + set[i] + '\\n';
             }
 
             document.getElementById('textbox').value = str;

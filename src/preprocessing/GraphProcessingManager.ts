@@ -12,6 +12,8 @@ class GraphProcessingManager {
     processGraph(): void {
         this.drawer.position();
 
+        this.drawer.correctCisTransBonds();
+
         // Restore the ring information (removes bridged rings and replaces them with the original, multiple, rings)
         this.drawer.restoreRingInformation();
 

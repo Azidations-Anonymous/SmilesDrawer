@@ -155,7 +155,7 @@ if (!Array.prototype.fill) {
 
 module.exports = SmilesDrawer;
 
-},{"./src/SmilesDrawer":4,"./src/drawing/Drawer":14,"./src/drawing/GaussDrawer":16,"./src/drawing/SvgDrawer":17,"./src/parsing/Parser":40,"./src/parsing/ReactionParser":41,"./src/reactions/ReactionDrawer":53}],2:[function(require,module,exports){
+},{"./src/SmilesDrawer":4,"./src/drawing/Drawer":14,"./src/drawing/GaussDrawer":16,"./src/drawing/SvgDrawer":17,"./src/parsing/Parser":40,"./src/parsing/ReactionParser":41,"./src/reactions/ReactionDrawer":54}],2:[function(require,module,exports){
 /**
  * chroma.js - JavaScript library for color conversions
  *
@@ -4148,7 +4148,7 @@ class SmilesDrawer {
 
 module.exports = SmilesDrawer;
 
-},{"./config/Options":9,"./drawing/SvgDrawer":17,"./drawing/helpers/SvgConversionHelper":25,"./parsing/Parser":40,"./parsing/ReactionParser":41,"./reactions/ReactionDrawer":53}],5:[function(require,module,exports){
+},{"./config/Options":9,"./drawing/SvgDrawer":17,"./drawing/helpers/SvgConversionHelper":25,"./parsing/Parser":40,"./parsing/ReactionParser":41,"./reactions/ReactionDrawer":54}],5:[function(require,module,exports){
 "use strict";
 /**
  * Johnson cycle enumeration adapted from NetworkX / PIKAChU.
@@ -4830,7 +4830,7 @@ class KamadaKawaiLayout {
 
 module.exports = KamadaKawaiLayout;
 
-},{"../utils/MathHelper":56}],7:[function(require,module,exports){
+},{"../utils/MathHelper":57}],7:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -6542,7 +6542,7 @@ class DrawingManager {
 
 module.exports = DrawingManager;
 
-},{"../config/ThemeManager":11,"../graph/Atom":28,"../graph/Line":34,"../graph/Vector2":37,"../utils/ArrayHelper":54,"./CanvasDrawer":13}],16:[function(require,module,exports){
+},{"../config/ThemeManager":11,"../graph/Atom":28,"../graph/Line":34,"../graph/Vector2":37,"../utils/ArrayHelper":55,"./CanvasDrawer":13}],16:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -6726,7 +6726,7 @@ class GaussDrawer {
 
 module.exports = GaussDrawer;
 
-},{"../graph/Vector2":37,"../utils/PixelsToSvg":57,"chroma-js":2}],17:[function(require,module,exports){
+},{"../graph/Vector2":37,"../utils/PixelsToSvg":58,"chroma-js":2}],17:[function(require,module,exports){
 "use strict";
 
 const MolecularPreprocessor = require("../preprocessing/MolecularPreprocessor");
@@ -6996,7 +6996,7 @@ class SvgDrawer {
 
 module.exports = SvgDrawer;
 
-},{"../config/ThemeManager":11,"../preprocessing/MolecularDataSnapshot":44,"../preprocessing/MolecularPreprocessor":46,"./SvgWrapper":18,"./draw/SvgEdgeDrawer":22,"./draw/SvgVertexDrawer":23,"./draw/SvgWeightsDrawer":24}],18:[function(require,module,exports){
+},{"../config/ThemeManager":11,"../preprocessing/MolecularDataSnapshot":45,"../preprocessing/MolecularPreprocessor":47,"./SvgWrapper":18,"./draw/SvgEdgeDrawer":22,"./draw/SvgVertexDrawer":23,"./draw/SvgWeightsDrawer":24}],18:[function(require,module,exports){
 "use strict";
 
 const SvgTextHelper = require("./helpers/SvgTextHelper");
@@ -7778,7 +7778,7 @@ class SvgWrapper {
 
 module.exports = SvgWrapper;
 
-},{"../graph/Line":34,"../graph/Vector2":37,"../utils/MathHelper":56,"./helpers/SvgTextHelper":26,"./helpers/SvgUnicodeHelper":27}],19:[function(require,module,exports){
+},{"../graph/Line":34,"../graph/Vector2":37,"../utils/MathHelper":57,"./helpers/SvgTextHelper":26,"./helpers/SvgUnicodeHelper":27}],19:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../../utils/MathHelper");
@@ -7983,7 +7983,7 @@ class CanvasPrimitiveDrawer {
 
 module.exports = CanvasPrimitiveDrawer;
 
-},{"../../utils/MathHelper":56}],20:[function(require,module,exports){
+},{"../../utils/MathHelper":57}],20:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../../utils/MathHelper");
@@ -8303,7 +8303,7 @@ class CanvasTextDrawer {
 
 module.exports = CanvasTextDrawer;
 
-},{"../../utils/MathHelper":56}],21:[function(require,module,exports){
+},{"../../utils/MathHelper":57}],21:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../../graph/Vector2");
@@ -8639,7 +8639,7 @@ class SvgEdgeDrawer {
 
 module.exports = SvgEdgeDrawer;
 
-},{"../../graph/Line":34,"../../graph/Vector2":37,"../../utils/ArrayHelper":54}],23:[function(require,module,exports){
+},{"../../graph/Line":34,"../../graph/Vector2":37,"../../utils/ArrayHelper":55}],23:[function(require,module,exports){
 "use strict";
 
 const Atom = require("../../graph/Atom");
@@ -8769,7 +8769,7 @@ class SvgVertexDrawer {
 
 module.exports = SvgVertexDrawer;
 
-},{"../../graph/Atom":28,"../../graph/Vector2":37,"../../utils/ArrayHelper":54}],24:[function(require,module,exports){
+},{"../../graph/Atom":28,"../../graph/Vector2":37,"../../utils/ArrayHelper":55}],24:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../../graph/Vector2");
@@ -9621,7 +9621,7 @@ class Atom {
 
 module.exports = Atom;
 
-},{"../utils/ArrayHelper":54,"./AtomAnnotations":29}],29:[function(require,module,exports){
+},{"../utils/ArrayHelper":55,"./AtomAnnotations":29}],29:[function(require,module,exports){
 "use strict";
 /**
  * AtomAnnotations stores arbitrary per-atom metadata.
@@ -9759,6 +9759,10 @@ class Edge {
     this.isPartOfAromaticRing = false;
     this.center = false;
     this.wedge = null;
+    this.stereoSymbol = null;
+    this.stereoSourceId = null;
+    this.cisTrans = false;
+    this.cisTransNeighbours = {};
   }
   /**
    * Set the bond type of this edge. This also sets the edge weight.
@@ -9769,6 +9773,13 @@ class Edge {
   setBondType(bondType) {
     this.bondType = bondType;
     this.weight = Edge.bonds[bondType];
+
+    if (Edge.isDirectional(bondType)) {
+      this.stereoSymbol = bondType;
+    } else {
+      this.stereoSymbol = null;
+      this.stereoSourceId = null;
+    }
   }
   /**
    * An object mapping the bond type to the number of bonds.
@@ -9787,6 +9798,14 @@ class Edge {
       '#': 3,
       '$': 4
     };
+  }
+  /**
+   * Returns true if the supplied bond type encodes a cis/trans directional marker.
+   */
+
+
+  static isDirectional(bondType) {
+    return bondType === '/' || bondType === '\\';
   }
 
 }
@@ -9887,16 +9906,18 @@ class Graph {
       parentVertex.spanningTreeChildren.push(vertex.id); // Add edge between this node and its parent
 
       let edge = new Edge(parentVertexId, vertex.id, 1);
-      let vertexId = null;
+      let stereoOwner = null;
 
       if (isBranch) {
         edge.setBondType(vertex.value.branchBond || '-');
-        vertexId = vertex.id;
-        edge.setBondType(vertex.value.branchBond || '-');
-        vertexId = vertex.id;
+        stereoOwner = vertex.id;
       } else {
         edge.setBondType(parentVertex.value.bondType || '-');
-        vertexId = parentVertex.id;
+        stereoOwner = parentVertex.id;
+      }
+
+      if (Edge.isDirectional(edge.bondType) && stereoOwner !== null) {
+        edge.stereoSourceId = stereoOwner;
       }
 
       let edgeId = this.addEdge(edge);
@@ -11136,7 +11157,7 @@ class Ring {
 
 module.exports = Ring;
 
-},{"../utils/ArrayHelper":54,"./RingConnection":36,"./Vector2":37}],36:[function(require,module,exports){
+},{"../utils/ArrayHelper":55,"./RingConnection":36,"./Vector2":37}],36:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a ring connection.
@@ -11533,6 +11554,31 @@ class Vector2 {
     let y = this.x * s + this.y * c;
     this.x = x + vec.x;
     this.y = y + vec.y;
+    return this;
+  }
+  /**
+   * Mirror this vector across the infinite line defined by points a and b.
+   *
+   * @param {Vector2} a Start point of the mirror line.
+   * @param {Vector2} b End point of the mirror line.
+   * @returns {Vector2} Returns itself.
+   */
+
+
+  mirrorAboutLine(a, b) {
+    let dx = b.x - a.x;
+    let dy = b.y - a.y;
+    let lenSq = dx * dx + dy * dy;
+
+    if (lenSq === 0) {
+      return this;
+    }
+
+    let t = ((this.x - a.x) * dx + (this.y - a.y) * dy) / lenSq;
+    let projX = a.x + t * dx;
+    let projY = a.y + t * dy;
+    this.x = 2 * projX - this.x;
+    this.y = 2 * projY - this.y;
     return this;
   }
   /**
@@ -12301,7 +12347,7 @@ class Vertex {
 
 module.exports = Vertex;
 
-},{"../utils/ArrayHelper":54,"../utils/MathHelper":56,"./Vector2":37}],39:[function(require,module,exports){
+},{"../utils/ArrayHelper":55,"../utils/MathHelper":57,"./Vector2":37}],39:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
@@ -12514,7 +12560,7 @@ class BridgedRingHandler {
 
 module.exports = BridgedRingHandler;
 
-},{"../graph/Ring":35,"../graph/RingConnection":36,"../utils/ArrayHelper":54}],40:[function(require,module,exports){
+},{"../graph/Ring":35,"../graph/RingConnection":36,"../utils/ArrayHelper":55}],40:[function(require,module,exports){
 "use strict"; // WHEN REPLACING, CHECK FOR:
 // KEEP THIS WHEN REGENERATING THE PARSER !!
 
@@ -14433,7 +14479,753 @@ class ReactionParser {
 
 module.exports = ReactionParser;
 
-},{"../reactions/Reaction":52}],42:[function(require,module,exports){
+},{"../reactions/Reaction":53}],42:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+class CisTransManager {
+  constructor(drawer) {
+    this.drawer = drawer;
+    this.fixedStereoBonds = new Set();
+  }
+  /**
+   * Derive cis/trans metadata for every stereochemically-defined double bond.
+   */
+
+
+  buildMetadata() {
+    if (!this.drawer.graph) {
+      return;
+    }
+
+    for (const edge of this.drawer.graph.edges) {
+      edge.cisTrans = false;
+      edge.cisTransNeighbours = {};
+    }
+
+    for (const edge of this.drawer.graph.edges) {
+      if (edge.bondType !== '=') {
+        continue;
+      }
+
+      const mapping = this.resolveCisTrans(edge);
+
+      if (mapping && Object.keys(mapping).length > 0) {
+        edge.cisTrans = true;
+        edge.cisTransNeighbours = mapping;
+      }
+    }
+  }
+
+  correctBondOrientations() {
+    if (!this.drawer.graph) {
+      return;
+    }
+
+    this.fixedStereoBonds.clear();
+    const sequences = this.findDoubleBondSequences();
+
+    for (const sequence of sequences) {
+      for (const bond of sequence) {
+        if (!bond.cisTrans) {
+          continue;
+        }
+
+        if (this.isBondDrawnCorrectly(bond)) {
+          this.fixedStereoBonds.add(bond.id);
+        } else {
+          this.fixChiralBond(bond);
+        }
+      }
+    }
+
+    for (const edge of this.drawer.graph.edges) {
+      if (edge.bondType !== '=' || !edge.cisTrans || this.fixedStereoBonds.has(edge.id)) {
+        continue;
+      }
+
+      if (this.isBondDrawnCorrectly(edge)) {
+        this.fixedStereoBonds.add(edge.id);
+      } else {
+        this.fixChiralBond(edge);
+      }
+    }
+  }
+
+  resolveCisTrans(edge) {
+    if (!this.drawer.graph) {
+      return null;
+    }
+
+    const vertexA = this.drawer.graph.vertices[edge.sourceId];
+    const vertexB = this.drawer.graph.vertices[edge.targetId];
+    const sideA = this.resolveSide(vertexA, vertexB.id);
+    const sideB = this.resolveSide(vertexB, vertexA.id);
+
+    if (!sideA || !sideB || !sideA.anchor || !sideB.anchor) {
+      return null;
+    }
+
+    const sameSymbol = sideA.anchorSymbol === sideB.anchorSymbol;
+    const map = {};
+
+    const register = (from, to, orientation) => {
+      if (!from || !to) {
+        return;
+      }
+
+      if (!map[from.id]) {
+        map[from.id] = {};
+      }
+
+      map[from.id][to.id] = orientation;
+    };
+
+    const registerBidirectional = (a, b, orientation) => {
+      register(a, b, orientation);
+      register(b, a, orientation);
+    };
+
+    if (sameSymbol) {
+      registerBidirectional(sideA.anchor, sideB.anchor, 'cis');
+      registerBidirectional(sideA.partner, sideB.partner, 'cis');
+      registerBidirectional(sideA.anchor, sideB.partner, 'trans');
+      registerBidirectional(sideA.partner, sideB.anchor, 'trans');
+    } else {
+      registerBidirectional(sideA.anchor, sideB.anchor, 'trans');
+      registerBidirectional(sideA.partner, sideB.partner, 'trans');
+      registerBidirectional(sideA.anchor, sideB.partner, 'cis');
+      registerBidirectional(sideA.partner, sideB.anchor, 'cis');
+    }
+
+    return Object.keys(map).length > 0 ? map : null;
+  }
+
+  resolveSide(center, oppositeId) {
+    var _a, _b;
+
+    if (!this.drawer.graph) {
+      return null;
+    }
+
+    const neighbourIds = center.getNeighbours(oppositeId);
+
+    if (neighbourIds.length === 0) {
+      return null;
+    }
+
+    const neighbours = neighbourIds.map(id => this.drawer.graph.vertices[id]);
+    let anchor = (_a = neighbours[0]) !== null && _a !== void 0 ? _a : null;
+    let partner = (_b = neighbours[1]) !== null && _b !== void 0 ? _b : null;
+    let anchorSymbol = anchor ? this.getRelativeSymbol(center.id, anchor.id) : null;
+    let partnerSymbol = partner ? this.getRelativeSymbol(center.id, partner.id) : null;
+
+    if (!anchor && partner) {
+      anchor = partner;
+      partner = null;
+      anchorSymbol = partnerSymbol;
+      partnerSymbol = null;
+    }
+
+    if (!anchorSymbol && partnerSymbol) {
+      [anchor, partner] = [partner, anchor];
+      [anchorSymbol, partnerSymbol] = [partnerSymbol, anchorSymbol];
+    }
+
+    if (!anchor || !anchorSymbol) {
+      return null;
+    }
+
+    if (!partnerSymbol && partner) {
+      partnerSymbol = this.inferSymbol(center, anchor, partner, anchorSymbol);
+    }
+
+    return {
+      anchor,
+      partner: partner !== null && partner !== void 0 ? partner : null,
+      anchorSymbol,
+      partnerSymbol
+    };
+  }
+
+  getRelativeSymbol(centerId, neighbourId) {
+    if (!this.drawer.graph) {
+      return null;
+    }
+
+    const edge = this.drawer.graph.getEdge(centerId, neighbourId);
+
+    if (!edge || !edge.stereoSymbol) {
+      return null;
+    }
+
+    if (edge.stereoSourceId === null || edge.stereoSourceId === centerId) {
+      return edge.stereoSymbol;
+    }
+
+    return edge.stereoSymbol === '/' ? '\\' : '/';
+  }
+
+  inferSymbol(center, defined, undefinedVertex, definedSymbol) {
+    const sameSide = this.areBothBeforeOrAfter(center, defined, undefinedVertex);
+
+    if (definedSymbol === '/') {
+      return sameSide ? '\\' : '/';
+    }
+
+    return sameSide ? '/' : '\\';
+  }
+
+  areBothBeforeOrAfter(center, a, b) {
+    return a.id > center.id && b.id > center.id || a.id < center.id && b.id < center.id;
+  }
+
+  findDoubleBondSequences() {
+    const sequences = [];
+
+    if (!this.drawer.graph) {
+      return sequences;
+    }
+
+    const fragments = [];
+
+    for (const edge of this.drawer.graph.edges) {
+      if (!this.isSingleBond(edge)) {
+        continue;
+      }
+
+      const first = this.findAdjacentStereoBond(edge.sourceId, edge.targetId);
+      const second = this.findAdjacentStereoBond(edge.targetId, edge.sourceId);
+
+      if (first && second) {
+        fragments.push([first, second]);
+      }
+    }
+
+    let previousLength = -1;
+
+    while (fragments.length !== previousLength) {
+      previousLength = fragments.length;
+      let merged = false;
+
+      for (let i = 0; i < fragments.length && !merged; i++) {
+        for (let j = i + 1; j < fragments.length; j++) {
+          const mergedFragment = this.mergeFragmentsIfPossible(fragments[i], fragments[j]);
+
+          if (mergedFragment) {
+            fragments.splice(j, 1);
+            fragments.splice(i, 1);
+            fragments.push(mergedFragment);
+            merged = true;
+            break;
+          }
+        }
+      }
+
+      if (!merged) {
+        break;
+      }
+    }
+
+    return fragments;
+  }
+
+  mergeFragmentsIfPossible(fragmentA, fragmentB) {
+    const firstA = fragmentA[0];
+    const lastA = fragmentA[fragmentA.length - 1];
+    const firstB = fragmentB[0];
+    const lastB = fragmentB[fragmentB.length - 1];
+
+    if (lastA.id === firstB.id) {
+      return fragmentA.concat(fragmentB.slice(1));
+    }
+
+    if (lastA.id === lastB.id) {
+      return fragmentA.concat(fragmentB.slice(0, -1).reverse());
+    }
+
+    if (firstA.id === firstB.id) {
+      return fragmentB.slice(1).reverse().concat(fragmentA);
+    }
+
+    if (firstA.id === lastB.id) {
+      return fragmentB.slice(0, -1).concat(fragmentA);
+    }
+
+    return null;
+  }
+
+  isSingleBond(edge) {
+    return edge.bondType === '-' || edge.bondType === '/' || edge.bondType === '\\';
+  }
+
+  findAdjacentStereoBond(vertexId, excludeVertexId) {
+    if (!this.drawer.graph) {
+      return null;
+    }
+
+    const vertex = this.drawer.graph.vertices[vertexId];
+
+    for (const neighbourId of vertex.neighbours) {
+      if (neighbourId === excludeVertexId) {
+        continue;
+      }
+
+      const edge = this.drawer.graph.getEdge(vertexId, neighbourId);
+
+      if (edge && edge.bondType === '=' && edge.cisTrans) {
+        return edge;
+      }
+    }
+
+    return null;
+  }
+
+  isBondDrawnCorrectly(edge) {
+    if (!this.drawer.graph) {
+      return true;
+    }
+
+    const vertexA = this.drawer.graph.vertices[edge.sourceId];
+    const vertexB = this.drawer.graph.vertices[edge.targetId];
+    const evaluatedPairs = new Set();
+
+    for (const [sourceKey, mapping] of Object.entries(edge.cisTransNeighbours)) {
+      const sourceId = Number(sourceKey);
+      const sourceVertex = this.drawer.graph.vertices[sourceId];
+
+      for (const [targetKey, orientation] of Object.entries(mapping)) {
+        const targetId = Number(targetKey);
+        const targetVertex = this.drawer.graph.vertices[targetId];
+        const pairKey = `${Math.min(sourceId, targetId)}_${Math.max(sourceId, targetId)}`;
+
+        if (evaluatedPairs.has(pairKey)) {
+          continue;
+        }
+
+        const sourceOnA = vertexA.neighbours.includes(sourceId);
+        const sourceOnB = vertexB.neighbours.includes(sourceId);
+        const targetOnA = vertexA.neighbours.includes(targetId);
+        const targetOnB = vertexB.neighbours.includes(targetId);
+        let leftVertex = null;
+        let rightVertex = null;
+
+        if (sourceOnA && targetOnB) {
+          leftVertex = sourceVertex;
+          rightVertex = targetVertex;
+        } else if (sourceOnB && targetOnA) {
+          leftVertex = targetVertex;
+          rightVertex = sourceVertex;
+        } else {
+          continue;
+        }
+
+        if (!leftVertex.value.isDrawn || !rightVertex.value.isDrawn) {
+          continue;
+        }
+
+        evaluatedPairs.add(pairKey);
+        const placementLeft = this.getSideOfLine(vertexA.position, vertexB.position, leftVertex.position);
+        const placementRight = this.getSideOfLine(vertexA.position, vertexB.position, rightVertex.position);
+
+        if (placementLeft === 0 || placementRight === 0) {
+          continue;
+        }
+
+        const sameSide = placementLeft === placementRight;
+
+        if (orientation === 'cis' && !sameSide || orientation === 'trans' && sameSide) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  getSideOfLine(a, b, point) {
+    const cross = (b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x);
+
+    if (cross > 0) {
+      return 1;
+    }
+
+    if (cross < 0) {
+      return -1;
+    }
+
+    return 0;
+  }
+
+  getDrawnNeighbours(vertex, exclude = new Set()) {
+    if (!this.drawer.graph) {
+      return [];
+    }
+
+    const neighbours = [];
+
+    for (const neighbourId of vertex.neighbours) {
+      if (exclude.has(neighbourId)) {
+        continue;
+      }
+
+      const neighbour = this.drawer.graph.vertices[neighbourId];
+
+      if (neighbour.value.isDrawn) {
+        neighbours.push(neighbour);
+      }
+    }
+
+    return neighbours;
+  }
+
+  shareRing(a, b) {
+    return a.value.rings.some(ringId => b.value.rings.includes(ringId));
+  }
+
+  fixChiralBond(edge) {
+    if (!this.drawer.graph) {
+      return;
+    }
+
+    const vertexA = this.drawer.graph.vertices[edge.sourceId];
+    const vertexB = this.drawer.graph.vertices[edge.targetId];
+    const inSharedRing = vertexA.value.rings.length > 0 && vertexB.value.rings.length > 0 && this.drawer.areVerticesInSameRing(vertexA, vertexB);
+
+    if (inSharedRing) {
+      this.flipBondInRing(edge);
+    } else {
+      const parent = vertexA.value.rings.length > 0 ? vertexB : vertexA;
+      const root = parent === vertexA ? vertexB : vertexA;
+      const neighbours = this.getDrawnNeighbours(parent, new Set([root.id]));
+
+      if (neighbours.length === 0) {
+        return;
+      }
+
+      if (neighbours.length === 1) {
+        this.flipSubtree(neighbours[0], root, parent);
+      } else if (neighbours.length === 2 && this.shareRing(neighbours[0], neighbours[1])) {
+        this.flipSubtree(neighbours[0], root, parent);
+      } else {
+        for (const neighbour of neighbours) {
+          this.flipSubtree(neighbour, root, parent);
+        }
+      }
+    }
+
+    this.fixedStereoBonds.add(edge.id);
+  }
+
+  isVertexAdjacentToStereoBond(vertex, excludeEdgeId, requireFixed = false) {
+    if (!this.drawer.graph) {
+      return false;
+    }
+
+    for (const neighbourId of vertex.neighbours) {
+      const edge = this.drawer.graph.getEdge(vertex.id, neighbourId);
+
+      if (!edge || edge.id === excludeEdgeId) {
+        continue;
+      }
+
+      if (edge.bondType === '=' && edge.cisTrans) {
+        if (!requireFixed || this.fixedStereoBonds.has(edge.id)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  flipBondInRing(edge) {
+    var _a, _b, _c, _d;
+
+    if (!this.drawer.graph) {
+      return;
+    }
+
+    const atom1 = this.drawer.graph.vertices[edge.sourceId];
+    const atom2 = this.drawer.graph.vertices[edge.targetId];
+    const neighbours1 = this.getDrawnNeighbours(atom1, new Set([atom2.id]));
+    const neighbours2 = this.getDrawnNeighbours(atom2, new Set([atom1.id]));
+    let central = null;
+    let flanking = null;
+    let resolvable = true;
+    const neighbours1Adjacent = neighbours1.some(n => this.isVertexAdjacentToStereoBond(n, edge.id));
+    const neighbours2Adjacent = neighbours2.some(n => this.isVertexAdjacentToStereoBond(n, edge.id));
+    const neighbours1AdjacentFixed = neighbours1.some(n => this.isVertexAdjacentToStereoBond(n, edge.id, true));
+    const neighbours2AdjacentFixed = neighbours2.some(n => this.isVertexAdjacentToStereoBond(n, edge.id, true));
+
+    if (!neighbours1Adjacent && !neighbours2Adjacent) {
+      const branch = this.findRingBranchToFlip(edge, neighbours1, neighbours2);
+      central = (_a = branch === null || branch === void 0 ? void 0 : branch.central) !== null && _a !== void 0 ? _a : null;
+      flanking = (_b = branch === null || branch === void 0 ? void 0 : branch.flanking) !== null && _b !== void 0 ? _b : null;
+
+      if (!central || !flanking) {
+        resolvable = false;
+      }
+    } else if (neighbours1Adjacent && !neighbours2Adjacent) {
+      const ringNeighbour = this.findRingNeighbour(atom2, edge);
+
+      if (ringNeighbour) {
+        central = atom2;
+        flanking = [atom1, ringNeighbour];
+      } else {
+        resolvable = false;
+      }
+    } else if (neighbours2Adjacent && !neighbours1Adjacent) {
+      const ringNeighbour = this.findRingNeighbour(atom1, edge);
+
+      if (ringNeighbour) {
+        central = atom1;
+        flanking = [atom2, ringNeighbour];
+      } else {
+        resolvable = false;
+      }
+    } else {
+      if (neighbours1AdjacentFixed && !neighbours2AdjacentFixed) {
+        const ringNeighbour = this.findRingNeighbour(atom2, edge);
+
+        if (ringNeighbour) {
+          central = atom2;
+          flanking = [atom1, ringNeighbour];
+        } else {
+          resolvable = false;
+        }
+      } else if (neighbours2AdjacentFixed && !neighbours1AdjacentFixed) {
+        const ringNeighbour = this.findRingNeighbour(atom1, edge);
+
+        if (ringNeighbour) {
+          central = atom1;
+          flanking = [atom2, ringNeighbour];
+        } else {
+          resolvable = false;
+        }
+      } else {
+        const branch = this.findRingBranchToFlip(edge, neighbours1, neighbours2);
+        central = (_c = branch === null || branch === void 0 ? void 0 : branch.central) !== null && _c !== void 0 ? _c : null;
+        flanking = (_d = branch === null || branch === void 0 ? void 0 : branch.flanking) !== null && _d !== void 0 ? _d : null;
+
+        if (!central || !flanking) {
+          resolvable = false;
+        }
+      }
+    }
+
+    if (resolvable && central && flanking) {
+      this.flipSubtree(central, flanking[0], flanking[1]);
+    } else {
+      console.warn('Warning! Cis/trans stereochemistry of cyclic system incorrectly drawn.');
+    }
+  }
+
+  findRingNeighbour(vertex, edge) {
+    if (!this.drawer.graph) {
+      return null;
+    }
+
+    const otherA = this.drawer.graph.vertices[edge.sourceId];
+    const otherB = this.drawer.graph.vertices[edge.targetId];
+    const sharedRings = otherA.value.rings.filter(ringId => otherB.value.rings.includes(ringId));
+
+    for (const neighbourId of vertex.neighbours) {
+      if (neighbourId === otherA.id || neighbourId === otherB.id) {
+        continue;
+      }
+
+      const neighbour = this.drawer.graph.vertices[neighbourId];
+
+      if (!neighbour.value.isDrawn) {
+        continue;
+      }
+
+      if (neighbour.value.rings.some(ringId => sharedRings.includes(ringId))) {
+        return neighbour;
+      }
+    }
+
+    return null;
+  }
+
+  findRingBranchToFlip(edge, neighbours1, neighbours2) {
+    if (!this.drawer.graph) {
+      return null;
+    }
+
+    const atom1 = this.drawer.graph.vertices[edge.sourceId];
+    const atom2 = this.drawer.graph.vertices[edge.targetId];
+    const sharedRings = new Set(atom1.value.rings.filter(ringId => atom2.value.rings.includes(ringId)));
+
+    if (neighbours1.length === 1) {
+      return {
+        central: atom1,
+        flanking: [neighbours1[0], atom2]
+      };
+    }
+
+    if (neighbours2.length === 1) {
+      return {
+        central: atom2,
+        flanking: [neighbours2[0], atom1]
+      };
+    }
+
+    let neighbour1 = null;
+    let neighbour1InCycle = false;
+    let subtree1Size = null;
+
+    for (const neighbour of neighbours1) {
+      const inCycle = neighbour.value.rings.some(ringId => sharedRings.has(ringId));
+
+      if (!inCycle) {
+        const size = this.getSubgraphSize(neighbour, new Set([atom1.id]));
+
+        if (!neighbour1 || subtree1Size !== null && size < subtree1Size) {
+          neighbour1 = neighbour;
+          subtree1Size = size;
+        }
+
+        neighbour1InCycle = false;
+      } else if (!neighbour1) {
+        neighbour1 = neighbour;
+        neighbour1InCycle = true;
+      }
+    }
+
+    let neighbour2 = null;
+    let neighbour2InCycle = false;
+    let subtree2Size = null;
+
+    for (const neighbour of neighbours2) {
+      const inCycle = neighbour.value.rings.some(ringId => sharedRings.has(ringId));
+
+      if (!inCycle) {
+        const size = this.getSubgraphSize(neighbour, new Set([atom2.id]));
+
+        if (!neighbour2 || subtree2Size !== null && size < subtree2Size) {
+          neighbour2 = neighbour;
+          subtree2Size = size;
+        }
+
+        neighbour2InCycle = false;
+      } else if (!neighbour2) {
+        neighbour2 = neighbour;
+        neighbour2InCycle = true;
+      }
+    }
+
+    if (!neighbour1 || !neighbour2) {
+      return null;
+    }
+
+    if (!neighbour1InCycle && !neighbour2InCycle) {
+      const size1 = subtree1Size !== null && subtree1Size !== void 0 ? subtree1Size : Number.MAX_SAFE_INTEGER;
+      const size2 = subtree2Size !== null && subtree2Size !== void 0 ? subtree2Size : Number.MAX_SAFE_INTEGER;
+      const centralAtom = size2 > size1 ? atom1 : atom2;
+      const ringNeighbour = this.findRingNeighbour(centralAtom, edge);
+
+      if (!ringNeighbour) {
+        return null;
+      }
+
+      if (centralAtom === atom1) {
+        return {
+          central: atom1,
+          flanking: [atom2, ringNeighbour]
+        };
+      } else {
+        return {
+          central: atom2,
+          flanking: [atom1, ringNeighbour]
+        };
+      }
+    }
+
+    if (neighbour1InCycle && !neighbour2InCycle) {
+      const ringNeighbour = this.findRingNeighbour(atom2, edge);
+      return ringNeighbour ? {
+        central: atom2,
+        flanking: [atom1, ringNeighbour]
+      } : null;
+    }
+
+    if (neighbour2InCycle && !neighbour1InCycle) {
+      const ringNeighbour = this.findRingNeighbour(atom1, edge);
+      return ringNeighbour ? {
+        central: atom1,
+        flanking: [atom2, ringNeighbour]
+      } : null;
+    }
+
+    return null;
+  }
+
+  getSubgraphSize(root, blocked) {
+    return this.collectSubtreeVertices(root, blocked).length;
+  }
+
+  collectSubtreeVertices(root, blocked) {
+    if (!this.drawer.graph) {
+      return [];
+    }
+
+    const result = [];
+    const visited = new Set(blocked);
+    const stack = [root];
+
+    while (stack.length > 0) {
+      const current = stack.pop();
+
+      if (visited.has(current.id)) {
+        continue;
+      }
+
+      visited.add(current.id);
+      result.push(current);
+
+      for (const neighbourId of current.neighbours) {
+        if (!visited.has(neighbourId)) {
+          stack.push(this.drawer.graph.vertices[neighbourId]);
+        }
+      }
+    }
+
+    return result;
+  }
+
+  flipSubtree(root, anchorA, anchorB) {
+    if (!this.drawer.graph) {
+      return;
+    }
+
+    const blocked = new Set([anchorA.id, anchorB.id]);
+    const subtree = this.collectSubtreeVertices(root, blocked);
+
+    for (const vertex of subtree) {
+      vertex.position.mirrorAboutLine(anchorA.position, anchorB.position);
+
+      if (vertex.value.anchoredRings) {
+        for (const ringId of vertex.value.anchoredRings) {
+          const ring = this.drawer.rings[ringId];
+
+          if (ring && ring.center) {
+            ring.center.mirrorAboutLine(anchorA.position, anchorB.position);
+          }
+        }
+      }
+    }
+  }
+
+}
+
+exports.default = CisTransManager;
+
+},{}],43:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -14444,7 +15236,8 @@ class GraphProcessingManager {
   }
 
   processGraph() {
-    this.drawer.position(); // Restore the ring information (removes bridged rings and replaces them with the original, multiple, rings)
+    this.drawer.position();
+    this.drawer.correctCisTransBonds(); // Restore the ring information (removes bridged rings and replaces them with the original, multiple, rings)
 
     this.drawer.restoreRingInformation(); // Atoms bonded to the same ring atom
 
@@ -14574,7 +15367,7 @@ class GraphProcessingManager {
 
 module.exports = GraphProcessingManager;
 
-},{"../utils/MathHelper":56}],43:[function(require,module,exports){
+},{"../utils/MathHelper":57}],44:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -14601,6 +15394,7 @@ class InitializationManager {
     this.drawer.highlight_atoms = highlight_atoms;
     this.drawer.initRings();
     this.initHydrogens();
+    this.drawer.buildCisTransMetadata();
   }
 
   initHydrogens() {
@@ -14629,7 +15423,7 @@ class InitializationManager {
 
 module.exports = InitializationManager;
 
-},{"../graph/Graph":31}],44:[function(require,module,exports){
+},{"../graph/Graph":31}],45:[function(require,module,exports){
 "use strict";
 
 class MolecularDataSnapshot {
@@ -14788,7 +15582,7 @@ class MolecularDataSnapshot {
 
 module.exports = MolecularDataSnapshot;
 
-},{}],45:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -14880,7 +15674,7 @@ class MolecularInfoManager {
 
 module.exports = MolecularInfoManager;
 
-},{"../graph/Atom":28,"../graph/Graph":31}],46:[function(require,module,exports){
+},{"../graph/Atom":28,"../graph/Graph":31}],47:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -14904,6 +15698,8 @@ const MolecularInfoManager_1 = __importDefault(require("./MolecularInfoManager")
 const InitializationManager_1 = __importDefault(require("./InitializationManager"));
 
 const GraphProcessingManager_1 = __importDefault(require("./GraphProcessingManager"));
+
+const CisTransManager_1 = __importDefault(require("./CisTransManager"));
 
 const OptionsManager_1 = __importDefault(require("../config/OptionsManager"));
 
@@ -14940,6 +15736,7 @@ class MolecularPreprocessor {
     this.molecularInfoManager = new MolecularInfoManager_1.default(this);
     this.initializationManager = new InitializationManager_1.default(this);
     this.graphProcessingManager = new GraphProcessingManager_1.default(this);
+    this.cisTransManager = new CisTransManager_1.default(this);
     this.graph = null;
     this.doubleBondConfigCount = 0;
     this.doubleBondConfig = null;
@@ -15006,6 +15803,22 @@ class MolecularPreprocessor {
 
   getSpiros() {
     return this.ringManager.getSpiros();
+  }
+  /**
+   * Analyze the graph to derive cis/trans intent for every stereogenic double bond.
+   */
+
+
+  buildCisTransMetadata() {
+    this.cisTransManager.buildMetadata();
+  }
+  /**
+   * Enforce the captured cis/trans intent on the current layout.
+   */
+
+
+  correctCisTransBonds() {
+    this.cisTransManager.correctBondOrientations();
   }
   /**
    * Returns a string containing a semicolon and new-line separated list of ring properties: Id; Members Count; Neighbours Count; IsSpiro; IsFused; IsBridged; Ring Count (subrings of bridged rings)
@@ -15196,7 +16009,14 @@ class MolecularPreprocessor {
       bondType: e.bondType,
       isPartOfAromaticRing: e.isPartOfAromaticRing,
       center: e.center,
-      wedge: e.wedge
+      wedge: e.wedge,
+      stereoSymbol: e.stereoSymbol,
+      stereoSourceId: e.stereoSourceId,
+      cisTrans: e.cisTrans,
+      cisTransNeighbours: Object.entries(e.cisTransNeighbours || {}).reduce((acc, [key, value]) => {
+        acc[Number(key)] = Object.assign({}, value);
+        return acc;
+      }, {})
     })); // Serialize ring data
 
     const rings = this.rings ? this.rings.map(ring => ({
@@ -15991,7 +16811,7 @@ class MolecularPreprocessor {
 
 module.exports = MolecularPreprocessor;
 
-},{"../config/OptionsManager":10,"../config/Version":12,"../drawing/DrawingManager":15,"./GraphProcessingManager":42,"./InitializationManager":43,"./MolecularInfoManager":45,"./OverlapResolutionManager":47,"./PositioningManager":48,"./PseudoElementManager":49,"./RingManager":50,"./StereochemistryManager":51}],47:[function(require,module,exports){
+},{"../config/OptionsManager":10,"../config/Version":12,"../drawing/DrawingManager":15,"./CisTransManager":42,"./GraphProcessingManager":43,"./InitializationManager":44,"./MolecularInfoManager":46,"./OverlapResolutionManager":48,"./PositioningManager":49,"./PseudoElementManager":50,"./RingManager":51,"./StereochemistryManager":52}],48:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../graph/Vector2");
@@ -16526,7 +17346,7 @@ class OverlapResolutionManager {
 
 module.exports = OverlapResolutionManager;
 
-},{"../graph/Vector2":37,"../utils/ArrayHelper":54,"../utils/MathHelper":56}],48:[function(require,module,exports){
+},{"../graph/Vector2":37,"../utils/ArrayHelper":55,"../utils/MathHelper":57}],49:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../graph/Vector2");
@@ -16969,7 +17789,7 @@ class PositioningManager {
 
 module.exports = PositioningManager;
 
-},{"../graph/Vector2":37,"../utils/ArrayHelper":54,"../utils/MathHelper":56}],49:[function(require,module,exports){
+},{"../graph/Vector2":37,"../utils/ArrayHelper":55,"../utils/MathHelper":57}],50:[function(require,module,exports){
 "use strict";
 
 const Atom = require("../graph/Atom");
@@ -17105,7 +17925,7 @@ class PseudoElementManager {
 
 module.exports = PseudoElementManager;
 
-},{"../graph/Atom":28}],50:[function(require,module,exports){
+},{"../graph/Atom":28}],51:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -17255,7 +18075,17 @@ class RingManager {
           let targetVertexId = openBonds.get(ringbondId)[0];
           let targetRingbondBond = openBonds.get(ringbondId)[1];
           let edge = new Edge(sourceVertexId, targetVertexId, 1);
-          edge.setBondType(targetRingbondBond || ringbondBond || '-');
+          let resolvedBondType = targetRingbondBond || ringbondBond || '-';
+          edge.setBondType(resolvedBondType);
+
+          if (Edge.isDirectional(edge.bondType)) {
+            if (targetRingbondBond && Edge.isDirectional(targetRingbondBond)) {
+              edge.stereoSourceId = targetVertexId;
+            } else if (ringbondBond && Edge.isDirectional(ringbondBond)) {
+              edge.stereoSourceId = vertex.id;
+            }
+          }
+
           let edgeId = this.drawer.graph.addEdge(edge);
           let targetVertex = this.drawer.graph.vertices[targetVertexId];
           vertex.addRingbondChild(targetVertexId, j);
@@ -17733,7 +18563,7 @@ class RingManager {
 
 module.exports = RingManager;
 
-},{"../algorithms/SSSR":7,"../graph/Edge":30,"../graph/Ring":35,"../graph/RingConnection":36,"../graph/Vector2":37,"../handlers/BridgedRingHandler":39,"../utils/ArrayHelper":54,"../utils/MathHelper":56}],51:[function(require,module,exports){
+},{"../algorithms/SSSR":7,"../graph/Edge":30,"../graph/Ring":35,"../graph/RingConnection":36,"../graph/Vector2":37,"../handlers/BridgedRingHandler":39,"../utils/ArrayHelper":55,"../utils/MathHelper":57}],52:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -17957,7 +18787,7 @@ class StereochemistryManager {
 
 module.exports = StereochemistryManager;
 
-},{"../utils/MathHelper":56}],52:[function(require,module,exports){
+},{"../utils/MathHelper":57}],53:[function(require,module,exports){
 "use strict";
 
 const Parser = require("../parsing/Parser");
@@ -18013,7 +18843,7 @@ class Reaction {
 
 module.exports = Reaction;
 
-},{"../parsing/Parser":40}],53:[function(require,module,exports){
+},{"../parsing/Parser":40}],54:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("../drawing/SvgDrawer");
@@ -18388,7 +19218,7 @@ class ReactionDrawer {
 
 module.exports = ReactionDrawer;
 
-},{"../config/Options":9,"../config/ThemeManager":11,"../drawing/SvgDrawer":17,"../drawing/helpers/SvgTextHelper":26,"../drawing/helpers/SvgUnicodeHelper":27,"../utils/FormulaToCommonName":55}],54:[function(require,module,exports){
+},{"../config/Options":9,"../config/ThemeManager":11,"../drawing/SvgDrawer":17,"../drawing/helpers/SvgTextHelper":26,"../drawing/helpers/SvgUnicodeHelper":27,"../utils/FormulaToCommonName":56}],55:[function(require,module,exports){
 "use strict";
 
 class ArrayHelper {
@@ -18852,7 +19682,7 @@ class ArrayHelper {
 
 module.exports = ArrayHelper;
 
-},{}],55:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 "use strict";
 
 const formulaToCommonName = {
@@ -18890,7 +19720,7 @@ const formulaToCommonName = {
 };
 module.exports = formulaToCommonName;
 
-},{}],56:[function(require,module,exports){
+},{}],57:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for math-related tasks.
@@ -19063,7 +19893,7 @@ class MathHelper {
 
 module.exports = MathHelper;
 
-},{}],57:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 "use strict"; // Adapted from https://codepen.io/shshaw/pen/XbxvNj by
 
 function convertImage(img) {

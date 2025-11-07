@@ -240,6 +240,32 @@ class Vector2 {
     }
 
     /**
+     * Mirror this vector across the infinite line defined by points a and b.
+     *
+     * @param {Vector2} a Start point of the mirror line.
+     * @param {Vector2} b End point of the mirror line.
+     * @returns {Vector2} Returns itself.
+     */
+    mirrorAboutLine(a: Vector2, b: Vector2): Vector2 {
+        let dx = b.x - a.x;
+        let dy = b.y - a.y;
+        let lenSq = dx * dx + dy * dy;
+
+        if (lenSq === 0) {
+            return this;
+        }
+
+        let t = ((this.x - a.x) * dx + (this.y - a.y) * dy) / lenSq;
+        let projX = a.x + t * dx;
+        let projY = a.y + t * dy;
+
+        this.x = 2 * projX - this.x;
+        this.y = 2 * projY - this.y;
+
+        return this;
+    }
+
+    /**
      * Rotate a vector around a given center to the same angle as another vector (so that the two vectors and the center are in a line, with both vectors on one side of the center), keeps the distance from this vector to the center.
      *
      * @param {Vector2} vec The vector to rotate this vector to.
