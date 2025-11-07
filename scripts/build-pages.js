@@ -165,6 +165,9 @@ function buildLandingPage() {
 async function main() {
     const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 
+    console.log('Compiling TypeScript sources …');
+    await runCommand(npxCmd, ['tsc']);
+
     console.log('Building distribution bundle via gulp build …');
     await runCommand(npxCmd, ['gulp', 'build']);
 
