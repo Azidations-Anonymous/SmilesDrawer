@@ -1,4 +1,4 @@
-import { BondType, WedgeType } from '../types/CommonTypes';
+import { BondType, WedgeType, DirectionalBond, CisTransOrientation } from '../types/CommonTypes';
 
 /**
  * A class representing an edge.
@@ -21,6 +21,10 @@ class Edge {
     isPartOfAromaticRing: boolean;
     center: boolean;
     wedge: WedgeType;
+    stereoSymbol: DirectionalBond | null;
+    stereoSourceId: number | null;
+    cisTrans: boolean;
+    cisTransNeighbours: Record<number, Record<number, CisTransOrientation>>;
 
     /**
      * The constructor for the class Edge.
@@ -38,6 +42,10 @@ class Edge {
         this.isPartOfAromaticRing = false;
         this.center = false;
         this.wedge = null;
+        this.stereoSymbol = null;
+        this.stereoSourceId = null;
+        this.cisTrans = false;
+        this.cisTransNeighbours = {};
     }
 
     /**
@@ -47,6 +55,12 @@ class Edge {
     setBondType(bondType: BondType): void {
       this.bondType = bondType;
       this.weight = Edge.bonds[bondType];
+      if (Edge.isDirectional(bondType)) {
+        this.stereoSymbol = bondType;
+      } else {
+        this.stereoSymbol = null;
+        this.stereoSourceId = null;
+      }
     }
 
     /**
@@ -64,6 +78,13 @@ class Edge {
             '#': 3,
             '$': 4
         }
+    }
+
+    /**
+     * Returns true if the supplied bond type encodes a cis/trans directional marker.
+     */
+    static isDirectional(bondType: BondType): bondType is DirectionalBond {
+        return bondType === '/' || bondType === '\\';
     }
 }
 

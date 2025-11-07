@@ -15,6 +15,11 @@ export type BondType =
   | '\\'; // Stereochemistry down
 
 /**
+ * Directional bond markers used to encode cis/trans intent in SMILES.
+ */
+export type DirectionalBond = '/' | '\\';
+
+/**
  * Wedge type for stereochemical bonds
  */
 export type WedgeType = 'up' | 'down' | null;
@@ -48,3 +53,8 @@ export type HydrogenDirection = 'up' | 'down' | 'left' | 'right' | null;
  * Stereochemical plane position (-1 back, 0 middle, 1 front)
  */
 export type PlanePosition = -1 | 0 | 1;
+
+/**
+ * Cis/trans relationship between substituents around a stereobond.
+ */
+export type CisTransOrientation = 'cis' | 'trans';

@@ -1,5 +1,5 @@
 import Atom = require('../graph/Atom');
-import { BondType, WedgeType, Chirality, HydrogenDirection, PlanePosition } from '../types/CommonTypes';
+import { BondType, WedgeType, Chirality, HydrogenDirection, PlanePosition, DirectionalBond, CisTransOrientation } from '../types/CommonTypes';
 import { IAttachedPseudoElement } from '../config/IOptions';
 
 /**
@@ -137,6 +137,10 @@ export interface SerializedEdge {
   isPartOfAromaticRing: boolean;
   center: boolean;
   wedge: WedgeType;
+  stereoSymbol: DirectionalBond | null;
+  stereoSourceId: number | null;
+  cisTrans: boolean;
+  cisTransNeighbours: Record<number, Record<number, CisTransOrientation>>;
 }
 
 /**

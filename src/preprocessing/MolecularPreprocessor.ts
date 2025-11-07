@@ -11,7 +11,7 @@ import RingManager = require("./RingManager");
 import IMolecularData = require("./IMolecularData");
 import { SideChoice, AtomHighlight, OverlapScore, SubtreeOverlapScore, VertexOverlapScoreEntry, PositionData } from "./MolecularDataTypes";
 import { IMoleculeOptions, IThemeColors } from "../config/IOptions";
-import { BondType } from '../types/CommonTypes';
+import { BondType, CisTransOrientation } from '../types/CommonTypes';
 import { POSITION_DATA_VERSION } from '../config/Version';
 
 import MathHelper = require('../utils/MathHelper');
@@ -313,7 +313,14 @@ class MolecularPreprocessor implements IMolecularData {
           bondType: e.bondType,
           isPartOfAromaticRing: e.isPartOfAromaticRing,
           center: e.center,
-          wedge: e.wedge
+          wedge: e.wedge,
+          stereoSymbol: e.stereoSymbol,
+          stereoSourceId: e.stereoSourceId,
+          cisTrans: e.cisTrans,
+          cisTransNeighbours: Object.entries(e.cisTransNeighbours || {}).reduce((acc, [key, value]) => {
+              acc[Number(key)] = { ...value };
+              return acc;
+          }, {} as Record<number, Record<number, CisTransOrientation>>)
       }));
 
       // Serialize ring data
