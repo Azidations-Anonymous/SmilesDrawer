@@ -121,6 +121,21 @@ npm install
 gulp
 ```
 
+### GitHub Pages bundle
+
+Generate a deploy-ready bundle that hosts both the API docs and the interactive playground:
+
+```bash
+npm run build:pages
+```
+
+This clears and recreates `pages/` with:
+- `pages/index.html` – small landing hub linking to the playground and the docs
+- `pages/playground/` – a direct copy of `example/smilesdrawer.surge.sh/`
+- `pages/docs/` – the current JSDoc output
+
+Commit/publish the `pages/` directory to whichever branch or folder GitHub Pages consumes (e.g. `main` + `/pages` via GitHub Actions) to update the public site.
+
 ### Testing
 
 SmilesDrawer includes comprehensive regression testing to detect rendering differences between code versions, and smoke testing for quick sanity checks.

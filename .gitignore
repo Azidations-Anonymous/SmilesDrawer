@@ -16,3 +16,6 @@ debug/output/
 
 # MacOS
 .DS_Store
+
+# GitHub Pages build output
+pages/

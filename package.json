@@ -17,7 +17,8 @@
     "test:layout:property": "node test/layout.property.js",
     "test:graph-matrix": "node test/graph-matrix.js",
     "type-check": "tsc",
-    "type-check:watch": "tsc --watch"
+    "type-check:watch": "tsc --watch",
+    "build:pages": "node scripts/build-pages.js"
   },
   "devDependencies": {
     "@types/chroma-js": "^3.1.2",
