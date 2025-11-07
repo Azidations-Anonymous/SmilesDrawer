@@ -155,7 +155,7 @@ if (!Array.prototype.fill) {
 
 module.exports = SmilesDrawer;
 
-},{"./src/SmilesDrawer":4,"./src/drawing/Drawer":13,"./src/drawing/GaussDrawer":15,"./src/drawing/SvgDrawer":16,"./src/parsing/Parser":38,"./src/parsing/ReactionParser":39,"./src/reactions/ReactionDrawer":51}],2:[function(require,module,exports){
+},{"./src/SmilesDrawer":4,"./src/drawing/Drawer":14,"./src/drawing/GaussDrawer":16,"./src/drawing/SvgDrawer":17,"./src/parsing/Parser":40,"./src/parsing/ReactionParser":41,"./src/reactions/ReactionDrawer":53}],2:[function(require,module,exports){
 /**
  * chroma.js - JavaScript library for color conversions
  *
@@ -4148,7 +4148,280 @@ class SmilesDrawer {
 
 module.exports = SmilesDrawer;
 
-},{"./config/Options":8,"./drawing/SvgDrawer":16,"./drawing/helpers/SvgConversionHelper":24,"./parsing/Parser":38,"./parsing/ReactionParser":39,"./reactions/ReactionDrawer":51}],5:[function(require,module,exports){
+},{"./config/Options":9,"./drawing/SvgDrawer":17,"./drawing/helpers/SvgConversionHelper":25,"./parsing/Parser":40,"./parsing/ReactionParser":41,"./reactions/ReactionDrawer":53}],5:[function(require,module,exports){
+"use strict";
+/**
+ * Johnson cycle enumeration adapted from NetworkX / PIKAChU.
+ * Works on undirected graphs represented as adjacency lists.
+ */
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.findAllCycles = findAllCycles;
+
+function cloneGraphMap(original) {
+  const clone = new Map();
+
+  for (const [node, neighbours] of original.entries()) {
+    clone.set(node, new Set(neighbours));
+  }
+
+  return clone;
+}
+
+function buildGraphMap(adjacencyList) {
+  const map = new Map();
+
+  for (let i = 0; i < adjacencyList.length; i++) {
+    map.set(i, new Set(adjacencyList[i]));
+  }
+
+  return map;
+}
+
+function unblock(node, blocked, B) {
+  const stack = [node];
+
+  while (stack.length > 0) {
+    const current = stack.pop();
+
+    if (blocked.has(current)) {
+      blocked.delete(current);
+      const bSet = B.get(current);
+
+      if (bSet && bSet.size > 0) {
+        for (const neighbour of bSet) {
+          stack.push(neighbour);
+        }
+
+        bSet.clear();
+      }
+    }
+  }
+}
+
+function removeNode(graph, target) {
+  graph.delete(target);
+
+  for (const neighbours of graph.values()) {
+    neighbours.delete(target);
+  }
+}
+
+function subgraph(graph, vertices) {
+  var _a;
+
+  const result = new Map();
+
+  for (const vertex of vertices) {
+    const neighbours = (_a = graph.get(vertex)) !== null && _a !== void 0 ? _a : new Set();
+    const filtered = new Set();
+
+    for (const neighbour of neighbours) {
+      if (vertices.has(neighbour)) {
+        filtered.add(neighbour);
+      }
+    }
+
+    result.set(vertex, filtered);
+  }
+
+  return result;
+}
+
+function stronglyConnectedComponents(graph) {
+  const index = new Map();
+  const lowlink = new Map();
+  const stack = [];
+  const onStack = new Set();
+  const result = [];
+  let indexCounter = 0;
+
+  function strongConnect(v) {
+    var _a;
+
+    index.set(v, indexCounter);
+    lowlink.set(v, indexCounter);
+    indexCounter++;
+    stack.push(v);
+    onStack.add(v);
+    const successors = (_a = graph.get(v)) !== null && _a !== void 0 ? _a : new Set();
+
+    for (const w of successors) {
+      if (!index.has(w)) {
+        strongConnect(w);
+        lowlink.set(v, Math.min(lowlink.get(v), lowlink.get(w)));
+      } else if (onStack.has(w)) {
+        lowlink.set(v, Math.min(lowlink.get(v), index.get(w)));
+      }
+    }
+
+    if (lowlink.get(v) === index.get(v)) {
+      const component = new Set();
+      let w;
+
+      do {
+        w = stack.pop();
+        onStack.delete(w);
+        component.add(w);
+      } while (w !== v);
+
+      result.push(component);
+    }
+  }
+
+  for (const node of graph.keys()) {
+    if (!index.has(node)) {
+      strongConnect(node);
+    }
+  }
+
+  return result;
+}
+
+function* simpleCycles(graphInput) {
+  var _a, _b, _c;
+
+  const G = cloneGraphMap(graphInput);
+  const sccs = stronglyConnectedComponents(G);
+  const stackSCCs = [...sccs];
+
+  while (stackSCCs.length > 0) {
+    const scc = stackSCCs.pop();
+
+    if (!scc || scc.size === 0) {
+      continue;
+    }
+
+    const startIterator = scc.values();
+    const startResult = startIterator.next();
+
+    if (startResult.done) {
+      continue;
+    }
+
+    const startnode = startResult.value;
+    scc.delete(startnode);
+    const path = [startnode];
+    const blocked = new Set([startnode]);
+    const closed = new Set();
+    const B = new Map();
+    const stack = [{
+      node: startnode,
+      neighbours: Array.from((_a = G.get(startnode)) !== null && _a !== void 0 ? _a : [])
+    }];
+
+    while (stack.length > 0) {
+      const frame = stack[stack.length - 1];
+      const thisnode = frame.node;
+      const neighbours = frame.neighbours;
+
+      if (neighbours.length > 0) {
+        const nextnode = neighbours.pop();
+
+        if (nextnode === startnode) {
+          yield [...path];
+
+          for (const node of path) {
+            closed.add(node);
+          }
+        } else if (!blocked.has(nextnode)) {
+          path.push(nextnode);
+          stack.push({
+            node: nextnode,
+            neighbours: Array.from((_b = G.get(nextnode)) !== null && _b !== void 0 ? _b : [])
+          });
+          closed.delete(nextnode);
+          blocked.add(nextnode);
+          continue;
+        }
+      }
+
+      if (neighbours.length === 0) {
+        if (closed.has(thisnode)) {
+          unblock(thisnode, blocked, B);
+        } else {
+          const nbrs = (_c = G.get(thisnode)) !== null && _c !== void 0 ? _c : new Set();
+
+          for (const nbr of nbrs) {
+            if (!B.has(nbr)) {
+              B.set(nbr, new Set());
+            }
+
+            B.get(nbr).add(thisnode);
+          }
+        }
+
+        stack.pop();
+        path.pop();
+      }
+    }
+
+    removeNode(G, startnode);
+    const sub = subgraph(G, scc);
+    const newSCCs = stronglyConnectedComponents(sub);
+
+    for (const component of newSCCs) {
+      stackSCCs.push(component);
+    }
+  }
+}
+
+function rotateToSmallest(cycle) {
+  const minValue = Math.min(...cycle);
+  const index = cycle.indexOf(minValue);
+  return cycle.slice(index).concat(cycle.slice(0, index));
+}
+
+function compareLex(a, b) {
+  const length = Math.min(a.length, b.length);
+
+  for (let i = 0; i < length; i++) {
+    if (a[i] !== b[i]) {
+      return a[i] - b[i];
+    }
+  }
+
+  return a.length - b.length;
+}
+
+function canonicalizeCycle(cycle) {
+  const forward = rotateToSmallest(cycle);
+  const backward = rotateToSmallest([...cycle].reverse());
+  return compareLex(forward, backward) <= 0 ? forward : backward;
+}
+
+function findAllCycles(adjacencyList, options = {}) {
+  const {
+    maxCycleLength
+  } = options;
+  const graphMap = buildGraphMap(adjacencyList);
+  const cycles = [];
+  const seen = new Set();
+
+  for (const cycle of simpleCycles(graphMap)) {
+    if (cycle.length <= 2) {
+      continue;
+    }
+
+    if (typeof maxCycleLength === 'number' && maxCycleLength > 0 && cycle.length > maxCycleLength) {
+      continue;
+    }
+
+    const canonical = canonicalizeCycle(cycle);
+    const key = canonical.join(',');
+
+    if (!seen.has(key)) {
+      seen.add(key);
+      cycles.push(canonical);
+    }
+  }
+
+  return cycles;
+}
+
+},{}],6:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -4557,7 +4830,7 @@ class KamadaKawaiLayout {
 
 module.exports = KamadaKawaiLayout;
 
-},{"../utils/MathHelper":54}],6:[function(require,module,exports){
+},{"../utils/MathHelper":56}],7:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -4617,18 +4890,13 @@ class SSSR {
         pe,
         pe_prime
       } = SSSR.getPathIncludedDistanceMatrices(ccAdjacencyMatrix);
-      let c = SSSR.getRingCandidates(d, pe, pe_prime);
-      let sssr = SSSR.getSSSR(c, d, ccAdjacencyMatrix, pe, pe_prime, arrBondCount, arrRingCount, nSssr);
+      let candidates = SSSR.getRingCandidates(d, pe, pe_prime);
+      let sssr = SSSR.getSSSR(candidates, ccAdjacencyMatrix, arrBondCount, arrRingCount, nSssr);
+      let limited = sssr.slice(0, nSssr);
 
-      for (var j = 0; j < sssr.length; j++) {
-        let ring = Array(sssr[j].size);
-        let index = 0;
-
-        for (let val of sssr[j]) {
-          // Get the original id of the vertex back
-          ring[index++] = connectedComponent[val];
-        }
-
+      for (var j = 0; j < limited.length; j++) {
+        const ordered = SSSR.orderRingVertices(limited[j], ccAdjacencyMatrix);
+        const ring = ordered.map(val => connectedComponent[val]);
         rings.push(ring);
       }
     } // So, for some reason, this would return three rings for C1CCCC2CC1CCCC2, which is wrong
@@ -4668,152 +4936,147 @@ class SSSR {
 
 
   static getPathIncludedDistanceMatrices(adjacencyMatrix) {
-    let length = adjacencyMatrix.length;
-    let d = Array(length);
-    let pe = Array(length);
-    let pe_prime = Array(length);
-    var l = 0;
-    var m = 0;
-    var n = 0;
-    var i = length;
+    const length = adjacencyMatrix.length;
+    const d = Array.from({
+      length
+    }, () => Array(length).fill(Infinity));
+    const pe = Array.from({
+      length
+    }, () => Array.from({
+      length
+    }, () => []));
+    const peKeys = Array.from({
+      length
+    }, () => Array.from({
+      length
+    }, () => new Set()));
+    const pePrime = Array.from({
+      length
+    }, () => Array.from({
+      length
+    }, () => []));
+    const pePrimeKeys = Array.from({
+      length
+    }, () => Array.from({
+      length
+    }, () => new Set()));
 
-    while (i--) {
-      d[i] = Array(length);
-      pe[i] = Array(length);
-      pe_prime[i] = Array(length);
-      var j = length;
-
-      while (j--) {
-        d[i][j] = i === j || adjacencyMatrix[i][j] === 1 ? adjacencyMatrix[i][j] : Number.POSITIVE_INFINITY;
-
-        if (d[i][j] === 1) {
-          pe[i][j] = [[[i, j]]];
-        } else {
-          pe[i][j] = Array();
+    for (let i = 0; i < length; i++) {
+      for (let j = 0; j < length; j++) {
+        if (i === j) {
+          d[i][j] = 0;
+        } else if (adjacencyMatrix[i][j] === 1) {
+          d[i][j] = 1;
+          const path = [[i, j]];
+          const key = SSSR.pathToKey(path);
+          pe[i][j].push(path);
+          peKeys[i][j].add(key);
         }
-
-        pe_prime[i][j] = Array();
       }
     }
 
-    var k = length;
+    for (let k = 0; k < length; k++) {
+      for (let i = 0; i < length; i++) {
+        if (d[i][k] === Infinity) {
+          continue;
+        }
 
-    while (k--) {
-      i = length;
+        for (let j = 0; j < length; j++) {
+          if (d[k][j] === Infinity) {
+            continue;
+          }
 
-      while (i--) {
-        j = length;
+          const previous = d[i][j];
+          const throughK = d[i][k] + d[k][j];
+          const leftPaths = pe[i][k].length > 0 ? pe[i][k] : i === k ? [[]] : [];
+          const rightPaths = pe[k][j].length > 0 ? pe[k][j] : k === j ? [[]] : [];
 
-        while (j--) {
-          const previousPathLength = d[i][j];
-          const newPathLength = d[i][k] + d[k][j];
+          if (leftPaths.length === 0 || rightPaths.length === 0) {
+            continue;
+          }
 
-          if (previousPathLength > newPathLength) {
-            var l, m, n;
+          if (throughK < previous) {
+            d[i][j] = throughK;
+            pe[i][j] = [];
+            peKeys[i][j].clear();
 
-            if (previousPathLength === newPathLength + 1) {
-              pe_prime[i][j] = [pe[i][j].length];
-              l = pe[i][j].length;
+            for (const left of leftPaths) {
+              for (const right of rightPaths) {
+                const combined = SSSR.combinePaths(left, right);
 
-              while (l--) {
-                pe_prime[i][j][l] = [pe[i][j][l].length];
-                m = pe[i][j][l].length;
-
-                while (m--) {
-                  pe_prime[i][j][l][m] = [pe[i][j][l][m].length];
-                  n = pe[i][j][l][m].length;
-
-                  while (n--) {
-                    pe_prime[i][j][l][m][n] = [pe[i][j][l][m][0], pe[i][j][l][m][1]];
-                  }
-                }
-              }
-            } else {
-              pe_prime[i][j] = Array();
-            }
-
-            d[i][j] = newPathLength;
-            pe[i][j] = [[]];
-            l = pe[i][k][0].length;
-
-            while (l--) {
-              pe[i][j][0].push(pe[i][k][0][l]);
-            }
-
-            l = pe[k][j][0].length;
-
-            while (l--) {
-              pe[i][j][0].push(pe[k][j][0][l]);
-            }
-          } else if (previousPathLength === newPathLength) {
-            if (pe[i][k].length && pe[k][j].length) {
-              var l;
-
-              if (pe[i][j].length) {
-                let tmp = Array();
-                l = pe[i][k][0].length;
-
-                while (l--) {
-                  tmp.push(pe[i][k][0][l]);
+                if (!combined.length) {
+                  continue;
                 }
 
-                l = pe[k][j][0].length;
+                const key = SSSR.pathToKey(combined);
 
-                while (l--) {
-                  tmp.push(pe[k][j][0][l]);
+                if (!peKeys[i][j].has(key)) {
+                  peKeys[i][j].add(key);
+                  pe[i][j].push(combined);
                 }
-
-                pe[i][j].push(tmp);
-              } else {
-                let tmp = Array();
-                l = pe[i][k][0].length;
-
-                while (l--) {
-                  tmp.push(pe[i][k][0][l]);
-                }
-
-                l = pe[k][j][0].length;
-
-                while (l--) {
-                  tmp.push(pe[k][j][0][l]);
-                }
-
-                pe[i][j][0] = tmp;
               }
             }
-          } else if (previousPathLength === newPathLength - 1) {
-            var l;
+          } else if (throughK === previous) {
+            for (const left of leftPaths) {
+              for (const right of rightPaths) {
+                const combined = SSSR.combinePaths(left, right);
 
-            if (pe_prime[i][j].length) {
-              let tmp = Array();
-              l = pe[i][k][0].length;
+                if (!combined.length) {
+                  continue;
+                }
 
-              while (l--) {
-                tmp.push(pe[i][k][0][l]);
+                const key = SSSR.pathToKey(combined);
+
+                if (!peKeys[i][j].has(key)) {
+                  peKeys[i][j].add(key);
+                  pe[i][j].push(combined);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    for (let k = 0; k < length; k++) {
+      for (let i = 0; i < length; i++) {
+        if (d[i][k] === Infinity) {
+          continue;
+        }
+
+        for (let j = 0; j < length; j++) {
+          if (d[k][j] === Infinity) {
+            continue;
+          }
+
+          const shortest = d[i][j];
+          const throughK = d[i][k] + d[k][j];
+
+          if (throughK - 1 !== shortest) {
+            continue;
+          }
+
+          const leftPaths = pe[i][k].length > 0 ? pe[i][k] : i === k ? [[]] : [];
+          const rightPaths = pe[k][j].length > 0 ? pe[k][j] : k === j ? [[]] : [];
+
+          if (leftPaths.length === 0 || rightPaths.length === 0) {
+            continue;
+          }
+
+          for (const left of leftPaths) {
+            for (const right of rightPaths) {
+              const combined = SSSR.combinePaths(left, right);
+
+              if (!combined.length) {
+                continue;
               }
 
-              l = pe[k][j][0].length;
+              const key = SSSR.pathToKey(combined);
 
-              while (l--) {
-                tmp.push(pe[k][j][0][l]);
+              if (!pePrimeKeys[i][j].has(key)) {
+                pePrimeKeys[i][j].add(key);
+                pePrime[i][j].push(combined);
               }
-
-              pe_prime[i][j].push(tmp);
-            } else {
-              let tmp = Array();
-              l = pe[i][k][0].length;
-
-              while (l--) {
-                tmp.push(pe[i][k][0][l]);
-              }
-
-              l = pe[k][j][0].length;
-
-              while (l--) {
-                tmp.push(pe[k][j][0][l]);
-              }
-
-              pe_prime[i][j][0] = tmp;
             }
           }
         }
@@ -4821,9 +5084,9 @@ class SSSR {
     }
 
     return {
-      d: d,
-      pe: pe,
-      pe_prime: pe_prime
+      d,
+      pe,
+      pe_prime: pePrime
     };
   }
   /**
@@ -4837,43 +5100,45 @@ class SSSR {
 
 
   static getRingCandidates(d, pe, pe_prime) {
-    let length = d.length;
-    let candidates = Array();
-    let c = 0;
+    const length = d.length;
+    const candidates = [];
 
     for (let i = 0; i < length; i++) {
       for (let j = 0; j < length; j++) {
         if (d[i][j] === 0 || pe[i][j].length === 1 && pe_prime[i][j].length === 0) {
           continue;
-        } else {
-          // c is the number of vertices in the cycle.
-          if (pe_prime[i][j].length !== 0) {
-            c = 2 * (d[i][j] + 0.5);
-          } else {
-            c = 2 * d[i][j];
-          }
-
-          if (c !== Infinity) {
-            candidates.push([c, pe[i][j], pe_prime[i][j]]);
-          }
         }
+
+        let cycleSize;
+
+        if (pe[i][j].length > 1) {
+          cycleSize = 2 * d[i][j];
+        } else if (pe_prime[i][j].length !== 0) {
+          cycleSize = 2 * d[i][j] + 1;
+        } else {
+          cycleSize = 2 * d[i][j];
+        }
+
+        if (!Number.isFinite(cycleSize)) {
+          continue;
+        }
+
+        candidates.push({
+          size: cycleSize,
+          paths: pe[i][j].map(path => path.slice()),
+          extendedPaths: pe_prime[i][j].map(path => path.slice())
+        });
       }
-    } // Candidates have to be sorted by c
+    }
 
-
-    candidates.sort(function (a, b) {
-      return a[0] - b[0];
-    });
+    candidates.sort((a, b) => a.size - b.size);
     return candidates;
   }
   /**
    * Searches the candidates for the smallest set of smallest rings.
    *
-   * @param {Array[]} c The candidates.
-   * @param {Array[]} d The distance matrix.
+   * @param {RingCandidate[]} candidates The ring candidates.
    * @param {Array[]} adjacencyMatrix An adjacency matrix.
-   * @param {Array[]} pe A matrix containing the shortest paths.
-   * @param {Array[]} pe_prime A matrix containing the shortest paths + one vertex.
    * @param {Uint16Array} arrBondCount A matrix containing the bond count of each vertex.
    * @param {Uint16Array} arrRingCount A matrix containing the number of rings associated with each vertex.
    * @param {Number} nsssr The theoretical number of rings in the graph.
@@ -4881,57 +5146,69 @@ class SSSR {
    */
 
 
-  static getSSSR(c, d, adjacencyMatrix, pe, pe_prime, arrBondCount, arrRingCount, nsssr) {
-    let cSssr = Array();
-    let allBonds = Array();
+  static getSSSR(candidates, adjacencyMatrix, arrBondCount, arrRingCount, nsssr) {
+    var _a, _b;
 
-    for (let i = 0; i < c.length; i++) {
-      if (c[i][0] % 2 !== 0) {
-        for (let j = 0; j < c[i][2].length; j++) {
-          let bonds = c[i][1][0].concat(c[i][2][j]); // Some bonds are added twice, resulting in [[u, v], [u, v]] instead of [u, v].
-          // TODO: This is a workaround, fix later. Probably should be a set rather than an array, however the computational overhead
-          //       is probably bigger compared to leaving it like this.
+    const cSssr = [];
+    const allBondCounts = new Map();
 
-          for (var k = 0; k < bonds.length; k++) {
-            if (bonds[k][0].constructor === Array) bonds[k] = bonds[k][0];
-          }
+    for (const candidate of candidates) {
+      const {
+        size,
+        paths,
+        extendedPaths
+      } = candidate;
 
-          let atoms = SSSR.bondsToAtoms(bonds);
+      if (size % 2 !== 0) {
+        if (paths.length === 0) {
+          continue;
+        }
 
-          if (SSSR.getBondCount(atoms, adjacencyMatrix) === atoms.size && !SSSR.pathSetsContain(cSssr, atoms, bonds, allBonds, arrBondCount, arrRingCount)) {
+        const basePath = paths[0];
+
+        for (const extended of extendedPaths) {
+          const bonds = [...basePath, ...extended];
+          const atoms = SSSR.bondsToAtoms(bonds);
+
+          if (SSSR.getBondCount(atoms, adjacencyMatrix) === atoms.size && !SSSR.pathSetsContain(cSssr, atoms, bonds, allBondCounts, arrBondCount, arrRingCount)) {
             cSssr.push(atoms);
-            allBonds = allBonds.concat(bonds);
+
+            for (const bond of bonds) {
+              const key = SSSR.bondKey(bond);
+              allBondCounts.set(key, ((_a = allBondCounts.get(key)) !== null && _a !== void 0 ? _a : 0) + 1);
+            }
           }
 
           if (cSssr.length >= nsssr) {
-            return cSssr;
+            return cSssr.slice(0, nsssr);
           }
         }
       } else {
-        for (let j = 0; j < c[i][1].length - 1; j++) {
-          let bonds = c[i][1][j].concat(c[i][1][j + 1]); // Some bonds are added twice, resulting in [[u, v], [u, v]] instead of [u, v].
-          // TODO: This is a workaround, fix later. Probably should be a set rather than an array, however the computational overhead
-          //       is probably bigger compared to leaving it like this.
+        if (paths.length < 2) {
+          continue;
+        }
 
-          for (var k = 0; k < bonds.length; k++) {
-            if (bonds[k][0].constructor === Array) bonds[k] = bonds[k][0];
-          }
+        for (let j = 0; j < paths.length - 1; j++) {
+          const bonds = [...paths[j], ...paths[j + 1]];
+          const atoms = SSSR.bondsToAtoms(bonds);
 
-          let atoms = SSSR.bondsToAtoms(bonds);
-
-          if (SSSR.getBondCount(atoms, adjacencyMatrix) === atoms.size && !SSSR.pathSetsContain(cSssr, atoms, bonds, allBonds, arrBondCount, arrRingCount)) {
+          if (SSSR.getBondCount(atoms, adjacencyMatrix) === atoms.size && !SSSR.pathSetsContain(cSssr, atoms, bonds, allBondCounts, arrBondCount, arrRingCount)) {
             cSssr.push(atoms);
-            allBonds = allBonds.concat(bonds);
+
+            for (const bond of bonds) {
+              const key = SSSR.bondKey(bond);
+              allBondCounts.set(key, ((_b = allBondCounts.get(key)) !== null && _b !== void 0 ? _b : 0) + 1);
+            }
           }
 
           if (cSssr.length >= nsssr) {
-            return cSssr;
+            return cSssr.slice(0, nsssr);
           }
         }
       }
     }
 
-    return cSssr;
+    return cSssr.slice(0, nsssr);
   }
   /**
    * Returns the number of edges in a graph defined by an adjacency matrix.
@@ -5032,17 +5309,17 @@ class SSSR {
    * @param {Set[]} pathSets An array of sets each representing a path.
    * @param {Set<Number>} pathSet A set representing a path.
    * @param {Array[]} bonds The bonds associated with the current path.
-   * @param {Array[]} allBonds All bonds currently associated with rings in the SSSR set.
+   * @param {Map<string, number>} allBondCounts Bond multiplicities currently associated with rings in the SSSR set.
    * @param {Uint16Array} arrBondCount A matrix containing the bond count of each vertex.
    * @param {Uint16Array} arrRingCount A matrix containing the number of rings associated with each vertex.
-   * @returns {Boolean} A boolean indicating whether or not a give path is contained within a set.
+   * @returns {Boolean} A boolean indicating whether or not a given path is contained within a set.
    */
 
 
-  static pathSetsContain(pathSets, pathSet, bonds, allBonds, arrBondCount, arrRingCount) {
-    var i = pathSets.length;
+  static pathSetsContain(pathSets, pathSet, bonds, allBondCounts, arrBondCount, arrRingCount) {
+    var _a, _b;
 
-    while (i--) {
+    for (let i = pathSets.length - 1; i >= 0; i--) {
       if (SSSR.isSupersetOf(pathSet, pathSets[i])) {
         return true;
       }
@@ -5054,34 +5331,28 @@ class SSSR {
       if (SSSR.areSetsEqual(pathSets[i], pathSet)) {
         return true;
       }
-    } // Check if the edges from the candidate are already all contained within the paths of the set of paths.
-    // TODO: For some reason, this does not replace the isSupersetOf method above -> why?
+    }
 
+    const bondKeys = bonds.map(bond => SSSR.bondKey(bond));
+    const candidateBondCounts = new Map();
 
-    let count = 0;
-    let allContained = false;
-    i = bonds.length;
+    for (const key of bondKeys) {
+      candidateBondCounts.set(key, ((_a = candidateBondCounts.get(key)) !== null && _a !== void 0 ? _a : 0) + 1);
+    }
 
-    while (i--) {
-      var j = allBonds.length;
+    let allContained = true;
 
-      while (j--) {
-        if (bonds[i][0] === allBonds[j][0] && bonds[i][1] === allBonds[j][1] || bonds[i][1] === allBonds[j][0] && bonds[i][0] === allBonds[j][1]) {
-          count++;
-        }
-
-        if (count === bonds.length) {
-          allContained = true;
-        }
+    for (const [key, required] of candidateBondCounts.entries()) {
+      if (((_b = allBondCounts.get(key)) !== null && _b !== void 0 ? _b : 0) < required) {
+        allContained = false;
+        break;
       }
-    } // If all the bonds and thus vertices are already contained within other rings
-    // check if there's one vertex with ringCount < bondCount
-
+    }
 
     let specialCase = false;
 
     if (allContained) {
-      for (let element of pathSet) {
+      for (const element of pathSet) {
         if (arrRingCount[element] < arrBondCount[element]) {
           specialCase = true;
           break;
@@ -5091,14 +5362,38 @@ class SSSR {
 
     if (allContained && !specialCase) {
       return true;
-    } // Update the ring counts for the vertices
+    }
 
-
-    for (let element of pathSet) {
+    for (const element of pathSet) {
       arrRingCount[element]++;
     }
 
     return false;
+  }
+
+  static combinePaths(pathA, pathB) {
+    if (pathA.length === 0) {
+      return pathB.slice();
+    }
+
+    if (pathB.length === 0) {
+      return pathA.slice();
+    }
+
+    return pathA.concat(pathB);
+  }
+
+  static pathToKey(path) {
+    if (path.length === 0) {
+      return '';
+    }
+
+    return path.map(bond => SSSR.bondKey(bond)).join('|');
+  }
+
+  static bondKey(bond) {
+    const [a, b] = bond;
+    return a < b ? `${a}-${b}` : `${b}-${a}`;
   }
   /**
    * Checks whether or not two sets are equal (contain the same elements).
@@ -5141,11 +5436,50 @@ class SSSR {
     return true;
   }
 
+  static orderRingVertices(vertices, adjacencyMatrix) {
+    if (vertices.size === 0) {
+      return [];
+    }
+
+    const ordered = [];
+    const start = Math.min(...vertices);
+    let current = start;
+    let previous = -1;
+
+    do {
+      ordered.push(current);
+      const neighbours = [];
+
+      for (const candidate of vertices) {
+        if (candidate !== current && adjacencyMatrix[current][candidate] === 1) {
+          neighbours.push(candidate);
+        }
+      }
+
+      neighbours.sort((a, b) => a - b);
+      let next = neighbours.find(n => n !== previous);
+
+      if (next === undefined) {
+        // Fallback: try any neighbour not yet used
+        next = neighbours.find(n => !ordered.includes(n));
+      }
+
+      if (next === undefined) {
+        break;
+      }
+
+      previous = current;
+      current = next;
+    } while (current !== start && ordered.length <= vertices.size);
+
+    return ordered;
+  }
+
 }
 
 module.exports = SSSR;
 
-},{"../graph/Graph":29}],7:[function(require,module,exports){
+},{"../graph/Graph":31}],8:[function(require,module,exports){
 "use strict";
 
 function getDefaultOptions() {
@@ -5370,7 +5704,7 @@ function getDefaultOptions() {
 
 module.exports = getDefaultOptions;
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 "use strict";
 
 class Options {
@@ -5417,7 +5751,7 @@ class Options {
 
 module.exports = Options;
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -5447,7 +5781,7 @@ class OptionsManager {
 
 module.exports = OptionsManager;
 
-},{"./DefaultOptions":7,"./Options":8}],10:[function(require,module,exports){
+},{"./DefaultOptions":8,"./Options":9}],11:[function(require,module,exports){
 "use strict";
 
 class ThemeManager {
@@ -5495,7 +5829,7 @@ class ThemeManager {
 
 module.exports = ThemeManager;
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -5507,7 +5841,7 @@ const packageJson = require("../../package.json");
 
 exports.POSITION_DATA_VERSION = parseInt(packageJson.version.split('.')[0], 10);
 
-},{"../../package.json":3}],12:[function(require,module,exports){
+},{"../../package.json":3}],13:[function(require,module,exports){
 "use strict";
 
 const CanvasWedgeDrawer = require("./draw/CanvasWedgeDrawer");
@@ -5738,7 +6072,7 @@ class CanvasDrawer {
 
 module.exports = CanvasDrawer;
 
-},{"./draw/CanvasPrimitiveDrawer":18,"./draw/CanvasTextDrawer":19,"./draw/CanvasWedgeDrawer":20}],13:[function(require,module,exports){
+},{"./draw/CanvasPrimitiveDrawer":19,"./draw/CanvasTextDrawer":20,"./draw/CanvasWedgeDrawer":21}],14:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -5815,6 +6149,34 @@ class Drawer {
   getMolecularFormula() {
     return this.svgDrawer.getMolecularFormula();
   }
+
+  registerAtomAnnotation(name, defaultValue = null) {
+    this.svgDrawer.registerAtomAnnotation(name, defaultValue);
+  }
+
+  setAtomAnnotation(vertexId, name, value) {
+    this.svgDrawer.setAtomAnnotation(vertexId, name, value);
+  }
+
+  setAtomAnnotationByAtomIndex(atomIdx, name, value) {
+    this.svgDrawer.setAtomAnnotationByAtomIndex(atomIdx, name, value);
+  }
+
+  getAtomAnnotation(vertexId, name) {
+    return this.svgDrawer.getAtomAnnotation(vertexId, name);
+  }
+
+  getAtomAnnotationByAtomIndex(atomIdx, name) {
+    return this.svgDrawer.getAtomAnnotationByAtomIndex(atomIdx, name);
+  }
+
+  listAtomAnnotationNames() {
+    return this.svgDrawer.listAtomAnnotationNames();
+  }
+
+  getAtomAnnotations(vertexId) {
+    return this.svgDrawer.getAtomAnnotations(vertexId);
+  }
   /**
    * Returns complete positioning and structural data for the loaded molecule.
    * This data includes everything needed to implement custom rendering algorithms:
@@ -5847,7 +6209,7 @@ class Drawer {
 
 module.exports = Drawer;
 
-},{"./SvgDrawer":16}],14:[function(require,module,exports){
+},{"./SvgDrawer":17}],15:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../graph/Vector2");
@@ -6180,7 +6542,7 @@ class DrawingManager {
 
 module.exports = DrawingManager;
 
-},{"../config/ThemeManager":10,"../graph/Atom":27,"../graph/Line":32,"../graph/Vector2":35,"../utils/ArrayHelper":52,"./CanvasDrawer":12}],15:[function(require,module,exports){
+},{"../config/ThemeManager":11,"../graph/Atom":28,"../graph/Line":34,"../graph/Vector2":37,"../utils/ArrayHelper":54,"./CanvasDrawer":13}],16:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -6364,7 +6726,7 @@ class GaussDrawer {
 
 module.exports = GaussDrawer;
 
-},{"../graph/Vector2":35,"../utils/PixelsToSvg":55,"chroma-js":2}],16:[function(require,module,exports){
+},{"../graph/Vector2":37,"../utils/PixelsToSvg":57,"chroma-js":2}],17:[function(require,module,exports){
 "use strict";
 
 const MolecularPreprocessor = require("../preprocessing/MolecularPreprocessor");
@@ -6534,6 +6896,34 @@ class SvgDrawer {
   getMolecularFormula(data = null) {
     return this.preprocessor.getMolecularFormula(data);
   }
+
+  registerAtomAnnotation(name, defaultValue = null) {
+    this.preprocessor.registerAtomAnnotation(name, defaultValue);
+  }
+
+  setAtomAnnotation(vertexId, name, value) {
+    this.preprocessor.setAtomAnnotation(vertexId, name, value);
+  }
+
+  setAtomAnnotationByAtomIndex(atomIdx, name, value) {
+    this.preprocessor.setAtomAnnotationByAtomIndex(atomIdx, name, value);
+  }
+
+  getAtomAnnotation(vertexId, name) {
+    return this.preprocessor.getAtomAnnotation(vertexId, name);
+  }
+
+  getAtomAnnotationByAtomIndex(atomIdx, name) {
+    return this.preprocessor.getAtomAnnotationByAtomIndex(atomIdx, name);
+  }
+
+  listAtomAnnotationNames() {
+    return this.preprocessor.listAtomAnnotationNames();
+  }
+
+  getAtomAnnotations(vertexId) {
+    return this.preprocessor.getAtomAnnotations(vertexId);
+  }
   /**
    * Returns complete positioning and structural data for the loaded molecule.
    * This data includes everything needed to implement custom rendering algorithms:
@@ -6606,7 +6996,7 @@ class SvgDrawer {
 
 module.exports = SvgDrawer;
 
-},{"../config/ThemeManager":10,"../preprocessing/MolecularDataSnapshot":42,"../preprocessing/MolecularPreprocessor":44,"./SvgWrapper":17,"./draw/SvgEdgeDrawer":21,"./draw/SvgVertexDrawer":22,"./draw/SvgWeightsDrawer":23}],17:[function(require,module,exports){
+},{"../config/ThemeManager":11,"../preprocessing/MolecularDataSnapshot":44,"../preprocessing/MolecularPreprocessor":46,"./SvgWrapper":18,"./draw/SvgEdgeDrawer":22,"./draw/SvgVertexDrawer":23,"./draw/SvgWeightsDrawer":24}],18:[function(require,module,exports){
 "use strict";
 
 const SvgTextHelper = require("./helpers/SvgTextHelper");
@@ -7388,7 +7778,7 @@ class SvgWrapper {
 
 module.exports = SvgWrapper;
 
-},{"../graph/Line":32,"../graph/Vector2":35,"../utils/MathHelper":54,"./helpers/SvgTextHelper":25,"./helpers/SvgUnicodeHelper":26}],18:[function(require,module,exports){
+},{"../graph/Line":34,"../graph/Vector2":37,"../utils/MathHelper":56,"./helpers/SvgTextHelper":26,"./helpers/SvgUnicodeHelper":27}],19:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../../utils/MathHelper");
@@ -7593,7 +7983,7 @@ class CanvasPrimitiveDrawer {
 
 module.exports = CanvasPrimitiveDrawer;
 
-},{"../../utils/MathHelper":54}],19:[function(require,module,exports){
+},{"../../utils/MathHelper":56}],20:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../../utils/MathHelper");
@@ -7913,7 +8303,7 @@ class CanvasTextDrawer {
 
 module.exports = CanvasTextDrawer;
 
-},{"../../utils/MathHelper":54}],20:[function(require,module,exports){
+},{"../../utils/MathHelper":56}],21:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../../graph/Vector2");
@@ -8067,7 +8457,7 @@ class CanvasWedgeDrawer {
 
 module.exports = CanvasWedgeDrawer;
 
-},{"../../graph/Vector2":35}],21:[function(require,module,exports){
+},{"../../graph/Vector2":37}],22:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../../utils/ArrayHelper");
@@ -8249,7 +8639,7 @@ class SvgEdgeDrawer {
 
 module.exports = SvgEdgeDrawer;
 
-},{"../../graph/Line":32,"../../graph/Vector2":35,"../../utils/ArrayHelper":52}],22:[function(require,module,exports){
+},{"../../graph/Line":34,"../../graph/Vector2":37,"../../utils/ArrayHelper":54}],23:[function(require,module,exports){
 "use strict";
 
 const Atom = require("../../graph/Atom");
@@ -8379,7 +8769,7 @@ class SvgVertexDrawer {
 
 module.exports = SvgVertexDrawer;
 
-},{"../../graph/Atom":27,"../../graph/Vector2":35,"../../utils/ArrayHelper":52}],23:[function(require,module,exports){
+},{"../../graph/Atom":28,"../../graph/Vector2":37,"../../utils/ArrayHelper":54}],24:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../../graph/Vector2");
@@ -8430,7 +8820,7 @@ class SvgWeightsDrawer {
 
 module.exports = SvgWeightsDrawer;
 
-},{"../../graph/Vector2":35,"../GaussDrawer":15}],24:[function(require,module,exports){
+},{"../../graph/Vector2":37,"../GaussDrawer":16}],25:[function(require,module,exports){
 "use strict";
 
 class SvgConversionHelper {
@@ -8489,7 +8879,7 @@ class SvgConversionHelper {
 
 module.exports = SvgConversionHelper;
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 "use strict";
 
 class SvgTextHelper {
@@ -8598,7 +8988,7 @@ class SvgTextHelper {
 
 module.exports = SvgTextHelper;
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 "use strict";
 
 class SvgUnicodeHelper {
@@ -8667,10 +9057,12 @@ class SvgUnicodeHelper {
 
 module.exports = SvgUnicodeHelper;
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
+
+const AtomAnnotations = require("./AtomAnnotations");
 /**
  * A class representing an atom.
  *
@@ -8745,6 +9137,7 @@ class Atom {
     this.subtreeDepth = 1;
     this.hasHydrogen = false;
     this.class = undefined;
+    this.annotations = new AtomAnnotations();
   }
   /**
    * Adds a neighbouring element to this atom.
@@ -9228,7 +9621,113 @@ class Atom {
 
 module.exports = Atom;
 
-},{"../utils/ArrayHelper":52}],28:[function(require,module,exports){
+},{"../utils/ArrayHelper":54,"./AtomAnnotations":29}],29:[function(require,module,exports){
+"use strict";
+/**
+ * AtomAnnotations stores arbitrary per-atom metadata.
+ * It mirrors the functionality provided in PIKAChU while
+ * exposing a TypeScript-friendly API for SmilesDrawer.
+ */
+
+class AtomAnnotations {
+  constructor() {
+    this.values = new Map();
+  }
+  /**
+   * Clone the annotation container.
+   */
+
+
+  copy() {
+    const clone = new AtomAnnotations();
+
+    for (const [key, value] of this.values.entries()) {
+      clone.values.set(key, this.cloneValue(value));
+    }
+
+    return clone;
+  }
+  /**
+   * Register a new annotation with an optional default value.
+   * Throws if the annotation already exists.
+   */
+
+
+  addAnnotation(name, defaultValue = null) {
+    if (this.values.has(name)) {
+      throw new Error(`Annotation "${name}" already exists on atom`);
+    }
+
+    this.values.set(name, this.cloneValue(defaultValue));
+  }
+  /**
+   * Update an existing annotation value.
+   */
+
+
+  setAnnotation(name, value) {
+    if (!this.values.has(name)) {
+      throw new Error(`Annotation "${name}" is not registered on atom`);
+    }
+
+    this.values.set(name, this.cloneValue(value));
+  }
+  /**
+   * Retrieve an annotation value.
+   */
+
+
+  getAnnotation(name) {
+    return this.values.get(name);
+  }
+  /**
+   * Whether an annotation is registered on the atom.
+   */
+
+
+  hasAnnotation(name) {
+    return this.values.has(name);
+  }
+  /**
+   * Return all annotation names registered for this atom.
+   */
+
+
+  keys() {
+    return Array.from(this.values.keys());
+  }
+  /**
+   * Export annotations as a plain object.
+   */
+
+
+  toJSON() {
+    const obj = {};
+
+    for (const [key, value] of this.values.entries()) {
+      obj[key] = this.cloneValue(value);
+    }
+
+    return obj;
+  }
+
+  cloneValue(value) {
+    if (value === null || typeof value !== 'object') {
+      return value;
+    }
+
+    if (Array.isArray(value)) {
+      return value.map(entry => this.cloneValue(entry));
+    }
+
+    return Object.assign({}, value);
+  }
+
+}
+
+module.exports = AtomAnnotations;
+
+},{}],30:[function(require,module,exports){
 "use strict";
 /**
  * A class representing an edge.
@@ -9294,7 +9793,7 @@ class Edge {
 
 module.exports = Edge;
 
-},{}],29:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 "use strict";
 
 const GraphMatrixOperations = require("./GraphMatrixOperations");
@@ -9302,6 +9801,8 @@ const GraphMatrixOperations = require("./GraphMatrixOperations");
 const GraphAlgorithms = require("./GraphAlgorithms");
 
 const KamadaKawaiLayout = require("../algorithms/KamadaKawaiLayout");
+
+const JohnsonCycles_1 = require("../algorithms/JohnsonCycles");
 
 const Vertex = require("./Vertex");
 
@@ -9342,6 +9843,7 @@ class Graph {
     this.matrixOps = new GraphMatrixOperations(this);
     this.algorithms = new GraphAlgorithms(this);
     this.layout = new KamadaKawaiLayout(this);
+    this.cycles = [];
   }
   /**
    * PRIVATE FUNCTION. Initializing the graph from the parse tree.
@@ -9565,6 +10067,14 @@ class Graph {
   getAdjacencyMatrix() {
     return this.matrixOps.getAdjacencyMatrix();
   }
+
+  getAllCycles(maxCycleLength = 0) {
+    const adjacencyList = this.matrixOps.getAdjacencyList();
+    const cycles = (0, JohnsonCycles_1.findAllCycles)(adjacencyList, {
+      maxCycleLength: maxCycleLength > 0 ? maxCycleLength : undefined
+    });
+    return cycles;
+  }
   /**
    * Get the adjacency matrix of the graph with all bridges removed (thus the components). Thus the remaining vertices are all part of ring systems.
    *
@@ -9718,7 +10228,7 @@ class Graph {
 
 module.exports = Graph;
 
-},{"../algorithms/KamadaKawaiLayout":5,"./Atom":27,"./Edge":28,"./GraphAlgorithms":30,"./GraphMatrixOperations":31,"./Vertex":36}],30:[function(require,module,exports){
+},{"../algorithms/JohnsonCycles":5,"../algorithms/KamadaKawaiLayout":6,"./Atom":28,"./Edge":30,"./GraphAlgorithms":32,"./GraphMatrixOperations":33,"./Vertex":38}],32:[function(require,module,exports){
 "use strict";
 /**
  * A class providing graph algorithms including bridge detection,
@@ -9915,7 +10425,7 @@ class GraphAlgorithms {
 
 module.exports = GraphAlgorithms;
 
-},{}],31:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 "use strict";
 /**
  * A class providing matrix and list operations for molecular graphs.
@@ -10099,7 +10609,7 @@ class GraphMatrixOperations {
 
 module.exports = GraphMatrixOperations;
 
-},{}],32:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -10407,7 +10917,7 @@ class Line {
 
 module.exports = Line;
 
-},{"./Vector2":35}],33:[function(require,module,exports){
+},{"./Vector2":37}],35:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
@@ -10626,7 +11136,7 @@ class Ring {
 
 module.exports = Ring;
 
-},{"../utils/ArrayHelper":52,"./RingConnection":34,"./Vector2":35}],34:[function(require,module,exports){
+},{"../utils/ArrayHelper":54,"./RingConnection":36,"./Vector2":37}],36:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a ring connection.
@@ -10794,7 +11304,7 @@ class RingConnection {
 
 module.exports = RingConnection;
 
-},{}],35:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a 2D vector.
@@ -11414,7 +11924,7 @@ class Vector2 {
 
 module.exports = Vector2;
 
-},{}],36:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -11791,7 +12301,7 @@ class Vertex {
 
 module.exports = Vertex;
 
-},{"../utils/ArrayHelper":52,"../utils/MathHelper":54,"./Vector2":35}],37:[function(require,module,exports){
+},{"../utils/ArrayHelper":54,"../utils/MathHelper":56,"./Vector2":37}],39:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
@@ -12004,7 +12514,7 @@ class BridgedRingHandler {
 
 module.exports = BridgedRingHandler;
 
-},{"../graph/Ring":33,"../graph/RingConnection":34,"../utils/ArrayHelper":52}],38:[function(require,module,exports){
+},{"../graph/Ring":35,"../graph/RingConnection":36,"../utils/ArrayHelper":54}],40:[function(require,module,exports){
 "use strict"; // WHEN REPLACING, CHECK FOR:
 // KEEP THIS WHEN REGENERATING THE PARSER !!
 
@@ -13902,7 +14412,7 @@ module.exports = function () {
   };
 }();
 
-},{}],39:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 "use strict";
 
 const Reaction = require("../reactions/Reaction");
@@ -13923,7 +14433,7 @@ class ReactionParser {
 
 module.exports = ReactionParser;
 
-},{"../reactions/Reaction":50}],40:[function(require,module,exports){
+},{"../reactions/Reaction":52}],42:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -14064,7 +14574,7 @@ class GraphProcessingManager {
 
 module.exports = GraphProcessingManager;
 
-},{"../utils/MathHelper":54}],41:[function(require,module,exports){
+},{"../utils/MathHelper":56}],43:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -14119,7 +14629,7 @@ class InitializationManager {
 
 module.exports = InitializationManager;
 
-},{"../graph/Graph":29}],42:[function(require,module,exports){
+},{"../graph/Graph":31}],44:[function(require,module,exports){
 "use strict";
 
 class MolecularDataSnapshot {
@@ -14192,6 +14702,62 @@ class MolecularDataSnapshot {
     return this.source.getMolecularFormula(data);
   }
 
+  registerAtomAnnotation(_name, _defaultValue = null) {
+    throw new Error('MolecularDataSnapshot is read-only. registerAtomAnnotation() cannot be called.');
+  }
+
+  setAtomAnnotation(_vertexId, _name, _value) {
+    throw new Error('MolecularDataSnapshot is read-only. setAtomAnnotation() cannot be called.');
+  }
+
+  getAtomAnnotation(vertexId, name) {
+    const vertex = this.getSerializedVertex(vertexId);
+
+    if (!vertex || !vertex.value || !vertex.value.annotations) {
+      return undefined;
+    }
+
+    return vertex.value.annotations[name];
+  }
+
+  setAtomAnnotationByAtomIndex(_atomIdx, _name, _value) {
+    throw new Error('MolecularDataSnapshot is read-only. setAtomAnnotationByAtomIndex() cannot be called.');
+  }
+
+  getAtomAnnotationByAtomIndex(atomIdx, name) {
+    const vertexId = this.getVertexIdFromAtomIndex(atomIdx);
+
+    if (vertexId === null) {
+      return undefined;
+    }
+
+    return this.getAtomAnnotation(vertexId, name);
+  }
+
+  listAtomAnnotationNames() {
+    const names = new Set();
+
+    for (const vertex of this.serializedData.vertices) {
+      if (vertex.value && vertex.value.annotations) {
+        for (const key of Object.keys(vertex.value.annotations)) {
+          names.add(key);
+        }
+      }
+    }
+
+    return Array.from(names.values());
+  }
+
+  getAtomAnnotations(vertexId) {
+    const vertex = this.getSerializedVertex(vertexId);
+
+    if (!vertex || !vertex.value || !vertex.value.annotations) {
+      return {};
+    }
+
+    return Object.assign({}, vertex.value.annotations);
+  }
+
   getPositionData() {
     return this.serializedData;
   }
@@ -14200,11 +14766,29 @@ class MolecularDataSnapshot {
     return this.serializedData;
   }
 
+  getSerializedVertex(vertexId) {
+    return this.serializedData.vertices.find(vertex => vertex.id === vertexId);
+  }
+
+  getVertexIdFromAtomIndex(atomIdx) {
+    if (!this.serializedData.metadata.atomIdxToVertexId) {
+      return null;
+    }
+
+    const vertexId = this.serializedData.metadata.atomIdxToVertexId[atomIdx];
+
+    if (vertexId === undefined || vertexId === null) {
+      return null;
+    }
+
+    return vertexId;
+  }
+
 }
 
 module.exports = MolecularDataSnapshot;
 
-},{}],43:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -14296,7 +14880,7 @@ class MolecularInfoManager {
 
 module.exports = MolecularInfoManager;
 
-},{"../graph/Atom":27,"../graph/Graph":29}],44:[function(require,module,exports){
+},{"../graph/Atom":28,"../graph/Graph":31}],46:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -14363,6 +14947,8 @@ class MolecularPreprocessor {
     this.ringConnectionIdCounter = 0;
     this.canvasWrapper = null;
     this.totalOverlapScore = 0;
+    this.atomAnnotationDefaults = new Map();
+    this.atomAnnotationNames = new Set();
     const optionsManager = new OptionsManager_1.default(options);
     this.opts = optionsManager.opts;
     this.theme = optionsManager.theme;
@@ -14596,7 +15182,9 @@ class MolecularPreprocessor {
         subtreeDepth: v.value.subtreeDepth,
         // Pseudo elements
         attachedPseudoElements: v.value.attachedPseudoElements ? Object.assign({}, v.value.attachedPseudoElements) : {},
-        hasAttachedPseudoElements: v.value.hasAttachedPseudoElements
+        hasAttachedPseudoElements: v.value.hasAttachedPseudoElements,
+        // Custom annotations
+        annotations: v.value.annotations ? v.value.annotations.toJSON() : {}
       } : null
     })); // Serialize edges with comprehensive bond data
 
@@ -14638,6 +15226,105 @@ class MolecularPreprocessor {
       }
     };
   }
+
+  registerAtomAnnotation(name, defaultValue = null) {
+    const clonedDefault = this.cloneAnnotationValue(defaultValue);
+    this.atomAnnotationDefaults.set(name, clonedDefault);
+    this.atomAnnotationNames.add(name);
+
+    if (!this.graph) {
+      return;
+    }
+
+    for (const vertex of this.graph.vertices) {
+      if (!vertex || !vertex.value) {
+        continue;
+      }
+
+      const annotations = vertex.value.annotations;
+
+      if (!annotations.hasAnnotation(name)) {
+        annotations.addAnnotation(name, this.cloneAnnotationValue(clonedDefault));
+      }
+    }
+  }
+
+  setAtomAnnotation(vertexId, name, value) {
+    if (!this.graph) {
+      throw new Error('Cannot set atom annotation before a graph is initialized.');
+    }
+
+    const vertex = this.getVertexById(vertexId);
+
+    if (!vertex || !vertex.value) {
+      throw new Error(`Vertex with id ${vertexId} does not exist.`);
+    }
+
+    this.atomAnnotationNames.add(name);
+    const annotations = vertex.value.annotations;
+
+    if (!annotations.hasAnnotation(name)) {
+      if (this.atomAnnotationDefaults.has(name)) {
+        annotations.addAnnotation(name, this.cloneAnnotationValue(this.atomAnnotationDefaults.get(name)));
+      } else {
+        annotations.addAnnotation(name, null);
+      }
+    }
+
+    annotations.setAnnotation(name, value);
+  }
+
+  getAtomAnnotation(vertexId, name) {
+    if (!this.graph) {
+      return undefined;
+    }
+
+    const vertex = this.getVertexById(vertexId);
+
+    if (!vertex || !vertex.value) {
+      return undefined;
+    }
+
+    return vertex.value.annotations.getAnnotation(name);
+  }
+
+  setAtomAnnotationByAtomIndex(atomIdx, name, value) {
+    const vertexId = this.getVertexIdFromAtomIndex(atomIdx);
+
+    if (vertexId === null) {
+      throw new Error(`No vertex found for atom index ${atomIdx}.`);
+    }
+
+    this.setAtomAnnotation(vertexId, name, value);
+  }
+
+  getAtomAnnotationByAtomIndex(atomIdx, name) {
+    const vertexId = this.getVertexIdFromAtomIndex(atomIdx);
+
+    if (vertexId === null) {
+      return undefined;
+    }
+
+    return this.getAtomAnnotation(vertexId, name);
+  }
+
+  listAtomAnnotationNames() {
+    return Array.from(this.atomAnnotationNames.values());
+  }
+
+  getAtomAnnotations(vertexId) {
+    if (!this.graph) {
+      return {};
+    }
+
+    const vertex = this.getVertexById(vertexId);
+
+    if (!vertex || !vertex.value) {
+      return {};
+    }
+
+    return vertex.value.annotations.toJSON();
+  }
   /**
    * Returns the type of the ringbond (e.g. '=' for a double bond). The ringbond represents the break in a ring introduced when creating the MST. If the two vertices supplied as arguments are not part of a common ringbond, the method returns null.
    *
@@ -14653,6 +15340,7 @@ class MolecularPreprocessor {
 
   initDraw(data, themeName, infoOnly, highlight_atoms) {
     this.initializationManager.initDraw(data, themeName, infoOnly, highlight_atoms);
+    this.applyAtomAnnotationDefaultsToGraph();
   }
 
   processGraph() {
@@ -15183,6 +15871,66 @@ class MolecularPreprocessor {
     this.pseudoElementManager.initPseudoElements();
   }
 
+  applyAtomAnnotationDefaultsToGraph() {
+    if (!this.graph) {
+      return;
+    }
+
+    for (const [name, defaultValue] of this.atomAnnotationDefaults.entries()) {
+      this.atomAnnotationNames.add(name);
+
+      for (const vertex of this.graph.vertices) {
+        if (!vertex || !vertex.value) {
+          continue;
+        }
+
+        const annotations = vertex.value.annotations;
+
+        if (!annotations.hasAnnotation(name)) {
+          annotations.addAnnotation(name, this.cloneAnnotationValue(defaultValue));
+        }
+      }
+    }
+  }
+
+  getVertexById(vertexId) {
+    if (!this.graph) {
+      return null;
+    }
+
+    if (vertexId < 0 || vertexId >= this.graph.vertices.length) {
+      return null;
+    }
+
+    return this.graph.vertices[vertexId];
+  }
+
+  getVertexIdFromAtomIndex(atomIdx) {
+    if (!this.graph || !this.graph.atomIdxToVertexId) {
+      return null;
+    }
+
+    const vertexId = this.graph.atomIdxToVertexId[atomIdx];
+
+    if (vertexId === undefined || vertexId === null) {
+      return null;
+    }
+
+    return vertexId;
+  }
+
+  cloneAnnotationValue(value) {
+    if (value === null || typeof value !== 'object') {
+      return value;
+    }
+
+    if (Array.isArray(value)) {
+      return value.map(entry => this.cloneAnnotationValue(entry));
+    }
+
+    return Object.assign({}, value);
+  }
+
   get ringIdCounter() {
     return this.ringManager.ringIdCounter;
   }
@@ -15243,7 +15991,7 @@ class MolecularPreprocessor {
 
 module.exports = MolecularPreprocessor;
 
-},{"../config/OptionsManager":9,"../config/Version":11,"../drawing/DrawingManager":14,"./GraphProcessingManager":40,"./InitializationManager":41,"./MolecularInfoManager":43,"./OverlapResolutionManager":45,"./PositioningManager":46,"./PseudoElementManager":47,"./RingManager":48,"./StereochemistryManager":49}],45:[function(require,module,exports){
+},{"../config/OptionsManager":10,"../config/Version":12,"../drawing/DrawingManager":15,"./GraphProcessingManager":42,"./InitializationManager":43,"./MolecularInfoManager":45,"./OverlapResolutionManager":47,"./PositioningManager":48,"./PseudoElementManager":49,"./RingManager":50,"./StereochemistryManager":51}],47:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../graph/Vector2");
@@ -15778,7 +16526,7 @@ class OverlapResolutionManager {
 
 module.exports = OverlapResolutionManager;
 
-},{"../graph/Vector2":35,"../utils/ArrayHelper":52,"../utils/MathHelper":54}],46:[function(require,module,exports){
+},{"../graph/Vector2":37,"../utils/ArrayHelper":54,"../utils/MathHelper":56}],48:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../graph/Vector2");
@@ -16221,7 +16969,7 @@ class PositioningManager {
 
 module.exports = PositioningManager;
 
-},{"../graph/Vector2":35,"../utils/ArrayHelper":52,"../utils/MathHelper":54}],47:[function(require,module,exports){
+},{"../graph/Vector2":37,"../utils/ArrayHelper":54,"../utils/MathHelper":56}],49:[function(require,module,exports){
 "use strict";
 
 const Atom = require("../graph/Atom");
@@ -16357,7 +17105,7 @@ class PseudoElementManager {
 
 module.exports = PseudoElementManager;
 
-},{"../graph/Atom":27}],48:[function(require,module,exports){
+},{"../graph/Atom":28}],50:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -16522,6 +17270,7 @@ class RingManager {
     } // Get the rings in the graph (the SSSR)
 
 
+    this.drawer.graph.cycles = this.drawer.graph.getAllCycles();
     let rings = SSSR.getRings(this.drawer.graph, this.drawer.opts.experimentalSSSR);
 
     if (rings === null) {
@@ -16984,7 +17733,7 @@ class RingManager {
 
 module.exports = RingManager;
 
-},{"../algorithms/SSSR":6,"../graph/Edge":28,"../graph/Ring":33,"../graph/RingConnection":34,"../graph/Vector2":35,"../handlers/BridgedRingHandler":37,"../utils/ArrayHelper":52,"../utils/MathHelper":54}],49:[function(require,module,exports){
+},{"../algorithms/SSSR":7,"../graph/Edge":30,"../graph/Ring":35,"../graph/RingConnection":36,"../graph/Vector2":37,"../handlers/BridgedRingHandler":39,"../utils/ArrayHelper":54,"../utils/MathHelper":56}],51:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -17208,7 +17957,7 @@ class StereochemistryManager {
 
 module.exports = StereochemistryManager;
 
-},{"../utils/MathHelper":54}],50:[function(require,module,exports){
+},{"../utils/MathHelper":56}],52:[function(require,module,exports){
 "use strict";
 
 const Parser = require("../parsing/Parser");
@@ -17264,7 +18013,7 @@ class Reaction {
 
 module.exports = Reaction;
 
-},{"../parsing/Parser":38}],51:[function(require,module,exports){
+},{"../parsing/Parser":40}],53:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("../drawing/SvgDrawer");
@@ -17639,7 +18388,7 @@ class ReactionDrawer {
 
 module.exports = ReactionDrawer;
 
-},{"../config/Options":8,"../config/ThemeManager":10,"../drawing/SvgDrawer":16,"../drawing/helpers/SvgTextHelper":25,"../drawing/helpers/SvgUnicodeHelper":26,"../utils/FormulaToCommonName":53}],52:[function(require,module,exports){
+},{"../config/Options":9,"../config/ThemeManager":11,"../drawing/SvgDrawer":17,"../drawing/helpers/SvgTextHelper":26,"../drawing/helpers/SvgUnicodeHelper":27,"../utils/FormulaToCommonName":55}],54:[function(require,module,exports){
 "use strict";
 
 class ArrayHelper {
@@ -18103,7 +18852,7 @@ class ArrayHelper {
 
 module.exports = ArrayHelper;
 
-},{}],53:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 "use strict";
 
 const formulaToCommonName = {
@@ -18141,7 +18890,7 @@ const formulaToCommonName = {
 };
 module.exports = formulaToCommonName;
 
-},{}],54:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for math-related tasks.
@@ -18314,7 +19063,7 @@ class MathHelper {
 
 module.exports = MathHelper;
 
-},{}],55:[function(require,module,exports){
+},{}],57:[function(require,module,exports){
 "use strict"; // Adapted from https://codepen.io/shshaw/pen/XbxvNj by
 
 function convertImage(img) {

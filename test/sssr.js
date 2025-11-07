@@ -30,6 +30,20 @@ function detectRings(smiles) {
     return rings ?? [];
 }
 
+function canonicalizeRings(rings) {
+    const sortedRings = rings.map((ring) => [...ring].sort((a, b) => a - b));
+    sortedRings.sort((a, b) => {
+        const len = Math.min(a.length, b.length);
+        for (let i = 0; i < len; i++) {
+            if (a[i] !== b[i]) {
+                return a[i] - b[i];
+            }
+        }
+        return a.length - b.length;
+    });
+    return sortedRings;
+}
+
 /**
  * Run the molecular preprocessor pipeline to access ring metadata.
  * @param {string} smiles
@@ -77,6 +91,75 @@ describe('SSSR ring detection', () => {
         assert.ok(
             largest >= 12,
             `Expected at least one ring of size ≥12 in TPPP SSSR output, observed sizes: ${rings.map(r => r.length).join(', ')}`
+        );
+    });
+
+    it('matches PIKAChU fused cyclohexane SSSR for decalin', () => {
+        const rings = detectRings('C1CCC2CC1CCC2');
+        const canonical = canonicalizeRings(rings);
+
+        assert.deepEqual(
+            canonical,
+            [
+                [0, 1, 2, 3, 4, 5],
+                [3, 4, 5, 6, 7, 8],
+            ],
+            'Decalin SSSR should mirror PIKAChU fused cyclohexane rings'
+        );
+    });
+
+    it('matches PIKAChU fused aromatic SSSR for naphthalene', () => {
+        const rings = detectRings('c1ccc2cccc2c1');
+        const canonical = canonicalizeRings(rings);
+
+        assert.deepEqual(
+            canonical,
+            [
+                [0, 1, 2, 3, 7, 8],
+                [3, 4, 5, 6, 7],
+            ],
+            'Naphthalene SSSR should match PIKAChU fused aromatic rings'
+        );
+    });
+
+    it('matches PIKAChU adamantane cage SSSR', () => {
+        const rings = detectRings('C1C2CC3CC(C1)CC(C2)C3');
+        const canonical = canonicalizeRings(rings);
+
+        assert.deepEqual(
+            canonical,
+            [
+                [0, 1, 2, 3, 4, 5, 6],
+                [1, 2, 3, 8, 9, 10],
+                [3, 4, 5, 7, 8, 10]
+            ],
+            'Adamantane SSSR should match PIKAChU cage rings'
+        );
+    });
+
+    it('matches PIKAChU anthracene fused aromatic SSSR', () => {
+        const rings = detectRings('c1ccc2cc3ccccc3cc2c1');
+        const canonical = canonicalizeRings(rings);
+
+        assert.deepEqual(
+            canonical,
+            [
+                [0, 1, 2, 3, 12, 13],
+                [3, 4, 5, 10, 11, 12],
+                [5, 6, 7, 8, 9, 10]
+            ],
+            'Anthracene SSSR should match PIKAChU fused rings'
+        );
+    });
+
+    it('produces large macrocycle SSSR consistent with PIKAChU', () => {
+        const rings = detectRings('C1CCCCC2CCCCCC3CCCCCC4CCCCCC5CCCCCC6CCCCCC(C1)C2C3C4C5C6');
+        const orderedByLength = rings.map((ring) => ring.length).sort((a, b) => a - b);
+
+        assert.deepEqual(
+            orderedByLength,
+            [9, 9, 9, 9, 9, 12],
+            'Macrocycle SSSR lengths should match PIKAChU expectations'
         );
     });
 });
