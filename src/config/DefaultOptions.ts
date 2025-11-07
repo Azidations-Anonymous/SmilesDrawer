@@ -17,6 +17,8 @@ function getDefaultOptions(): IMoleculeOptions {
       overlapSensitivity: 0.42,
       overlapResolutionIterations: 1,
       finetuneOverlap: true,
+      finetuneOverlapMaxSteps: 64,
+      finetuneOverlapMaxDurationMs: 50,
       showAtomAnnotations: false,
       atomAnnotationColor: '#ff4081',
       atomAnnotationFontSize: 9,

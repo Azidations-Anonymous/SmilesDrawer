@@ -264,11 +264,29 @@ class OverlapResolutionManager {
         }
 
         const stepAngle = MathHelper.toRad(30);
+        const rawMaxSteps = this.drawer.opts.finetuneOverlapMaxSteps;
+        const maxSteps = Number.isFinite(rawMaxSteps) ? Math.floor(rawMaxSteps) : Number.POSITIVE_INFINITY;
+        if (maxSteps <= 0) {
+          return;
+        }
+        const maxDuration = Math.max(0, this.drawer.opts.finetuneOverlapMaxDurationMs || 0);
+        const startTime = Date.now();
+        let processedSteps = 0;
 
         for (const edgeId of candidateEdgeIds) {
+          if (processedSteps >= maxSteps) {
+            break;
+          }
+
+          if (maxDuration > 0 && Date.now() - startTime >= maxDuration) {
+            break;
+          }
+
           if (this.drawer.totalOverlapScore <= this.drawer.opts.overlapSensitivity) {
             break;
           }
+
+          processedSteps++;
 
           const edge = this.drawer.graph.edges[edgeId];
 

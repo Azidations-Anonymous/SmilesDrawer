@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 - A getPositionData() browser API (with versioned metadata baked into builds), atom annotations, Johnson cycle enumeration, and PIKAChU-style overlap/parity plans for higher-fidelity layouts.
 - A regression and smoke-test platform with dataset filtering, regex selection, copy-to-clipboard buttons, PNG generation (white backgrounds, single-SMILES mode), timestamped outputs, and automated comparison reports/bisect helpers.
 - GitHub Pages deployment workflow that rebuilds docs/dist from source, exposes downloadable SVGs from the playground, and publishes refreshed documentation without tracking generated assets.
+- Configurable iteration/time guards for the overlap finetuning pass (new `finetuneOverlapMaxSteps`/`finetuneOverlapMaxDurationMs` options) plus regression coverage in `test/overlap-finetune.js` that locks the Fig. 2B clash examples in place.
 
 ### Changed
 - Re-architected the runtime: DrawerBase responsibilities were split into dedicated managers, Graph/Kamada-Kawais code was modularized, and jsdom-based tests were replaced with faster linkedom-based runs.

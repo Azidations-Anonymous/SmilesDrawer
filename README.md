@@ -293,6 +293,9 @@ The following options are available:
 | Show explicit hydrogens                                         | explicitHydrogens           | boolean                             | false         |
 | Overlap sensitivity                                             | overlapSensitivity          | number                              | 0.42          |
 | # of overlap resolution iterations                              | overlapResolutionIterations | number                              | 1             |
+| Enable overlap finetuning pass                                  | finetuneOverlap             | boolean                             | true          |
+| Finetune overlap iteration cap (candidate edges per pass, 0 = skip) | finetuneOverlapMaxSteps     | number                              | 64            |
+| Finetune overlap time budget (milliseconds per pass, 0 = unlimited) | finetuneOverlapMaxDurationMs| number                              | 50            |
 | Enable atom annotation labels                                   | showAtomAnnotations         | boolean                             | false         |
 | Draw concatenated terminals and pseudo elements                 | compactDrawing              | boolean                             | true          |
 | Draw isometric SMILES if available                              | isometric                   | boolean                             | true          |
@@ -317,6 +320,8 @@ The default options are defined as follows:
     overlapSensitivity: 0.42,
     overlapResolutionIterations: 1,
     finetuneOverlap: true,
+    finetuneOverlapMaxSteps: 64,
+    finetuneOverlapMaxDurationMs: 50,
     showAtomAnnotations: false,
     atomAnnotationColor: '#ff4081',
     atomAnnotationFontSize: 9,

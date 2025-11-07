@@ -65,6 +65,8 @@ interface IMoleculeOptions {
   overlapSensitivity: number;
   overlapResolutionIterations: number;
   finetuneOverlap: boolean;
+  finetuneOverlapMaxSteps: number;
+  finetuneOverlapMaxDurationMs: number;
   showAtomAnnotations: boolean;
   atomAnnotationColor: string;
   atomAnnotationFontSize: number;

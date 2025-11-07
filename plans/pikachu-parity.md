@@ -24,7 +24,7 @@ This tracker aggregates the open work needed to keep SmilesDrawer functionally a
 
 ### Finetune & Rendering Follow-ups
 
-1. **Overlap finetune safeguards** – Add max-iteration/timeout guards plus unit tests showing the finetune loop reduces the overlap score on the Fig. 2B clash examples.
+1. **Overlap finetune safeguards** – ✅ Added iteration/time guards (options `finetuneOverlapMaxSteps` and `finetuneOverlapMaxDurationMs`) and regression coverage in `test/overlap-finetune.js` for the Fig. 2B clash macrocycles.
 
 ### Cis/Trans Follow-ups
 
