@@ -1192,12 +1192,15 @@ function generateIndividualHTMLReport(diff) {
             <pre class="diff-content" id="${diffFieldId}"><code>${escapeHtml(collapsedDiff)}</code></pre>
         </div>` : '';
 
+    const PERFORMANCE_EPSILON = 5; // milliseconds
     const oldTotalTime = diff.oldSvgRenderTime + diff.oldJsonRenderTime;
     const newTotalTime = diff.newSvgRenderTime + diff.newJsonRenderTime;
-    const timeDiff = newTotalTime - oldTotalTime;
+    const rawTimeDiff = newTotalTime - oldTotalTime;
+    const isNoise = Math.abs(rawTimeDiff) < PERFORMANCE_EPSILON;
+    const timeDiff = isNoise ? 0 : rawTimeDiff;
     const percentChange = oldTotalTime > 0 ? ((timeDiff / oldTotalTime) * 100) : 0;
     const isFaster = timeDiff < 0;
-    const performanceClass = isFaster ? 'performance-improvement' : 'performance-regression';
+    const performanceClass = isNoise ? 'performance-neutral' : (isFaster ? 'performance-improvement' : 'performance-regression');
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -1445,6 +1448,11 @@ function generateIndividualHTMLReport(diff) {
             border: 1px solid #f5c6cb;
         }
 
+        .performance-neutral {
+            background: #f1f1f1;
+            border: 1px solid #dcdcdc;
+        }
+
         .benchmark-info h3 {
             color: #2c3e50;
             margin-bottom: 12px;
@@ -1511,6 +1519,10 @@ function generateIndividualHTMLReport(diff) {
 
         .performance-summary.slower {
             color: #e74c3c;
+        }
+
+        .performance-summary.neutral {
+            color: #7f8c8d;
         }
 
         @media (max-width: 768px) {
@@ -1604,8 +1616,8 @@ function generateIndividualHTMLReport(diff) {
                     </div>
                 </div>
             </div>
-            <div class="performance-summary ${isFaster ? 'faster' : 'slower'}">
-                ${isFaster ? '\u2713 Performance Improvement' : '\u26A0 Performance Regression'}
+            <div class="performance-summary ${isNoise ? 'neutral' : (isFaster ? 'faster' : 'slower')}">
+                ${isNoise ? '\u2713 Within noise (no significant change)' : (isFaster ? '\u2713 Performance Improvement' : '\u26A0 Performance Regression')}
             </div>
         </div>
 
