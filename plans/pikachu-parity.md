@@ -11,7 +11,7 @@ This tracker aggregates the open work needed to keep SmilesDrawer functionally a
 - **Legacy SSSR switches removed** – the experimental toggle is gone, and `SSSR.getSSSR` now mirrors PIKAChU’s “allow one extra candidate” guard so parity behaviour is always on by default.
 - **Cis/trans metadata and correction** – `src/preprocessing/CisTransManager.ts` derives `cisTransNeighbours` from the SMILES markers and repairs misdrawn stereobonds post-layout, matching `structure.find_double_bond_sequences` + `_fix_chiral_bonds_in_rings`.
 - **Overlap finetuning pass** – `src/preprocessing/OverlapResolutionManager.ts` implements the optional `_finetune_overlap_resolution` loop, gated by the new `finetuneOverlap` option (`src/config/IOptions.ts`).
-- **Atom annotation storage** – Atoms own an `AtomAnnotations` container (`src/graph/AtomAnnotations.ts`), and the preprocessor/drawers expose register/get/set helpers so callers can attach metadata like in PIKAChU’s `Structure`.
+- **Atom annotation storage & rendering** – Atoms own an `AtomAnnotations` container (`src/graph/AtomAnnotations.ts`), the API exposes register/get/set helpers, and `showAtomAnnotations` plus formatter/styling knobs render those attributes directly on the canvas/SVG output.
 - **Aromatic cycle inventory** – `RingManager.getAromaticRings()` surfaces Johnson-derived aromatic cycles (including macrocycles outside the SSSR basis) so both the canvas and SVG drawers render the same aromaticity markers PIKAChU exposes.
 
 ---
@@ -22,10 +22,9 @@ This tracker aggregates the open work needed to keep SmilesDrawer functionally a
 
 1. **Documentation/tests** – Update developer docs to describe the new SSSR stack (and removal of the experimental flag) plus add regression fixtures for the paper’s macrocycle example (Additional file 2 Fig. S2) so we lock the behaviour down.
 
-### Rendering & Annotation UX
+### Finetune & Rendering Follow-ups
 
-1. **Visual hooks for annotations** – Decide how annotations influence rendering (e.g. callbacks, label layers, highlight styles) and plumb the data from `Drawer.getPositionData()` through the SVG/canvas drawers.
-2. **Overlap finetune safeguards** – Add max-iteration/timeout guards plus unit tests showing the finetune loop reduces the overlap score on the Fig. 2B clash examples.
+1. **Overlap finetune safeguards** – Add max-iteration/timeout guards plus unit tests showing the finetune loop reduces the overlap score on the Fig. 2B clash examples.
 
 ### Cis/Trans Follow-ups
 
@@ -40,6 +39,6 @@ This tracker aggregates the open work needed to keep SmilesDrawer functionally a
 
 ## Immediate Next Steps
 
-1. Finish the SSSR clean-up (termination guard + experimental flag removal) and wire the cycle inventory into aromaticity consumers.
-2. Add the missing regression fixtures for macrocycle rings and stereobond sequences so future refactors can’t regress the imported behaviour.
-3. Design the annotation rendering hooks, then decide whether they land alongside a `strict_mode` option for stereochemistry fixes or in a separate UI-focused iteration.
+1. Add the missing regression fixtures for macrocycle rings and stereobond sequences so future refactors can’t regress the imported behaviour.
+2. Harden the finetune pass with iteration/time guards and accompanying tests/benchmarks.
+3. Implement the cis/trans `strict_mode` handling (including documentation) so stereochemistry mismatches surface as explicit warnings/errors.

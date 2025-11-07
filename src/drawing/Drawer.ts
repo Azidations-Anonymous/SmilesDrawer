@@ -1,7 +1,7 @@
 import SvgDrawer = require('./SvgDrawer');
 import IMolecularData = require('../preprocessing/IMolecularData');
 import { AtomHighlight } from '../preprocessing/MolecularDataTypes';
-import { IMoleculeOptions } from '../config/IOptions';
+import { AtomAnnotationFormatter, IMoleculeOptions } from '../config/IOptions';
 
 type ParseTree = any;
 
@@ -100,6 +100,10 @@ class Drawer {
 
   getAtomAnnotations(vertexId: number): Record<string, unknown> {
     return this.svgDrawer.getAtomAnnotations(vertexId);
+  }
+
+  setAtomAnnotationFormatter(formatter: AtomAnnotationFormatter | null): void {
+    this.svgDrawer.setAtomAnnotationFormatter(formatter);
   }
 
   /**

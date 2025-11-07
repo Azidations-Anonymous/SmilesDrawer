@@ -37,6 +37,8 @@ The PIKAChU paper highlights two additional capabilities beyond SSSR and cis/tra
 - **PIKAChU**: Every `Atom` owns an `AtomAnnotations` collection (`pikachu/pikachu/chem/atom.py:958`-`989`). `Structure` stores global annotation defaults (`pikachu/pikachu/chem/structure.py:1413`-`1467`), enabling APIs like `structure.add_attribute(...)`, `structure.set_attribute(...)`, and reactions/utilities that rely on these custom tags (`pikachu/pikachu/reactions/functional_groups.py:221`-`236`).
 - **SmilesDrawer**: `Atom` lacks any annotation container (`src/graph/Atom.ts`) and no higher-level module exposes per-atom metadata hooks. Users cannot attach arbitrary information to the molecular graph for downstream processing or rendering.
 
+*Status: ✅ Completed – atoms expose `AtomAnnotations`, the drawer surface includes register/get/set helpers, and `showAtomAnnotations` plus formatter/styling options render those labels inline.*
+
 ### 2.2 Tasks
 1. **Design annotation container**:
    - Introduce an `AtomAnnotations` class (mirroring the MIT-licensed PIKAChU implementation) that stores a set of keys plus per-key values.
@@ -65,8 +67,7 @@ PIKAChU is MIT-licensed, so porting its annotation container and finetuning logi
 
 - [ ] Add optional finetune pass to the overlap resolver, controlled by configuration.
 - [ ] Implement clash detection, bond-path search, rotatable bond filtering, and rotation trials.
-- [ ] Provide per-atom annotation storage and structure-level helpers.
-- [ ] Ensure annotations survive cloning, graph transformations, and rendering exports.
-- [ ] Add tests/regressions covering finetune improvements and annotation APIs.
+- [x] Provide per-atom annotation storage and structure-level helpers.
+- [x] Ensure annotations survive cloning, graph transformations, and rendering exports.
+- [x] Add tests/regressions covering finetune improvements and annotation APIs.
 - [ ] Update public documentation to advertise the new parity features.
-

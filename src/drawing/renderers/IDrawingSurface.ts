@@ -15,6 +15,7 @@ interface IDrawingSurface {
   drawPoint(x: number, y: number, elementName: string): void;
   drawDebugPoint(x: number, y: number, debugText?: string, color?: string): void;
   drawDebugText(x: number, y: number, text: string): void;
+  drawAnnotation?(x: number, y: number, text: string, options?: { fontSize?: number; color?: string }): void;
   drawText(
     x: number,
     y: number,

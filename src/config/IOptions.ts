@@ -1,4 +1,10 @@
 import { AtomVisualization } from '../types/CommonTypes';
+import Vertex = require('../graph/Vertex');
+
+type AtomAnnotationFormatter = (input: {
+  vertex: Vertex;
+  annotations: Record<string, unknown>;
+}) => string | null;
 
 /**
  * Color theme for rendering molecular structures
@@ -59,6 +65,11 @@ interface IMoleculeOptions {
   overlapSensitivity: number;
   overlapResolutionIterations: number;
   finetuneOverlap: boolean;
+  showAtomAnnotations: boolean;
+  atomAnnotationColor: string;
+  atomAnnotationFontSize: number;
+  atomAnnotationOffset: number;
+  atomAnnotationFormatter?: AtomAnnotationFormatter | null;
 
   // Kamada-Kawai force layout parameters
   kkThreshold: number;
@@ -163,5 +174,6 @@ export {
   IReactionWeightOptions,
   IReactionOptions,
   IAttachedPseudoElement,
-  AttachedPseudoElements
+  AttachedPseudoElements,
+  AtomAnnotationFormatter
 };

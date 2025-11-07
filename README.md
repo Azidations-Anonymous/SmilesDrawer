@@ -293,6 +293,7 @@ The following options are available:
 | Show explicit hydrogens                                         | explicitHydrogens           | boolean                             | false         |
 | Overlap sensitivity                                             | overlapSensitivity          | number                              | 0.42          |
 | # of overlap resolution iterations                              | overlapResolutionIterations | number                              | 1             |
+| Enable atom annotation labels                                   | showAtomAnnotations         | boolean                             | false         |
 | Draw concatenated terminals and pseudo elements                 | compactDrawing              | boolean                             | true          |
 | Draw isometric SMILES if available                              | isometric                   | boolean                             | true          |
 | Debug (draw debug information to canvas)                        | debug                       | boolean                             | false         |
@@ -315,6 +316,11 @@ The default options are defined as follows:
     explicitHydrogens: false,
     overlapSensitivity: 0.42,
     overlapResolutionIterations: 1,
+    finetuneOverlap: true,
+    showAtomAnnotations: false,
+    atomAnnotationColor: '#ff4081',
+    atomAnnotationFontSize: 9,
+    atomAnnotationOffset: 12,
     compactDrawing: true,
     fontSizeLarge: 5,
     fontSizeSmall: 3,
@@ -352,6 +358,23 @@ The default options are defined as follows:
         }
     }
 };
+```
+
+### Atom annotations
+
+SmilesDrawer can persist arbitrary metadata per atom via `registerAtomAnnotation`, `setAtomAnnotation`, and `setAtomAnnotationByAtomIndex`. Set the `showAtomAnnotations` option to `true` to render those values next to each atom, and optionally provide `atomAnnotationFormatter` (or call `drawer.setAtomAnnotationFormatter`) to customize the label text. Additional knobs (`atomAnnotationColor`, `atomAnnotationFontSize`, `atomAnnotationOffset`) control the appearance.
+
+```javascript
+const drawer = new SmilesDrawer.Drawer({
+    showAtomAnnotations: true,
+    atomAnnotationFormatter: ({ annotations }) => annotations.label ? `@${annotations.label}` : null
+});
+
+drawer.registerAtomAnnotation('label', 'Ligand');
+
+SmilesDrawer.parse('c1ccccc1', function(tree) {
+    drawer.draw(tree, 'output-svg', 'light');
+});
 ```
 
 ### Usage

@@ -2,6 +2,8 @@ import Atom = require('../../graph/Atom');
 import ArrayHelper = require('../../utils/ArrayHelper');
 import Vector2 = require('../../graph/Vector2');
 import SvgDrawer = require('../SvgDrawer');
+import Vertex = require('../../graph/Vertex');
+import IDrawingSurface = require('../renderers/IDrawingSurface');
 
 class SvgVertexDrawer {
   constructor(private drawer: SvgDrawer) {}
@@ -104,6 +106,8 @@ class SvgVertexDrawer {
         }
       }
 
+      this.renderAnnotations(vertex, atom, renderer);
+
       if (debug) {
         let value = 'v: ' + vertex.id + ' ' + ArrayHelper.print(atom.ringbonds);
         renderer.drawDebugText(vertex.position.x, vertex.position.y, value);
@@ -120,6 +124,63 @@ class SvgVertexDrawer {
         renderer.drawDebugPoint(center.x, center.y, 'r: ' + rings[j].id);
       }
     }
+  }
+
+  private renderAnnotations(vertex: Vertex, atom: Atom, renderer: IDrawingSurface): void {
+    const opts = this.drawer.opts;
+    if (!opts.showAtomAnnotations || typeof renderer.drawAnnotation !== 'function') {
+      return;
+    }
+
+    const annotations = atom.annotations ? atom.annotations.toJSON() : {};
+    const keys = Object.keys(annotations);
+
+    if (keys.length === 0) {
+      return;
+    }
+
+    const formatter = opts.atomAnnotationFormatter;
+    const formatted = formatter
+      ? formatter({ vertex, annotations })
+      : this.defaultAnnotationFormatter(keys, annotations);
+
+    if (!formatted) {
+      return;
+    }
+
+    const fontSize = opts.atomAnnotationFontSize || opts.fontSizeSmall;
+    const color = opts.atomAnnotationColor;
+    const offset = opts.atomAnnotationOffset ?? 0;
+
+    renderer.drawAnnotation!(
+      vertex.position.x,
+      vertex.position.y - offset,
+      formatted,
+      {
+        fontSize,
+        color
+      }
+    );
+  }
+
+  private defaultAnnotationFormatter(keys: string[], annotations: Record<string, unknown>): string {
+    return keys
+      .sort()
+      .map((key) => {
+        const value = annotations[key];
+        if (value === null || value === undefined) {
+          return `${key}`;
+        }
+        if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+          return `${key}: ${value}`;
+        }
+        try {
+          return `${key}: ${JSON.stringify(value)}`;
+        } catch {
+          return `${key}: [object]`;
+        }
+      })
+      .join('\n');
   }
 }
 

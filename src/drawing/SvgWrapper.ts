@@ -98,6 +98,11 @@ class SvgWrapper implements IDrawingSurface {
                 .sub {
                     font: ${this.opts.fontSizeSmall}pt ${this.opts.fontFamily};
                 }
+                .annotation {
+                    font: ${this.opts.atomAnnotationFontSize}pt ${this.opts.fontFamily};
+                    text-anchor: middle;
+                    dominant-baseline: text-after-edge;
+                }
             `));
 
     if (this.svg) {
@@ -481,6 +486,30 @@ class SvgWrapper implements IDrawingSurface {
     textElem.appendChild(document.createTextNode(text));
 
     this.vertices.push(textElem);
+  }
+
+  drawAnnotation(x: number, y: number, text: string, options?: { fontSize?: number; color?: string }): void {
+    const annotation = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    const fontSize = options?.fontSize ?? this.opts.atomAnnotationFontSize;
+    annotation.setAttributeNS(null, 'x', x.toString());
+    annotation.setAttributeNS(null, 'y', y.toString());
+    annotation.setAttributeNS(null, 'class', 'annotation');
+    annotation.setAttributeNS(null, 'text-anchor', 'middle');
+    annotation.setAttributeNS(null, 'fill', options?.color ?? this.themeManager.getColor(null));
+    annotation.setAttributeNS(null, 'font-size', `${fontSize}`);
+
+    const lines = text.split('\n');
+    lines.forEach((line, index) => {
+      const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+      if (index > 0) {
+        tspan.setAttributeNS(null, 'x', x.toString());
+        tspan.setAttributeNS(null, 'dy', `${fontSize}`);
+      }
+      tspan.textContent = line;
+      annotation.appendChild(tspan);
+    });
+
+    this.vertices.push(annotation);
   }
 
 
