@@ -174,4 +174,26 @@ describe('SSSR ring detection', () => {
             'Ferrioxamine macrocycle SSSR lengths should match PIKAChU expectations'
         );
     });
+
+    it('exposes aromatic macrocycles captured via Johnson inventory', () => {
+        const molecule = prepareMolecule('c1ccc2cccc2c1');
+        const aromaticInventory = molecule.getAromaticRings();
+        const sizes = aromaticInventory.map((ring) => ring.members.length);
+
+        const sssrAromaticSizes = molecule.rings
+            .filter((ring) => molecule.isRingAromatic(ring))
+            .map((ring) => ring.members.length);
+
+        assert.ok(
+            aromaticInventory.length >= sssrAromaticSizes.length,
+            'Cycle inventory should include at least the SSSR aromatic rings'
+        );
+
+        const longestInventory = Math.max(...sizes);
+        const longestSSSR = Math.max(...sssrAromaticSizes);
+        assert.ok(
+            longestInventory > longestSSSR,
+            'Aromatic inventory should expose longer fused cycles than the SSSR basis'
+        );
+    });
 });

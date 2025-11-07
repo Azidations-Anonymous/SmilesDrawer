@@ -59,7 +59,6 @@ interface IMoleculeOptions {
   overlapSensitivity: number;
   overlapResolutionIterations: number;
   finetuneOverlap: boolean;
-  experimentalSSSR: boolean;
 
   // Kamada-Kawai force layout parameters
   kkThreshold: number;

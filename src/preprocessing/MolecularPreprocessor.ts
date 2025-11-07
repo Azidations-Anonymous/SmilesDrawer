@@ -906,6 +906,10 @@ class MolecularPreprocessor implements IMolecularData {
       return this.ringManager.isRingAromatic(ring);
   }
 
+  getAromaticRings(): Ring[] {
+      return this.ringManager.getAromaticRings();
+  }
+
   /**
    * Get the normals of an edge.
    *

@@ -1,0 +1,45 @@
+# PIKAChU Parity Tracker
+
+This tracker aggregates the open work needed to keep SmilesDrawer functionally aligned with the behaviours described in the PIKAChU paper and reference implementation. It complements the focused roadmaps in this folder (`sssr-parity-roadmap.md`, `cis-trans-parity-roadmap.md`, `rendering-parity-roadmap.md`) by listing what’s already been ported and what is still outstanding across the whole project.
+
+---
+
+## Shipped Parity Work
+
+- **Johnson cycle inventory** – `Graph.getAllCycles()` now consumes the TypeScript port of Johnson’s algorithm (`src/algorithms/JohnsonCycles.ts`), giving downstream systems deterministic cycle catalogues.
+- **SSSR pipeline overhaul** – `src/algorithms/SSSR.ts` mirrors the set-based bonding logic, integer candidate metrics, and ordered ring output used in `pikachu/drawing/sssr.py`. Tests in `test/sssr.js` enforce parity on fused and macrocyclic systems.
+- **Legacy SSSR switches removed** – the experimental toggle is gone, and `SSSR.getSSSR` now mirrors PIKAChU’s “allow one extra candidate” guard so parity behaviour is always on by default.
+- **Cis/trans metadata and correction** – `src/preprocessing/CisTransManager.ts` derives `cisTransNeighbours` from the SMILES markers and repairs misdrawn stereobonds post-layout, matching `structure.find_double_bond_sequences` + `_fix_chiral_bonds_in_rings`.
+- **Overlap finetuning pass** – `src/preprocessing/OverlapResolutionManager.ts` implements the optional `_finetune_overlap_resolution` loop, gated by the new `finetuneOverlap` option (`src/config/IOptions.ts`).
+- **Atom annotation storage** – Atoms own an `AtomAnnotations` container (`src/graph/AtomAnnotations.ts`), and the preprocessor/drawers expose register/get/set helpers so callers can attach metadata like in PIKAChU’s `Structure`.
+- **Aromatic cycle inventory** – `RingManager.getAromaticRings()` surfaces Johnson-derived aromatic cycles (including macrocycles outside the SSSR basis) so both the canvas and SVG drawers render the same aromaticity markers PIKAChU exposes.
+
+---
+
+## Outstanding Items
+
+### SSSR & Aromaticity
+
+1. **Documentation/tests** – Update developer docs to describe the new SSSR stack (and removal of the experimental flag) plus add regression fixtures for the paper’s macrocycle example (Additional file 2 Fig. S2) so we lock the behaviour down.
+
+### Rendering & Annotation UX
+
+1. **Visual hooks for annotations** – Decide how annotations influence rendering (e.g. callbacks, label layers, highlight styles) and plumb the data from `Drawer.getPositionData()` through the SVG/canvas drawers.
+2. **Overlap finetune safeguards** – Add max-iteration/timeout guards plus unit tests showing the finetune loop reduces the overlap score on the Fig. 2B clash examples.
+
+### Cis/Trans Follow-ups
+
+1. **Strict-mode or warnings** – Mirror PIKAChU’s `strict_mode` handling so unresolved stereobonds raise surfaced warnings/errors instead of silently failing.
+2. **Regression depth** – Extend `test/cis-trans.js` with macrocyclic / multi-stereobond fixtures from Fig. S3 to ensure the correction pass scales beyond the current three cases.
+
+### Documentation & Release Notes
+
+- Add a parity section to `CHANGELOG.md` summarising the imported behaviours, option additions (`finetuneOverlap`, annotation APIs), and any breaking changes so downstream users know what to expect.
+
+---
+
+## Immediate Next Steps
+
+1. Finish the SSSR clean-up (termination guard + experimental flag removal) and wire the cycle inventory into aromaticity consumers.
+2. Add the missing regression fixtures for macrocycle rings and stereobond sequences so future refactors can’t regress the imported behaviour.
+3. Design the annotation rendering hooks, then decide whether they land alongside a `strict_mode` option for stereochemistry fixes or in a separate UI-focused iteration.
