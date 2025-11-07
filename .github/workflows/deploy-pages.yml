@@ -29,6 +29,9 @@ jobs:
         with:
           node-version: 20
 
+      - name: Install dependencies
+        run: npm ci
+
       - name: Build playground + docs bundle
         run: npm run build:pages
 
