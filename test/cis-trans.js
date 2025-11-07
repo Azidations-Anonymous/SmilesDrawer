@@ -66,6 +66,22 @@ function measuredOrientation(graph) {
     return placementA === placementB ? 'cis' : 'trans';
 }
 
+function pointInPolygon(point, polygon) {
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i].x;
+        const yi = polygon[i].y;
+        const xj = polygon[j].x;
+        const yj = polygon[j].y;
+        const intersects = ((yi > point.y) !== (yj > point.y)) &&
+            (point.x < (xj - xi) * (point.y - yi) / ((yj - yi) || Number.EPSILON) + xi);
+        if (intersects) {
+            inside = !inside;
+        }
+    }
+    return inside;
+}
+
 describe('Cis/trans stereobond corrections', () => {
     it('keeps trans substituents on opposite sides for linear chains', () => {
         const graph = prepareGraph('F/C=C/F');
@@ -80,5 +96,30 @@ describe('Cis/trans stereobond corrections', () => {
     it('resolves ring-embedded trans bonds before overlap resolution', () => {
         const graph = prepareGraph('C1/C=C/CC=C\\1');
         assert.equal(measuredOrientation(graph), 'trans');
+    });
+
+    it('keeps the allyl substituent inside the macrocycle for the Figure S2 molecule', () => {
+        const smiles = 'C[C@H]1C[C@@]23C(=O)/C(=C\\4/C=C/C(=C/[C@@H](C/C=C/C(=C/[C@]2(C=C1C)C)/C)O)/CO4)/C(=O)O3';
+        const preprocessor = new MolecularPreprocessor({});
+        preprocessor.initDraw(Parser.parse(smiles, {}), 'light', false, []);
+        preprocessor.processGraph();
+
+        const graph = preprocessor.graph;
+        const largestRing = preprocessor.rings.reduce((acc, ring) => {
+            if (!acc) {
+                return ring;
+            }
+            return ring.members.length > acc.members.length ? ring : acc;
+        }, null);
+
+        assert.ok(largestRing, 'expected at least one ring in the macrocycle');
+
+        const polygon = largestRing.members.map((id) => graph.vertices[id].position);
+        const target = graph.vertices[29];
+        assert.ok(target, 'could not locate the allyl carbon attached to the ether bridge');
+        assert.ok(
+            pointInPolygon(target.position, polygon),
+            'allyl bridge should remain inside the macrocycle'
+        );
     });
 });
