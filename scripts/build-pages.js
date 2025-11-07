@@ -3,12 +3,17 @@
 
 const fs = require('fs');
 const path = require('path');
+const { spawn } = require('child_process');
 
 const rootDir = path.resolve(__dirname, '..');
-const docsDir = path.join(rootDir, 'docs');
 const playgroundSourceDir = path.join(rootDir, 'example', 'smilesdrawer.surge.sh');
 const pagesDir = path.join(rootDir, 'pages');
 const playgroundTargetDir = path.join(pagesDir, 'playground');
+const docsOutputDir = path.join(pagesDir, 'docs');
+const distDir = path.join(rootDir, 'dist');
+const distBundle = path.join(distDir, 'smiles-drawer.js');
+const distBundleMin = path.join(distDir, 'smiles-drawer.min.js');
+const distBundleMap = path.join(distDir, 'smiles-drawer.min.js.map');
 
 async function pathExists(targetPath) {
     try {
@@ -42,6 +47,33 @@ async function copyRecursive(src, dest) {
 
     await fs.promises.mkdir(path.dirname(dest), { recursive: true });
     await fs.promises.copyFile(src, dest);
+}
+
+function runCommand(command, args, options = {}) {
+    const spawnOptions = {
+        cwd: rootDir,
+        stdio: 'inherit',
+        ...options,
+    };
+
+    if (options.env) {
+        spawnOptions.env = { ...process.env, ...options.env };
+    } else {
+        spawnOptions.env = process.env;
+    }
+
+    return new Promise((resolve, reject) => {
+        const child = spawn(command, args, spawnOptions);
+
+        child.on('close', (code) => {
+            if (code !== 0) {
+                reject(new Error(`${command} ${args.join(' ')} exited with code ${code}`));
+                return;
+            }
+
+            resolve();
+        });
+    });
 }
 
 function buildLandingPage() {
@@ -131,27 +163,33 @@ function buildLandingPage() {
 }
 
 async function main() {
-    const hasDocs = await pathExists(docsDir);
-    if (!hasDocs) {
-        console.error('Cannot find docs directory at %s. Please run the documentation build first.', docsDir);
-        process.exit(1);
-    }
+    const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 
-    const hasPlayground = await pathExists(path.join(playgroundSourceDir, 'playground.html'));
-    if (!hasPlayground) {
-        console.error('Cannot find playground.html at %s.', playgroundSourceDir);
-        process.exit(1);
-    }
+    console.log('Building distribution bundle via gulp build …');
+    await runCommand(npxCmd, ['gulp', 'build']);
 
     await emptyDir(pagesDir);
 
-    console.log('Copying docs into pages/docs …');
-    await copyRecursive(docsDir, path.join(pagesDir, 'docs'));
+    console.log('Building documentation via gulp doc …');
+    await runCommand(npxCmd, ['gulp', 'doc'], {
+        env: {
+            JSDOC_DEST: docsOutputDir,
+        },
+    });
+    console.log('Docs generated in %s', docsOutputDir);
 
     console.log('Copying playground assets …');
     await fs.promises.mkdir(playgroundTargetDir, { recursive: true });
     await copyRecursive(path.join(playgroundSourceDir, 'playground.html'), path.join(playgroundTargetDir, 'index.html'));
-    await copyRecursive(path.join(playgroundSourceDir, 'smiles-drawer.js'), path.join(playgroundTargetDir, 'smiles-drawer.js'));
+    await copyRecursive(distBundle, path.join(playgroundTargetDir, 'smiles-drawer.js'));
+
+    if (await pathExists(distBundleMin)) {
+        await copyRecursive(distBundleMin, path.join(playgroundTargetDir, 'smiles-drawer.min.js'));
+    }
+
+    if (await pathExists(distBundleMap)) {
+        await copyRecursive(distBundleMap, path.join(playgroundTargetDir, 'smiles-drawer.min.js.map'));
+    }
 
     console.log('Writing landing page …');
     await fs.promises.writeFile(path.join(pagesDir, 'index.html'), buildLandingPage(), 'utf8');

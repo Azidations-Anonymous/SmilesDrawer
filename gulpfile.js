@@ -94,10 +94,25 @@ gulp.task("watch", function() {
 
 gulp.task("doc", function(cb) {
   return new Promise(function(resolve, reject) {
-    var config = require("./jsdocConfig.json");
+    var baseConfig = require("./jsdocConfig.json");
+    var config = JSON.parse(JSON.stringify(baseConfig));
+    if (!config.opts) {
+      config.opts = {};
+    }
+    if (process.env.JSDOC_DEST) {
+      config.opts.destination = process.env.JSDOC_DEST;
+    }
+    var docSources = [
+      "README.md",
+      "./src/*.js",
+      "./debug/generate-json.js",
+      "./test/generate-json.js",
+      "./test/regression-runner.js"
+    ];
     gulp
-      .src(["README.md", "./src/*.js", "./test/generate-json.js", "./test/regression-runner.js"], {
-        read: false
+      .src(docSources, {
+        read: false,
+        allowEmpty: true
       })
       .pipe(jsdoc(config, cb));
     resolve();

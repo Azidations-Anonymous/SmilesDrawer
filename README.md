@@ -134,6 +134,8 @@ This clears and recreates `pages/` with:
 - `pages/playground/` – a direct copy of `example/smilesdrawer.surge.sh/`
 - `pages/docs/` – the current JSDoc output
 
+Behind the scenes the command runs `gulp build` (distribution bundle) and `gulp doc` (JSDoc) before writing everything into `pages/`, ensuring the published assets are always fresh.
+
 Commit/publish the `pages/` directory to whichever branch or folder GitHub Pages consumes (e.g. `main` + `/pages` via GitHub Actions) to update the public site.
 
 ### Testing
