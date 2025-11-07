@@ -47,7 +47,6 @@ class BridgedRingHandler {
     }
 
     createBridgedRing(ringIds: number[], sourceVertexId: number): Ring {
-        console.log('[createBridgedRing] start', { ringIds, sourceVertexId });
         let ringMembers = new Set();
         let vertices = new Set();
         let neighbours = new Set();
