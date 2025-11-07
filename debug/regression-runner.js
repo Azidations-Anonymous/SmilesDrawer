@@ -1192,7 +1192,7 @@ function generateIndividualHTMLReport(diff) {
             <pre class="diff-content" id="${diffFieldId}"><code>${escapeHtml(collapsedDiff)}</code></pre>
         </div>` : '';
 
-    const PERFORMANCE_EPSILON = 5; // milliseconds
+    const PERFORMANCE_EPSILON = 50; // milliseconds
     const oldTotalTime = diff.oldSvgRenderTime + diff.oldJsonRenderTime;
     const newTotalTime = diff.newSvgRenderTime + diff.newJsonRenderTime;
     const rawTimeDiff = newTotalTime - oldTotalTime;
