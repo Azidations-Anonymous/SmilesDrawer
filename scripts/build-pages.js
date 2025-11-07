@@ -14,6 +14,7 @@ const distDir = path.join(rootDir, 'dist');
 const distBundle = path.join(distDir, 'smiles-drawer.js');
 const distBundleMin = path.join(distDir, 'smiles-drawer.min.js');
 const distBundleMap = path.join(distDir, 'smiles-drawer.min.js.map');
+const generatedDocDir = path.join(rootDir, 'doc');
 
 async function pathExists(targetPath) {
     try {
@@ -174,12 +175,11 @@ async function main() {
     await emptyDir(pagesDir);
 
     console.log('Building documentation via gulp doc …');
-    await runCommand(npxCmd, ['gulp', 'doc'], {
-        env: {
-            JSDOC_DEST: docsOutputDir,
-        },
-    });
-    console.log('Docs generated in %s', docsOutputDir);
+    await runCommand(npxCmd, ['gulp', 'doc']);
+    console.log('Docs generated in %s', generatedDocDir);
+
+    console.log('Copying documentation into GitHub Pages bundle …');
+    await copyRecursive(generatedDocDir, docsOutputDir);
 
     console.log('Copying playground assets …');
     await fs.promises.mkdir(playgroundTargetDir, { recursive: true });

@@ -35,6 +35,11 @@ jobs:
       - name: Build playground + docs bundle
         run: npm run build:pages
 
+      - name: Copy docs into Pages bundle
+        run: |
+          rm -rf pages/docs
+          cp -R doc pages/docs
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
