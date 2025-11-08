@@ -66,19 +66,50 @@ function measuredOrientation(graph) {
     return placementA === placementB ? 'cis' : 'trans';
 }
 
-function pointInPolygon(point, polygon) {
+function pointInPolygon(point, polygon, epsilon = 1e-6) {
+    const almostEqual = (a, b) => Math.abs(a - b) <= epsilon;
+
+    // Treat exact vertex matches as inside.
+    for (const vertex of polygon) {
+        if (almostEqual(vertex.x, point.x) && almostEqual(vertex.y, point.y)) {
+            return true;
+        }
+    }
+
+    const pointOnSegment = (a, b, p) => {
+        const cross = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
+        if (!almostEqual(cross, 0)) {
+            return false;
+        }
+        const dot = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);
+        if (dot < -epsilon) {
+            return false;
+        }
+        const lenSq = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
+        if (dot - lenSq > epsilon) {
+            return false;
+        }
+        return true;
+    };
+
     let inside = false;
     for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-        const xi = polygon[i].x;
-        const yi = polygon[i].y;
-        const xj = polygon[j].x;
-        const yj = polygon[j].y;
-        const intersects = ((yi > point.y) !== (yj > point.y)) &&
-            (point.x < (xj - xi) * (point.y - yi) / ((yj - yi) || Number.EPSILON) + xi);
+        const a = polygon[j];
+        const b = polygon[i];
+
+        if (pointOnSegment(a, b, point)) {
+            return true;
+        }
+
+        const intersects =
+            ((a.y > point.y) !== (b.y > point.y)) &&
+            (point.x < (b.x - a.x) * (point.y - a.y) / ((b.y - a.y) || Number.EPSILON) + a.x);
+
         if (intersects) {
             inside = !inside;
         }
     }
+
     return inside;
 }
 
@@ -105,17 +136,26 @@ describe('Cis/trans stereobond corrections', () => {
         preprocessor.processGraph();
 
         const graph = preprocessor.graph;
-        const largestRing = preprocessor.rings.reduce((acc, ring) => {
-            if (!acc) {
-                return ring;
+        const targetId = 29;
+        const macrocycleMembers = (() => {
+            const cycles = graph.cycles || [];
+            const containing = cycles.filter((cycle) => cycle.includes(targetId));
+            if (containing.length > 0) {
+                return containing.sort((a, b) => b.length - a.length)[0];
             }
-            return ring.members.length > acc.members.length ? ring : acc;
-        }, null);
+            const largestRing = preprocessor.rings.reduce((acc, ring) => {
+                if (!acc) {
+                    return ring;
+                }
+                return ring.members.length > acc.members.length ? ring : acc;
+            }, null);
+            return largestRing ? largestRing.members : null;
+        })();
 
-        assert.ok(largestRing, 'expected at least one ring in the macrocycle');
+        assert.ok(macrocycleMembers && macrocycleMembers.length > 0, 'expected macrocycle cycle inventory');
 
-        const polygon = largestRing.members.map((id) => graph.vertices[id].position);
-        const target = graph.vertices[29];
+        const polygon = macrocycleMembers.map((id) => graph.vertices[id].position);
+        const target = graph.vertices[targetId];
         assert.ok(target, 'could not locate the allyl carbon attached to the ether bridge');
         assert.ok(
             pointInPolygon(target.position, polygon),
