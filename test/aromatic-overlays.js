@@ -39,4 +39,9 @@ describe('Aromatic overlay rendering', () => {
       assert(inventorySets.has(key), 'overlay must correspond to a Johnson inventory cycle');
     }
   });
+
+  it('never draws more aromatic overlays than canonical rings for the macrocycle regression molecule', () => {
+    const diagnostics = buildDiagnostics(FIGURE_S2_SMILES);
+    assert(diagnostics.aromaticRings.length <= diagnostics.ringCount, 'overlay count should never exceed canonical ring count');
+  });
 });
