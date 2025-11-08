@@ -177,4 +177,23 @@ describe('Cis/trans stereobond corrections', () => {
         assert.equal(JSON.stringify(edge.chiralDict || {}), originalDict, 'chiral dict should persist across rebuilds');
         assert.equal(JSON.stringify(edge.cisTransNeighbours || {}), originalDict, 'cisTransNeighbours should be restored from persisted chiral dict');
     });
+
+    it('stabilises long alternating sequences', () => {
+        const smiles = 'F/C=C/C=C/C=C/C=F';
+        const preprocessor = new MolecularPreprocessor({});
+        preprocessor.initDraw(Parser.parse(smiles, {}), 'light', false, []);
+        preprocessor.processGraph();
+
+        const diagnostics = collectCisTransDiagnostics(preprocessor);
+        const sequenceIds = new Set();
+        for (const entry of diagnostics) {
+            assert.equal(entry.isDrawnCorrectly, true, `sequence bond ${entry.edgeId} should be corrected`);
+            assert.equal(entry.evaluations[0].actual, entry.evaluations[0].expected, 'orientation should match expectation');
+            if (entry.sequenceId !== null && entry.sequenceId !== undefined) {
+                sequenceIds.add(entry.sequenceId);
+            }
+        }
+
+        assert(sequenceIds.size <= 1, 'all alternating bonds should share the same sequence id');
+    });
 });
