@@ -315,6 +315,7 @@ let failEarly = false;
 let noVisual = false;
 let bisectMode = false;
 let bisectSmiles = '';
+let singleSmiles = null;
 let filterPattern = null;
 let datasetName = null;
 let generateImages = false;
@@ -377,6 +378,15 @@ for (let i = 0; i < args.length; i++) {
         continue;
     }
 
+    if (arg === '-smiles') {
+        if (i + 1 >= args.length) {
+            console.error('ERROR: -smiles flag requires a SMILES string argument');
+            process.exit(2);
+        }
+        singleSmiles = args[++i];
+        continue;
+    }
+
     if (arg.startsWith('-')) {
         console.error('ERROR: Unknown flag: ' + arg);
         process.exit(2);
@@ -391,14 +401,15 @@ const extraArg = positionalArgs[2];
 
 if (!oldCodePath || !newCodePath) {
     console.error('ERROR: Missing arguments');
-    console.error('Usage: node regression-runner.js <old-code-path> <new-code-path> [-all] [-failearly] [-novisual] [-filter "<regex>"] [-json] [-image] [-bisect "<smiles>"]');
+console.error('Usage: node regression-runner.js <old-code-path> <new-code-path> [-all] [-failearly] [-novisual] [-filter "<regex>"] [-json] [-image] [-bisect "<smiles>"] [-smiles "<smiles>"]');
     console.error('  -all         Test all datasets (default: fastregression only)');
     console.error('  -failearly   Stop at first difference (default: continue)');
     console.error('  -novisual    Skip SVG generation (default: generate visual comparisons)');
     console.error('  -filter      Only test SMILES matching the given regex (JavaScript syntax)');
-    console.error('  -json        Save JSON diff reports (default: skip writing JSON files)');
-    console.error('  -image       Save PNG snapshots for changed molecules (default: skip PNG files)');
-    console.error('  -bisect      Test single SMILES and generate comparison report (returns 0=match, 1=difference)');
+console.error('  -json        Save JSON diff reports (default: skip writing JSON files)');
+console.error('  -image       Save PNG snapshots for changed molecules (default: skip PNG files)');
+console.error('  -bisect      Test single SMILES and generate comparison report (returns 0=match, 1=difference)');
+console.error('  -smiles      Run regression on a single SMILES (regular mode, no HTML report)');
     console.error('');
     console.error('Example: node regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer');
     console.error('Example: node regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer -all -failearly');
@@ -408,6 +419,11 @@ if (!oldCodePath || !newCodePath) {
 
 if (extraArg) {
     console.error('ERROR: Unexpected argument: ' + extraArg);
+    process.exit(2);
+}
+
+if (singleSmiles && bisectMode) {
+    console.error('ERROR: -smiles cannot be combined with -bisect');
     process.exit(2);
 }
 
@@ -600,7 +616,13 @@ if (bisectMode) {
 
 // Regular regression test mode
 let datasets;
-if (allMode) {
+if (singleSmiles) {
+    datasets = [{
+        name: 'single-smiles',
+        entries: [singleSmiles],
+        source: 'flag'
+    }];
+} else if (allMode) {
     datasets = fullDatasets;
 } else if (datasetName) {
     const jsonDatasets = collectJsonDatasets(datasetName);

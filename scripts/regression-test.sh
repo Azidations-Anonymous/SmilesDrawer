@@ -7,6 +7,7 @@ declare -a FLAG_ARGS=()
 BISECT_MODE="NO"
 BISECT_SMILES=""
 ALL_MODE="NO"
+SINGLE_SMILES=""
 FAIL_EARLY="NO"
 NO_VISUAL="NO"
 FILTER_PATTERN=""
@@ -62,6 +63,16 @@ while [[ $# -gt 0 ]]; do
             FLAG_ARGS+=("$1")
             shift
             ;;
+        -smiles)
+            shift
+            if [[ $# -eq 0 ]]; then
+                echo "ERROR: -smiles flag requires a SMILES string argument"
+                exit 1
+            fi
+            SINGLE_SMILES="$1"
+            FLAG_ARGS+=("-smiles" "$SINGLE_SMILES")
+            shift
+            ;;
         -bisect)
             BISECT_MODE="YES"
             shift
@@ -83,6 +94,11 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+if [ "$BISECT_MODE" = "YES" ] && [ -n "$SINGLE_SMILES" ]; then
+    echo "ERROR: -smiles cannot be combined with -bisect"
+    exit 1
+fi
 
 if [ "$FILTER_ENABLED" = "YES" ]; then
     FLAG_ARGS+=("-filter" "$FILTER_PATTERN")
@@ -160,7 +176,9 @@ if [ "$BISECT_MODE" = "YES" ]; then
         echo -e "\033[93mFILTER:\033[0m ${FILTER_PATTERN} (ignored in bisect mode)"
     fi
 else
-    if [ -n "$DATASET_PATTERN" ]; then
+    if [ -n "$SINGLE_SMILES" ]; then
+        MODE_DESCRIPTION="Single SMILES"
+    elif [ -n "$DATASET_PATTERN" ]; then
         MODE_DESCRIPTION="DATASET pattern (${DATASET_PATTERN})"
     else
         MODE_DESCRIPTION=$([ "$ALL_MODE" = "YES" ] && echo "FULL (all datasets)" || echo "FAST (fastregression only)")
