@@ -11,6 +11,26 @@ interface SideResolution {
     partnerSymbol: DirectionalBond | null;
 }
 
+type OrientationActual = 'cis' | 'trans' | 'collinear' | 'undrawn';
+
+interface BondOrientationEvaluation {
+    leftAtomId: number;
+    rightAtomId: number;
+    expected: CisTransOrientation;
+    actual: OrientationActual;
+}
+
+export interface BondOrientationAnalysis {
+    edgeId: number | null;
+    isCorrect: boolean;
+    evaluations: BondOrientationEvaluation[];
+}
+
+interface RingFlipPlan {
+    central: Vertex;
+    flanking: [Vertex, Vertex];
+}
+
 class CisTransManager {
     private drawer: MolecularPreprocessor;
     private fixedStereoBonds: Set<number>;
@@ -31,6 +51,7 @@ class CisTransManager {
         for (const edge of this.drawer.graph.edges) {
             edge.cisTrans = false;
             edge.cisTransNeighbours = {};
+            edge.chiralDict = {};
         }
 
         for (const edge of this.drawer.graph.edges) {
@@ -41,7 +62,7 @@ class CisTransManager {
             const mapping = this.resolveCisTrans(edge);
             if (mapping && Object.keys(mapping).length > 0) {
                 edge.cisTrans = true;
-                edge.cisTransNeighbours = mapping;
+                this.assignChiralMetadata(edge, mapping);
             }
         }
     }
@@ -297,14 +318,20 @@ class CisTransManager {
         return null;
     }
 
-    private isBondDrawnCorrectly(edge: Edge): boolean {
+    public getBondOrientationAnalysis(edge: Edge): BondOrientationAnalysis | null {
+        return this.analyzeBondOrientation(edge);
+    }
+
+    private analyzeBondOrientation(edge: Edge): BondOrientationAnalysis | null {
         if (!this.drawer.graph) {
-            return true;
+            return null;
         }
 
         const vertexA = this.drawer.graph.vertices[edge.sourceId];
         const vertexB = this.drawer.graph.vertices[edge.targetId];
         const evaluatedPairs = new Set<string>();
+        const evaluations: BondOrientationEvaluation[] = [];
+        let isCorrect = true;
 
         for (const [sourceKey, mapping] of Object.entries(edge.cisTransNeighbours)) {
             const sourceId = Number(sourceKey);
@@ -338,6 +365,12 @@ class CisTransManager {
                 }
 
                 if (!leftVertex.value.isDrawn || !rightVertex.value.isDrawn) {
+                    evaluations.push({
+                        leftAtomId: leftVertex.id!,
+                        rightAtomId: rightVertex.id!,
+                        expected: orientation,
+                        actual: 'undrawn'
+                    });
                     continue;
                 }
 
@@ -346,18 +379,41 @@ class CisTransManager {
                 const placementLeft = this.getSideOfLine(vertexA.position, vertexB.position, leftVertex.position);
                 const placementRight = this.getSideOfLine(vertexA.position, vertexB.position, rightVertex.position);
 
-                if (placementLeft === 0 || placementRight === 0) {
-                    continue;
-                }
-
                 const sameSide = placementLeft === placementRight;
-                if ((orientation === 'cis' && !sameSide) || (orientation === 'trans' && sameSide)) {
-                    return false;
+                let actual: OrientationActual;
+                if (placementLeft === 0 || placementRight === 0) {
+                    actual = 'collinear';
+                } else {
+                    actual = sameSide ? 'cis' : 'trans';
+                }
+                const matches = (orientation === 'cis' && sameSide) || (orientation === 'trans' && !sameSide);
+
+                evaluations.push({
+                    leftAtomId: leftVertex.id!,
+                    rightAtomId: rightVertex.id!,
+                    expected: orientation,
+                    actual
+                });
+
+                if (!matches) {
+                    isCorrect = false;
                 }
             }
         }
 
-        return true;
+        return {
+            edgeId: edge.id,
+            isCorrect,
+            evaluations
+        };
+    }
+
+    private isBondDrawnCorrectly(edge: Edge): boolean {
+        const analysis = this.analyzeBondOrientation(edge);
+        if (!analysis) {
+            return true;
+        }
+        return analysis.isCorrect;
     }
 
     private getSideOfLine(a: Vector2, b: Vector2, point: Vector2): number {
@@ -407,26 +463,16 @@ class CisTransManager {
             vertexB.value.rings.length > 0 &&
             this.drawer.areVerticesInSameRing(vertexA, vertexB);
 
+        let corrected = false;
         if (inSharedRing) {
-            this.flipBondInRing(edge);
+            corrected = this.flipBondInRing(edge);
         } else {
-            const parent = vertexA.value.rings.length > 0 ? vertexB : vertexA;
-            const root = parent === vertexA ? vertexB : vertexA;
-            const neighbours = this.getDrawnNeighbours(parent, new Set([root.id]));
+            corrected = this.flipBondOutsideRing(edge, vertexA, vertexB);
+        }
 
-            if (neighbours.length === 0) {
-                return;
-            }
-
-            if (neighbours.length === 1) {
-                this.flipSubtree(neighbours[0], root, parent);
-            } else if (neighbours.length === 2 && this.shareRing(neighbours[0], neighbours[1])) {
-                this.flipSubtree(neighbours[0], root, parent);
-            } else {
-                for (const neighbour of neighbours) {
-                    this.flipSubtree(neighbour, root, parent);
-                }
-            }
+        if (!corrected) {
+            console.warn('Warning! Cis/trans stereochemistry could not be resolved for bond ' + edge.id);
+            return;
         }
 
         this.fixedStereoBonds.add(edge.id);
@@ -453,80 +499,26 @@ class CisTransManager {
         return false;
     }
 
-    private flipBondInRing(edge: Edge): void {
-        if (!this.drawer.graph) {
-            return;
+    private flipBondOutsideRing(edge: Edge, vertexA: Vertex, vertexB: Vertex): boolean {
+        const parent = vertexA.value.rings.length > 0 ? vertexB : vertexA;
+        const root = parent === vertexA ? vertexB : vertexA;
+        const neighbours = this.getDrawnNeighbours(parent, new Set([root.id]));
+
+        if (neighbours.length === 0) {
+            return false;
         }
 
-        const atom1 = this.drawer.graph.vertices[edge.sourceId];
-        const atom2 = this.drawer.graph.vertices[edge.targetId];
-
-        const neighbours1 = this.getDrawnNeighbours(atom1, new Set([atom2.id]));
-        const neighbours2 = this.getDrawnNeighbours(atom2, new Set([atom1.id]));
-
-        let central: Vertex | null = null;
-        let flanking: [Vertex, Vertex] | null = null;
-        let resolvable = true;
-
-        const neighbours1Adjacent = neighbours1.some((n) => this.isVertexAdjacentToStereoBond(n, edge.id));
-        const neighbours2Adjacent = neighbours2.some((n) => this.isVertexAdjacentToStereoBond(n, edge.id));
-        const neighbours1AdjacentFixed = neighbours1.some((n) => this.isVertexAdjacentToStereoBond(n, edge.id, true));
-        const neighbours2AdjacentFixed = neighbours2.some((n) => this.isVertexAdjacentToStereoBond(n, edge.id, true));
-
-        if (!neighbours1Adjacent && !neighbours2Adjacent) {
-            const branch = this.findRingBranchToFlip(edge, neighbours1, neighbours2);
-            central = branch?.central ?? null;
-            flanking = branch?.flanking ?? null;
-            if (!central || !flanking) {
-                resolvable = false;
-            }
-        } else if (neighbours1Adjacent && !neighbours2Adjacent) {
-            const ringNeighbour = this.findRingNeighbour(atom2, edge);
-            if (ringNeighbour) {
-                central = atom2;
-                flanking = [atom1, ringNeighbour];
-            } else {
-                resolvable = false;
-            }
-        } else if (neighbours2Adjacent && !neighbours1Adjacent) {
-            const ringNeighbour = this.findRingNeighbour(atom1, edge);
-            if (ringNeighbour) {
-                central = atom1;
-                flanking = [atom2, ringNeighbour];
-            } else {
-                resolvable = false;
-            }
+        if (neighbours.length === 1) {
+            this.flipSubtree(neighbours[0], root, parent);
+            return true;
+        } else if (neighbours.length === 2 && this.shareRing(neighbours[0], neighbours[1])) {
+            this.flipSubtree(neighbours[0], root, parent);
+            return true;
         } else {
-            if (neighbours1AdjacentFixed && !neighbours2AdjacentFixed) {
-                const ringNeighbour = this.findRingNeighbour(atom2, edge);
-                if (ringNeighbour) {
-                    central = atom2;
-                    flanking = [atom1, ringNeighbour];
-                } else {
-                    resolvable = false;
-                }
-            } else if (neighbours2AdjacentFixed && !neighbours1AdjacentFixed) {
-                const ringNeighbour = this.findRingNeighbour(atom1, edge);
-                if (ringNeighbour) {
-                    central = atom1;
-                    flanking = [atom2, ringNeighbour];
-                } else {
-                    resolvable = false;
-                }
-            } else {
-                const branch = this.findRingBranchToFlip(edge, neighbours1, neighbours2);
-                central = branch?.central ?? null;
-                flanking = branch?.flanking ?? null;
-                if (!central || !flanking) {
-                    resolvable = false;
-                }
+            for (const neighbour of neighbours) {
+                this.flipSubtree(neighbour, root, parent);
             }
-        }
-
-        if (resolvable && central && flanking) {
-            this.flipSubtree(central, flanking[0], flanking[1]);
-        } else {
-            console.warn('Warning! Cis/trans stereochemistry of cyclic system incorrectly drawn.');
+            return true;
         }
     }
 
@@ -698,6 +690,199 @@ class CisTransManager {
                 }
             }
         }
+    }
+
+    private flipBondInRing(edge: Edge): boolean {
+        if (!this.drawer.graph) {
+            return false;
+        }
+
+        const atom1 = this.drawer.graph.vertices[edge.sourceId];
+        const atom2 = this.drawer.graph.vertices[edge.targetId];
+
+        const neighbours1 = this.getDrawnNeighbours(atom1, new Set([atom2.id]));
+        const neighbours2 = this.getDrawnNeighbours(atom2, new Set([atom1.id]));
+
+        const neighbours1Adjacent = neighbours1.some((n) => this.isVertexAdjacentToStereoBond(n, edge.id));
+        const neighbours2Adjacent = neighbours2.some((n) => this.isVertexAdjacentToStereoBond(n, edge.id));
+        const neighbours1AdjacentFixed = neighbours1.some((n) => this.isVertexAdjacentToStereoBond(n, edge.id, true));
+        const neighbours2AdjacentFixed = neighbours2.some((n) => this.isVertexAdjacentToStereoBond(n, edge.id, true));
+
+        const plans = this.buildRingFlipPlans(
+            edge,
+            neighbours1,
+            neighbours2,
+            neighbours1Adjacent,
+            neighbours2Adjacent,
+            neighbours1AdjacentFixed,
+            neighbours2AdjacentFixed
+        );
+
+        if (plans.length === 0) {
+            console.warn('Warning! Cis/trans stereochemistry of cyclic system incorrectly drawn.');
+            return false;
+        }
+
+        for (const plan of plans) {
+            this.flipSubtree(plan.central, plan.flanking[0], plan.flanking[1]);
+            if (this.isBondDrawnCorrectly(edge)) {
+                return true;
+            }
+            // Revert attempt
+            this.flipSubtree(plan.central, plan.flanking[0], plan.flanking[1]);
+        }
+
+        console.warn('Warning! Cis/trans stereochemistry of cyclic system incorrectly drawn.');
+        return false;
+    }
+
+    private buildRingFlipPlans(
+        edge: Edge,
+        neighbours1: Vertex[],
+        neighbours2: Vertex[],
+        neighbours1Adjacent: boolean,
+        neighbours2Adjacent: boolean,
+        neighbours1AdjacentFixed: boolean,
+        neighbours2AdjacentFixed: boolean
+    ): RingFlipPlan[] {
+        const plans: RingFlipPlan[] = [];
+        const primary = this.resolvePrimaryRingPlan(
+            edge,
+            neighbours1,
+            neighbours2,
+            neighbours1Adjacent,
+            neighbours2Adjacent,
+            neighbours1AdjacentFixed,
+            neighbours2AdjacentFixed
+        );
+        if (primary) {
+            plans.push(primary);
+        }
+
+        const fallbackPlans = this.generateFallbackRingPlans(edge);
+        for (const plan of fallbackPlans) {
+            if (!plans.some((existing) => this.areRingPlansEquivalent(existing, plan))) {
+                plans.push(plan);
+            }
+        }
+
+        return plans;
+    }
+
+    private resolvePrimaryRingPlan(
+        edge: Edge,
+        neighbours1: Vertex[],
+        neighbours2: Vertex[],
+        neighbours1Adjacent: boolean,
+        neighbours2Adjacent: boolean,
+        neighbours1AdjacentFixed: boolean,
+        neighbours2AdjacentFixed: boolean
+    ): RingFlipPlan | null {
+        if (!this.drawer.graph) {
+            return null;
+        }
+
+        const atom1 = this.drawer.graph.vertices[edge.sourceId];
+        const atom2 = this.drawer.graph.vertices[edge.targetId];
+
+        if (!neighbours1Adjacent && !neighbours2Adjacent) {
+            const branch = this.findRingBranchToFlip(edge, neighbours1, neighbours2);
+            if (branch?.central && branch.flanking) {
+                return { central: branch.central, flanking: branch.flanking };
+            }
+            return null;
+        }
+
+        if (neighbours1Adjacent && !neighbours2Adjacent) {
+            const ringNeighbour = this.findRingNeighbour(atom2, edge);
+            if (ringNeighbour) {
+                return { central: atom2, flanking: [atom1, ringNeighbour] };
+            }
+            return null;
+        }
+
+        if (neighbours2Adjacent && !neighbours1Adjacent) {
+            const ringNeighbour = this.findRingNeighbour(atom1, edge);
+            if (ringNeighbour) {
+                return { central: atom1, flanking: [atom2, ringNeighbour] };
+            }
+            return null;
+        }
+
+        if (neighbours1AdjacentFixed && !neighbours2AdjacentFixed) {
+            const ringNeighbour = this.findRingNeighbour(atom2, edge);
+            if (ringNeighbour) {
+                return { central: atom2, flanking: [atom1, ringNeighbour] };
+            }
+            return null;
+        }
+
+        if (neighbours2AdjacentFixed && !neighbours1AdjacentFixed) {
+            const ringNeighbour = this.findRingNeighbour(atom1, edge);
+            if (ringNeighbour) {
+                return { central: atom1, flanking: [atom2, ringNeighbour] };
+            }
+            return null;
+        }
+
+        if (!neighbours1AdjacentFixed && !neighbours2AdjacentFixed) {
+            const branch = this.findRingBranchToFlip(edge, neighbours1, neighbours2);
+            if (branch?.central && branch.flanking) {
+                return { central: branch.central, flanking: branch.flanking };
+            }
+            return null;
+        }
+
+        return null;
+    }
+
+    private generateFallbackRingPlans(edge: Edge): RingFlipPlan[] {
+        if (!this.drawer.graph) {
+            return [];
+        }
+
+        const atom1 = this.drawer.graph.vertices[edge.sourceId];
+        const atom2 = this.drawer.graph.vertices[edge.targetId];
+        const plans: RingFlipPlan[] = [];
+
+        const ringNeighbour1 = this.findRingNeighbour(atom1, edge);
+        if (ringNeighbour1) {
+            plans.push({ central: atom1, flanking: [atom2, ringNeighbour1] });
+        }
+
+        const ringNeighbour2 = this.findRingNeighbour(atom2, edge);
+        if (ringNeighbour2) {
+            plans.push({ central: atom2, flanking: [atom1, ringNeighbour2] });
+        }
+
+        return plans;
+    }
+
+    private areRingPlansEquivalent(a: RingFlipPlan, b: RingFlipPlan): boolean {
+        if (a.central.id !== b.central.id) {
+            return false;
+        }
+        const [a1, a2] = a.flanking;
+        const [b1, b2] = b.flanking;
+        return (a1.id === b1.id && a2.id === b2.id) || (a1.id === b2.id && a2.id === b1.id);
+    }
+
+    private assignChiralMetadata(edge: Edge, mapping: Record<number, Record<number, CisTransOrientation>>): void {
+        edge.cisTransNeighbours = this.cloneOrientationMap(mapping);
+        edge.chiralDict = this.cloneOrientationMap(mapping);
+    }
+
+    private cloneOrientationMap(source: Record<number, Record<number, CisTransOrientation>>): Record<number, Record<number, CisTransOrientation>> {
+        const clone: Record<number, Record<number, CisTransOrientation>> = {};
+        for (const [key, nested] of Object.entries(source)) {
+            const numericKey = Number(key);
+            const nestedClone: Record<number, CisTransOrientation> = {};
+            for (const [innerKey, orientation] of Object.entries(nested)) {
+                nestedClone[Number(innerKey)] = orientation;
+            }
+            clone[numericKey] = nestedClone;
+        }
+        return clone;
     }
 }
 

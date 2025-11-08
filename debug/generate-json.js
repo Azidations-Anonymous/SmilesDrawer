@@ -35,6 +35,7 @@ const fs = require('fs');
 
 const { createMoleculeOptions } = require('./molecule-options');
 const { collectRingDiagnostics } = require('./ring-diagnostics');
+const { collectCisTransDiagnostics } = require('./cis-trans-diagnostics');
 
 const smilesInput = process.argv[2];
 const outputFile = process.argv[3];
@@ -143,11 +144,17 @@ try {
         // Use the new public API to get positioning data
         const graphData = svgDrawer.getPositionData();
         const ringDiagnostics = collectRingDiagnostics(svgDrawer.preprocessor);
-        if (ringDiagnostics) {
-            if (graphData && typeof graphData === 'object' && graphData.serializedData && typeof graphData.serializedData === 'object') {
-                graphData.serializedData.ringDiagnostics = ringDiagnostics;
-            } else if (graphData && typeof graphData === 'object') {
-                graphData.ringDiagnostics = ringDiagnostics;
+        const cisTransDiagnostics = collectCisTransDiagnostics(svgDrawer.preprocessor);
+        if (graphData && typeof graphData === 'object') {
+            const target = graphData.serializedData && typeof graphData.serializedData === 'object'
+                ? graphData.serializedData
+                : graphData;
+
+            if (ringDiagnostics) {
+                target.ringDiagnostics = ringDiagnostics;
+            }
+            if (cisTransDiagnostics && cisTransDiagnostics.length > 0) {
+                target.cisTransDiagnostics = cisTransDiagnostics;
             }
         }
         const drawEndTime = Date.now();

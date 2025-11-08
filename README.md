@@ -94,7 +94,7 @@ A very simple JSFiddle example can be found [here](https://jsfiddle.net/zjdtkL57
 
 ### SSSR Parity (PIKAChU)
 
-If you experience problems with the drawing of complex ring systems (including very long bonds), please enable experimental SSSR ring detection (see `experimentalSSSR` option).
+SmilesDrawer now always uses the parity-correct SSSR ring detection pipeline (Johnson cycle enumeration plus canonical candidates), so complex ring systems no longer require a separate “experimental” toggle.
 
 #### What changed?
 - **Johnson cycle inventory** – every draw runs the TypeScript port of Johnson’s algorithm so both SSSR selection and aromaticity checks start from the full cycle catalog instead of just Floyd–Warshall paths.
@@ -225,6 +225,18 @@ Results are saved to `test/regression-results/`:
 
 The JSON format enables both visual inspection (HTML) and programmatic diff analysis (JSON).
 
+Every regression JSON now embeds a `ringDiagnostics` block (SSSR lists, cycle inventory, full `RingManager` state, and aromatic overlays) for both the baseline and the current build. Pair it with the per-edge `chiralDict` export and the new `cisTransDiagnostics` section (per double bond orientation checks) to see exactly which substituent pairs were tested and whether the drawing matched the stored intent. For focused investigations you can dump the same diagnostics without running the full regression harness:
+
+```bash
+# Ring inventory, SSSR, and per-atom ring membership
+node scripts/dump-rings.js --smiles "<SMILES>" --pretty
+
+# Cis/trans neighbour map and chiralDict entries for every stereo double bond
+node scripts/dump-cis-trans.js --smiles "<SMILES>" --pretty
+```
+
+These helpers print directly to stdout (or `--output`), which makes it easy to diff SmilesDrawer against PIKAChU’s `pikachu-ring-dump`.
+
 ### Getting Started
 
 To get a simple input box which lets the user enter a SMILES and then display it in a canvas, the following minimal example is sufficient.
@@ -298,7 +310,6 @@ The following options are available:
 | Large Font Size (in pt for elements)                            | fontSizeLarge               | number                              | 6             |
 | Small Font Size (in pt for numbers)                             | fontSizeSmall               | number                              | 4             |
 | Padding                                                         | padding                     | number                              | 20.0          |
-| Use experimental SSSR ring detection                            | experimentalSSSR            | boolean                             | false         |
 | Show Terminal Carbons (CH3)                                     | terminalCarbons             | boolean                             | false         |
 | Show explicit hydrogens                                         | explicitHydrogens           | boolean                             | false         |
 | Overlap sensitivity                                             | overlapSensitivity          | number                              | 0.42          |
@@ -340,7 +351,6 @@ The default options are defined as follows:
     fontSizeLarge: 5,
     fontSizeSmall: 3,
     padding: 20.0,
-    experimentalSSSR: false,
     themes: {
         dark: {
             C: '#fff',

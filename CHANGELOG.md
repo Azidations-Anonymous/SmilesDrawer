@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file.
 - A regression and smoke-test platform with dataset filtering, regex selection, copy-to-clipboard buttons, PNG generation (white backgrounds, single-SMILES mode), timestamped outputs, and automated comparison reports/bisect helpers.
 - GitHub Pages deployment workflow that rebuilds docs/dist from source, exposes downloadable SVGs from the playground, and publishes refreshed documentation without tracking generated assets.
 - Configurable iteration/time guards for the overlap finetuning pass (new `finetuneOverlapMaxSteps`/`finetuneOverlapMaxDurationMs` options) plus regression coverage in `test/overlap-finetune.js` that locks the Fig. 2B clash examples in place.
+- Regression metadata now serialises `ringDiagnostics` for both baselines and candidates, exposes per-edge `chiralDict` data, and ships with a `scripts/dump-cis-trans.js` CLI so stereochemical diffs can be debugged without running the full regression harness.
+- Added `cisTransDiagnostics` (per-double-bond orientation checks) to the regression JSON/CLI tools so we can see which substituent pairs failed and how they were evaluated without rerunning the full layout debugger.
+- `CisTransManager` now mirrors Pikachu’s ring/subtree flipping algorithm: it iterates multiple flip plans, re-checks orientations after each attempt, and only marks a stereobond as fixed when the recorded `chiralDict` matches the drawing. Macrocycles no longer flip back and forth after parity fixes.
 
 ### Changed
 - Re-architected the runtime: DrawerBase responsibilities were split into dedicated managers, Graph/Kamada-Kawais code was modularized, and jsdom-based tests were replaced with faster linkedom-based runs.
@@ -15,11 +18,13 @@ All notable changes to this project will be documented in this file.
 - Regression reporting now filters numeric noise, treats deltas below 50 ms as neutral, repositions performance panels, and collapses JSON diffs for easier triage while smoke/regression scripts gained clearer CLI ergonomics.
 - Playground and packaging updates now consume the dist bundle directly, restore the `smiles-drawer.js` symlink, and remove legacy position-data panels in favor of the runtime API.
 - Atom annotations now have first-class rendering support via `showAtomAnnotations`, a customizable formatter, and styling knobs for color/offset/font size.
+- SSSR parity is now the default: the experimental flag was removed, the collector guard matches PIKAChU’s “one extra candidate” rule, and aromatic indicators leverage the Johnson cycle inventory so fused/macrocyclic aromatics render correctly.
 
 ### Fixed
 - Stereochemical accuracy improved via cis/trans stereobond corrections, additional SSSR parity tests, deterministic neighbour ordering, and refactored cycle candidate handling.
 - Overlap/bridged-ring issues were addressed by preventing pivot rotation, keeping chiral wedges visible when hydrogens are hidden, and refining bridged-ring bookkeeping/logging.
 - Baseline/regression stability saw fixes for dataset loading, hidden SMILES filtering, position-data export, and guardrails that verify `src/` before comparing builds.
+- Macrocyclic double bonds no longer oscillate between cis/trans states: the cis/trans manager now mirrors Pikachu’s ring-branch flipping rules (respecting already-fixed stereobonds) and keeps its orientation maps in sync via the new `chiralDict` storage.
 
 ## [2.1.10] - 2025-03-29
 ### Fixed

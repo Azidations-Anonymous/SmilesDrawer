@@ -422,6 +422,8 @@ if (extraArg) {
     process.exit(2);
 }
 
+const targetedSmilesMode = Boolean(singleSmiles);
+
 if (singleSmiles && bisectMode) {
     console.error('ERROR: -smiles cannot be combined with -bisect');
     process.exit(2);
@@ -813,14 +815,53 @@ for (const dataset of datasets) {
             continue;
         }
 
-        // Check if there's a difference
-        if (oldJson !== newJson) {
+        totalTested++;
+
+        const jsonStringsMatch = oldJson === newJson;
+        const needsForcedComparison = targetedSmilesMode && jsonStringsMatch;
+
+        if (!jsonStringsMatch || needsForcedComparison) {
             const oldJsonObj = JSON.parse(oldJson);
             const newJsonObj = JSON.parse(newJson);
             const sanitizedOldJson = sanitizeJsonForDiff(oldJsonObj);
             const sanitizedNewJson = sanitizeJsonForDiff(newJsonObj);
 
+            if (jsonStringsMatch) {
+                await generateComparisonArtifacts({
+                    label: 'single-smiles',
+                    datasetName: dataset.name,
+                    index,
+                    totalEntries: smilesList.length,
+                    smiles,
+                    sanitizedOldJson,
+                    sanitizedNewJson,
+                    oldJsonLength: oldJson.length,
+                    newJsonLength: newJson.length,
+                    oldJsonRenderTime,
+                    newJsonRenderTime,
+                    isForced: true
+                });
+                console.log('  MATCH: Identical output ✓');
+                continue;
+            }
+
             if (areJsonStructurallyEqual(sanitizedOldJson, sanitizedNewJson)) {
+                if (targetedSmilesMode) {
+                    await generateComparisonArtifacts({
+                        label: 'single-smiles',
+                        datasetName: dataset.name,
+                        index,
+                        totalEntries: smilesList.length,
+                        smiles,
+                        sanitizedOldJson,
+                        sanitizedNewJson,
+                        oldJsonLength: oldJson.length,
+                        newJsonLength: newJson.length,
+                        oldJsonRenderTime,
+                        newJsonRenderTime,
+                        isForced: true
+                    });
+                }
                 console.log('  MATCH: Differences within noise tolerance ✓');
                 continue;
             }
@@ -829,112 +870,21 @@ for (const dataset of datasets) {
 
             console.log('  DIFFERENCE DETECTED' + (noVisual ? '' : ' - Generating SVG comparison'));
 
-            let reportFiles = [];
-            if (!noVisual) {
-                // Generate SVG for both versions
-                const oldSvgFile = path.join(os.tmpdir(), 'smiles-drawer-old-svg-' + Date.now() + '-' + Math.random().toString(36).substring(7) + '.svg');
-                const newSvgFile = path.join(os.tmpdir(), 'smiles-drawer-new-svg-' + Date.now() + '-' + Math.random().toString(36).substring(7) + '.svg');
-
-                const oldSvgStartTime = performance.now();
-                spawnSync('node', [getScriptPath(oldCodePath, 'generate-svg.js'), smiles, oldSvgFile], {
-                    cwd: oldCodePath,
-                    encoding: 'utf8'
-                });
-                const oldSvgEndTime = performance.now();
-                const oldSvgRenderTime = oldSvgEndTime - oldSvgStartTime;
-
-                const newSvgStartTime = performance.now();
-                spawnSync('node', [getScriptPath(newCodePath, 'generate-svg.js'), smiles, newSvgFile], {
-                    cwd: newCodePath,
-                    encoding: 'utf8'
-                });
-                const newSvgEndTime = performance.now();
-                const newSvgRenderTime = newSvgEndTime - newSvgStartTime;
-
-                let oldSvg = '';
-                let newSvg = '';
-                try {
-                    oldSvg = fs.readFileSync(oldSvgFile, 'utf8');
-                    newSvg = fs.readFileSync(newSvgFile, 'utf8');
-                    fs.unlinkSync(oldSvgFile);
-                    fs.unlinkSync(newSvgFile);
-                } catch (err) {
-                    console.error('  WARNING: Failed to read SVG files');
-                }
-
-                // Parse JSON and generate diff
-                const diffBase = cloneJson(sanitizedOldJson);
-                const delta = jsondiffpatch.diff(diffBase, sanitizedNewJson);
-                const rawJsonDiffHtml = htmlFormatter.format(delta, diffBase);
-                const jsonDiffHtml = collapseJsonDiff(rawJsonDiffHtml);
-
-                // Generate and save individual HTML report immediately
-                const htmlFilePath = path.join(outputDir, totalDifferences + '.html');
-                const html = generateIndividualHTMLReport({
-                    dataset: dataset.name,
-                    index: index,
-                    total: smilesList.length,
-                    smiles: smiles,
-                    oldSvg: oldSvg,
-                    newSvg: newSvg,
-                    oldJsonLength: oldJson.length,
-                    newJsonLength: newJson.length,
-                    jsonDiffHtml: jsonDiffHtml,
-                    diffNumber: totalDifferences,
-                    oldCommitHash: oldCommitHash,
-                    newCommitHash: newCommitHash,
-                    newHasChanges: newHasChanges,
-                    newSrcDiff: newSrcDiff,
-                    oldSvgRenderTime: oldSvgRenderTime,
-                    newSvgRenderTime: newSvgRenderTime,
-                    oldJsonRenderTime: oldJsonRenderTime,
-                    newJsonRenderTime: newJsonRenderTime
-                });
-
-                fs.writeFileSync(htmlFilePath, html, 'utf8');
-                reportFiles.push(totalDifferences + '.html');
-
-                if (generateJsonReports) {
-                    const jsonFilePath = path.join(outputDir, totalDifferences + '.json');
-                    const jsonOutput = {
-                        old: sanitizedOldJson,
-                        new: sanitizedNewJson,
-                        delta: delta
-                    };
-                    fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
-                    reportFiles.push(totalDifferences + '.json');
-                }
-
-                if (generateImages) {
-                    try {
-                        const oldPngBuffer = await svgToPng(oldSvg);
-                        const newPngBuffer = await svgToPng(newSvg);
-                        const oldPngPath = path.join(outputDir, totalDifferences + '-old.png');
-                        const newPngPath = path.join(outputDir, totalDifferences + '-new.png');
-                        fs.writeFileSync(oldPngPath, oldPngBuffer);
-                        fs.writeFileSync(newPngPath, newPngBuffer);
-                        reportFiles.push(totalDifferences + '-old.png', totalDifferences + '-new.png');
-                    } catch (err) {
-                        console.warn('  WARNING: Failed to generate PNG snapshots: ' + err.message);
-                    }
-                }
-
-                console.log('  Reports saved: ' + reportFiles.join(', '));
-            } else {
-                // Save JSON even when -novisual is used
-                if (generateJsonReports) {
-                    const jsonFilePath = path.join(outputDir, totalDifferences + '.json');
-                    const jsonOutput = {
-                        old: sanitizedOldJson,
-                        new: sanitizedNewJson
-                    };
-                    fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
-                    reportFiles.push(totalDifferences + '.json');
-                    console.log('  JSON saved: ' + totalDifferences + '.json');
-                } else {
-                    console.log('  JSON generation disabled - skipping file save');
-                }
-            }
+            const label = targetedSmilesMode ? 'single-smiles' : String(totalDifferences);
+            const reportFiles = await generateComparisonArtifacts({
+                label,
+                datasetName: dataset.name,
+                index,
+                totalEntries: smilesList.length,
+                smiles,
+                sanitizedOldJson,
+                sanitizedNewJson,
+                oldJsonLength: oldJson.length,
+                newJsonLength: newJson.length,
+                oldJsonRenderTime,
+                newJsonRenderTime,
+                isForced: false
+            });
 
             // Exit early if -failearly flag is set
             if (failEarly) {
@@ -949,11 +899,12 @@ for (const dataset of datasets) {
                 console.error('!'.repeat(80));
                 process.exit(1);
             }
+
+            continue;
         } else {
             console.log('  MATCH: Identical output ✓');
         }
 
-        totalTested++;
     }
 
     totalDatasets++;
@@ -1006,6 +957,132 @@ runRegression().catch(err => {
     console.error(err && err.stack ? err.stack : err);
     process.exit(2);
 });
+
+async function generateComparisonArtifacts(options) {
+    const {
+        label,
+        datasetName,
+        index,
+        totalEntries,
+        smiles,
+        sanitizedOldJson,
+        sanitizedNewJson,
+        oldJsonLength,
+        newJsonLength,
+        oldJsonRenderTime,
+        newJsonRenderTime,
+        isForced
+    } = options;
+
+    const safeLabel = (label || 'comparison').toString().replace(/[^a-zA-Z0-9_-]/g, '_') || 'comparison';
+    const reportFiles = [];
+
+    const diffBase = cloneJson(sanitizedOldJson);
+    const delta = jsondiffpatch.diff(diffBase, sanitizedNewJson);
+    let jsonDiffHtml;
+
+    if (delta) {
+        const rawJsonDiffHtml = htmlFormatter.format(delta, diffBase);
+        jsonDiffHtml = collapseJsonDiff(rawJsonDiffHtml);
+    } else {
+        jsonDiffHtml = '<div class="jsondiffpatch-result"><pre>No structural differences detected.</pre></div>';
+    }
+
+    let oldSvgRenderTime = 0;
+    let newSvgRenderTime = 0;
+    let oldSvg = '';
+    let newSvg = '';
+
+    if (!noVisual) {
+        const token = safeLabel + '-' + Date.now() + '-' + Math.random().toString(36).substring(2);
+        const oldSvgFile = path.join(os.tmpdir(), 'smiles-drawer-' + token + '-old.svg');
+        const newSvgFile = path.join(os.tmpdir(), 'smiles-drawer-' + token + '-new.svg');
+
+        const oldSvgStartTime = performance.now();
+        spawnSync('node', [getScriptPath(oldCodePath, 'generate-svg.js'), smiles, oldSvgFile], {
+            cwd: oldCodePath,
+            encoding: 'utf8'
+        });
+        oldSvgRenderTime = performance.now() - oldSvgStartTime;
+
+        const newSvgStartTime = performance.now();
+        spawnSync('node', [getScriptPath(newCodePath, 'generate-svg.js'), smiles, newSvgFile], {
+            cwd: newCodePath,
+            encoding: 'utf8'
+        });
+        newSvgRenderTime = performance.now() - newSvgStartTime;
+
+        try {
+            oldSvg = fs.readFileSync(oldSvgFile, 'utf8');
+            newSvg = fs.readFileSync(newSvgFile, 'utf8');
+        } catch (err) {
+            console.error('  WARNING: Failed to read SVG files');
+        } finally {
+            try { fs.unlinkSync(oldSvgFile); } catch (err) {}
+            try { fs.unlinkSync(newSvgFile); } catch (err) {}
+        }
+
+        const htmlFilePath = path.join(outputDir, safeLabel + '.html');
+        const html = generateIndividualHTMLReport({
+            dataset: datasetName,
+            index: index,
+            total: totalEntries,
+            smiles: smiles,
+            oldSvg: oldSvg,
+            newSvg: newSvg,
+            oldJsonLength: oldJsonLength,
+            newJsonLength: newJsonLength,
+            jsonDiffHtml: jsonDiffHtml,
+            diffNumber: safeLabel,
+            oldCommitHash: oldCommitHash,
+            newCommitHash: newCommitHash,
+            newHasChanges: newHasChanges,
+            newSrcDiff: newSrcDiff,
+            oldSvgRenderTime: oldSvgRenderTime,
+            newSvgRenderTime: newSvgRenderTime,
+            oldJsonRenderTime: oldJsonRenderTime,
+            newJsonRenderTime: newJsonRenderTime
+        });
+        fs.writeFileSync(htmlFilePath, html, 'utf8');
+        reportFiles.push(path.basename(htmlFilePath));
+
+        if (generateImages && oldSvg && newSvg) {
+            try {
+                const oldPngBuffer = await svgToPng(oldSvg);
+                const newPngBuffer = await svgToPng(newSvg);
+                const oldPngPath = path.join(outputDir, safeLabel + '-old.png');
+                const newPngPath = path.join(outputDir, safeLabel + '-new.png');
+                fs.writeFileSync(oldPngPath, oldPngBuffer);
+                fs.writeFileSync(newPngPath, newPngBuffer);
+                reportFiles.push(path.basename(oldPngPath), path.basename(newPngPath));
+            } catch (err) {
+                console.warn('  WARNING: Failed to generate PNG snapshots: ' + err.message);
+            }
+        }
+    }
+
+    if (generateJsonReports) {
+        const jsonFilePath = path.join(outputDir, safeLabel + '.json');
+        const jsonOutput = {
+            old: sanitizedOldJson,
+            new: sanitizedNewJson,
+            delta: delta || null
+        };
+        fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
+        reportFiles.push(path.basename(jsonFilePath));
+    } else if (noVisual) {
+        console.log('  JSON generation disabled - skipping file save');
+    }
+
+    if (reportFiles.length > 0) {
+        const prefix = isForced ? '  Targeted comparison saved: ' : '  Reports saved: ';
+        console.log(prefix + reportFiles.join(', '));
+    } else if (isForced) {
+        console.log('  Targeted comparison requested but no artifacts were generated (check flags).');
+    }
+
+    return reportFiles;
+}
 
 function sanitizeSmiles(smiles) {
     let cleaned = '';
