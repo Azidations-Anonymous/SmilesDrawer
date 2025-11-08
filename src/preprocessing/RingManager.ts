@@ -655,9 +655,13 @@ class RingManager {
     getAromaticRings(): Ring[] {
         const aromatic: Ring[] = [];
         const seen = new Set<string>();
+        const coveredVertices = new Set<number>();
         const pushRing = (ring: Ring): void => {
             aromatic.push(ring);
             seen.add(this.serializeMembers(ring.members));
+            for (const vertexId of ring.members) {
+                coveredVertices.add(vertexId);
+            }
         };
 
         for (const ring of this.rings) {
@@ -674,6 +678,18 @@ class RingManager {
 
             const key = this.serializeMembers(cycle);
             if (seen.has(key) || !this.isCycleAromatic(cycle)) {
+                continue;
+            }
+
+            let requiresCoverage = false;
+            for (const vertexId of cycle) {
+                if (!coveredVertices.has(vertexId)) {
+                    requiresCoverage = true;
+                    break;
+                }
+            }
+
+            if (!requiresCoverage) {
                 continue;
             }
 
