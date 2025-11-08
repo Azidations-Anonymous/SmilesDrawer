@@ -460,11 +460,67 @@ class CisTransManager {
     }
 
     private isBondDrawnCorrectly(edge: Edge): boolean {
-        const analysis = this.analyzeBondOrientation(edge);
-        if (!analysis) {
+        if (!this.drawer.graph) {
             return true;
         }
-        return analysis.isCorrect;
+
+        const vertexA = this.drawer.graph.vertices[edge.sourceId];
+        const vertexB = this.drawer.graph.vertices[edge.targetId];
+        const { mapping } = this.getOrientationMap(edge);
+        const evaluatedPairs = new Set<string>();
+
+        for (const [sourceKey, mappingEntry] of Object.entries(mapping)) {
+            const sourceId = Number(sourceKey);
+            const sourceVertex = this.drawer.graph.vertices[sourceId];
+
+            for (const [targetKey, orientation] of Object.entries(mappingEntry)) {
+                const targetId = Number(targetKey);
+                const targetVertex = this.drawer.graph.vertices[targetId];
+
+                const pairKey = `${Math.min(sourceId, targetId)}_${Math.max(sourceId, targetId)}`;
+                if (evaluatedPairs.has(pairKey)) {
+                    continue;
+                }
+
+                const sourceOnA = vertexA.neighbours.includes(sourceId);
+                const sourceOnB = vertexB.neighbours.includes(sourceId);
+                const targetOnA = vertexA.neighbours.includes(targetId);
+                const targetOnB = vertexB.neighbours.includes(targetId);
+
+                let leftVertex: Vertex | null = null;
+                let rightVertex: Vertex | null = null;
+
+                if (sourceOnA && targetOnB) {
+                    leftVertex = sourceVertex;
+                    rightVertex = targetVertex;
+                } else if (sourceOnB && targetOnA) {
+                    leftVertex = targetVertex;
+                    rightVertex = sourceVertex;
+                } else {
+                    continue;
+                }
+
+                if (!leftVertex.value.isDrawn || !rightVertex.value.isDrawn) {
+                    continue;
+                }
+
+                evaluatedPairs.add(pairKey);
+
+                const placementLeft = this.getSideOfLine(vertexA.position, vertexB.position, leftVertex.position);
+                const placementRight = this.getSideOfLine(vertexA.position, vertexB.position, rightVertex.position);
+
+                if (placementLeft === 0 || placementRight === 0) {
+                    continue;
+                }
+
+                const sameSide = placementLeft === placementRight;
+                if ((orientation === 'cis' && !sameSide) || (orientation === 'trans' && sameSide)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     private getSideOfLine(a: Vector2, b: Vector2, point: Vector2): number {

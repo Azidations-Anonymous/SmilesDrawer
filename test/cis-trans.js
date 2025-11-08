@@ -197,6 +197,7 @@ describe('Cis/trans stereobond corrections', () => {
 
         assert.equal(JSON.stringify(edge.chiralDict || {}), originalDict, 'chiral dict should persist across rebuilds');
         assert.equal(JSON.stringify(edge.cisTransNeighbours || {}), originalDict, 'cisTransNeighbours should be restored from persisted chiral dict');
+        assert.equal(edge.cisTransSource, 'chiralDict', 'edge should record chiralDict as the metadata source');
     });
 
     it('stabilises long alternating sequences', () => {
