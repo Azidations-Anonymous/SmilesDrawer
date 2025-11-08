@@ -14,6 +14,7 @@ const assert = require('node:assert/strict');
 
 const Parser = require('../src/parsing/Parser.js');
 const MolecularPreprocessor = require('../src/preprocessing/MolecularPreprocessor.js');
+const { collectCisTransDiagnostics } = require('../debug/cis-trans-diagnostics.js');
 
 const FIGURE_S2_SMILES = 'C[C@H]1C[C@@]23C(=O)/C(=C\\4/C=C/C(=C/[C@@H](C/C=C/C(=C/[C@]2(C=C1C)C)/C)O)/CO4)/C(=O)O3';
 
@@ -129,5 +130,32 @@ describe('Cis/trans stereobond corrections', () => {
     it('resolves ring-embedded trans bonds before overlap resolution', () => {
         const graph = prepareGraph('C1/C=C/CC=C\\1');
         assert.equal(measuredOrientation(graph), 'trans');
+    });
+
+    it('assigns sequence IDs to alternating stereobonds', () => {
+        const preprocessor = new MolecularPreprocessor({});
+        preprocessor.initDraw(Parser.parse('C/C=C/C=C/C', {}), 'light', false, []);
+        preprocessor.processGraph();
+
+        const diagnostics = collectCisTransDiagnostics(preprocessor);
+        const sequenceIds = diagnostics
+            .map((entry) => entry.sequenceId)
+            .filter((id) => typeof id === 'number');
+
+        assert.ok(sequenceIds.length >= 2, 'expected at least two stereobonds with a sequence id');
+        const unique = new Set(sequenceIds);
+        assert.equal(unique.size, 1, 'alternating stereobonds should share the same sequence id');
+    });
+
+    it('includes sequence IDs in cis/trans diagnostics output', () => {
+        const preprocessor = new MolecularPreprocessor({});
+        preprocessor.initDraw(Parser.parse('F/C=C/C=C/F', {}), 'light', false, []);
+        preprocessor.processGraph();
+
+        const diagnostics = collectCisTransDiagnostics(preprocessor);
+        const annotated = diagnostics.find((entry) => typeof entry.sequenceId === 'number');
+
+        assert.ok(annotated, 'expected diagnostics entry with a numeric sequence id');
+        assert.ok(Array.isArray(annotated.evaluations) && annotated.evaluations.length > 0, 'diagnostics entry should retain evaluations');
     });
 });
