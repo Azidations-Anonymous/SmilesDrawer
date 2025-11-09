@@ -8,6 +8,7 @@ const MolecularPreprocessor = require('../src/preprocessing/MolecularPreprocesso
 const { collectRingDiagnostics } = require('../debug/ring-diagnostics.js');
 
 const FIGURE_S2_SMILES = 'C[C@H]1C[C@@]23C(=O)/C(=C\\4/C=C/C(=C/[C@@H](C/C=C/C(=C/[C@]2(C=C1C)C)/C)O)/CO4)/C(=O)O3';
+const KEKULIZED_BENZENE = 'C1=CC=CC=C1';
 
 function buildDiagnostics(smiles) {
   const preprocessor = new MolecularPreprocessor({});
@@ -30,6 +31,12 @@ describe('Aromatic overlay rendering', () => {
     assert.equal(memberSets.size, diagnostics.aromaticRings.length, 'overlay sets should be unique');
   });
 
+  it('detects aromatic overlays for kekulised benzene', () => {
+    const diagnostics = buildDiagnostics(KEKULIZED_BENZENE);
+    assert.equal(diagnostics.ringCount, 1, 'kekulised benzene should still have one canonical ring');
+    assert.equal(diagnostics.aromaticRings.length, 1, 'overlay count should remain one for kekulised input');
+  });
+
   it('never duplicates aromatic overlays beyond the inventory', () => {
     const diagnostics = buildDiagnostics('c1ccc2ccccc2c1'); // naphthalene
     assert(diagnostics.aromaticRings.length > 0, 'should detect aromatic overlays');
@@ -40,8 +47,8 @@ describe('Aromatic overlay rendering', () => {
     }
   });
 
-  it('never draws more aromatic overlays than canonical rings for the macrocycle regression molecule', () => {
+  it('does not mark macrocycle rings aromatic when Pikachu would reject them', () => {
     const diagnostics = buildDiagnostics(FIGURE_S2_SMILES);
-    assert(diagnostics.aromaticRings.length <= diagnostics.ringCount, 'overlay count should never exceed canonical ring count');
+    assert.equal(diagnostics.aromaticRings.length, 0, 'macrocycle should not report aromatic overlays');
   });
 });

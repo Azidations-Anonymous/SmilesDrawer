@@ -195,6 +195,7 @@ class RingManager {
         }
 
         this.addInventoryRingsForUnassignedVertices();
+        this.markAromaticRingsFromCycleInventory();
 
         // Find connection between rings
         // Check for common vertices and create ring connections. This is a bit
@@ -726,6 +727,294 @@ class RingManager {
             }
         }
         return true;
+    }
+
+    private markAromaticRingsFromCycleInventory(): void {
+        const graph = this.drawer.graph;
+        if (!graph || !Array.isArray(graph.cycles) || graph.cycles.length === 0) {
+            return;
+        }
+
+        for (const cycle of graph.cycles) {
+            if (!cycle || cycle.length < 3) {
+                continue;
+            }
+
+            const edgeIds = this.evaluateCycleAromaticity(cycle);
+            if (!edgeIds) {
+                continue;
+            }
+
+            for (const vertexId of cycle) {
+                const vertex = graph.vertices[vertexId];
+                if (vertex) {
+                    vertex.value.isPartOfAromaticRing = true;
+                }
+            }
+
+            for (const edgeId of edgeIds) {
+                const edge = graph.edges[edgeId];
+                if (edge) {
+                    edge.isPartOfAromaticRing = true;
+                }
+            }
+        }
+    }
+
+    private evaluateCycleAromaticity(cycle: number[]): number[] | null {
+        const graph = this.drawer.graph;
+        if (!graph || cycle.length < 3) {
+            return null;
+        }
+
+        const cycleEdgeIds: number[] = [];
+        const aromaticEdges: number[] = [];
+        const doubleEdges: number[] = [];
+
+        if (this.containsForbiddenSp3Atom(cycle)) {
+            return null;
+        }
+
+        for (let i = 0; i < cycle.length; i++) {
+            const current = cycle[i];
+            const next = cycle[(i + 1) % cycle.length];
+            const edgeId = graph.vertexIdsToEdgeId[current + '_' + next];
+
+            if (edgeId === undefined) {
+                return null;
+            }
+
+            const edge = graph.edges[edgeId];
+            if (!edge) {
+                return null;
+            }
+
+            cycleEdgeIds.push(edgeId);
+
+            if (edge.isPartOfAromaticRing) {
+                aromaticEdges.push(edgeId);
+            }
+
+            if (this.isPiBond(edge)) {
+                doubleEdges.push(edgeId);
+            }
+        }
+
+        const cycleSet = new Set(cycle);
+        const sp3Donors = this.countLonePairDonors(cycle);
+        let piElectrons: number | null = null;
+
+        if (aromaticEdges.length === cycle.length) {
+            const permissible = this.getPermissibleDoubleBondCount(aromaticEdges);
+            piElectrons = (permissible + sp3Donors) * 2;
+        } else if (aromaticEdges.length === 0) {
+            for (const vertexId of cycle) {
+                const vertex = this.drawer.graph.vertices[vertexId];
+                if (vertex && this.hasForbiddenExocyclicDouble(vertex, cycleSet)) {
+                    return null;
+                }
+            }
+            piElectrons = (doubleEdges.length + sp3Donors) * 2;
+        } else {
+            return null;
+        }
+
+        if (!this.satisfiesHuckelRule(piElectrons, cycle.length)) {
+            return null;
+        }
+
+        return cycleEdgeIds;
+    }
+
+    private countLonePairDonors(cycle: number[]): number {
+        let donors = 0;
+        for (const vertexId of cycle) {
+            const vertex = this.drawer.graph.vertices[vertexId];
+            if (vertex && this.canVertexDonateLonePair(vertex)) {
+                donors++;
+            }
+        }
+        return donors;
+    }
+
+    private satisfiesHuckelRule(piElectrons: number | null, cycleSize: number): boolean {
+        if (piElectrons === null || piElectrons < 2) {
+            return false;
+        }
+
+        if (piElectrons === 2) {
+            return cycleSize === 3;
+        }
+
+        return piElectrons % 4 === 2;
+    }
+
+    private getPermissibleDoubleBondCount(aromaticEdgeIds: number[]): number {
+        const groups = this.groupAromaticBondSequences(aromaticEdgeIds);
+        let total = 0;
+        for (const group of groups) {
+            total += Math.ceil(group.length / 2);
+        }
+        return total;
+    }
+
+    private groupAromaticBondSequences(aromaticEdgeIds: number[]): number[][] {
+        const graph = this.drawer.graph;
+        const vertexToEdges = new Map<number, number[]>();
+        const groups: number[][] = [];
+        const visited = new Set<number>();
+
+        for (const edgeId of aromaticEdgeIds) {
+            const edge = graph.edges[edgeId];
+            if (!edge) {
+                continue;
+            }
+
+            if (!vertexToEdges.has(edge.sourceId)) {
+                vertexToEdges.set(edge.sourceId, []);
+            }
+            vertexToEdges.get(edge.sourceId)!.push(edgeId);
+
+            if (!vertexToEdges.has(edge.targetId)) {
+                vertexToEdges.set(edge.targetId, []);
+            }
+            vertexToEdges.get(edge.targetId)!.push(edgeId);
+        }
+
+        for (const edgeId of aromaticEdgeIds) {
+            if (visited.has(edgeId)) {
+                continue;
+            }
+
+            const stack = [edgeId];
+            const group: number[] = [];
+            visited.add(edgeId);
+
+            while (stack.length > 0) {
+                const current = stack.pop()!;
+                group.push(current);
+                const edge = graph.edges[current];
+                if (!edge) {
+                    continue;
+                }
+
+                for (const vertexId of [edge.sourceId, edge.targetId]) {
+                    const neighbours = vertexToEdges.get(vertexId) || [];
+                    for (const neighbourEdgeId of neighbours) {
+                        if (!visited.has(neighbourEdgeId)) {
+                            visited.add(neighbourEdgeId);
+                            stack.push(neighbourEdgeId);
+                        }
+                    }
+                }
+            }
+
+            groups.push(group);
+        }
+
+        return groups;
+    }
+
+    private containsForbiddenSp3Atom(cycle: number[]): boolean {
+        for (const vertexId of cycle) {
+            const vertex = this.drawer.graph.vertices[vertexId];
+            if (vertex && this.isLikelySp3WithoutDonation(vertex)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private isLikelySp3WithoutDonation(vertex: Vertex): boolean {
+        const graph = this.drawer.graph;
+        if (!graph) {
+            return false;
+        }
+
+        const element = vertex.value.element ? vertex.value.element.toUpperCase() : '';
+        if (element === 'O' || element === 'N' || element === 'S' || element === 'SE' || element === 'P') {
+            return false;
+        }
+
+        for (const edgeId of vertex.edges) {
+            const edge = graph.edges[edgeId];
+            if (edge && this.isPiBond(edge)) {
+                return false;
+            }
+        }
+
+        return vertex.neighbours.length >= 4;
+    }
+
+    private isPiBond(edge: Edge): boolean {
+        return edge.bondType === '=' || edge.bondType === '#';
+    }
+
+    private hasForbiddenExocyclicDouble(vertex: Vertex, cycleSet: Set<number>): boolean {
+        const graph = this.drawer.graph;
+        if (!graph) {
+            return false;
+        }
+
+        for (const edgeId of vertex.edges) {
+            const edge = graph.edges[edgeId];
+            if (!edge || edge.bondType !== '=') {
+                continue;
+            }
+
+            const neighbourId = edge.sourceId === vertex.id ? edge.targetId : edge.sourceId;
+            if (cycleSet.has(neighbourId)) {
+                continue;
+            }
+
+            const neighbour = graph.vertices[neighbourId];
+            const element = neighbour?.value.element?.toUpperCase() || '';
+            const charge = neighbour?.value.bracket?.charge ?? 0;
+
+            if (charge <= 0 && element !== 'O' && element !== 'S') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private canVertexDonateLonePair(vertex: Vertex): boolean {
+        const atom = vertex.value;
+        if (!atom) {
+            return false;
+        }
+
+        if (atom.isPartOfAromaticRing) {
+            return true;
+        }
+
+        const charge = atom.bracket ? atom.bracket.charge : 0;
+        const element = atom.element ? atom.element.toUpperCase() : '';
+        const neighbourCount = vertex.neighbours.length;
+
+        if (charge < 0 && (element === 'C' || element === 'SI' || element === 'GE' || element === 'SN')) {
+            return true;
+        }
+
+        if (charge > 0) {
+            return false;
+        }
+
+        switch (element) {
+            case 'N':
+                return neighbourCount <= 3;
+            case 'O':
+                return neighbourCount <= 2;
+            case 'S':
+            case 'SE':
+            case 'P':
+                return neighbourCount <= 4;
+            case 'B':
+                return neighbourCount <= 3;
+            default:
+                return false;
+        }
     }
 
     private addInventoryRingsForUnassignedVertices(): void {
