@@ -930,6 +930,14 @@ class SvgWrapper implements IDrawingSurface {
 
     const primaryPlacement = placements.find((placement) => placement.segment.kind === 'primary');
     if (primaryPlacement) {
+      const offsetX = x - primaryPlacement.x;
+      const offsetY = y - primaryPlacement.y;
+      if (offsetX !== 0 || offsetY !== 0) {
+        placements.forEach((placement) => {
+          placement.x += offsetX;
+          placement.y += offsetY;
+        });
+      }
       this.createLabelMask(primaryPlacement.x, primaryPlacement.y, primaryPlacement.segment);
     } else {
       this.createLabelMask(x, y, segments[0]);
