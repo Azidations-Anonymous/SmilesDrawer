@@ -7,12 +7,12 @@ type PolygonRenderer = Pick<IDrawingSurface, 'drawDashedPolygon'> | null;
 
 class AromaticOverlayRenderer {
     static render(molecule: IMolecularData, renderer: PolygonRenderer, inset: number): void {
-        if (!renderer || typeof renderer.drawDashedPolygon !== 'function') {
+        if (!renderer || molecule.bridgedRing) {
             return;
         }
 
         const insetAmount = isFinite(inset) && inset > 0 ? inset : 7;
-        const rings = molecule.getAromaticRings?.() || [];
+        const rings = molecule.getAromaticRings();
         for (const ring of rings) {
             if (!AromaticOverlayRenderer.isImplicitRing(molecule, ring)) {
                 continue;
@@ -23,7 +23,7 @@ class AromaticOverlayRenderer {
                 continue;
             }
 
-            renderer.drawDashedPolygon!(polygon);
+            renderer.drawDashedPolygon(polygon);
         }
     }
 

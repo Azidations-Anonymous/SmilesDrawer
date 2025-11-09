@@ -622,7 +622,7 @@ class SvgWrapper implements IDrawingSurface {
     path.setAttributeNS(null, 'd', `${segments.join(' ')} Z`);
     path.setAttributeNS(null, 'fill', 'none');
     path.setAttributeNS(null, 'stroke', color || this.themeManager.getColor('C'));
-    path.setAttributeNS(null, 'stroke-width', (this.opts.bondThickness / 1.5).toString());
+    path.setAttributeNS(null, 'stroke-width', this.opts.bondThickness.toString());
     path.setAttributeNS(null, 'stroke-linecap', 'round');
     path.setAttributeNS(null, 'stroke-linejoin', 'round');
     path.setAttributeNS(null, 'stroke-dasharray', '3,2');

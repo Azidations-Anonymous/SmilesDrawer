@@ -61,13 +61,11 @@ class DrawingManager {
           }
         });
 
-        if (!this.drawer.bridgedRing) {
-            AromaticOverlayRenderer.render(
-                this.drawer,
-                this.drawer.canvasWrapper,
-                this.drawer.opts.aromaticPiSystemInset ?? 7,
-            );
-        }
+        AromaticOverlayRenderer.render(
+            this.drawer,
+            this.drawer.canvasWrapper,
+            this.drawer.opts.aromaticPiSystemInset ?? 7,
+        );
     }
 
     drawEdge(edgeId: number, debug: boolean): void {

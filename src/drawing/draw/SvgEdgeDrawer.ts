@@ -45,13 +45,11 @@ class SvgEdgeDrawer {
       }
     });
 
-    if (!preprocessor.bridgedRing) {
-      AromaticOverlayRenderer.render(
-        preprocessor,
-        this.drawer.getRenderer(),
-        preprocessor.opts.aromaticPiSystemInset ?? 7,
-      );
-    }
+    AromaticOverlayRenderer.render(
+      preprocessor,
+      this.drawer.getRenderer(),
+      preprocessor.opts.aromaticPiSystemInset ?? 7,
+    );
   }
 
 
