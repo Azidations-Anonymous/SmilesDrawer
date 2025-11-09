@@ -9,6 +9,7 @@ import { BondType, WedgeType, DirectionalBond, CisTransOrientation } from '../ty
  * @property {Number} weight The weight of this edge. That is, the degree of the bond (single bond = 1, double bond = 2, etc).
  * @property {String} [bondType='-'] The bond type of this edge.
  * @property {Boolean} [isPartOfAromaticRing=false] Whether or not this edge is part of an aromatic ring.
+ * @property {Boolean} [isAromatic=false] Whether the bond was specified as aromatic in the input.
  * @property {Boolean} [center=false] Wheter or not the bond is centered. For example, this affects straight double bonds.
  * @property {String} [wedge=null] Wedge direction. Either null, 'up' or 'down'
  */
@@ -19,6 +20,7 @@ class Edge {
     weight: number;
     bondType: BondType;
     isPartOfAromaticRing: boolean;
+    isAromatic: boolean;
     center: boolean;
     wedge: WedgeType;
     stereoSymbol: DirectionalBond | null;
@@ -42,6 +44,7 @@ class Edge {
         this.weight = weight;
         this.bondType = '-';
         this.isPartOfAromaticRing = false;
+        this.isAromatic = false;
         this.center = false;
         this.wedge = null;
         this.stereoSymbol = null;

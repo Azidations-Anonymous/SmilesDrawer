@@ -23,16 +23,64 @@ const fs = require('fs');
 
 const { createMoleculeOptions } = require('./molecule-options');
 
-const smilesInput = process.argv[2];
-const outputFile = process.argv[3];
+function parseBooleanFlag(value, flagName) {
+    if (value === undefined) {
+        throw new Error(`${flagName} flag requires a value`);
+    }
+    const normalized = String(value).trim().toLowerCase();
+    if (['true', '1', 'yes', 'on'].includes(normalized)) {
+        return true;
+    }
+    if (['false', '0', 'no', 'off'].includes(normalized)) {
+        return false;
+    }
+    throw new Error(`Invalid boolean value for ${flagName}: ${value}`);
+}
+
+const rawArgs = process.argv.slice(2);
+const positionals = [];
+let kekulizeMode = false;
+
+for (let i = 0; i < rawArgs.length; i++) {
+    const arg = rawArgs[i];
+    if (arg === '--kekulize') {
+        try {
+            kekulizeMode = parseBooleanFlag(rawArgs[i + 1], '--kekulize');
+        } catch (err) {
+            console.error('ERROR:', err.message);
+            process.exit(2);
+        }
+        i += 1;
+        continue;
+    }
+    if (arg.startsWith('--kekulize=')) {
+        const value = arg.split('=')[1];
+        try {
+            kekulizeMode = parseBooleanFlag(value, '--kekulize');
+        } catch (err) {
+            console.error('ERROR:', err.message);
+            process.exit(2);
+        }
+        continue;
+    }
+    positionals.push(arg);
+}
+
+const smilesInput = positionals[0];
+const outputFile = positionals[1];
 
 if (!smilesInput) {
     console.error('ERROR: No SMILES string provided');
-    console.error('Usage: node generate-svg.js "<SMILES>" [output-file]');
+    console.error('Usage: node generate-svg.js [--kekulize=true|false] "<SMILES>" [output-file]');
     process.exit(2);
 }
 
 console.log(`PROCESSING: ${smilesInput}`);
+console.log(`KEKULIZE MODE: ${kekulizeMode}`);
+
+if (kekulizeMode && /[bcnosp]/.test(smilesInput)) {
+    console.warn('WARNING: Kekulised preview requested but SMILES contains lowercase aromatic atoms. Provide Kekulé form (uppercase atoms with explicit bonds) to see alternating double bonds.');
+}
 
 const domSetupStart = Date.now();
 const { window } = parseHTML('<!DOCTYPE html><html><body></body></html>');
@@ -60,7 +108,7 @@ const options = createMoleculeOptions({
     height: 500,
     bondThickness: 1.0,
     bondLength: 30,
-    shortBondLength: 0.85,
+    shortBondLength: 0.7,
     bondSpacing: 0.18 * 30,
     atomVisualization: 'default',
     isomeric: true,
@@ -123,6 +171,7 @@ try {
         svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
         svg.setAttribute('width', String(options.width));
         svg.setAttribute('height', String(options.height));
+        svg.setAttribute('data-kekulize-mode', String(kekulizeMode));
 
         svgDrawer.draw(tree, svg, 'light', false);
 

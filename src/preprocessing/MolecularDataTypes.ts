@@ -136,6 +136,7 @@ export interface SerializedEdge {
   weight: number;
   bondType: BondType;
   isPartOfAromaticRing: boolean;
+  isAromatic: boolean;
   center: boolean;
   wedge: WedgeType;
   stereoSymbol: DirectionalBond | null;

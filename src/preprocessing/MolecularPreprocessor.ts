@@ -330,6 +330,7 @@ class MolecularPreprocessor implements IMolecularData {
           weight: e.weight,
           bondType: e.bondType,
           isPartOfAromaticRing: e.isPartOfAromaticRing,
+          isAromatic: e.isAromatic,
           center: e.center,
       wedge: e.wedge,
           stereoSymbol: e.stereoSymbol,
@@ -917,36 +918,7 @@ class MolecularPreprocessor implements IMolecularData {
   }
 
   shouldDrawAromaticCircle(ring: Ring | null): boolean {
-      if (!ring || !ring.members || ring.members.length === 0) {
-          return false;
-      }
-
-      const members = ring.members;
-      for (let i = 0; i < members.length; i++) {
-          const memberId = members[i];
-          const vertex = this.graph.vertices[memberId];
-          if (!vertex || !(vertex.value as any).isAromaticByInput) {
-              return false;
-          }
-
-          const nextId = members[(i + 1) % members.length];
-          const edgeId = this.graph.vertexIdsToEdgeId[memberId + '_' + nextId];
-          if (edgeId == null) {
-              continue;
-          }
-          const edge = this.graph.edges[edgeId];
-          if (!edge) {
-              continue;
-          }
-          if (edge.bondType === '=' ||
-              edge.bondType === '#' ||
-              edge.bondType === '$' ||
-              edge.bondType === '/' ||
-              edge.bondType === '\\') {
-              return false;
-          }
-      }
-      return true;
+      return false;
   }
 
   /**

@@ -2,6 +2,7 @@ import MathHelper = require('../../utils/MathHelper');
 import CanvasDrawer = require('../CanvasDrawer');
 import Line = require('../../graph/Line');
 import Ring = require('../../graph/Ring');
+import { DASH_PATTERN } from '../../utils/DashPatternHelper';
 
 class CanvasPrimitiveDrawer {
   constructor(private wrapper: CanvasDrawer) {}
@@ -116,7 +117,8 @@ class CanvasPrimitiveDrawer {
             this.wrapper.themeManager.getColor('C'));
 
         if (dashed) {
-            ctx.setLineDash([1, 1.5]);
+            const [dashLength, gapLength] = DASH_PATTERN;
+            ctx.setLineDash([dashLength, gapLength]);
             ctx.lineWidth = this.wrapper.opts.bondThickness / 1.5;
         }
 
@@ -221,6 +223,7 @@ class CanvasPrimitiveDrawer {
         ctx.fillText(text, x + this.wrapper.offsetX, y + this.wrapper.offsetY);
         ctx.restore();
     }
+
 }
 
 export = CanvasPrimitiveDrawer;

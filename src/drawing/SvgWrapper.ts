@@ -9,6 +9,7 @@ import { IMoleculeOptions, AttachedPseudoElements } from '../config/IOptions';
 import ThemeManager = require('../config/ThemeManager');
 import { TextDirection } from '../types/CommonTypes';
 import IDrawingSurface = require('./renderers/IDrawingSurface');
+import { DASH_PATTERN_STRING } from '../utils/DashPatternHelper';
 
 function makeid(length: number): string {
   var result = '';
@@ -545,7 +546,7 @@ class SvgWrapper implements IDrawingSurface {
       stylesArr = [
         ['stroke-width', this.opts.bondThickness],
         ['stroke-linecap', linecap],
-        ['stroke-dasharray', dashed ? '5, 5' : 'none'],
+        ['stroke-dasharray', dashed ? DASH_PATTERN_STRING : 'none'],
       ],
       l = line.getLeftVector(),
       r = line.getRightVector(),
@@ -612,6 +613,7 @@ class SvgWrapper implements IDrawingSurface {
     point.setAttributeNS(null, 'fill', this.themeManager.getColor(elementName));
     this.vertices.push(point);
   }
+
 
   /**
    * Draw a text to the canvas.

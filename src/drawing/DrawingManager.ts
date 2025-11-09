@@ -8,6 +8,7 @@ import ThemeManager = require("../config/ThemeManager");
 import CanvasDrawer = require("./CanvasDrawer");
 import Atom = require("../graph/Atom");
 import Ring = require("../graph/Ring");
+import { snapLineToDashPattern } from "../utils/DashPatternHelper";
 
 type ParseTree = any;
 
@@ -61,15 +62,6 @@ class DrawingManager {
           }
         });
 
-        // Draw ring for implicitly defined aromatic rings
-        if (!this.drawer.bridgedRing) {
-          const aromaticRings = this.drawer.getAromaticRings();
-          for (const ring of aromaticRings) {
-            if (this.drawer.shouldDrawAromaticCircle(ring)) {
-              this.drawer.canvasWrapper.drawAromaticityRing(ring);
-            }
-          }
-        }
     }
 
     drawEdge(edgeId: number, debug: boolean): void {
@@ -79,6 +71,7 @@ class DrawingManager {
         let vertexB = this.drawer.graph.vertices[edge.targetId];
         let elementA = vertexA.value.element;
         let elementB = vertexB.value.element;
+        const isAromaticEdge = edge.isAromatic;
 
         if ((!vertexA.value.isDrawn || !vertexB.value.isDrawn) && this.drawer.opts.atomVisualization === 'default') {
           return;
@@ -94,8 +87,7 @@ class DrawingManager {
         sides[0].multiplyScalar(10).add(a);
         sides[1].multiplyScalar(10).add(a);
 
-        if (edge.bondType === '=' || this.drawer.getRingbondType(vertexA, vertexB) === '=' ||
-          (edge.isPartOfAromaticRing && this.drawer.bridgedRing)) {
+        if (edge.bondType === '=' || this.drawer.getRingbondType(vertexA, vertexB) === '=' || isAromaticEdge) {
           // Always draw double bonds inside the ring
           let inRing = this.drawer.areVerticesInSameRing(vertexA, vertexB);
           let s = this.drawer.chooseSide(vertexA, vertexB, sides);
@@ -122,11 +114,8 @@ class DrawingManager {
             line.shorten(this.drawer.opts.bondLength - this.drawer.opts.shortBondLength * this.drawer.opts.bondLength);
 
             // The shortened edge
-            if (edge.isPartOfAromaticRing) {
-              this.drawer.canvasWrapper.drawLine(line, true);
-            } else {
-              this.drawer.canvasWrapper.drawLine(line);
-            }
+            this.applyAromaticDashSizing(line, isAromaticEdge);
+            this.drawer.canvasWrapper.drawLine(line, isAromaticEdge);
 
             // The normal edge
             this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
@@ -137,8 +126,10 @@ class DrawingManager {
             let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
             let lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
-            this.drawer.canvasWrapper.drawLine(lineA);
-            this.drawer.canvasWrapper.drawLine(lineB);
+            this.applyAromaticDashSizing(lineA, isAromaticEdge);
+            this.drawer.canvasWrapper.drawLine(lineA, isAromaticEdge);
+            this.applyAromaticDashSizing(lineB, isAromaticEdge);
+            this.drawer.canvasWrapper.drawLine(lineB, isAromaticEdge);
           } else if (s.anCount == 0 && s.bnCount > 1 || s.bnCount == 0 && s.anCount > 1) {
             // Both lines are the same length here
             // Add the spacing to the edges (which are of unit length)
@@ -148,8 +139,10 @@ class DrawingManager {
             let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
             let lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
-            this.drawer.canvasWrapper.drawLine(lineA);
-            this.drawer.canvasWrapper.drawLine(lineB);
+            this.applyAromaticDashSizing(lineA, isAromaticEdge);
+            this.drawer.canvasWrapper.drawLine(lineA, isAromaticEdge);
+            this.applyAromaticDashSizing(lineB, isAromaticEdge);
+            this.drawer.canvasWrapper.drawLine(lineB, isAromaticEdge);
           } else if (s.sideCount[0] > s.sideCount[1]) {
             normals[0].multiplyScalar(that.drawer.opts.bondSpacing);
             normals[1].multiplyScalar(that.drawer.opts.bondSpacing);
@@ -157,7 +150,8 @@ class DrawingManager {
             let line = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
 
             line.shorten(this.drawer.opts.bondLength - this.drawer.opts.shortBondLength * this.drawer.opts.bondLength);
-            this.drawer.canvasWrapper.drawLine(line);
+            this.applyAromaticDashSizing(line, isAromaticEdge);
+            this.drawer.canvasWrapper.drawLine(line, isAromaticEdge);
             this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
           } else if (s.sideCount[0] < s.sideCount[1]) {
             normals[0].multiplyScalar(that.drawer.opts.bondSpacing);
@@ -166,7 +160,8 @@ class DrawingManager {
             let line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
             line.shorten(this.drawer.opts.bondLength - this.drawer.opts.shortBondLength * this.drawer.opts.bondLength);
-            this.drawer.canvasWrapper.drawLine(line);
+            this.applyAromaticDashSizing(line, isAromaticEdge);
+            this.drawer.canvasWrapper.drawLine(line, isAromaticEdge);
             this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
           } else if (s.totalSideCount[0] > s.totalSideCount[1]) {
             normals[0].multiplyScalar(that.drawer.opts.bondSpacing);
@@ -175,7 +170,8 @@ class DrawingManager {
             let line = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
 
             line.shorten(this.drawer.opts.bondLength - this.drawer.opts.shortBondLength * this.drawer.opts.bondLength);
-            this.drawer.canvasWrapper.drawLine(line);
+            this.applyAromaticDashSizing(line, isAromaticEdge);
+            this.drawer.canvasWrapper.drawLine(line, isAromaticEdge);
             this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
           } else if (s.totalSideCount[0] <= s.totalSideCount[1]) {
             normals[0].multiplyScalar(that.drawer.opts.bondSpacing);
@@ -184,7 +180,8 @@ class DrawingManager {
             let line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
             line.shorten(this.drawer.opts.bondLength - this.drawer.opts.shortBondLength * this.drawer.opts.bondLength);
-            this.drawer.canvasWrapper.drawLine(line);
+            this.applyAromaticDashSizing(line, isAromaticEdge);
+            this.drawer.canvasWrapper.drawLine(line, isAromaticEdge);
             this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
           } else {
 
@@ -354,6 +351,14 @@ class DrawingManager {
         let normals = Vector2.units(v1, v2);
 
         return normals;
+    }
+
+    private applyAromaticDashSizing(line: Line, dashed: boolean): void {
+        if (!dashed || !line) {
+            return;
+        }
+
+        snapLineToDashPattern(line);
     }
 
 }

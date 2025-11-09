@@ -3,6 +3,7 @@ import Vector2 = require('../../graph/Vector2');
 import Ring = require('../../graph/Ring');
 import Line = require('../../graph/Line');
 import SvgDrawer = require('../SvgDrawer');
+import { snapLineToDashPattern } from '../../utils/DashPatternHelper';
 
 class SvgEdgeDrawer {
   constructor(private drawer: SvgDrawer) {}
@@ -44,15 +45,6 @@ class SvgEdgeDrawer {
       }
     });
 
-    // Draw ring for implicitly defined aromatic rings
-    if (!this.drawer.bridgedRing) {
-      const aromaticRings = preprocessor.getAromaticRings();
-      for (const ring of aromaticRings) {
-        if (preprocessor.shouldDrawAromaticCircle(ring)) {
-          this.drawAromaticityRing(ring);
-        }
-      }
-    }
   }
 
 
@@ -72,6 +64,7 @@ class SvgEdgeDrawer {
       vertexB = preprocessor.graph.vertices[edge.targetId],
       elementA = vertexA.value.element,
       elementB = vertexB.value.element;
+    const isAromaticEdge = edge.isAromatic;
 
     if ((!vertexA.value.isDrawn || !vertexB.value.isDrawn) && preprocessor.opts.atomVisualization === 'default') {
       return;
@@ -86,8 +79,7 @@ class SvgEdgeDrawer {
     sides[0].multiplyScalar(10).add(a);
     sides[1].multiplyScalar(10).add(a);
 
-    if (edge.bondType === '=' || preprocessor.getRingbondType(vertexA, vertexB) === '=' ||
-      (edge.isPartOfAromaticRing && preprocessor.bridgedRing)) {
+    if (edge.bondType === '=' || preprocessor.getRingbondType(vertexA, vertexB) === '=' || isAromaticEdge) {
       // Always draw double bonds inside the ring
       let inRing = preprocessor.areVerticesInSameRing(vertexA, vertexB);
       let s = preprocessor.chooseSide(vertexA, vertexB, sides);
@@ -114,11 +106,8 @@ class SvgEdgeDrawer {
         line.shorten(opts.bondLength - opts.shortBondLength * opts.bondLength);
 
         // The shortened edge
-        if (edge.isPartOfAromaticRing) {
-          renderer.drawLine(line, true);
-        } else {
-          renderer.drawLine(line);
-        }
+        this.applyAromaticDashSizing(line, isAromaticEdge);
+        renderer.drawLine(line, isAromaticEdge);
 
         renderer.drawLine(new Line(a, b, elementA, elementB));
       } else if ((edge.center || vertexA.isTerminal() && vertexB.isTerminal()) ||
@@ -128,8 +117,10 @@ class SvgEdgeDrawer {
         let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB),
           lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
-        renderer.drawLine(lineA);
-        renderer.drawLine(lineB);
+        this.applyAromaticDashSizing(lineA, isAromaticEdge);
+        renderer.drawLine(lineA, isAromaticEdge);
+        this.applyAromaticDashSizing(lineB, isAromaticEdge);
+        renderer.drawLine(lineB, isAromaticEdge);
       } else if ((s.sideCount[0] > s.sideCount[1]) ||
         (s.totalSideCount[0] > s.totalSideCount[1])) {
         this.multiplyNormals(normals, opts.bondSpacing);
@@ -138,7 +129,8 @@ class SvgEdgeDrawer {
 
         line.shorten(opts.bondLength - opts.shortBondLength * opts.bondLength);
 
-        renderer.drawLine(line);
+        this.applyAromaticDashSizing(line, isAromaticEdge);
+        renderer.drawLine(line, isAromaticEdge);
         renderer.drawLine(new Line(a, b, elementA, elementB));
       } else if ((s.sideCount[0] < s.sideCount[1]) ||
         (s.totalSideCount[0] <= s.totalSideCount[1])) {
@@ -147,7 +139,8 @@ class SvgEdgeDrawer {
         let line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
         line.shorten(opts.bondLength - opts.shortBondLength * opts.bondLength);
-        renderer.drawLine(line);
+        this.applyAromaticDashSizing(line, isAromaticEdge);
+        renderer.drawLine(line, isAromaticEdge);
         renderer.drawLine(new Line(a, b, elementA, elementB));
       }
     } else if (edge.bondType === '#') {
@@ -191,6 +184,14 @@ class SvgEdgeDrawer {
     normals[0].multiplyScalar(spacing);
     normals[1].multiplyScalar(spacing);
   }
+
+  private applyAromaticDashSizing(line: Line, dashed: boolean): void {
+    if (!dashed || !line) {
+      return;
+    }
+    snapLineToDashPattern(line);
+  }
+
 }
 
 export = SvgEdgeDrawer;

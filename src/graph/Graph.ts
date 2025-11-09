@@ -190,6 +190,7 @@ class Graph {
 
     this.vertexIdsToEdgeId[edge.sourceId + '_' + edge.targetId] = edge.id;
     this.vertexIdsToEdgeId[edge.targetId + '_' + edge.sourceId] = edge.id;
+    edge.isAromatic = source.value.isAromaticByInput && target.value.isAromaticByInput;
     edge.isPartOfAromaticRing = source.value.isPartOfAromaticRing && target.value.isPartOfAromaticRing;
 
     source.value.bondCount += edge.weight;
