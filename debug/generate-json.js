@@ -74,7 +74,7 @@ const options = createMoleculeOptions({
     height: 500,
     bondThickness: 1.0,
     bondLength: 30,
-    shortBondLength: 0.85,
+    shortBondLength: 0.7,
     bondSpacing: 0.18 * 30,
     atomVisualization: 'default',
     isomeric: true,

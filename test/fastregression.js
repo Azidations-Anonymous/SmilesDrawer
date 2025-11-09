@@ -9,6 +9,7 @@ let fastregression = [
 	'C1=CCCCC1',
 	'C1=CCCC=C1',
 	'C1=CC=CC=C1',
+	'c1ccccc1CC(N)C',
 	'CCCC(S(=O)(=O)C)CC(C(C)=O)CCCC',
 	'C1=C[N](N=C1)C2CN([S](C)(=O)=O)C2',
 	'C(C)(C)C(C)(C)CC',
