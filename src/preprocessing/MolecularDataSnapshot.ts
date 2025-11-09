@@ -72,6 +72,10 @@ class MolecularDataSnapshot implements IMolecularData {
     return this.source.getAromaticRings();
   }
 
+  shouldDrawAromaticCircle(ring: Ring | null): boolean {
+    return this.source.shouldDrawAromaticCircle(ring);
+  }
+
   initDraw(data: ParseTree, themeName: string, infoOnly: boolean, highlight_atoms: AtomHighlight[]): void {
     throw new Error('MolecularDataSnapshot is read-only. initDraw() cannot be called.');
   }

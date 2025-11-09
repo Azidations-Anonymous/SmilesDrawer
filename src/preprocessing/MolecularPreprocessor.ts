@@ -293,6 +293,7 @@ class MolecularPreprocessor implements IMolecularData {
               anchoredRings: v.value.anchoredRings ? [...v.value.anchoredRings] : [],
               isConnectedToRing: v.value.isConnectedToRing,
               isPartOfAromaticRing: v.value.isPartOfAromaticRing,
+              isAromaticByInput: (v.value as any).isAromaticByInput ?? false,
 
               // Bracket notation data
               bracket: v.value.bracket ? {
@@ -913,6 +914,39 @@ class MolecularPreprocessor implements IMolecularData {
 
   getAromaticRings(): Ring[] {
       return this.ringManager.getAromaticRings();
+  }
+
+  shouldDrawAromaticCircle(ring: Ring | null): boolean {
+      if (!ring || !ring.members || ring.members.length === 0) {
+          return false;
+      }
+
+      const members = ring.members;
+      for (let i = 0; i < members.length; i++) {
+          const memberId = members[i];
+          const vertex = this.graph.vertices[memberId];
+          if (!vertex || !(vertex.value as any).isAromaticByInput) {
+              return false;
+          }
+
+          const nextId = members[(i + 1) % members.length];
+          const edgeId = this.graph.vertexIdsToEdgeId[memberId + '_' + nextId];
+          if (edgeId == null) {
+              continue;
+          }
+          const edge = this.graph.edges[edgeId];
+          if (!edge) {
+              continue;
+          }
+          if (edge.bondType === '=' ||
+              edge.bondType === '#' ||
+              edge.bondType === '$' ||
+              edge.bondType === '/' ||
+              edge.bondType === '\\') {
+              return false;
+          }
+      }
+      return true;
   }
 
   /**

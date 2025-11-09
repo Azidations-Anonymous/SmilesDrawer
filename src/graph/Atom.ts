@@ -81,6 +81,7 @@ class Atom {
   isConnectedToRing: boolean;
   neighbouringElements: string[];
   isPartOfAromaticRing: boolean;
+  isAromaticByInput: boolean;
   bondCount: number;
   chirality: Chirality;
   isStereoCenter: boolean;
@@ -100,6 +101,7 @@ class Atom {
    */
   constructor(element: string, bondType: BondType = '-') {
     this.idx = null;
+    const isLowercaseAromatic = element.length === 1 && element === element.toLowerCase();
     this.element = element.length === 1 ? element.toUpperCase() : element;
     this.drawExplicit = false;
     this.ringbonds = Array();
@@ -118,7 +120,8 @@ class Atom {
     this.isDrawn = true;
     this.isConnectedToRing = false;
     this.neighbouringElements = Array();
-    this.isPartOfAromaticRing = element !== this.element;
+    this.isAromaticByInput = isLowercaseAromatic;
+    this.isPartOfAromaticRing = isLowercaseAromatic;
     this.bondCount = 0;
     this.chirality = null;
     this.isStereoCenter = false;

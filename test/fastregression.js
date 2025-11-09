@@ -1,6 +1,11 @@
 let fastregression = [
 	'CC1=[O][Fe]2345ON1CCC[C@H]1NC(=O)CNC(=O)[C@H](CO)NC(=O)CNC(=O)[C@@H](CCCN(O2)C(C)=[O]3)NC(=O)[C@@H](CCCN(O4)C(C)=[O]5)NC1=O',
+	'c1ccccc1',
+	'c1cccccc1',
+	'c1ccccccc1',
 	'C1=CCCCC1',
+	'C1=CCCC=C1',
+	'C1=CC=CC=C1',
 	'CCCC(S(=O)(=O)C)CC(C(C)=O)CCCC',
 	'C1=C[N](N=C1)C2CN([S](C)(=O)=O)C2',
 	'C(C)(C)C(C)(C)CC',

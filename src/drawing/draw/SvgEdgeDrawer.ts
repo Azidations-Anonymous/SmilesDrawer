@@ -48,7 +48,9 @@ class SvgEdgeDrawer {
     if (!this.drawer.bridgedRing) {
       const aromaticRings = preprocessor.getAromaticRings();
       for (const ring of aromaticRings) {
-        this.drawAromaticityRing(ring);
+        if (preprocessor.shouldDrawAromaticCircle(ring)) {
+          this.drawAromaticityRing(ring);
+        }
       }
     }
   }

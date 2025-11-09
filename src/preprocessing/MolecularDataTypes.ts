@@ -78,6 +78,7 @@ export interface SerializedAtomValue {
   anchoredRings: number[];
   isConnectedToRing: boolean;
   isPartOfAromaticRing: boolean;
+  isAromaticByInput: boolean;
 
   // Bracket notation
   bracket: SerializedBracket | null;

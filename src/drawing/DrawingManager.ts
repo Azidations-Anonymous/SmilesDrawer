@@ -7,6 +7,7 @@ import Edge = require("../graph/Edge");
 import ThemeManager = require("../config/ThemeManager");
 import CanvasDrawer = require("./CanvasDrawer");
 import Atom = require("../graph/Atom");
+import Ring = require("../graph/Ring");
 
 type ParseTree = any;
 
@@ -64,7 +65,9 @@ class DrawingManager {
         if (!this.drawer.bridgedRing) {
           const aromaticRings = this.drawer.getAromaticRings();
           for (const ring of aromaticRings) {
-            this.drawer.canvasWrapper.drawAromaticityRing(ring);
+            if (this.drawer.shouldDrawAromaticCircle(ring)) {
+              this.drawer.canvasWrapper.drawAromaticityRing(ring);
+            }
           }
         }
     }
@@ -352,5 +355,6 @@ class DrawingManager {
 
         return normals;
     }
+
 }
 export = DrawingManager;
