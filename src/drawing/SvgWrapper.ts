@@ -9,6 +9,21 @@ import { IMoleculeOptions, AttachedPseudoElements } from '../config/IOptions';
 import ThemeManager = require('../config/ThemeManager');
 import { TextDirection } from '../types/CommonTypes';
 import IDrawingSurface = require('./renderers/IDrawingSurface');
+import SvgLabelRenderer = require('./renderers/SvgLabelRenderer');
+type LabelSegment = {
+  display: string;
+  element: string;
+  kind: 'primary' | 'satellite';
+};
+
+type LabelPlacement = {
+  segment: LabelSegment;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
 function makeid(length: number): string {
   var result = '';
   var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -40,6 +55,7 @@ class SvgWrapper implements IDrawingSurface {
   minX: number;
   minY: number;
   style: SVGStyleElement;
+  labelRenderer: SvgLabelRenderer;
 
   constructor(themeManager: ThemeManager, target: string | SVGElement, options: IMoleculeOptions, clear: boolean = true) {
     if (typeof target === 'string') {
@@ -50,6 +66,7 @@ class SvgWrapper implements IDrawingSurface {
 
     this.container = null;
     this.opts = options;
+    this.labelRenderer = new SvgLabelRenderer(this.opts);
     this.uid = makeid(5);
     this.gradientId = 0;
 
@@ -648,7 +665,8 @@ class SvgWrapper implements IDrawingSurface {
    * @param {Number} attachedPseudoElement.hyrogenCount The number of hydrogens attached to each atom matching the key.
    */
   drawText(x: number, y: number, elementName: string, hydrogens: number, direction: TextDirection, isTerminal: boolean, charge: number, isotope: number, totalVertices: number, attachedPseudoElement: AttachedPseudoElements = {}): void {
-    let text = [];
+    const parityMode = this.opts.svgTextParity || 'pikachu';
+    const segments: LabelSegment[] = [];
     let display = elementName;
 
     if (charge !== 0 && charge !== null) {
@@ -659,19 +677,27 @@ class SvgWrapper implements IDrawingSurface {
       display = SvgUnicodeHelper.createUnicodeSuperscript(isotope) + display;
     }
 
-    text.push([display, elementName]);
+    segments.push({
+      display,
+      element: elementName,
+      kind: 'primary'
+    });
 
     if (hydrogens === 1) {
-      text.push(['H', 'H'])
+      segments.push({ display: 'H', element: 'H', kind: 'satellite' });
     } else if (hydrogens > 1) {
-      text.push(['H' + SvgUnicodeHelper.createUnicodeSubscript(hydrogens), 'H'])
+      segments.push({
+        display: 'H' + SvgUnicodeHelper.createUnicodeSubscript(hydrogens),
+        element: 'H',
+        kind: 'satellite'
+      });
     }
 
     // TODO: Better handle exceptions
     // Exception for nitro (draw nitro as NO2 instead of N+O-O)
     if (charge === 1 && elementName === 'N' && attachedPseudoElement.hasOwnProperty('0O') &&
       attachedPseudoElement.hasOwnProperty('0O-1')) {
-      attachedPseudoElement = { '0O': { element: 'O', count: 2, hydrogenCount: 0, previousElement: 'C', charge: 0 } }
+      attachedPseudoElement = { '0O': { element: 'O', count: 2, hydrogenCount: 0, previousElement: 'C', charge: 0 } };
       charge = 0;
     }
 
@@ -681,29 +707,44 @@ class SvgWrapper implements IDrawingSurface {
       }
 
       let pe = attachedPseudoElement[key];
-      let display = pe.element;
+      let pseudoDisplay = pe.element;
 
       if (pe.count > 1) {
-        display += SvgUnicodeHelper.createUnicodeSubscript(pe.count);
+        pseudoDisplay += SvgUnicodeHelper.createUnicodeSubscript(pe.count);
       }
 
       if (pe.charge !== 0) {
-        display += SvgUnicodeHelper.createUnicodeCharge(pe.charge);
+        pseudoDisplay += SvgUnicodeHelper.createUnicodeCharge(pe.charge);
       }
 
-      text.push([display, pe.element]);
+      segments.push({
+        display: pseudoDisplay,
+        element: pe.element,
+        kind: 'satellite'
+      });
 
       if (pe.hydrogenCount === 1) {
-        text.push(['H', 'H'])
+        segments.push({ display: 'H', element: 'H', kind: 'satellite' });
       } else if (pe.hydrogenCount > 1) {
-        text.push(['H' + SvgUnicodeHelper.createUnicodeSubscript(pe.hydrogenCount), 'H'])
+        segments.push({
+          display: 'H' + SvgUnicodeHelper.createUnicodeSubscript(pe.hydrogenCount),
+          element: 'H',
+          kind: 'satellite'
+        });
       }
     }
 
-    this.write(text, direction, x, y, totalVertices === 1);
+    const textTuples: [string, string][] = segments.map(segment => [segment.display, segment.element]);
+
+    if (parityMode === 'legacy') {
+      this.writeLegacy(textTuples, direction, x, y, totalVertices === 1);
+      return;
+    }
+
+    this.writeAbsoluteLabels(segments, direction, x, y, totalVertices === 1);
   }
 
-  write(text: [string, string][], direction: TextDirection, x: number, y: number, singleVertex: boolean): void {
+  writeLegacy(text: [string, string][], direction: TextDirection, x: number, y: number, singleVertex: boolean): void {
     // Measure element name only, without charge or isotope ...
     let bbox = SvgTextHelper.measureText(text[0][1], this.opts.fontSizeLarge, this.opts.fontFamily);
 
@@ -779,27 +820,26 @@ class SvgWrapper implements IDrawingSurface {
       text = text.reverse();
     }
 
-    if (direction === 'right' || direction === 'down' || direction === 'up') {
-      x -= bbox.width / 2.0;
+    const isVertical = direction === 'up' || direction === 'down';
+    let lines = text;
+    if (direction === 'left' || direction === 'up') {
+      lines = text.slice().reverse();
     }
 
-    if (direction === 'left') {
-      x += bbox.width / 2.0;
-    }
-
-    text.forEach((part, i) => {
+    lines.forEach((part, i) => {
       const display = part[0];
       const elementName = part[1];
       let tspanElem = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
       tspanElem.setAttributeNS(null, 'fill', this.themeManager.getColor(elementName));
       tspanElem.textContent = display;
 
-      if (direction === 'up' || direction === 'down') {
-        tspanElem.setAttributeNS(null, 'x', '0px')
-        if (direction === 'up') {
-          tspanElem.setAttributeNS(null, 'y', `-${0.9 * i}em`);
+      if (isVertical) {
+        tspanElem.setAttributeNS(null, 'x', '0');
+        if (i === 0) {
+          tspanElem.setAttributeNS(null, 'dy', '0');
         } else {
-          tspanElem.setAttributeNS(null, 'y', `${0.9 * i}em`);
+          const step = direction === 'up' ? -0.9 : 0.9;
+          tspanElem.setAttributeNS(null, 'dy', `${step}em`);
         }
       }
 
@@ -808,20 +848,13 @@ class SvgWrapper implements IDrawingSurface {
 
     textElem.setAttributeNS(null, 'data-direction', direction);
 
-    if (direction === 'left' || direction === 'right') {
-      textElem.setAttributeNS(null, 'dominant-baseline', 'alphabetic');
-      textElem.setAttributeNS(null, 'y', '0.36em');
-    } else {
-      textElem.setAttributeNS(null, 'dominant-baseline', 'central');
-    }
-
-    if (direction === 'left') {
-      textElem.setAttributeNS(null, 'text-anchor', 'end');
-    }
+    textElem.setAttributeNS(null, 'text-anchor', 'middle');
+    textElem.setAttributeNS(null, 'dominant-baseline', 'central');
+    textElem.setAttributeNS(null, 'alignment-baseline', 'central');
 
     g.appendChild(textElem)
 
-    g.setAttributeNS(null, 'style', `transform: translateX(${x}px) translateY(${y}px)`);
+    g.setAttributeNS(null, 'transform', `translate(${x},${y})`);
 
     let maskRadius = this.opts.fontSizeLarge * 0.75;
     if (text[0][1].length > 1) {
@@ -837,6 +870,126 @@ class SvgWrapper implements IDrawingSurface {
     this.maskElements.push(mask);
 
     this.vertices.push(g);
+  }
+
+  private writeAbsoluteLabels(segments: LabelSegment[], direction: TextDirection, x: number, y: number, singleVertex: boolean): void {
+    if (!segments.length) {
+      return;
+    }
+
+    const metricsCache = new Map<string, { width: number; height: number }>();
+    const measure = (textValue: string): { width: number; height: number } => {
+      if (!metricsCache.has(textValue)) {
+        metricsCache.set(textValue, SvgTextHelper.measureText(textValue, this.opts.fontSizeLarge, this.opts.fontFamily));
+      }
+      return metricsCache.get(textValue)!;
+    };
+
+    const isVertical = direction === 'up' || direction === 'down';
+    const needsReverse = direction === 'left' || direction === 'up';
+    const orderedSegments = needsReverse ? segments.slice().reverse() : segments.slice();
+    const placements: LabelPlacement[] = [];
+
+    if (isVertical) {
+      const metricsList = orderedSegments.map((segment) => measure(segment.display));
+      const lineHeight = this.opts.fontSizeLarge * 0.9;
+      let currentY = y;
+
+      orderedSegments.forEach((segment, index) => {
+        if (index > 0) {
+          currentY += direction === 'up' ? -lineHeight : lineHeight;
+        }
+
+        const metrics = metricsList[index];
+        placements.push({
+          segment,
+          x,
+          y: currentY,
+          width: metrics.width,
+          height: metrics.height
+        });
+      });
+    } else {
+      const metricsList = orderedSegments.map((segment) => measure(segment.display));
+      const totalWidth = metricsList.reduce((sum, metrics) => sum + metrics.width, 0);
+      let cursor = x - totalWidth / 2;
+
+      orderedSegments.forEach((segment, index) => {
+        const metrics = metricsList[index];
+        const centerX = cursor + metrics.width / 2;
+        placements.push({
+          segment,
+          x: centerX,
+          y,
+          width: metrics.width,
+          height: metrics.height
+        });
+        cursor += metrics.width;
+      });
+    }
+
+    const primaryPlacement = placements.find((placement) => placement.segment.kind === 'primary');
+    if (primaryPlacement) {
+      this.createLabelMask(primaryPlacement.x, primaryPlacement.y, primaryPlacement.segment);
+    } else {
+      this.createLabelMask(x, y, segments[0]);
+    }
+
+    placements.forEach((placement) => {
+      const color = this.themeManager.getColor(placement.segment.element);
+      const textElem = placement.segment.kind === 'primary'
+        ? this.labelRenderer.drawPrimaryLabel(placement.x, placement.y, placement.segment.display, color)
+        : this.labelRenderer.drawSatellite(placement.x, placement.y, placement.segment.display, color);
+
+      this.vertices.push(textElem);
+    });
+
+    this.updateBoundsFromPlacements(placements, singleVertex);
+  }
+
+  private createLabelMask(cx: number, cy: number, segment: LabelSegment): void {
+    let maskRadius = this.opts.fontSizeLarge * 0.75;
+    if (segment.element.length > 1) {
+      maskRadius = this.opts.fontSizeLarge * 1.1;
+    }
+
+    const mask = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    mask.setAttributeNS(null, 'cx', cx.toString());
+    mask.setAttributeNS(null, 'cy', cy.toString());
+    mask.setAttributeNS(null, 'r', maskRadius.toString());
+    mask.setAttributeNS(null, 'fill', 'black');
+
+    this.maskElements.push(mask);
+  }
+
+  private updateBoundsFromPlacements(placements: LabelPlacement[], _singleVertex: boolean): void {
+    if (!placements.length) {
+      return;
+    }
+
+    let localMinX = Number.POSITIVE_INFINITY;
+    let localMaxX = -Number.POSITIVE_INFINITY;
+    let localMinY = Number.POSITIVE_INFINITY;
+    let localMaxY = -Number.POSITIVE_INFINITY;
+
+    placements.forEach((placement) => {
+      const halfWidth = placement.width / 2;
+      const halfHeight = placement.height / 2;
+
+      localMinX = Math.min(localMinX, placement.x - halfWidth);
+      localMaxX = Math.max(localMaxX, placement.x + halfWidth);
+      localMinY = Math.min(localMinY, placement.y - halfHeight);
+      localMaxY = Math.max(localMaxY, placement.y + halfHeight);
+    });
+
+    this.minX = Math.min(this.minX, localMinX);
+    this.maxX = Math.max(this.maxX, localMaxX);
+    this.minY = Math.min(this.minY, localMinY);
+    this.maxY = Math.max(this.maxY, localMaxY);
+
+    if (_singleVertex) {
+      return;
+    }
   }
 
   /**

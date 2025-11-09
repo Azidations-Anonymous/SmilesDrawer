@@ -1,4 +1,4 @@
-import { AtomVisualization } from '../types/CommonTypes';
+import { AtomVisualization, SvgTextParity } from '../types/CommonTypes';
 import Vertex = require('../graph/Vertex');
 
 type AtomAnnotationFormatter = (input: {
@@ -85,6 +85,7 @@ interface IMoleculeOptions {
   fontFamily: string;
   fontSizeLarge: number;
   fontSizeSmall: number;
+  svgTextParity?: SvgTextParity;
 
   // Debugging
   debug: boolean;
