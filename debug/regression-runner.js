@@ -320,6 +320,7 @@ let filterPattern = null;
 let datasetName = null;
 let generateImages = false;
 let generateJsonReports = false;
+let ignoreJsonAdditions = true;
 const positionalArgs = [];
 
 for (let i = 0; i < args.length; i++) {
@@ -368,6 +369,11 @@ for (let i = 0; i < args.length; i++) {
         continue;
     }
 
+    if (arg === '-respectjsonadditions') {
+        ignoreJsonAdditions = false;
+        continue;
+    }
+
     if (arg === '-bisect') {
         if (i + 1 >= args.length) {
             console.error('ERROR: -bisect flag requires a SMILES string argument');
@@ -408,6 +414,7 @@ console.error('Usage: node regression-runner.js <old-code-path> <new-code-path> 
     console.error('  -filter      Only test SMILES matching the given regex (JavaScript syntax)');
 console.error('  -json        Save JSON diff reports (default: skip writing JSON files)');
 console.error('  -image       Save PNG snapshots for changed molecules (default: skip PNG files)');
+console.error('  -respectjsonadditions  Treat JSON additions as differences (default: ignore additions)');
 console.error('  -bisect      Test single SMILES and generate comparison report (returns 0=match, 1=difference)');
 console.error('  -smiles      Run regression on a single SMILES (regular mode, no HTML report)');
     console.error('');
@@ -548,6 +555,11 @@ if (bisectMode) {
             process.exit(0);
         }
 
+        if (ignoreJsonAdditions && equalsIgnoringAdditions(sanitizedOldJson, sanitizedNewJson)) {
+            console.log('Bisection mode: differences limited to JSON modifications (additions ignored).');
+            process.exit(0);
+        }
+
         const diffBase = cloneJson(sanitizedOldJson);
         const delta = jsondiffpatch.diff(diffBase, sanitizedNewJson);
         const rawJsonDiffHtml = htmlFormatter.format(delta, diffBase);
@@ -606,6 +618,9 @@ if (bisectMode) {
         // Exit 0 if match, 1 if difference
         if (areJsonStructurallyEqual(sanitizedOldJson, sanitizedNewJson)) {
             console.log('Bisection mode: differences were below noise tolerance.');
+            process.exit(0);
+        } else if (ignoreJsonAdditions && equalsIgnoringAdditions(sanitizedOldJson, sanitizedNewJson)) {
+            console.log('Bisection mode: differences limited to JSON additions (ignored).');
             process.exit(0);
         } else if (oldJson === newJson) {
             process.exit(0);
@@ -863,6 +878,11 @@ for (const dataset of datasets) {
                     });
                 }
                 console.log('  MATCH: Differences within noise tolerance ✓');
+                continue;
+            }
+
+            if (ignoreJsonAdditions && equalsIgnoringAdditions(sanitizedOldJson, sanitizedNewJson)) {
+            console.log('  MATCH: Differences limited to JSON modifications (additions ignored) ✓');
                 continue;
             }
 
@@ -1134,6 +1154,52 @@ function areJsonStructurallyEqual(a, b) {
 
 function cloneJson(value) {
     return JSON.parse(JSON.stringify(value));
+}
+
+function equalsIgnoringAdditions(oldValue, newValue) {
+    if (oldValue === newValue) {
+        return true;
+    }
+
+    if (oldValue === null || newValue === null) {
+        return oldValue === newValue;
+    }
+
+    const oldIsObject = typeof oldValue === 'object';
+    const newIsObject = typeof newValue === 'object';
+
+    if (!oldIsObject || !newIsObject) {
+        return oldValue === newValue;
+    }
+
+    const oldIsArray = Array.isArray(oldValue);
+    const newIsArray = Array.isArray(newValue);
+
+    if (oldIsArray || newIsArray) {
+        if (!oldIsArray || !newIsArray) {
+            return false;
+        }
+        if (oldValue.length !== newValue.length) {
+            return false;
+        }
+        for (let i = 0; i < oldValue.length; i++) {
+            if (!equalsIgnoringAdditions(oldValue[i], newValue[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    for (const key of Object.keys(oldValue)) {
+        if (!Object.prototype.hasOwnProperty.call(newValue, key)) {
+            return false;
+        }
+        if (!equalsIgnoringAdditions(oldValue[key], newValue[key])) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 /**

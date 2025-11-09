@@ -14,6 +14,7 @@ FILTER_PATTERN=""
 FILTER_ENABLED="NO"
 IMAGE_ENABLED="NO"
 JSON_ENABLED="NO"
+IGNORE_JSON_ADDITIONS="YES"
 DATASET_PATTERN=""
 
 while [[ $# -gt 0 ]]; do
@@ -60,6 +61,11 @@ while [[ $# -gt 0 ]]; do
             ;;
         -json)
             JSON_ENABLED="YES"
+            FLAG_ARGS+=("$1")
+            shift
+            ;;
+        -respectjsonadditions)
+            IGNORE_JSON_ADDITIONS="NO"
             FLAG_ARGS+=("$1")
             shift
             ;;
@@ -171,7 +177,8 @@ if [ "$BISECT_MODE" = "YES" ]; then
     echo -e "\033[93mBASELINE COMMIT:\033[0m ${BASELINE_COMMIT}"
     echo -e "\033[93mCURRENT COMMIT:\033[0m ${CURRENT_COMMIT}${UNCOMMITTED_CHANGES}"
     echo -e "\033[93mIMAGES:\033[0m $([ "$IMAGE_ENABLED" = "YES" ] && echo "YES (-image)" || echo "NO")"
-    echo -e "\033[93mJSON:\033[0m $([ "$JSON_ENABLED" = "YES" ] && echo "YES (-json)" || echo "NO")"
+echo -e "\033[93mJSON:\033[0m $([ "$JSON_ENABLED" = "YES" ] && echo "YES (-json)" || echo "NO")"
+echo -e "\033[93mIgnore JSON additions:\033[0m $([ "$IGNORE_JSON_ADDITIONS" = "YES" ] && echo "YES (default)" || echo "NO (respect additions)")"
     if [ "$FILTER_ENABLED" = "YES" ]; then
         echo -e "\033[93mFILTER:\033[0m ${FILTER_PATTERN} (ignored in bisect mode)"
     fi
@@ -189,6 +196,7 @@ else
     echo -e "\033[93mFILTER:\033[0m $([ "$FILTER_ENABLED" = "YES" ] && echo "${FILTER_PATTERN}" || echo "(none)")"
     echo -e "\033[93mIMAGES:\033[0m $([ "$IMAGE_ENABLED" = "YES" ] && echo "YES (-image)" || echo "NO")"
     echo -e "\033[93mJSON:\033[0m $([ "$JSON_ENABLED" = "YES" ] && echo "YES (-json)" || echo "NO")"
+    echo -e "\033[93mIgnore JSON additions:\033[0m $([ "$IGNORE_JSON_ADDITIONS" = "YES" ] && echo "YES (default)" || echo "NO (respect additions)")"
     echo -e "\033[93mBASELINE COMMIT:\033[0m ${BASELINE_COMMIT}"
     echo -e "\033[93mCURRENT COMMIT:\033[0m ${CURRENT_COMMIT}${UNCOMMITTED_CHANGES}"
     echo -e "\033[93mOUTPUT DIRECTORY:\033[0m ${CURRENT_DIR}/debug/output/regression/[timestamp]"
