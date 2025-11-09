@@ -114,7 +114,8 @@ class GaussDrawer {
             abs_max = Math.max(Math.abs(min), Math.abs(max));
         }
 
-        const scale = chroma.scale(this.colormap).domain([-1.0, 1.0]);
+        type ColorScaleFn = ((value: number | null | undefined) => chroma.Color);
+        const scale = chroma.scale(this.colormap).domain([-1.0, 1.0]) as ColorScaleFn;
 
         for (let x = 0; x < this.width; x++) {
             for (let y = 0; y < this.height; y++) {
@@ -126,7 +127,8 @@ class GaussDrawer {
                     m[x][y] = Math.round(m[x][y] / this.interval) * this.interval;
                 }
 
-                let [r, g, b] = (scale(m[x][y]) as any).rgb();
+                const color = scale(m[x][y]);
+                const [r, g, b] = color.rgb();
                 this.setPixel(new Vector2(x, y), r, g, b);
             }
         }
