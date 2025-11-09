@@ -66,7 +66,6 @@ class SvgEdgeDrawer {
       vertexB = preprocessor.graph.vertices[edge.targetId],
       elementA = vertexA.value.element,
       elementB = vertexB.value.element;
-    const isAromaticEdge = edge.isAromatic;
 
     if ((!vertexA.value.isDrawn || !vertexB.value.isDrawn) && preprocessor.opts.atomVisualization === 'default') {
       return;
@@ -81,7 +80,7 @@ class SvgEdgeDrawer {
     sides[0].multiplyScalar(10).add(a);
     sides[1].multiplyScalar(10).add(a);
 
-    if (edge.bondType === '=' || preprocessor.getRingbondType(vertexA, vertexB) === '=' || isAromaticEdge) {
+    if (edge.bondType === '=' || preprocessor.getRingbondType(vertexA, vertexB) === '=') {
       // Always draw double bonds inside the ring
       let inRing = preprocessor.areVerticesInSameRing(vertexA, vertexB);
       let s = preprocessor.chooseSide(vertexA, vertexB, sides);
@@ -108,7 +107,7 @@ class SvgEdgeDrawer {
         line.shorten(opts.bondLength - opts.shortBondLength * opts.bondLength);
 
         // The shortened edge
-        renderer.drawLine(line, isAromaticEdge);
+        renderer.drawLine(line);
 
         renderer.drawLine(new Line(a, b, elementA, elementB));
       } else if ((edge.center || vertexA.isTerminal() && vertexB.isTerminal()) ||
@@ -118,8 +117,8 @@ class SvgEdgeDrawer {
         let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB),
           lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
-        renderer.drawLine(lineA, isAromaticEdge);
-        renderer.drawLine(lineB, isAromaticEdge);
+        renderer.drawLine(lineA);
+        renderer.drawLine(lineB);
       } else if ((s.sideCount[0] > s.sideCount[1]) ||
         (s.totalSideCount[0] > s.totalSideCount[1])) {
         this.multiplyNormals(normals, opts.bondSpacing);
@@ -128,7 +127,7 @@ class SvgEdgeDrawer {
 
         line.shorten(opts.bondLength - opts.shortBondLength * opts.bondLength);
 
-        renderer.drawLine(line, isAromaticEdge);
+        renderer.drawLine(line);
         renderer.drawLine(new Line(a, b, elementA, elementB));
       } else if ((s.sideCount[0] < s.sideCount[1]) ||
         (s.totalSideCount[0] <= s.totalSideCount[1])) {
@@ -137,7 +136,7 @@ class SvgEdgeDrawer {
         let line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
         line.shorten(opts.bondLength - opts.shortBondLength * opts.bondLength);
-        renderer.drawLine(line, isAromaticEdge);
+        renderer.drawLine(line);
         renderer.drawLine(new Line(a, b, elementA, elementB));
       }
     } else if (edge.bondType === '#') {
@@ -152,6 +151,10 @@ class SvgEdgeDrawer {
       renderer.drawLine(new Line(a, b, elementA, elementB));
     } else if (edge.bondType === '.') {
       // TODO: Something... maybe... version 2?
+    } else if (edge.isAromatic) {
+      let isChiralCenterA = vertexA.value.isStereoCenter;
+      let isChiralCenterB = vertexB.value.isStereoCenter;
+      renderer.drawLine(new Line(a, b, elementA, elementB, isChiralCenterA, isChiralCenterB));
     } else {
       let isChiralCenterA = vertexA.value.isStereoCenter;
       let isChiralCenterB = vertexB.value.isStereoCenter;
@@ -190,6 +193,9 @@ class SvgEdgeDrawer {
 
     const aromaticRings = this.drawer.preprocessor.getAromaticRings();
     for (const ring of aromaticRings) {
+      if (!this.isImplicitAromaticRing(ring)) {
+        continue;
+      }
       const polygon = this.computeAromaticPolygon(ring);
       if (polygon.length < 2) {
         continue;
@@ -205,7 +211,7 @@ class SvgEdgeDrawer {
       return polygon;
     }
 
-    const offset = Math.max(1, this.drawer.preprocessor.opts.bondSpacing * this.drawer.preprocessor.opts.bondLength * 0.5);
+    const offset = 7;
     for (const memberId of ring.members) {
       const vertex = this.drawer.preprocessor.graph.vertices[memberId];
       if (!vertex || !vertex.position) {
@@ -224,6 +230,19 @@ class SvgEdgeDrawer {
     }
 
     return polygon;
+  }
+
+  private isImplicitAromaticRing(ring: Ring): boolean {
+    if (!ring.members || ring.members.length === 0) {
+      return false;
+    }
+    for (const memberId of ring.members) {
+      const vertex = this.drawer.preprocessor.graph.vertices[memberId];
+      if (!vertex || !vertex.value.isAromaticByInput) {
+        return false;
+      }
+    }
+    return true;
   }
 
 }

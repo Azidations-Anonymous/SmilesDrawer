@@ -73,7 +73,6 @@ class DrawingManager {
         let vertexB = this.drawer.graph.vertices[edge.targetId];
         let elementA = vertexA.value.element;
         let elementB = vertexB.value.element;
-        const isAromaticEdge = edge.isAromatic;
 
         if ((!vertexA.value.isDrawn || !vertexB.value.isDrawn) && this.drawer.opts.atomVisualization === 'default') {
           return;
@@ -89,7 +88,7 @@ class DrawingManager {
         sides[0].multiplyScalar(10).add(a);
         sides[1].multiplyScalar(10).add(a);
 
-        if (edge.bondType === '=' || this.drawer.getRingbondType(vertexA, vertexB) === '=' || isAromaticEdge) {
+        if (edge.bondType === '=' || this.drawer.getRingbondType(vertexA, vertexB) === '=') {
           // Always draw double bonds inside the ring
           let inRing = this.drawer.areVerticesInSameRing(vertexA, vertexB);
           let s = this.drawer.chooseSide(vertexA, vertexB, sides);
@@ -116,7 +115,7 @@ class DrawingManager {
             line.shorten(this.drawer.opts.bondLength - this.drawer.opts.shortBondLength * this.drawer.opts.bondLength);
 
             // The shortened edge
-            this.drawer.canvasWrapper.drawLine(line, isAromaticEdge);
+            this.drawer.canvasWrapper.drawLine(line);
 
             // The normal edge
             this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
@@ -127,8 +126,8 @@ class DrawingManager {
             let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
             let lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
-            this.drawer.canvasWrapper.drawLine(lineA, isAromaticEdge);
-            this.drawer.canvasWrapper.drawLine(lineB, isAromaticEdge);
+            this.drawer.canvasWrapper.drawLine(lineA);
+            this.drawer.canvasWrapper.drawLine(lineB);
           } else if (s.anCount == 0 && s.bnCount > 1 || s.bnCount == 0 && s.anCount > 1) {
             // Both lines are the same length here
             // Add the spacing to the edges (which are of unit length)
@@ -138,8 +137,8 @@ class DrawingManager {
             let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
             let lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
-            this.drawer.canvasWrapper.drawLine(lineA, isAromaticEdge);
-            this.drawer.canvasWrapper.drawLine(lineB, isAromaticEdge);
+            this.drawer.canvasWrapper.drawLine(lineA);
+            this.drawer.canvasWrapper.drawLine(lineB);
           } else if (s.sideCount[0] > s.sideCount[1]) {
             normals[0].multiplyScalar(that.drawer.opts.bondSpacing);
             normals[1].multiplyScalar(that.drawer.opts.bondSpacing);
@@ -147,7 +146,7 @@ class DrawingManager {
             let line = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
 
             line.shorten(this.drawer.opts.bondLength - this.drawer.opts.shortBondLength * this.drawer.opts.bondLength);
-            this.drawer.canvasWrapper.drawLine(line, isAromaticEdge);
+            this.drawer.canvasWrapper.drawLine(line);
             this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
           } else if (s.sideCount[0] < s.sideCount[1]) {
             normals[0].multiplyScalar(that.drawer.opts.bondSpacing);
@@ -156,7 +155,7 @@ class DrawingManager {
             let line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
             line.shorten(this.drawer.opts.bondLength - this.drawer.opts.shortBondLength * this.drawer.opts.bondLength);
-            this.drawer.canvasWrapper.drawLine(line, isAromaticEdge);
+            this.drawer.canvasWrapper.drawLine(line);
             this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
           } else if (s.totalSideCount[0] > s.totalSideCount[1]) {
             normals[0].multiplyScalar(that.drawer.opts.bondSpacing);
@@ -165,7 +164,7 @@ class DrawingManager {
             let line = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
 
             line.shorten(this.drawer.opts.bondLength - this.drawer.opts.shortBondLength * this.drawer.opts.bondLength);
-            this.drawer.canvasWrapper.drawLine(line, isAromaticEdge);
+            this.drawer.canvasWrapper.drawLine(line);
             this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
           } else if (s.totalSideCount[0] <= s.totalSideCount[1]) {
             normals[0].multiplyScalar(that.drawer.opts.bondSpacing);
@@ -174,7 +173,7 @@ class DrawingManager {
             let line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
             line.shorten(this.drawer.opts.bondLength - this.drawer.opts.shortBondLength * this.drawer.opts.bondLength);
-            this.drawer.canvasWrapper.drawLine(line, isAromaticEdge);
+            this.drawer.canvasWrapper.drawLine(line);
             this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
           } else {
 
@@ -191,7 +190,11 @@ class DrawingManager {
 
           this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
         } else if (edge.bondType === '.') {
-          // TODO: Something... maybe... version 2?
+        // TODO: Something... maybe... version 2?
+        } else if (edge.isAromatic) {
+          let isChiralCenterA = vertexA.value.isStereoCenter;
+          let isChiralCenterB = vertexB.value.isStereoCenter;
+          this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB, isChiralCenterA, isChiralCenterB));
         } else {
           let isChiralCenterA = vertexA.value.isStereoCenter;
           let isChiralCenterB = vertexB.value.isStereoCenter;
@@ -353,7 +356,10 @@ class DrawingManager {
 
         const aromaticRings = this.drawer.getAromaticRings();
         for (const ring of aromaticRings) {
-            const polygon = this.computeAromaticPolygon(ring);
+        if (!this.isImplicitAromaticRing(ring)) {
+            continue;
+        }
+        const polygon = this.computeAromaticPolygon(ring);
             if (polygon.length < 2) {
                 continue;
             }
@@ -368,7 +374,7 @@ class DrawingManager {
             return polygon;
         }
 
-        const offset = Math.max(1, this.drawer.opts.bondSpacing * this.drawer.opts.bondLength * 0.5);
+        const offset = 8;
         for (const memberId of ring.members) {
             const vertex = this.drawer.graph.vertices[memberId];
             if (!vertex || !vertex.position) {
@@ -387,6 +393,19 @@ class DrawingManager {
         }
 
         return polygon;
+    }
+
+    private isImplicitAromaticRing(ring: Ring): boolean {
+        if (!ring.members || ring.members.length === 0) {
+            return false;
+        }
+        for (const memberId of ring.members) {
+            const vertex = this.drawer.graph.vertices[memberId];
+            if (!vertex || !vertex.value.isAromaticByInput) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }
