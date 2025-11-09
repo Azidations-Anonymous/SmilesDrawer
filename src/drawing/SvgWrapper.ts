@@ -66,7 +66,7 @@ class SvgWrapper implements IDrawingSurface {
 
     this.container = null;
     this.opts = options;
-    this.labelRenderer = new SvgLabelRenderer(this.opts);
+    this.labelRenderer = new SvgLabelRenderer(this.opts, () => this.themeManager.getColor('BACKGROUND'));
     this.uid = makeid(5);
     this.gradientId = 0;
 
