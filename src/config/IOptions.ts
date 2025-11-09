@@ -56,6 +56,7 @@ interface IMoleculeOptions {
   atomVisualization: AtomVisualization;
   terminalCarbons: boolean;
   explicitHydrogens: boolean;
+  aromaticPiSystemInset?: number;
 
   // Stereochemistry
   isomeric: boolean;

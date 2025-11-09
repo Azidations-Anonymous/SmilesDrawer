@@ -3,6 +3,7 @@ import Vector2 = require('../../graph/Vector2');
 import Ring = require('../../graph/Ring');
 import Line = require('../../graph/Line');
 import SvgDrawer = require('../SvgDrawer');
+import AromaticOverlayRenderer = require('../../rendering/AromaticOverlayRenderer');
 
 class SvgEdgeDrawer {
   constructor(private drawer: SvgDrawer) {}
@@ -45,7 +46,11 @@ class SvgEdgeDrawer {
     });
 
     if (!preprocessor.bridgedRing) {
-      this.drawAromaticPolygons();
+      AromaticOverlayRenderer.render(
+        preprocessor,
+        this.drawer.getRenderer(),
+        preprocessor.opts.aromaticPiSystemInset ?? 7,
+      );
     }
   }
 
@@ -183,66 +188,6 @@ class SvgEdgeDrawer {
   multiplyNormals(normals: Vector2[], spacing: number): void {
     normals[0].multiplyScalar(spacing);
     normals[1].multiplyScalar(spacing);
-  }
-
-  private drawAromaticPolygons(): void {
-    const renderer = this.drawer.getRenderer();
-    if (!renderer.drawDashedPolygon) {
-      return;
-    }
-
-    const aromaticRings = this.drawer.preprocessor.getAromaticRings();
-    for (const ring of aromaticRings) {
-      if (!this.isImplicitAromaticRing(ring)) {
-        continue;
-      }
-      const polygon = this.computeAromaticPolygon(ring);
-      if (polygon.length < 2) {
-        continue;
-      }
-      renderer.drawDashedPolygon(polygon);
-    }
-  }
-
-  private computeAromaticPolygon(ring: Ring): Vector2[] {
-    const polygon: Vector2[] = [];
-    const center = ring.center;
-    if (!center || !ring.members || ring.members.length === 0) {
-      return polygon;
-    }
-
-    const offset = 7;
-    for (const memberId of ring.members) {
-      const vertex = this.drawer.preprocessor.graph.vertices[memberId];
-      if (!vertex || !vertex.position) {
-        continue;
-      }
-
-      const toVertex = vertex.position.clone().subtract(center);
-      const distance = toVertex.length();
-      if (distance < 1e-3) {
-        continue;
-      }
-
-      const inset = Math.min(offset, distance * 0.5);
-      const insetVector = toVertex.clone().normalize().multiplyScalar(inset);
-      polygon.push(vertex.position.clone().subtract(insetVector));
-    }
-
-    return polygon;
-  }
-
-  private isImplicitAromaticRing(ring: Ring): boolean {
-    if (!ring.members || ring.members.length === 0) {
-      return false;
-    }
-    for (const memberId of ring.members) {
-      const vertex = this.drawer.preprocessor.graph.vertices[memberId];
-      if (!vertex || !vertex.value.isAromaticByInput) {
-        return false;
-      }
-    }
-    return true;
   }
 
 }

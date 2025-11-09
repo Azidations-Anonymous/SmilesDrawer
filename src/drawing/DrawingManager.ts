@@ -7,7 +7,7 @@ import Edge = require("../graph/Edge");
 import ThemeManager = require("../config/ThemeManager");
 import CanvasDrawer = require("./CanvasDrawer");
 import Atom = require("../graph/Atom");
-import Ring = require("../graph/Ring");
+import AromaticOverlayRenderer = require("../rendering/AromaticOverlayRenderer");
 
 type ParseTree = any;
 
@@ -62,7 +62,11 @@ class DrawingManager {
         });
 
         if (!this.drawer.bridgedRing) {
-          this.drawAromaticPolygons();
+            AromaticOverlayRenderer.render(
+                this.drawer,
+                this.drawer.canvasWrapper,
+                this.drawer.opts.aromaticPiSystemInset ?? 7,
+            );
         }
     }
 
@@ -347,65 +351,6 @@ class DrawingManager {
         let normals = Vector2.units(v1, v2);
 
         return normals;
-    }
-
-    private drawAromaticPolygons(): void {
-        if (!this.drawer.canvasWrapper || typeof this.drawer.canvasWrapper.drawDashedPolygon !== 'function') {
-            return;
-        }
-
-        const aromaticRings = this.drawer.getAromaticRings();
-        for (const ring of aromaticRings) {
-        if (!this.isImplicitAromaticRing(ring)) {
-            continue;
-        }
-        const polygon = this.computeAromaticPolygon(ring);
-            if (polygon.length < 2) {
-                continue;
-            }
-            this.drawer.canvasWrapper.drawDashedPolygon(polygon);
-        }
-    }
-
-    private computeAromaticPolygon(ring: Ring): Vector2[] {
-        const polygon: Vector2[] = [];
-        const center = ring.center;
-        if (!center || !ring.members || ring.members.length === 0) {
-            return polygon;
-        }
-
-        const offset = 8;
-        for (const memberId of ring.members) {
-            const vertex = this.drawer.graph.vertices[memberId];
-            if (!vertex || !vertex.position) {
-                continue;
-            }
-
-            const toVertex = vertex.position.clone().subtract(center);
-            const distance = toVertex.length();
-            if (distance < 1e-3) {
-                continue;
-            }
-
-            const inset = Math.min(offset, distance * 0.5);
-            const insetVector = toVertex.clone().normalize().multiplyScalar(inset);
-            polygon.push(vertex.position.clone().subtract(insetVector));
-        }
-
-        return polygon;
-    }
-
-    private isImplicitAromaticRing(ring: Ring): boolean {
-        if (!ring.members || ring.members.length === 0) {
-            return false;
-        }
-        for (const memberId of ring.members) {
-            const vertex = this.drawer.graph.vertices[memberId];
-            if (!vertex || !vertex.value.isAromaticByInput) {
-                return false;
-            }
-        }
-        return true;
     }
 
 }
