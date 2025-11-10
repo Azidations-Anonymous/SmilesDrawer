@@ -149,11 +149,6 @@ function buildLandingPage() {
 </head>
 <body>
     <main>
-        <h1>SmilesDrawer Playground</h1>
-        <p>
-            Explore the interactive SMILES playground or dive into the API documentation.
-            This bundle is ready to deploy directly to GitHub Pages.
-        </p>
         <div class="links">
             <a href="./playground/index.html">Interactive Playground</a>
             <a href="./docs/index.html">API Documentation</a>
