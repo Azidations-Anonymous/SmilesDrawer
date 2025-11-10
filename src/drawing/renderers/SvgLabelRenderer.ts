@@ -20,13 +20,16 @@ class SvgLabelRenderer {
     textElem.setAttributeNS(null, 'class', 'element');
     textElem.setAttributeNS(null, 'x', x.toString());
     textElem.setAttributeNS(null, 'y', y.toString());
-    const outline = this.getBackgroundColor();
+    const outlineWidth = this.opts.labelOutlineWidth ?? 0;
     textElem.setAttributeNS(null, 'fill', color);
-    textElem.setAttributeNS(null, 'stroke', outline);
-    textElem.setAttributeNS(null, 'stroke-width', '1');
-    textElem.setAttributeNS(null, 'stroke-linejoin', 'round');
-    textElem.setAttributeNS(null, 'paint-order', 'stroke fill');
-    textElem.setAttributeNS(null, 'vector-effect', 'non-scaling-stroke');
+    if (outlineWidth > 0) {
+      const outline = this.getBackgroundColor();
+      textElem.setAttributeNS(null, 'stroke', outline);
+      textElem.setAttributeNS(null, 'stroke-width', outlineWidth.toString());
+      textElem.setAttributeNS(null, 'stroke-linejoin', 'round');
+      textElem.setAttributeNS(null, 'paint-order', 'stroke fill');
+      textElem.setAttributeNS(null, 'vector-effect', 'non-scaling-stroke');
+    }
     textElem.setAttributeNS(null, 'font-family', this.opts.fontFamily);
     textElem.setAttributeNS(null, 'font-size', `${fontSize}pt`);
     textElem.setAttributeNS(null, 'text-anchor', 'middle');

@@ -85,6 +85,7 @@ interface IMoleculeOptions {
   fontFamily: string;
   fontSizeLarge: number;
   fontSizeSmall: number;
+  labelOutlineWidth?: number;
 
   // Debugging
   debug: boolean;

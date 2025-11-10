@@ -773,12 +773,17 @@ class SvgWrapper implements IDrawingSurface {
       return;
     }
 
+    const outlinePadding = this.opts.labelOutlineWidth ?? 0;
     const metricsCache = new Map<string, { width: number; height: number }>();
     const measure = (segment: LabelSegment): { width: number; height: number } => {
       const fontSize = segment.fontSize ?? this.opts.fontSizeLarge;
       const key = `${segment.display}@${fontSize}`;
       if (!metricsCache.has(key)) {
-        metricsCache.set(key, SvgTextHelper.measureText(segment.display, fontSize, this.opts.fontFamily));
+        const base = SvgTextHelper.measureText(segment.display, fontSize, this.opts.fontFamily);
+        metricsCache.set(key, {
+          width: base.width + outlinePadding,
+          height: base.height + outlinePadding
+        });
       }
       return metricsCache.get(key)!;
     };
@@ -790,12 +795,12 @@ class SvgWrapper implements IDrawingSurface {
 
     if (isVertical) {
       const metricsList = orderedSegments.map((segment) => measure(segment));
-      const lineHeight = this.opts.fontSizeLarge * 0.9;
       let currentY = y;
 
       orderedSegments.forEach((segment, index) => {
         if (index > 0) {
-          currentY += direction === 'up' ? -lineHeight : lineHeight;
+          const prevHeight = metricsList[index - 1].height;
+          currentY += direction === 'up' ? -prevHeight : prevHeight;
         }
 
         const metrics = metricsList[index];
