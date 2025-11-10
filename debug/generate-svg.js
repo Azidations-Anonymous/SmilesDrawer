@@ -1,204 +1,220 @@
 #!/usr/bin/env node
 
 /**
- * @file Generates SVG representation of molecular structures from SMILES strings for visual regression testing.
- * @module test/generate-svg
- * @description
- * This script parses a SMILES string using SmilesDrawer and generates an SVG representation.
- * Used for visual regression testing to compare rendering differences between code versions.
- *
- * @example
- * // Generate SVG to file
- * node test/generate-svg.js "CCO" /tmp/output.svg
+ * @file Generates SVG representation of molecular structures from SMILES strings.
+ *        Provides both a reusable helper (renderSvg) and a CLI entry point.
  */
 
-const scriptStartTime = Date.now();
-
-const domLibLoadStart = Date.now();
 const { parseHTML } = require('linkedom');
-const domLibLoadEnd = Date.now();
-console.log(`TIMING: linkedom load took ${domLibLoadEnd - domLibLoadStart}ms`);
-
+const { performance } = require('perf_hooks');
 const fs = require('fs');
+const path = require('path');
 
 const { createMoleculeOptions } = require('./molecule-options');
 
-function parseBooleanFlag(value, flagName) {
-    if (value === undefined) {
-        throw new Error(`${flagName} flag requires a value`);
-    }
-    const normalized = String(value).trim().toLowerCase();
-    if (['true', '1', 'yes', 'on'].includes(normalized)) {
-        return true;
-    }
-    if (['false', '0', 'no', 'off'].includes(normalized)) {
-        return false;
-    }
-    throw new Error(`Invalid boolean value for ${flagName}: ${value}`);
+let domInitialized = false;
+let cachedSmilesDrawer = null;
+
+function ensureDom() {
+  if (domInitialized) {
+    return;
+  }
+
+  const { window } = parseHTML('<!DOCTYPE html><html><body></body></html>');
+  global.window = window;
+  global.document = window.document;
+  global.navigator = window.navigator;
+  global.HTMLElement = window.HTMLElement;
+  global.SVGElement = window.SVGElement;
+  global.HTMLCanvasElement = window.HTMLCanvasElement;
+  global.HTMLImageElement = window.HTMLImageElement;
+  global.Element = window.Element;
+  global.Node = window.Node;
+  global.DOMParser = window.DOMParser;
+  global.XMLSerializer = window.XMLSerializer;
+  domInitialized = true;
 }
 
-const rawArgs = process.argv.slice(2);
-const positionals = [];
-let kekulizeMode = false;
-
-for (let i = 0; i < rawArgs.length; i++) {
-    const arg = rawArgs[i];
-    if (arg === '--kekulize') {
-        try {
-            kekulizeMode = parseBooleanFlag(rawArgs[i + 1], '--kekulize');
-        } catch (err) {
-            console.error('ERROR:', err.message);
-            process.exit(2);
-        }
-        i += 1;
-        continue;
-    }
-    if (arg.startsWith('--kekulize=')) {
-        const value = arg.split('=')[1];
-        try {
-            kekulizeMode = parseBooleanFlag(value, '--kekulize');
-        } catch (err) {
-            console.error('ERROR:', err.message);
-            process.exit(2);
-        }
-        continue;
-    }
-    positionals.push(arg);
+function getSmilesDrawer() {
+  if (!cachedSmilesDrawer) {
+    cachedSmilesDrawer = require('../app.js');
+  }
+  return cachedSmilesDrawer;
 }
 
-const smilesInput = positionals[0];
-const outputFile = positionals[1];
-
-if (!smilesInput) {
-    console.error('ERROR: No SMILES string provided');
-    console.error('Usage: node generate-svg.js [--kekulize=true|false] "<SMILES>" [output-file]');
-    process.exit(2);
+function formatLogArg(arg) {
+  if (typeof arg === 'string') {
+    return arg;
+  }
+  try {
+    return JSON.stringify(arg);
+  } catch (err) {
+    return String(arg);
+  }
 }
 
-console.log(`PROCESSING: ${smilesInput}`);
-console.log(`KEKULIZE MODE: ${kekulizeMode}`);
+/**
+ * Render a SMILES string to SVG.
+ * @param {string} smiles
+ * @param {object} [options]
+ * @param {boolean} [options.kekulize=false]
+ * @param {string} [options.theme='light']
+ * @param {object} [options.moleculeOptions] - Additional option overrides.
+ * @param {(msg: string) => void} [options.onLog] - Called for every console.log emitted by SmilesDrawer during draw.
+ * @param {boolean} [options.captureLogs=true] - Disable to skip console capture entirely.
+ * @returns {Promise<{svg: string, logs: string[], timings: {parse: number, draw: number, total: number}}>}
+ */
+async function renderSvg(smiles, options = {}) {
+  if (!smiles) {
+    throw new Error('SMILES string is required');
+  }
 
-if (kekulizeMode && /[bcnosp]/.test(smilesInput)) {
-    console.warn('WARNING: Kekulised preview requested but SMILES contains lowercase aromatic atoms. Provide Kekulé form (uppercase atoms with explicit bonds) to see alternating double bonds.');
-}
+  ensureDom();
+  const SmilesDrawer = getSmilesDrawer();
+  const mergedOptions = createMoleculeOptions({ ...(options.moleculeOptions || {}) });
+  const theme = options.theme || 'light';
+  const captureLogs = options.captureLogs !== false;
+  const logs = [];
 
-const domSetupStart = Date.now();
-const { window } = parseHTML('<!DOCTYPE html><html><body></body></html>');
-global.window = window;
-global.document = window.document;
-global.navigator = window.navigator;
-global.HTMLElement = window.HTMLElement;
-global.SVGElement = window.SVGElement;
-global.HTMLCanvasElement = window.HTMLCanvasElement;
-global.HTMLImageElement = window.HTMLImageElement;
-global.Element = window.Element;
-global.Node = window.Node;
-global.DOMParser = window.DOMParser;
-global.XMLSerializer = window.XMLSerializer;
-const domSetupEnd = Date.now();
-console.log(`TIMING: DOM setup took ${domSetupEnd - domSetupStart}ms`);
+  const totalStart = performance.now();
 
-const smilesDrawerLoadStart = Date.now();
-const SmilesDrawer = require('../app.js');
-const smilesDrawerLoadEnd = Date.now();
-console.log(`TIMING: SmilesDrawer load took ${smilesDrawerLoadEnd - smilesDrawerLoadStart}ms`);
+  return new Promise((resolve, reject) => {
+    const svgDrawer = new SmilesDrawer.SvgDrawer(mergedOptions);
+    const parseStart = performance.now();
 
-const options = createMoleculeOptions({
-    width: 500,
-    height: 500,
-    bondThickness: 1.0,
-    bondLength: 30,
-    shortBondLength: 0.7,
-    bondSpacing: 0.18 * 30,
-    atomVisualization: 'default',
-    isomeric: true,
-    debug: false,
-    terminalCarbons: false,
-    explicitHydrogens: false,
-    overlapSensitivity: 0.42,
-    overlapResolutionIterations: 1,
-    compactDrawing: true,
-    fontFamily: 'Arial, Helvetica, sans-serif',
-    fontSizeLarge: 6,
-    fontSizeSmall: 4,
-    padding: 20.0,
-    themes: {
-        dark: {
-            C: '#fff',
-            O: '#e74c3c',
-            N: '#3498db',
-            F: '#27ae60',
-            CL: '#16a085',
-            BR: '#d35400',
-            I: '#8e44ad',
-            P: '#d35400',
-            S: '#f39c12',
-            B: '#e67e22',
-            SI: '#e67e22',
-            H: '#aaa',
-            BACKGROUND: '#141414'
-        },
-        light: {
-            C: '#222',
-            O: '#e74c3c',
-            N: '#3498db',
-            F: '#27ae60',
-            CL: '#16a085',
-            BR: '#d35400',
-            I: '#8e44ad',
-            P: '#d35400',
-            S: '#f39c12',
-            B: '#e67e22',
-            SI: '#e67e22',
-            H: '#999',
-            BACKGROUND: '#fff'
-        }
-    }
-});
-
-try {
-    console.log('PARSING: Starting parse');
-    const parseStartTime = Date.now();
-    const svgDrawer = new SmilesDrawer.SvgDrawer(options);
-
-    SmilesDrawer.parse(smilesInput, function(tree) {
-        const parseEndTime = Date.now();
-        console.log(`PARSE_SUCCESS: Tree generated (took ${parseEndTime - parseStartTime}ms)`);
-        console.log('PROCESSING: Generating SVG');
-        const drawStartTime = Date.now();
+    SmilesDrawer.parse(
+      smiles,
+      (tree) => {
+        const parseEnd = performance.now();
 
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-        svg.setAttribute('width', String(options.width));
-        svg.setAttribute('height', String(options.height));
-        svg.setAttribute('data-kekulize-mode', String(kekulizeMode));
+        svg.setAttribute('width', String(mergedOptions.width));
+        svg.setAttribute('height', String(mergedOptions.height));
+        svg.setAttribute('data-kekulize-mode', String(!!options.kekulize));
 
-        svgDrawer.draw(tree, svg, 'light', false);
+        const runDraw = () => {
+          svgDrawer.draw(tree, svg, theme, !!options.debug);
+        };
 
-        const svgString = svg.outerHTML;
-        const drawEndTime = Date.now();
-        console.log(`PROCESS_SUCCESS: SVG generated (took ${drawEndTime - drawStartTime}ms)`);
+        const capture = captureLogs && typeof console !== 'undefined';
+        const originalConsoleLog = capture ? console.log : null;
+        const emitLog = (message) => {
+          logs.push(message);
+          if (typeof options.onLog === 'function') {
+            options.onLog(message);
+          }
+        };
 
-        if (outputFile) {
-            fs.writeFileSync(outputFile, svgString, 'utf8');
-            console.log('SVG written to: ' + outputFile);
-            console.log('SVG length: ' + svgString.length + ' bytes');
-        } else {
-            console.log('SVG_START_MARKER');
-            console.log(svgString);
-            console.log('SVG_END_MARKER');
+        let drawStart = performance.now();
+        let drawEnd;
+
+        if (capture) {
+          console.log = (...args) => {
+            const message = args.map(formatLogArg).join(' ');
+            emitLog(message);
+            originalConsoleLog(...args);
+          };
         }
 
-        const scriptEndTime = Date.now();
-        console.log(`TIMING: Total script execution time: ${scriptEndTime - scriptStartTime}ms`);
+        try {
+          runDraw();
+          drawEnd = performance.now();
+        } catch (err) {
+          if (capture) {
+            console.log = originalConsoleLog;
+          }
+          reject(err instanceof Error ? err : new Error(String(err)));
+          return;
+        } finally {
+          if (capture) {
+            console.log = originalConsoleLog;
+          }
+        }
 
-        process.exit(0);
-    }, function(err) {
-        console.error('PARSE_ERROR: ' + err);
-        process.exit(1);
-    });
-} catch (err) {
-    console.error('FATAL_ERROR: ' + err.message);
-    console.error(err.stack);
+        const timings = {
+          parse: parseEnd - parseStart,
+          draw: drawEnd - drawStart,
+          total: performance.now() - totalStart
+        };
+
+        resolve({
+          svg: svg.outerHTML,
+          logs,
+          timings
+        });
+      },
+      (err) => {
+        reject(err instanceof Error ? err : new Error(String(err)));
+      }
+    );
+  });
+}
+
+function parseBooleanFlag(value, flagName) {
+  if (value === undefined) {
+    throw new Error(`${flagName} flag requires a value`);
+  }
+  const normalized = String(value).trim().toLowerCase();
+  if (['true', '1', 'yes', 'on'].includes(normalized)) {
+    return true;
+  }
+  if (['false', '0', 'no', 'off'].includes(normalized)) {
+    return false;
+  }
+  throw new Error(`Invalid boolean value for ${flagName}: ${value}`);
+}
+
+async function runCli() {
+  const rawArgs = process.argv.slice(2);
+  const positionals = [];
+  let kekulizeMode = false;
+
+  for (let i = 0; i < rawArgs.length; i++) {
+    const arg = rawArgs[i];
+    if (arg === '--kekulize') {
+      kekulizeMode = parseBooleanFlag(rawArgs[i + 1], '--kekulize');
+      i += 1;
+      continue;
+    }
+    if (arg.startsWith('--kekulize=')) {
+      kekulizeMode = parseBooleanFlag(arg.split('=')[1], '--kekulize');
+      continue;
+    }
+    positionals.push(arg);
+  }
+
+  const smilesInput = positionals[0];
+  const outputFile = positionals[1];
+
+  if (!smilesInput) {
+    console.error('ERROR: No SMILES string provided');
+    console.error('Usage: node generate-svg.js [--kekulize=true|false] "<SMILES>" [output-file]');
+    process.exit(2);
+  }
+
+  try {
+    const { svg } = await renderSvg(smilesInput, { kekulize: kekulizeMode, captureLogs: false });
+    if (outputFile) {
+      fs.writeFileSync(outputFile, svg, 'utf8');
+      console.log('SVG written to:', path.resolve(outputFile));
+      console.log('SVG length:', svg.length, 'bytes');
+    } else {
+      console.log('SVG_START_MARKER');
+      console.log(svg);
+      console.log('SVG_END_MARKER');
+    }
+    process.exit(0);
+  } catch (err) {
+    console.error('PARSE_ERROR:', err && err.message ? err.message : err);
     process.exit(1);
+  }
+}
+
+if (require.main === module) {
+  runCli();
+} else {
+  module.exports = {
+    renderSvg
+  };
 }

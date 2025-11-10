@@ -1,188 +1,154 @@
 #!/usr/bin/env node
 
 /**
- * @file Generates JSON representation of molecular graph data from SMILES strings for regression testing.
- * @module test/generate-json
- * @description
- * This script parses a SMILES string using SmilesDrawer and extracts the molecular graph structure
- * using the public getPositionData() API. The JSON output is deterministic and versioned, allowing
- * comparison between different versions of the code to detect regressions.
- *
- * The graph data includes:
- * - Version: Format version number for compatibility
- * - Vertices: comprehensive atom data with positions, elements, angles, stereochemistry
- * - Edges: bond types, aromatic ring membership, wedge stereochemistry
- * - Rings: ring membership and properties
- * - Metadata: graph-level information (counts, mappings, flags)
- *
- * @example
- * // Generate JSON to stdout
- * node test/generate-json.js "CCO"
- *
- * @example
- * // Generate JSON to file
- * node test/generate-json.js "CCO" /tmp/output.json
+ * @file Generates JSON graph data from SMILES strings.
+ *        Provides both a reusable helper (renderJson) and a CLI entry point.
  */
 
-const scriptStartTime = Date.now();
-
-const domLibLoadStart = Date.now();
 const { parseHTML } = require('linkedom');
-const domLibLoadEnd = Date.now();
-console.log(`TIMING: linkedom load took ${domLibLoadEnd - domLibLoadStart}ms`);
-
+const { performance } = require('perf_hooks');
 const fs = require('fs');
+const path = require('path');
 
 const { createMoleculeOptions } = require('./molecule-options');
 const { collectRingDiagnostics } = require('./ring-diagnostics');
 const { collectCisTransDiagnostics } = require('./cis-trans-diagnostics');
 
-const smilesInput = process.argv[2];
-const outputFile = process.argv[3];
+let domInitialized = false;
+let cachedSmilesDrawer = null;
 
-if (!smilesInput) {
-    console.error('ERROR: No SMILES string provided');
-    console.error('Usage: node generate-json.js "<SMILES>" [output-file]');
-    process.exit(2);
+function ensureDom() {
+  if (domInitialized) {
+    return;
+  }
+
+  const { window } = parseHTML('<!DOCTYPE html><html><body></body></html>');
+  global.window = window;
+  global.document = window.document;
+  global.navigator = window.navigator;
+  global.HTMLElement = window.HTMLElement;
+  global.SVGElement = window.SVGElement;
+  global.HTMLCanvasElement = window.HTMLCanvasElement;
+  global.HTMLImageElement = window.HTMLImageElement;
+  global.Element = window.Element;
+  global.Node = window.Node;
+  global.DOMParser = window.DOMParser;
+  global.XMLSerializer = window.XMLSerializer;
+  domInitialized = true;
 }
 
-console.log(`PROCESSING: ${smilesInput}`);
+function getSmilesDrawer() {
+  if (!cachedSmilesDrawer) {
+    cachedSmilesDrawer = require('../app.js');
+  }
+  return cachedSmilesDrawer;
+}
 
-const domSetupStart = Date.now();
-const { window } = parseHTML('<!DOCTYPE html><html><body></body></html>');
-global.window = window;
-global.document = window.document;
-global.navigator = window.navigator;
-global.HTMLElement = window.HTMLElement;
-global.SVGElement = window.SVGElement;
-global.HTMLCanvasElement = window.HTMLCanvasElement;
-global.HTMLImageElement = window.HTMLImageElement;
-global.Element = window.Element;
-global.Node = window.Node;
-global.DOMParser = window.DOMParser;
-global.XMLSerializer = window.XMLSerializer;
-const domSetupEnd = Date.now();
-console.log(`TIMING: DOM setup took ${domSetupEnd - domSetupStart}ms`);
+/**
+ * Render a SMILES string to JSON graph data.
+ * @param {string} smiles
+ * @param {object} [options]
+ * @param {object} [options.moleculeOptions]
+ * @returns {Promise<{json: string, data: object, timings: {parse: number, draw: number, total: number}}>}
+ */
+async function renderJson(smiles, options = {}) {
+  if (!smiles) {
+    throw new Error('SMILES string is required');
+  }
 
-const smilesDrawerLoadStart = Date.now();
-const SmilesDrawer = require('../app.js');
-const smilesDrawerLoadEnd = Date.now();
-console.log(`TIMING: SmilesDrawer load took ${smilesDrawerLoadEnd - smilesDrawerLoadStart}ms`);
+  ensureDom();
+  const SmilesDrawer = getSmilesDrawer();
+  const mergedOptions = createMoleculeOptions({ ...(options.moleculeOptions || {}) });
 
-const options = createMoleculeOptions({
-    width: 500,
-    height: 500,
-    bondThickness: 1.0,
-    bondLength: 30,
-    shortBondLength: 0.7,
-    bondSpacing: 0.18 * 30,
-    atomVisualization: 'default',
-    isomeric: true,
-    debug: false,
-    terminalCarbons: false,
-    explicitHydrogens: false,
-    overlapSensitivity: 0.42,
-    overlapResolutionIterations: 1,
-    compactDrawing: true,
-    fontFamily: 'Arial, Helvetica, sans-serif',
-    fontSizeLarge: 6,
-    fontSizeSmall: 4,
-    padding: 20.0,
-    themes: {
-        dark: {
-            C: '#fff',
-            O: '#e74c3c',
-            N: '#3498db',
-            F: '#27ae60',
-            CL: '#16a085',
-            BR: '#d35400',
-            I: '#8e44ad',
-            P: '#d35400',
-            S: '#f39c12',
-            B: '#e67e22',
-            SI: '#e67e22',
-            H: '#aaa',
-            BACKGROUND: '#141414'
-        },
-        light: {
-            C: '#222',
-            O: '#e74c3c',
-            N: '#3498db',
-            F: '#27ae60',
-            CL: '#16a085',
-            BR: '#d35400',
-            I: '#8e44ad',
-            P: '#d35400',
-            S: '#f39c12',
-            B: '#e67e22',
-            SI: '#e67e22',
-            H: '#999',
-            BACKGROUND: '#fff'
-        }
-    }
-});
+  const totalStart = performance.now();
 
-try {
-    console.log('PARSING: Starting parse');
-    const parseStartTime = Date.now();
-    const svgDrawer = new SmilesDrawer.SvgDrawer(options);
+  return new Promise((resolve, reject) => {
+    const svgDrawer = new SmilesDrawer.SvgDrawer(mergedOptions);
+    const parseStart = performance.now();
 
-    SmilesDrawer.parse(smilesInput, function(tree) {
-        const parseEndTime = Date.now();
-        console.log(`PARSE_SUCCESS: Tree generated (took ${parseEndTime - parseStartTime}ms)`);
-
-        console.log('PROCESSING: Generating graph data');
-        const drawStartTime = Date.now();
+    SmilesDrawer.parse(
+      smiles,
+      (tree) => {
+        const parseEnd = performance.now();
 
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-        svg.setAttribute('width', String(options.width));
-        svg.setAttribute('height', String(options.height));
+        svg.setAttribute('width', String(mergedOptions.width));
+        svg.setAttribute('height', String(mergedOptions.height));
 
+        const drawStart = performance.now();
         svgDrawer.draw(tree, svg, 'light', false);
+        const drawEnd = performance.now();
 
-        // Use the new public API to get positioning data
         const graphData = svgDrawer.getPositionData();
         const ringDiagnostics = collectRingDiagnostics(svgDrawer.preprocessor);
         const cisTransDiagnostics = collectCisTransDiagnostics(svgDrawer.preprocessor);
+
         if (graphData && typeof graphData === 'object') {
-            const target = graphData.serializedData && typeof graphData.serializedData === 'object'
-                ? graphData.serializedData
-                : graphData;
+          const target = graphData.serializedData && typeof graphData.serializedData === 'object'
+            ? graphData.serializedData
+            : graphData;
 
-            if (ringDiagnostics) {
-                target.ringDiagnostics = ringDiagnostics;
-            }
-            if (cisTransDiagnostics && cisTransDiagnostics.length > 0) {
-                target.cisTransDiagnostics = cisTransDiagnostics;
-            }
+          if (ringDiagnostics) {
+            target.ringDiagnostics = ringDiagnostics;
+          }
+          if (cisTransDiagnostics && cisTransDiagnostics.length > 0) {
+            target.cisTransDiagnostics = cisTransDiagnostics;
+          }
         }
-        const drawEndTime = Date.now();
-
-        console.log(`PROCESS_SUCCESS: Graph data extracted using getPositionData() API (took ${drawEndTime - drawStartTime}ms)`);
 
         const jsonOutput = JSON.stringify(graphData, null, 2);
+        const timings = {
+          parse: parseEnd - parseStart,
+          draw: drawEnd - drawStart,
+          total: performance.now() - totalStart
+        };
 
-        if (outputFile) {
-            fs.writeFileSync(outputFile, jsonOutput, 'utf8');
-            console.log('JSON written to: ' + outputFile);
-            console.log('JSON length: ' + jsonOutput.length + ' bytes');
-        } else {
-            console.log('JSON_START_MARKER');
-            console.log(jsonOutput);
-            console.log('JSON_END_MARKER');
-        }
+        resolve({
+          json: jsonOutput,
+          data: graphData,
+          timings
+        });
+      },
+      (err) => {
+        reject(err instanceof Error ? err : new Error(String(err)));
+      }
+    );
+  });
+}
 
-        const scriptEndTime = Date.now();
-        console.log(`TIMING: Total script execution time: ${scriptEndTime - scriptStartTime}ms`);
+async function runCli() {
+  const smilesInput = process.argv[2];
+  const outputFile = process.argv[3];
 
-        process.exit(0);
-    }, function(err) {
-        console.error('PARSE_ERROR: ' + err);
-        process.exit(1);
-    });
-} catch (err) {
-    console.error('FATAL_ERROR: ' + err.message);
-    console.error(err.stack);
+  if (!smilesInput) {
+    console.error('ERROR: No SMILES string provided');
+    console.error('Usage: node generate-json.js "<SMILES>" [output-file]');
+    process.exit(2);
+  }
+
+  try {
+    const { json } = await renderJson(smilesInput);
+    if (outputFile) {
+      fs.writeFileSync(outputFile, json, 'utf8');
+      console.log('JSON written to:', path.resolve(outputFile));
+      console.log('JSON length:', json.length, 'bytes');
+    } else {
+      console.log('JSON_START_MARKER');
+      console.log(json);
+      console.log('JSON_END_MARKER');
+    }
+    process.exit(0);
+  } catch (err) {
+    console.error('PARSE_ERROR:', err && err.message ? err.message : err);
     process.exit(1);
+  }
+}
+
+if (require.main === module) {
+  runCli();
+} else {
+  module.exports = {
+    renderJson
+  };
 }

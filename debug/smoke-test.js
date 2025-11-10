@@ -43,6 +43,8 @@ const path = require('path');
 const fs = require('fs');
 const { performance } = require('perf_hooks');
 const { createCanvas, Image } = require('canvas');
+const { renderSvg } = require('./generate-svg');
+const { renderJson } = require('./generate-json');
 
 const DATA_DIR = path.join(__dirname, '..', 'test', 'data');
 
@@ -573,35 +575,12 @@ for (const dataset of datasets) {
         console.log(`[${dataset.name} ${i + 1}/${smilesData.length}] Generating: ${displaySmiles}`);
 
         try {
-            // Generate SVG to temporary file (avoids stdout buffer issues with large molecules)
-            const tempSvgFile = path.join(outputDir, `temp-${outputNum}.svg`);
-
-            const svgStartTime = performance.now();
-            const svgResult = spawnSync('node', ['debug/generate-svg.js', smiles, tempSvgFile], {
-                cwd: path.join(__dirname, '..'),
-                encoding: 'utf8'
+            const logBuffer = [];
+            const svgResult = await renderSvg(smiles, {
+                onLog: (line) => logBuffer.push(line)
             });
-            const svgEndTime = performance.now();
-            const svgRenderTime = svgEndTime - svgStartTime;
-
-            if (svgResult.error || svgResult.status !== 0) {
-                console.error('  ERROR: Failed to generate SVG');
-                console.error('  ' + (svgResult.stderr || svgResult.error?.message || 'Unknown error'));
-                totalErrors++;
-                continue;
-            }
-
-            // Read SVG from file
-            let svg;
-            try {
-                svg = fs.readFileSync(tempSvgFile, 'utf8');
-                fs.unlinkSync(tempSvgFile);
-            } catch (err) {
-                console.error('  ERROR: Could not read SVG file');
-                console.error('  ' + err.message);
-                totalErrors++;
-                continue;
-            }
+            const svg = svgResult.svg;
+            const svgRenderTime = svgResult.timings?.draw ?? svgResult.timings?.total ?? 0;
 
             let pngGenerated = false;
             if (includeImages) {
@@ -622,34 +601,10 @@ for (const dataset of datasets) {
             let jsonRenderTime = 0;
             let jsonGenerated = false;
             if (includeJson) {
-                // Generate JSON to temporary file (avoids stdout buffer issues with large molecules)
-                const tempJsonFile = path.join(outputDir, `temp-${outputNum}.json`);
-
-                const jsonStartTime = performance.now();
-                const jsonResult = spawnSync('node', ['debug/generate-json.js', smiles, tempJsonFile], {
-                    cwd: path.join(__dirname, '..'),
-                    encoding: 'utf8'
-                });
-                const jsonEndTime = performance.now();
-                jsonRenderTime = jsonEndTime - jsonStartTime;
-
-                if (jsonResult.error || jsonResult.status !== 0) {
-                    console.error('  ERROR: Failed to generate JSON');
-                    console.error('  ' + (jsonResult.stderr || jsonResult.error?.message || 'Unknown error'));
-                    totalErrors++;
-                    continue;
-                }
-
-                try {
-                    json = fs.readFileSync(tempJsonFile, 'utf8');
-                    fs.unlinkSync(tempJsonFile);
-                    jsonGenerated = true;
-                } catch (err) {
-                    console.error('  ERROR: Could not read JSON file');
-                    console.error('  ' + err.message);
-                    totalErrors++;
-                    continue;
-                }
+                const jsonResult = await renderJson(smiles);
+                json = jsonResult.json;
+                jsonRenderTime = jsonResult.timings?.draw ?? jsonResult.timings?.total ?? 0;
+                jsonGenerated = true;
             }
 
             // Generate HTML wrapper
@@ -658,6 +613,7 @@ for (const dataset of datasets) {
             const smilesFieldId = `smiles-${outputNum}`;
             const jsonFieldId = `json-${outputNum}`;
             const diffFieldId = `diff-${outputNum}`;
+            const runtimeLogId = `runtime-log-${outputNum}`;
             const diffSection = hasChanges && collapsedDiff ? `
         <div class="diff-section">
             <div class="section-header">
@@ -687,6 +643,7 @@ for (const dataset of datasets) {
             </div>
             <p>JSON generation disabled (-json flag not provided).</p>
         </div>`;
+            const runtimeLogContent = logBuffer.length ? logBuffer.join('\n') : '[console]';
 
             const html = `<!DOCTYPE html>
 <html lang="en">
@@ -906,6 +863,14 @@ for (const dataset of datasets) {
         ${jsonSection}
 
         ${diffSection}
+
+        <div class="runtime-log">
+            <div class="section-header">
+                <strong>Runtime Log</strong>
+                <button class="copy-btn" data-copy-target="${runtimeLogId}">Copy to Clipboard</button>
+            </div>
+            <textarea id="${runtimeLogId}" readonly spellcheck="false">${escapeHtml(runtimeLogContent)}</textarea>
+        </div>
     </div>
     <script>
         (function() {
@@ -952,7 +917,7 @@ for (const dataset of datasets) {
                         return;
                     }
 
-                    const text = target.innerText || target.textContent || '';
+                    const text = 'value' in target ? target.value : (target.innerText || target.textContent || '');
                     if (!text) {
                         setFeedback(button, 'Copy failed');
                         return;
