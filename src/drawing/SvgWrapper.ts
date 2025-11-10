@@ -943,10 +943,16 @@ class SvgWrapper implements IDrawingSurface {
     const base = this.opts.labelOutlineWidth;
     const fallback = this.opts.fontSizeLarge * 0.1;
     const spacing = Math.max(base ?? 0, fallback);
-    if (category === 'charge') {
-      return spacing / 2;
+    switch (category) {
+      case 'charge':
+        return spacing / 4
+      case 'hydrogen':
+        return spacing
+      case 'isotope':
+        return spacing
+      case 'main':
+        return spacing
     }
-    return spacing;
   }
 
   /**
