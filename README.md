@@ -309,7 +309,9 @@ The following options are available:
 | Atom Visualization                                              | atomVisualization           | string ['default', 'balls', 'none'] | 'default'     |
 | Large Font Size (in pt for elements)                            | fontSizeLarge               | number                              | 6             |
 | Small Font Size (in pt for numbers)                             | fontSizeSmall               | number                              | 4             |
-| Label outline width (px)                                        | labelOutlineWidth           | number                              | 3             |
+| Label outline width (px)                                        | labelOutlineWidth           | number                              | 1             |
+| Label mask radius scale                                         | labelMaskRadiusScale        | number                              | 0.75          |
+| Label mask radius scale for multi-letter symbols                | labelMaskRadiusScaleWide    | number                              | 1.1           |
 | Padding                                                         | padding                     | number                              | 20.0          |
 | Show Terminal Carbons (CH3)                                     | terminalCarbons             | boolean                             | false         |
 | Show explicit hydrogens                                         | explicitHydrogens           | boolean                             | false         |
@@ -351,7 +353,9 @@ The default options are defined as follows:
     compactDrawing: true,
     fontSizeLarge: 5,
     fontSizeSmall: 3,
-    labelOutlineWidth: 3,
+    labelOutlineWidth: 1,
+    labelMaskRadiusScale: 0.75,
+    labelMaskRadiusScaleWide: 1.1,
     padding: 20.0,
     themes: {
         dark: {

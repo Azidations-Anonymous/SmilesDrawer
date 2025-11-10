@@ -86,6 +86,8 @@ interface IMoleculeOptions {
   fontSizeLarge: number;
   fontSizeSmall: number;
   labelOutlineWidth?: number;
+  labelMaskRadiusScale?: number;
+  labelMaskRadiusScaleWide?: number;
 
   // Debugging
   debug: boolean;

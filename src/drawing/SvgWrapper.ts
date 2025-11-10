@@ -859,9 +859,11 @@ class SvgWrapper implements IDrawingSurface {
   }
 
   private createLabelMask(cx: number, cy: number, segment: LabelSegment): void {
-    let maskRadius = this.opts.fontSizeLarge * 0.75;
+    const baseScale = this.opts.labelMaskRadiusScale ?? 0.75;
+    const wideScale = this.opts.labelMaskRadiusScaleWide ?? 1.1;
+    let maskRadius = this.opts.fontSizeLarge * baseScale;
     if (segment.element.length > 1) {
-      maskRadius = this.opts.fontSizeLarge * 1.1;
+      maskRadius = this.opts.fontSizeLarge * wideScale;
     }
 
     const mask = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
