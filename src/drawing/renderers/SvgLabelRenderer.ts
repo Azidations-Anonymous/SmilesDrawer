@@ -1,7 +1,7 @@
 import { IMoleculeOptions } from '../../config/IOptions';
 
 type LabelRole = 'primary' | 'satellite';
-type LabelCategory = 'charge' | 'hydrogen' | 'isotope' | 'main';
+type LabelCategory = 'charge' | 'hydrogen' | 'hydrogenCount' | 'isotope' | 'main';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 

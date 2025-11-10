@@ -17,9 +17,10 @@ type LabelSegment = {
   kind: 'primary' | 'satellite';
   fontSize?: number;
   category?: LabelCategory;
+  groupId?: string;
 };
 
-type LabelCategory = 'charge' | 'hydrogen' | 'isotope' | 'main';
+type LabelCategory = 'charge' | 'hydrogen' | 'hydrogenCount' | 'isotope' | 'main';
 
 type LabelPlacement = {
   segment: LabelSegment;
@@ -674,6 +675,9 @@ class SvgWrapper implements IDrawingSurface {
     const segments: LabelSegment[] = [];
     let display = elementName;
 
+    let hydrogenGroupCounter = 0;
+    const nextHydrogenGroupId = (): string => `hydrogen-${hydrogenGroupCounter++}`;
+
     if (charge !== 0 && charge !== null) {
       display += SvgUnicodeHelper.createUnicodeCharge(charge);
     }
@@ -713,14 +717,16 @@ class SvgWrapper implements IDrawingSurface {
     }
 
     if (hydrogens > 0) {
-      segments.push({ display: 'H', element: 'H', kind: 'satellite', fontSize: this.opts.fontSizeLarge, category: 'hydrogen' });
+      const hydrogenGroupId = nextHydrogenGroupId();
+      segments.push({ display: 'H', element: 'H', kind: 'satellite', fontSize: this.opts.fontSizeLarge, category: 'hydrogen', groupId: hydrogenGroupId });
       if (hydrogens > 1) {
         segments.push({
           display: SvgUnicodeHelper.createUnicodeSubscript(hydrogens),
           element: 'H',
           kind: 'satellite',
-          fontSize: this.opts.fontSizeSmall,
-          category: 'hydrogen'
+          fontSize: this.opts.fontSizeLarge,
+          category: 'hydrogenCount',
+          groupId: hydrogenGroupId
         });
       }
     }
@@ -764,14 +770,16 @@ class SvgWrapper implements IDrawingSurface {
       }
 
       if (pe.hydrogenCount > 0) {
-        segments.push({ display: 'H', element: 'H', kind: 'satellite', fontSize: this.opts.fontSizeLarge, category: 'hydrogen' });
+        const hydrogenGroupId = nextHydrogenGroupId();
+        segments.push({ display: 'H', element: 'H', kind: 'satellite', fontSize: this.opts.fontSizeLarge, category: 'hydrogen', groupId: hydrogenGroupId });
         if (pe.hydrogenCount > 1) {
           segments.push({
             display: SvgUnicodeHelper.createUnicodeSubscript(pe.hydrogenCount),
             element: 'H',
             kind: 'satellite',
             fontSize: this.opts.fontSizeSmall,
-            category: 'hydrogen'
+            category: 'hydrogenCount',
+            groupId: hydrogenGroupId
           });
         }
       }
@@ -800,12 +808,12 @@ class SvgWrapper implements IDrawingSurface {
       return metricsCache.get(key)!;
     };
 
-    const isVertical = direction === 'up' || direction === 'down';
     const needsReverse = direction === 'left' || direction === 'up';
     const orderedSegments = needsReverse ? segments.slice().reverse() : segments.slice();
     const chargeSegments = orderedSegments.filter((segment) => segment.category === 'charge');
     const isotopeSegments = orderedSegments.filter((segment) => segment.category === 'isotope');
-    const layoutSegments = orderedSegments.filter((segment) => segment.category !== 'charge' && segment.category !== 'isotope');
+    const hydrogenCountSegments = orderedSegments.filter((segment) => segment.category === 'hydrogenCount');
+    const layoutSegments = orderedSegments.filter((segment) => segment.category !== 'charge' && segment.category !== 'isotope' && segment.category !== 'hydrogenCount');
     const baseFontSizeMap = new Map<LabelCategory | undefined, number>();
     orderedSegments.forEach((segment) => {
       if (!baseFontSizeMap.has(segment.category)) {
@@ -816,7 +824,9 @@ class SvgWrapper implements IDrawingSurface {
 
     const hasSatellites = segments.some((segment) => segment.kind === 'satellite');
 
-    if (isVertical) {
+    const hydrogenPlacementsByGroup = new Map<string, LabelPlacement>();
+
+    if (['up', 'down'].contains(direction)) {
       const lineHeight = this.opts.fontSizeLarge + (this.opts.labelOutlineWidth ?? 0);
       let currentY = y;
 
@@ -826,13 +836,17 @@ class SvgWrapper implements IDrawingSurface {
         }
 
         const metrics = measure(segment);
-        placements.push({
+        const placement: LabelPlacement = {
           segment,
           x,
           y: currentY,
           width: metrics.width,
           height: metrics.height
-        });
+        };
+        placements.push(placement);
+        if (segment.category === 'hydrogen' && segment.groupId) {
+          hydrogenPlacementsByGroup.set(segment.groupId, placement);
+        }
       });
     } else {
       const metricsList = layoutSegments.map((segment) => measure(segment));
@@ -853,13 +867,17 @@ class SvgWrapper implements IDrawingSurface {
         }
         const metrics = metricsList[index];
         const centerX = cursor + metrics.width / 2;
-        placements.push({
+        const placement: LabelPlacement = {
           segment,
           x: centerX,
           y,
           width: metrics.width,
           height: metrics.height
-        });
+        };
+        placements.push(placement);
+        if (segment.category === 'hydrogen' && segment.groupId) {
+          hydrogenPlacementsByGroup.set(segment.groupId, placement);
+        }
         cursor += metrics.width;
       });
     }
@@ -884,10 +902,10 @@ class SvgWrapper implements IDrawingSurface {
     const primaryBaseline = primaryPlacement ? primaryPlacement.y : y;
 
     if (isotopeSegments.length > 0) {
-      const smallOffset = (isotopeSegments[0].fontSize ?? this.opts.fontSizeSmall) * 0.35;
+      const smallOffset = (isotopeSegments[0].fontSize) * 0.5;
       const isotopeY = primaryBaseline - smallOffset;
       let isotopeCursor = primaryLeftEdge;
-      const isotopeSpacing = this.getCategorySpacing('isotope', 'main');
+      const isotopeSpacing = this.getCategorySpacing('main', 'isotope');
 
       isotopeSegments.forEach((segment) => {
         const metrics = measure(segment);
@@ -921,6 +939,29 @@ class SvgWrapper implements IDrawingSurface {
           height: metrics.height
         });
         chargeCursor += metrics.width / 2;
+      });
+    }
+
+    if (hydrogenCountSegments.length > 0) {
+      const hydrogenSpacing = this.getCategorySpacing('hydrogen', 'hydrogenCount');
+      hydrogenCountSegments.forEach((segment) => {
+        const basePlacement = segment.groupId ? hydrogenPlacementsByGroup.get(segment.groupId) : undefined;
+        if (!basePlacement) {
+          return;
+        }
+        const metrics = measure(segment);
+        const baselineY = basePlacement.y;
+        if (primaryPlacement && basePlacement.x < primaryPlacement.x && Math.abs(basePlacement.y - primaryPlacement.y) < this.opts.fontSizeLarge) {
+          basePlacement.x -= hydrogenSpacing + metrics.width;
+        }
+        const countX = basePlacement.x + basePlacement.width / 2 + hydrogenSpacing + metrics.width / 2;
+        placements.push({
+          segment,
+          x: countX,
+          y: baselineY,
+          width: metrics.width,
+          height: metrics.height
+        });
       });
     }
 
@@ -982,20 +1023,23 @@ class SvgWrapper implements IDrawingSurface {
     }
   }
 
-  private getCategorySpacing(lhs: LabelCategory, rhs: LabelCategory): number {
+  private getCategorySpacing(inner: LabelCategory, outer: LabelCategory): number {
     const base = this.opts.labelOutlineWidth;
     const fallback = this.opts.fontSizeLarge * 0.1;
     const spacing = Math.max(base ?? 0, fallback);
 
-    console.log(lhs, rhs);
-
-    if ([lhs, rhs].contains('charge')) {
-      return spacing / 4;
-    }
-    if ([lhs, rhs].contains('isotope')) {
-      return spacing;
-    } else {
-      return 0;
+    switch ([inner, outer]) {
+      case ['main', 'charge']:
+        return spacing / 4;
+      case ['main', 'isotope']:
+        return spacing;
+      case ['main', 'hydrogen']:
+        return spacing;
+      case ['hydrogen', 'hydrogenCount']:
+      case ['hydrogenCount', 'hydrogen']:
+        return 0;
+      default:
+        return 0;
     }
   }
 

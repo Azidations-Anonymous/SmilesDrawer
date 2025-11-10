@@ -15,7 +15,7 @@ function getDefaultOptions(): IMoleculeOptions {
       isomeric: true,
       debug: false,
       terminalCarbons: false,
-      explicitHydrogens: true,
+      explicitHydrogens: false,
       aromaticPiSystemInset: 7,
       overlapSensitivity: 0.42,
       overlapResolutionIterations: 1,
