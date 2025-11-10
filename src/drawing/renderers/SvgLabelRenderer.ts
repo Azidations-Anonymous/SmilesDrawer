@@ -11,11 +11,11 @@ class SvgLabelRenderer {
     return this.createText(x, y, text, color, fontSize || this.opts.fontSizeLarge, 'primary');
   }
 
-  drawSatellite(x: number, y: number, text: string, color: string, fontSize?: number): SVGElement {
-    return this.createText(x, y, text, color, fontSize || this.opts.fontSizeLarge, 'satellite');
+  drawSatellite(x: number, y: number, text: string, color: string, fontSize?: number, category?: LabelCategory): SVGElement {
+    return this.createText(x, y, text, color, fontSize || this.opts.fontSizeLarge, 'satellite', category);
   }
 
-  private createText(x: number, y: number, text: string, color: string, fontSize: number, role: LabelRole): SVGElement {
+  private createText(x: number, y: number, text: string, color: string, fontSize: number, role: LabelRole, category?: LabelCategory): SVGElement {
     const textElem = document.createElementNS(SVG_NS, 'text');
     textElem.setAttributeNS(null, 'class', 'element');
     textElem.setAttributeNS(null, 'x', x.toString());

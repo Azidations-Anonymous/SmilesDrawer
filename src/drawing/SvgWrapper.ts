@@ -15,7 +15,10 @@ type LabelSegment = {
   element: string;
   kind: 'primary' | 'satellite';
   fontSize?: number;
+  category?: LabelCategory;
 };
+
+type LabelCategory = 'charge' | 'hydrogen' | 'isotope' | 'main';
 
 type LabelPlacement = {
   segment: LabelSegment;
@@ -681,7 +684,8 @@ class SvgWrapper implements IDrawingSurface {
       display: elementName,
       element: elementName,
       kind: 'primary',
-      fontSize: this.opts.fontSizeLarge
+      fontSize: this.opts.fontSizeLarge,
+      category: 'main'
     };
 
     if (isotope !== 0 && isotope !== null) {
@@ -689,7 +693,8 @@ class SvgWrapper implements IDrawingSurface {
         display: SvgUnicodeHelper.createUnicodeSuperscript(isotope),
         element: elementName,
         kind: 'satellite',
-        fontSize: this.opts.fontSizeSmall
+        fontSize: this.opts.fontSizeSmall,
+        category: 'isotope'
       });
     }
 
@@ -700,18 +705,20 @@ class SvgWrapper implements IDrawingSurface {
         display: SvgUnicodeHelper.createUnicodeCharge(charge),
         element: elementName,
         kind: 'satellite',
-        fontSize: this.opts.fontSizeSmall
+        fontSize: this.opts.fontSizeSmall,
+        category: 'charge'
       });
     }
 
     if (hydrogens > 0) {
-      segments.push({ display: 'H', element: 'H', kind: 'satellite', fontSize: this.opts.fontSizeLarge });
+      segments.push({ display: 'H', element: 'H', kind: 'satellite', fontSize: this.opts.fontSizeLarge, category: 'hydrogen' });
       if (hydrogens > 1) {
         segments.push({
           display: SvgUnicodeHelper.createUnicodeSubscript(hydrogens),
           element: 'H',
           kind: 'satellite',
-          fontSize: this.opts.fontSizeSmall
+          fontSize: this.opts.fontSizeSmall,
+          category: 'hydrogen'
         });
       }
     }
@@ -740,7 +747,8 @@ class SvgWrapper implements IDrawingSurface {
         display: pseudoDisplay,
         element: pe.element,
         kind: 'satellite',
-        fontSize: this.opts.fontSizeLarge
+        fontSize: this.opts.fontSizeLarge,
+        category: 'main'
       });
 
       if (pe.charge !== 0) {
@@ -748,18 +756,20 @@ class SvgWrapper implements IDrawingSurface {
           display: SvgUnicodeHelper.createUnicodeCharge(pe.charge),
           element: pe.element,
           kind: 'satellite',
-          fontSize: this.opts.fontSizeSmall
+          fontSize: this.opts.fontSizeSmall,
+          category: 'charge'
         });
       }
 
       if (pe.hydrogenCount > 0) {
-        segments.push({ display: 'H', element: 'H', kind: 'satellite', fontSize: this.opts.fontSizeLarge });
+        segments.push({ display: 'H', element: 'H', kind: 'satellite', fontSize: this.opts.fontSizeLarge, category: 'hydrogen' });
         if (pe.hydrogenCount > 1) {
           segments.push({
             display: SvgUnicodeHelper.createUnicodeSubscript(pe.hydrogenCount),
             element: 'H',
             kind: 'satellite',
-            fontSize: this.opts.fontSizeSmall
+            fontSize: this.opts.fontSizeSmall,
+            category: 'hydrogen'
           });
         }
       }
@@ -816,11 +826,16 @@ class SvgWrapper implements IDrawingSurface {
     } else {
       const metricsList = orderedSegments.map((segment) => measure(segment));
       const totalWidth = metricsList.reduce((sum, metrics) => sum + metrics.width, 0);
-      let cursor = x - totalWidth / 2;
+    const chargeSegments = orderedSegments.filter((segment) => segment.category === 'charge');
+    let cursor = x - totalWidth / 2;
+    if (chargeSegments.length > 0) {
+      const positiveWidth = metricsList.reduce((sum, metrics) => sum + metrics.width, 0);
+      cursor = x - positiveWidth / 2;
+    }
 
-      orderedSegments.forEach((segment, index) => {
-        const metrics = metricsList[index];
-        const centerX = cursor + metrics.width / 2;
+    orderedSegments.forEach((segment, index) => {
+      const metrics = metricsList[index];
+      const centerX = cursor + metrics.width / 2;
         placements.push({
           segment,
           x: centerX,
@@ -852,7 +867,7 @@ class SvgWrapper implements IDrawingSurface {
       const fontSize = placement.segment.fontSize ?? this.opts.fontSizeLarge;
       const textElem = placement.segment.kind === 'primary'
         ? this.labelRenderer.drawPrimaryLabel(placement.x, placement.y, placement.segment.display, color, fontSize)
-        : this.labelRenderer.drawSatellite(placement.x, placement.y, placement.segment.display, color, fontSize);
+        : this.labelRenderer.drawSatellite(placement.x, placement.y, placement.segment.display, color, fontSize, placement.segment.category);
 
       this.vertices.push(textElem);
     });
