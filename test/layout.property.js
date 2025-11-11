@@ -28,7 +28,7 @@ function prepareMolecule(smiles) {
     preprocessor.processGraph();
     return {
         graph: preprocessor.graph,
-        bondLength: preprocessor.opts.bondLength
+        bondLength: preprocessor.userOpts.rendering.bonds.bondLength
     };
 }
 
