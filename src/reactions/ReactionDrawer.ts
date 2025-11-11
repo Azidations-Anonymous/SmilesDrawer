@@ -232,12 +232,14 @@ class ReactionDrawer {
 
         textAbove = textAbove.replace('{reagents}', reagentsText);
 
+        const measurementLineHeight = this.userOpts.typography.measurementLineHeight ?? 0.9;
         const topText = SvgTextHelper.writeText(
             textAbove,
             this.themeManager,
             this.opts.fontSize * this.opts.scale,
             this.opts.fontFamily,
-            this.opts.arrow.length * this.opts.scale
+            this.opts.arrow.length * this.opts.scale,
+            measurementLineHeight
         );
 
         let centerOffsetX = (this.opts.arrow.length * this.opts.scale - topText.width) / 2.0;
@@ -257,7 +259,8 @@ class ReactionDrawer {
             this.themeManager,
             this.opts.fontSize * this.opts.scale,
             this.opts.fontFamily,
-            this.opts.arrow.length * this.opts.scale
+            this.opts.arrow.length * this.opts.scale,
+            measurementLineHeight
         );
 
         centerOffsetX = (this.opts.arrow.length * this.opts.scale - bottomText.width) / 2.0;

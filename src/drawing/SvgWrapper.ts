@@ -6,7 +6,7 @@ import Vertex = require('../graph/Vertex');
 import SvgUnicodeHelper = require('./helpers/SvgUnicodeHelper');
 import Vector2 = require('../graph/Vector2');
 import MathHelper = require('../utils/MathHelper');
-import { IMoleculeOptions, AttachedPseudoElements } from '../config/IOptions';
+import { IUserOptions, IDerivedOptions, AttachedPseudoElements } from '../config/IOptions';
 import ThemeManager = require('../config/ThemeManager');
 import { TextDirection } from '../types/CommonTypes';
 import IDrawingSurface = require('./renderers/IDrawingSurface');
@@ -43,7 +43,8 @@ function makeid(length: number): string {
 class SvgWrapper implements IDrawingSurface {
   svg: SVGElement;
   container: SVGElement | null;
-  opts: IMoleculeOptions;
+  userOpts: IUserOptions;
+  derivedOpts: IDerivedOptions;
   uid: string;
   gradientId: number;
   backgroundItems: SVGElement[];
@@ -63,7 +64,7 @@ class SvgWrapper implements IDrawingSurface {
   style: SVGStyleElement;
   labelRenderer: SvgLabelRenderer;
 
-  constructor(themeManager: ThemeManager, target: string | SVGElement, options: IMoleculeOptions, clear: boolean = true) {
+  constructor(themeManager: ThemeManager, target: string | SVGElement, userOptions: IUserOptions, derivedOptions: IDerivedOptions, clear: boolean = true) {
     if (typeof target === 'string') {
       this.svg = document.getElementById(target) as unknown as SVGElement;
     } else {
@@ -71,8 +72,10 @@ class SvgWrapper implements IDrawingSurface {
     }
 
     this.container = null;
-    this.opts = options;
-    this.labelRenderer = new SvgLabelRenderer(this.opts, () => this.themeManager.getColor('BACKGROUND'));
+    this.userOpts = userOptions;
+    this.derivedOpts = derivedOptions;
+    this.themeManager = themeManager;
+    this.labelRenderer = new SvgLabelRenderer(this.userOpts, () => this.themeManager.getColor('BACKGROUND'));
     this.uid = makeid(5);
     this.gradientId = 0;
 
@@ -88,10 +91,7 @@ class SvgWrapper implements IDrawingSurface {
     // maintain the dimensions
     this.drawingWidth = 0;
     this.drawingHeight = 0;
-    this.halfBondThickness = this.opts.bondThickness / 2.0;
-
-    // for managing color schemes
-    this.themeManager = themeManager;
+    this.halfBondThickness = this.userOpts.rendering.bonds.bondThickness / 2.0;
 
     // create the mask
     this.maskElements = [];
@@ -115,14 +115,14 @@ class SvgWrapper implements IDrawingSurface {
     // create the css styles
     this.style.appendChild(document.createTextNode(`
                 .element {
-                    font-family: ${this.opts.fontFamily};
+                    font-family: ${this.userOpts.typography.fontFamily};
                 }
                 .sub {
-                    font-family: ${this.opts.fontFamily};
+                    font-family: ${this.userOpts.typography.fontFamily};
                 }
                 .annotation {
-                    font-family: ${this.opts.fontFamily};
-                    font-size: ${this.opts.atomAnnotationFontSize}pt;
+                    font-family: ${this.userOpts.typography.fontFamily};
+                    font-size: ${this.userOpts.annotations.fontSize}pt;
                     text-anchor: middle;
                     dominant-baseline: text-after-edge;
                 }
@@ -181,7 +181,7 @@ class SvgWrapper implements IDrawingSurface {
 
     paths.setAttributeNS(null, 'mask', 'url(#' + this.uid + '-text-mask)');
 
-    this.updateViewbox(this.opts.scale);
+    this.updateViewbox(this.userOpts.canvas.scale);
 
     // Position the background
     background.setAttributeNS(null, 'style', `transform: translateX(${this.minX}px) translateY(${this.minY}px)`);
@@ -289,7 +289,7 @@ class SvgWrapper implements IDrawingSurface {
     }
 
     // Add padding
-    let padding = this.opts.padding;
+    let padding = this.userOpts.canvas.padding;
     this.maxX += padding;
     this.maxY += padding;
     this.minX -= padding;
@@ -344,7 +344,7 @@ class SvgWrapper implements IDrawingSurface {
    * @param {String} elementName The name of the element (single-letter).
    */
   drawBall(x: number, y: number, elementName: string): void {
-    let r = this.opts.bondLength / 4.5;
+    let r = this.userOpts.rendering.atoms.ballRadiusBondFraction * this.userOpts.rendering.bonds.bondLength;
 
     if (x - r < this.minX) {
       this.minX = x - r;
@@ -394,9 +394,9 @@ class SvgWrapper implements IDrawingSurface {
     }
 
     let t = Vector2.add(start, Vector2.multiplyScalar(normals[0], this.halfBondThickness)),
-      u = Vector2.add(end, Vector2.multiplyScalar(normals[0], 3.0 + this.opts.fontSizeLarge / 4.0)),
-      v = Vector2.add(end, Vector2.multiplyScalar(normals[1], 3.0 + this.opts.fontSizeLarge / 4.0)),
-      w = Vector2.add(start, Vector2.multiplyScalar(normals[1], this.halfBondThickness));
+      u = Vector2.add(end, Vector2.multiplyScalar(normals[0], this.userOpts.rendering.stereochemistry.wedgeTipPaddingPx + this.halfBondThickness)),
+      v = Vector2.add(end, Vector2.multiplyScalar(normals[1], this.userOpts.rendering.stereochemistry.wedgeTipPaddingPx + this.halfBondThickness)),
+      w = Vector2.add(start, Vector2.multiplyScalar(normals[1], this.userOpts.rendering.stereochemistry.wedgeSidePaddingPx + this.halfBondThickness));
 
     let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon'),
       gradient = this.createGradient(line);
@@ -411,12 +411,13 @@ class SvgWrapper implements IDrawingSurface {
    *  @param {Number} y The y position of the highlight
    *  @param {string} color The color of the highlight, default #03fc9d
    */
-  drawAtomHighlight(x: number, y: number, color: string = "#03fc9d"): void {
+  drawAtomHighlight(x: number, y: number, color?: string): void {
     let ball = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     ball.setAttributeNS(null, 'cx', x.toString());
     ball.setAttributeNS(null, 'cy', y.toString());
-    ball.setAttributeNS(null, 'r', (this.opts.bondLength / 3).toString());
-    ball.setAttributeNS(null, 'fill', color);
+    const highlightRadius = this.userOpts.appearance.highlights.fallbackRadiusFactor * this.userOpts.rendering.bonds.bondLength;
+    ball.setAttributeNS(null, 'r', highlightRadius.toString());
+    ball.setAttributeNS(null, 'fill', color ?? this.userOpts.appearance.highlights.fallbackColor);
 
     this.highlights.push(ball);
   }
@@ -453,7 +454,7 @@ class SvgWrapper implements IDrawingSurface {
 
     let dir = Vector2.subtract(end, start).normalize(),
       length = line.getLength(),
-      step = 1.25 / (length / (this.opts.bondLength / 10.0)),
+      step = this.userOpts.rendering.stereochemistry.dashedStepFactor / (length / (this.userOpts.rendering.bonds.bondLength / 10.0)),
       changed = false;
 
     let gradient = this.createGradient(line);
@@ -461,7 +462,7 @@ class SvgWrapper implements IDrawingSurface {
     for (let t = 0.0; t < 1.0; t += step) {
       let to = Vector2.multiplyScalar(dir, t * length),
         startDash = Vector2.add(start, to),
-        width = this.opts.fontSizeLarge / 2.0 * t,
+        width = this.userOpts.typography.fontSizeLarge * this.userOpts.rendering.stereochemistry.dashedWidthFactorSvg * t,
         dashOffset = Vector2.multiplyScalar(normals[0], width);
 
       startDash.subtract(dashOffset);
@@ -513,7 +514,7 @@ class SvgWrapper implements IDrawingSurface {
 
   drawAnnotation(x: number, y: number, text: string, options?: { fontSize?: number; color?: string }): void {
     const annotation = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    const fontSize = options?.fontSize ?? this.opts.atomAnnotationFontSize;
+    const fontSize = options?.fontSize ?? this.userOpts.annotations.fontSize;
     annotation.setAttributeNS(null, 'x', x.toString());
     annotation.setAttributeNS(null, 'y', y.toString());
     annotation.setAttributeNS(null, 'class', 'annotation');
@@ -545,12 +546,12 @@ class SvgWrapper implements IDrawingSurface {
    */
   drawRing(x: number, y: number, s: number): void {
     let circleElem = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    let radius = MathHelper.apothemFromSideLength(this.opts.bondLength, s);
+    let radius = MathHelper.apothemFromSideLength(this.userOpts.rendering.bonds.bondLength, s);
     circleElem.setAttributeNS(null, 'cx', x.toString());
     circleElem.setAttributeNS(null, 'cy', y.toString());
-    circleElem.setAttributeNS(null, 'r', (radius - this.opts.bondSpacing).toString());
+    circleElem.setAttributeNS(null, 'r', (radius - this.userOpts.rendering.bonds.bondSpacing).toString());
     circleElem.setAttributeNS(null, 'stroke', this.themeManager.getColor('C'));
-    circleElem.setAttributeNS(null, 'stroke-width', this.opts.bondThickness.toString());
+    circleElem.setAttributeNS(null, 'stroke-width', this.userOpts.rendering.bonds.bondThickness.toString());
     circleElem.setAttributeNS(null, 'fill', 'none');
     this.paths.push(circleElem);
   }
@@ -564,11 +565,10 @@ class SvgWrapper implements IDrawingSurface {
    * @param {String} gradient gradient url. Defaults to null.
    */
   drawLine(line: Line, dashed: boolean = false, gradient: string | null = null, linecap: string = 'round'): void {
-    let opts = this.opts,
-      stylesArr = [
-        ['stroke-width', this.opts.bondThickness],
+    let stylesArr = [
+        ['stroke-width', this.userOpts.rendering.bonds.bondThickness],
         ['stroke-linecap', linecap],
-        ['stroke-dasharray', dashed ? '3,2' : 'none'],
+        ['stroke-dasharray', dashed ? this.userOpts.rendering.bonds.dashPattern.join(',') : 'none'],
       ],
       l = line.getLeftVector(),
       r = line.getRightVector(),
@@ -601,7 +601,8 @@ class SvgWrapper implements IDrawingSurface {
    * @param {String} elementName The name of the element (single-letter).
    */
   drawPoint(x: number, y: number, elementName: string): void {
-    let r = 0.75;
+    const r = this.userOpts.rendering.atoms.pointRadius;
+    const maskRadius = this.userOpts.rendering.atoms.pointMaskRadius;
 
     if (x - r < this.minX) {
       this.minX = x - r;
@@ -623,7 +624,7 @@ class SvgWrapper implements IDrawingSurface {
     let mask = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     mask.setAttributeNS(null, 'cx', x.toString());
     mask.setAttributeNS(null, 'cy', y.toString());
-    mask.setAttributeNS(null, 'r', '1.5');
+    mask.setAttributeNS(null, 'r', maskRadius.toString());
     mask.setAttributeNS(null, 'fill', 'black');
     this.maskElements.push(mask);
 
@@ -646,7 +647,7 @@ class SvgWrapper implements IDrawingSurface {
     path.setAttributeNS(null, 'd', `${segments.join(' ')} Z`);
     path.setAttributeNS(null, 'fill', 'none');
     path.setAttributeNS(null, 'stroke', color || this.themeManager.getColor('C'));
-    path.setAttributeNS(null, 'stroke-width', this.opts.bondThickness.toString());
+    path.setAttributeNS(null, 'stroke-width', this.userOpts.rendering.bonds.bondThickness.toString());
     path.setAttributeNS(null, 'stroke-linecap', 'round');
     path.setAttributeNS(null, 'stroke-linejoin', 'round');
     path.setAttributeNS(null, 'stroke-dasharray', '3,2');
@@ -690,7 +691,7 @@ class SvgWrapper implements IDrawingSurface {
       display: elementName,
       element: elementName,
       kind: 'primary',
-      fontSize: this.opts.fontSizeLarge,
+      fontSize: this.userOpts.typography.fontSizeLarge,
       category: 'main'
     };
 
@@ -699,7 +700,7 @@ class SvgWrapper implements IDrawingSurface {
         display: isotope.toString(),
         element: elementName,
         kind: 'satellite',
-        fontSize: this.opts.fontSizeSmall,
+        fontSize: this.userOpts.typography.fontSizeSmall,
         category: 'isotope'
       });
     }
@@ -711,20 +712,20 @@ class SvgWrapper implements IDrawingSurface {
         display: SvgUnicodeHelper.createUnicodeCharge(charge),
         element: elementName,
         kind: 'satellite',
-        fontSize: this.opts.fontSizeLarge,
+        fontSize: this.userOpts.typography.fontSizeLarge,
         category: 'charge'
       });
     }
 
     if (hydrogens > 0) {
       const hydrogenGroupId = nextHydrogenGroupId();
-      segments.push({ display: 'H', element: 'H', kind: 'satellite', fontSize: this.opts.fontSizeLarge, category: 'hydrogen', groupId: hydrogenGroupId });
+      segments.push({ display: 'H', element: 'H', kind: 'satellite', fontSize: this.userOpts.typography.fontSizeLarge, category: 'hydrogen', groupId: hydrogenGroupId });
       if (hydrogens > 1) {
         segments.push({
           display: SvgUnicodeHelper.createUnicodeSubscript(hydrogens),
           element: 'H',
           kind: 'satellite',
-          fontSize: this.opts.fontSizeLarge,
+          fontSize: this.userOpts.typography.fontSizeLarge,
           category: 'hydrogenCount',
           groupId: hydrogenGroupId
         });
@@ -755,7 +756,7 @@ class SvgWrapper implements IDrawingSurface {
         display: pseudoDisplay,
         element: pe.element,
         kind: 'satellite',
-        fontSize: this.opts.fontSizeLarge,
+        fontSize: this.userOpts.typography.fontSizeLarge,
         category: 'main'
       });
 
@@ -764,20 +765,20 @@ class SvgWrapper implements IDrawingSurface {
           display: SvgUnicodeHelper.createUnicodeCharge(pe.charge),
           element: pe.element,
           kind: 'satellite',
-          fontSize: this.opts.fontSizeSmall,
+          fontSize: this.userOpts.typography.fontSizeSmall,
           category: 'charge'
         });
       }
 
       if (pe.hydrogenCount > 0) {
         const hydrogenGroupId = nextHydrogenGroupId();
-        segments.push({ display: 'H', element: 'H', kind: 'satellite', fontSize: this.opts.fontSizeLarge, category: 'hydrogen', groupId: hydrogenGroupId });
+        segments.push({ display: 'H', element: 'H', kind: 'satellite', fontSize: this.userOpts.typography.fontSizeLarge, category: 'hydrogen', groupId: hydrogenGroupId });
         if (pe.hydrogenCount > 1) {
           segments.push({
             display: SvgUnicodeHelper.createUnicodeSubscript(pe.hydrogenCount),
             element: 'H',
             kind: 'satellite',
-            fontSize: this.opts.fontSizeSmall,
+            fontSize: this.userOpts.typography.fontSizeSmall,
             category: 'hydrogenCount',
             groupId: hydrogenGroupId
           });
@@ -793,13 +794,14 @@ class SvgWrapper implements IDrawingSurface {
       return;
     }
 
-    const outlinePadding = this.opts.labelOutlineWidth ?? 0;
+    const outlinePadding = this.userOpts.typography.labelOutlineWidth ?? 0;
     const metricsCache = new Map<string, { width: number; height: number }>();
+    const measurementLineHeight = this.userOpts.typography.measurementLineHeight ?? 0.9;
     const measure = (segment: LabelSegment): { width: number; height: number } => {
-      const fontSize = segment.fontSize ?? this.opts.fontSizeLarge;
+      const fontSize = segment.fontSize ?? this.userOpts.typography.fontSizeLarge;
       const key = `${segment.display}@${fontSize}`;
       if (!metricsCache.has(key)) {
-        const base = SvgTextHelper.measureText(segment.display, fontSize, this.opts.fontFamily);
+        const base = SvgTextHelper.measureText(segment.display, fontSize, this.userOpts.typography.fontFamily, measurementLineHeight);
         metricsCache.set(key, {
           width: base.width + outlinePadding,
           height: base.height + outlinePadding
@@ -817,7 +819,7 @@ class SvgWrapper implements IDrawingSurface {
     const baseFontSizeMap = new Map<LabelCategory | undefined, number>();
     orderedSegments.forEach((segment) => {
       if (!baseFontSizeMap.has(segment.category)) {
-        baseFontSizeMap.set(segment.category, segment.fontSize ?? this.opts.fontSizeLarge);
+        baseFontSizeMap.set(segment.category, segment.fontSize ?? this.userOpts.typography.fontSizeLarge);
       }
     });
     const placements: LabelPlacement[] = [];
@@ -827,7 +829,7 @@ class SvgWrapper implements IDrawingSurface {
     const hydrogenPlacementsByGroup = new Map<string, LabelPlacement>();
 
     if (['up', 'down'].contains(direction)) {
-      const lineHeight = this.opts.fontSizeLarge + (this.opts.labelOutlineWidth ?? 0);
+      const lineHeight = this.userOpts.typography.fontSizeLarge + (this.userOpts.typography.labelOutlineWidth ?? 0);
       let currentY = y;
 
       layoutSegments.forEach((segment, index) => {
@@ -951,7 +953,7 @@ class SvgWrapper implements IDrawingSurface {
         }
         const metrics = measure(segment);
         const baselineY = basePlacement.y;
-        if (primaryPlacement && basePlacement.x < primaryPlacement.x && Math.abs(basePlacement.y - primaryPlacement.y) < this.opts.fontSizeLarge) {
+        if (primaryPlacement && basePlacement.x < primaryPlacement.x && Math.abs(basePlacement.y - primaryPlacement.y) < this.userOpts.typography.fontSizeLarge) {
           basePlacement.x -= hydrogenSpacing + metrics.width;
         }
         const countX = basePlacement.x + basePlacement.width / 2 + hydrogenSpacing + metrics.width / 2;
@@ -967,7 +969,7 @@ class SvgWrapper implements IDrawingSurface {
 
     placements.forEach((placement) => {
       const color = this.themeManager.getColor(placement.segment.element);
-      const fontSize = placement.segment.fontSize ?? this.opts.fontSizeLarge;
+      const fontSize = placement.segment.fontSize ?? this.userOpts.typography.fontSizeLarge;
       const textElem = placement.segment.kind === 'primary'
         ? this.labelRenderer.drawPrimaryLabel(placement.x, placement.y, placement.segment.display, color, fontSize)
         : this.labelRenderer.drawSatellite(placement.x, placement.y, placement.segment.display, color, fontSize, placement.segment.category);
@@ -979,10 +981,10 @@ class SvgWrapper implements IDrawingSurface {
   }
 
   private createLabelMask(cx: number, cy: number, segment: LabelSegment, hasSatellites: boolean): void {
-    const baseScale = this.opts.labelMaskRadiusScale ?? 0.75;
-    const wideScale = this.opts.labelMaskRadiusScaleWide ?? 1.1;
+    const baseScale = this.userOpts.annotations.mask.baseScale ?? 0.75;
+    const wideScale = this.userOpts.annotations.mask.wideScale ?? 1.1;
     const shouldUseWide = segment.kind === 'primary' && hasSatellites;
-    const maskRadius = this.opts.fontSizeLarge * (shouldUseWide ? wideScale : baseScale);
+    const maskRadius = this.userOpts.typography.fontSizeLarge * (shouldUseWide ? wideScale : baseScale);
 
     const mask = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     mask.setAttributeNS(null, 'cx', cx.toString());
@@ -1024,20 +1026,24 @@ class SvgWrapper implements IDrawingSurface {
   }
 
   private getCategorySpacing(inner: LabelCategory, outer: LabelCategory): number {
-    const base = this.opts.labelOutlineWidth;
-    const fallback = this.opts.fontSizeLarge * 0.1;
+    const base = this.userOpts.typography.labelOutlineWidth;
+    const fallback = this.userOpts.typography.fontSizeLarge * this.userOpts.typography.labelSpacing.baseUnitScale;
     const spacing = Math.max(base ?? 0, fallback);
 
-    switch ([inner, outer]) {
-      case ['main', 'charge']:
-        return spacing / 4;
-      case ['main', 'isotope']:
-        return spacing;
-      case ['main', 'hydrogen']:
-        return spacing;
-      case ['hydrogen', 'hydrogenCount']:
-      case ['hydrogenCount', 'hydrogen']:
-        return 0;
+    const spacingConfig = this.userOpts.typography.labelSpacing;
+    const pair = `${inner}:${outer}`;
+    switch (pair) {
+      case 'main:charge':
+        return spacing * spacingConfig.chargeMultiplier;
+      case 'main:isotope':
+        return spacing * spacingConfig.isotopeMultiplier;
+      case 'main:hydrogen':
+        return spacing * spacingConfig.hydrogenMultiplier;
+      case 'charge:charge':
+        return spacing * spacingConfig.chargeMultiplier;
+      case 'hydrogen:hydrogenCount':
+      case 'hydrogenCount:hydrogen':
+        return spacing * spacingConfig.hydrogenCountMultiplier;
       default:
         return 0;
     }

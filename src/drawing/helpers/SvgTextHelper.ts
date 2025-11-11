@@ -1,8 +1,6 @@
 import ThemeManager = require('../../config/ThemeManager');
 
 class SvgTextHelper {
-
-
   static measureText(text: string, fontSize: number, fontFamily: string, lineHeight: number = 0.9): {width: number, height: number} {
     const element = document.createElement('canvas');
     const ctx = element.getContext("2d");
@@ -25,7 +23,7 @@ class SvgTextHelper {
    * @param {*} options
    * @returns {{svg: SVGElement, width: Number, height: Number}} The SVG element containing the text and its dimensions.
    */
-  static writeText(text: string, themeManager: ThemeManager, fontSize: number, fontFamily: string, maxWidth: number = Number.MAX_SAFE_INTEGER): {svg: SVGElement, width: number, height: number} {
+  static writeText(text: string, themeManager: ThemeManager, fontSize: number, fontFamily: string, maxWidth: number = Number.MAX_SAFE_INTEGER, lineHeight: number = 0.9): {svg: SVGElement, width: number, height: number} {
     let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     let style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
     style.appendChild(document.createTextNode(`
@@ -45,7 +43,7 @@ class SvgTextHelper {
     let lines = [];
 
     text.split("\n").forEach(line => {
-      let dims = SvgTextHelper.measureText(line, fontSize, fontFamily, 1.0);
+      let dims = SvgTextHelper.measureText(line, fontSize, fontFamily, lineHeight);
       if (dims.width >= maxWidth) {
         let totalWordsWidth = 0.0;
         let maxWordsHeight = 0.0;
@@ -53,7 +51,7 @@ class SvgTextHelper {
         let offset = 0;
 
         for (let i = 0; i < words.length; i++) {
-          let wordDims = SvgTextHelper.measureText(words[i], fontSize, fontFamily, 1.0);
+          let wordDims = SvgTextHelper.measureText(words[i], fontSize, fontFamily, lineHeight);
 
           if (totalWordsWidth + wordDims.width > maxWidth) {
             lines.push({
