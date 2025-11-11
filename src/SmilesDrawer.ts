@@ -6,7 +6,7 @@ import ReactionDrawer = require('./reactions/ReactionDrawer');
 import SvgWrapper = require('./drawing/SvgWrapper');
 import SvgConversionHelper = require('./drawing/helpers/SvgConversionHelper');
 import Options = require('./config/Options');
-import { IMoleculeOptions, IReactionOptions } from './config/IOptions';
+import { IUserOptions, IReactionOptions } from './config/IOptions';
 
 type DrawTarget = string | HTMLCanvasElement | HTMLImageElement | SVGElement | 'svg' | 'canvas' | 'img' | null;
 type Weights = number[] | { reactants: number[][], reagents: number[][], products: number[][] } | null;
@@ -15,14 +15,14 @@ class SmilesDrawer {
     drawer: SvgDrawer;
     reactionDrawer: ReactionDrawer;
 
-    constructor(moleculeOptions: Partial<IMoleculeOptions> = {}, reactionOptions: Partial<IReactionOptions> = {}) {
+    constructor(moleculeOptions: Partial<IUserOptions> = {}, reactionOptions: Partial<IReactionOptions> = {}) {
         this.drawer = new SvgDrawer(moleculeOptions);
 
         // moleculeOptions gets edited in reactionOptions, so clone
         this.reactionDrawer = new ReactionDrawer(reactionOptions, JSON.parse(JSON.stringify(this.drawer.opts)));
     }
 
-    static apply(moleculeOptions: Partial<IMoleculeOptions> = {}, reactionOptions: Partial<IReactionOptions> = {}, attribute: string = 'data-smiles', theme: string = 'light', successCallback: ((result: SVGElement | HTMLCanvasElement | HTMLImageElement) => void) | null = null, errorCallback: ((error: Error) => void) | null = null): void {
+    static apply(moleculeOptions: Partial<IUserOptions> = {}, reactionOptions: Partial<IReactionOptions> = {}, attribute: string = 'data-smiles', theme: string = 'light', successCallback: ((result: SVGElement | HTMLCanvasElement | HTMLImageElement) => void) | null = null, errorCallback: ((error: Error) => void) | null = null): void {
         const drawer = new SmilesDrawer(moleculeOptions, reactionOptions);
         drawer.apply(attribute, theme, successCallback, errorCallback);
     }

@@ -36,6 +36,22 @@ interface IWeightOptions {
   opacity: number;
 }
 
+interface IThemeMap {
+  dark: IThemeColors;
+  light: IThemeColors;
+  oldschool: IThemeColors;
+  solarized: IThemeColors;
+  "solarized-dark": IThemeColors;
+  matrix: IThemeColors;
+  github: IThemeColors;
+  carbon: IThemeColors;
+  cyberpunk: IThemeColors;
+  gruvbox: IThemeColors;
+  "gruvbox-dark": IThemeColors;
+  custom: IThemeColors;
+  [themeName: string]: IThemeColors;
+}
+
 /**
  * Molecular drawing options
  */
@@ -172,10 +188,179 @@ interface IAttachedPseudoElement {
 
 type AttachedPseudoElements = Record<string, IAttachedPseudoElement>;
 
+interface IUserMetaOptions {
+  version: string;
+  schemaRevision: number;
+  debug: boolean;
+}
+
+interface ICanvasOptions {
+  width: number;
+  height: number;
+  scale: number;
+  padding: number;
+}
+
+interface IRenderingBondOptions {
+  bondThickness: number;
+  bondLength: number;
+  shortBondLength: number;
+  bondSpacing: number;
+}
+
+interface IRenderingAtomOptions {
+  atomVisualization: AtomVisualization;
+  terminalCarbons: boolean;
+  explicitHydrogens: boolean;
+}
+
+interface IRenderingStereochemistryOptions {
+  isomeric: boolean;
+  shadowShortenPx: number;
+  wedgeTipPaddingPx: number;
+  wedgeTipFontScale: number;
+  wedgeSidePaddingPx: number;
+  dashedStepFactor: number;
+  dashedWidthFactorSvg: number;
+  dashedWidthFactorCanvas: number;
+  dashedColorSwitchThreshold: number;
+  dashedInsetPx: number;
+}
+
+interface IRenderingAromaticOptions {
+  piSystemInset: number;
+  overlayInset: number;
+  overlayClampRatio: number;
+}
+
+interface IRenderingOptions {
+  bonds: IRenderingBondOptions;
+  atoms: IRenderingAtomOptions;
+  stereochemistry: IRenderingStereochemistryOptions;
+  aromatic: IRenderingAromaticOptions;
+}
+
+interface ILayoutGraphOptions {
+  compactDrawing: boolean;
+  overlapSensitivity: number;
+  overlapResolutionIterations: number;
+  defaultBranchAngleRad: number;
+  linearBondToleranceRad: number;
+  rotationSnapIncrementDeg: number;
+  rotationSnapDeadzoneDeg: number;
+  centerOfMassRadiusFactor: number;
+  rotationJitterEpsilon: number;
+}
+
+interface ILayoutFinetuneOptions {
+  enabled: boolean;
+  maxSteps: number;
+  maxDurationMs: number;
+}
+
+interface ILayoutForceOptions {
+  kkThreshold: number;
+  kkInnerThreshold: number;
+  kkMaxIteration: number;
+  kkMaxInnerIteration: number;
+  kkMaxEnergy: number;
+  hessianMinimum: number;
+}
+
+interface ILayoutOverlapOptions {
+  ringDivisionSegments: number;
+  finetuneClashDistanceFactor: number;
+  rotatableEdgeCenteringFactor: number;
+}
+
+interface ILayoutOptions {
+  graph: ILayoutGraphOptions;
+  finetune: ILayoutFinetuneOptions;
+  force: ILayoutForceOptions;
+  overlap: ILayoutOverlapOptions;
+}
+
+interface ITypographyOptions {
+  fontFamily: string;
+  fontSizeLarge: number;
+  fontSizeSmall: number;
+  labelOutlineWidth: number;
+  svgBaselineShiftEm: number;
+  measurementLineHeight: number;
+  isotopeOffsetFactor: number;
+  labelSpacing: {
+    baseUnitScale: number;
+    chargeMultiplier: number;
+    isotopeMultiplier: number;
+    hydrogenMultiplier: number;
+    hydrogenCountMultiplier: number;
+  };
+}
+
+interface IAnnotationMaskOptions {
+  baseScale: number;
+  wideScale: number;
+  canvasRadiusFactor: number;
+}
+
+interface IAnnotationOptions {
+  enabled: boolean;
+  color: string;
+  fontSize: number;
+  offset: number;
+  formatter: AtomAnnotationFormatter | null;
+  mask: IAnnotationMaskOptions;
+}
+
+interface IAppearanceOptions {
+  themes: IThemeMap;
+  highlights: {
+    fallbackColor: string;
+    fallbackRadiusFactor: number;
+  };
+}
+
+interface IVisualizationsOptions {
+  weights: IWeightOptions;
+  gaussianDefaults: {
+    defaultSigma: number;
+    domainMin: number;
+    domainMax: number;
+    defaultColormap: string[];
+  };
+}
+
+interface IPixelExportOptions {
+  viewboxYOffset: number;
+}
+
+interface IUserOptions {
+  meta: IUserMetaOptions;
+  canvas: ICanvasOptions;
+  rendering: IRenderingOptions;
+  layout: ILayoutOptions;
+  typography: ITypographyOptions;
+  annotations: IAnnotationOptions;
+  visualizations: IVisualizationsOptions;
+  appearance: IAppearanceOptions;
+  pixelExport: IPixelExportOptions;
+}
+
 export {
   IThemeColors,
+  IThemeMap,
   IWeightOptions,
   IMoleculeOptions,
+  IUserOptions,
+  IUserMetaOptions,
+  ICanvasOptions,
+  IRenderingOptions,
+  ILayoutOptions,
+  ITypographyOptions,
+  IAnnotationOptions,
+  IAppearanceOptions,
+  IVisualizationsOptions,
+  IPixelExportOptions,
   IArrowOptions,
   IPlusOptions,
   IReactionWeightOptions,
