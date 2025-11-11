@@ -86,8 +86,10 @@ class CanvasTextDrawer {
         // @ts-ignore - Adding custom properties to TextMetrics for internal use
         dim.height = parseInt(this.wrapper.fontLarge, 10);
 
-        let r = (dim.width > this.wrapper.opts.fontSizeLarge) ? dim.width : this.wrapper.opts.fontSizeLarge;
-        r /= 1.5;
+        const typography = this.wrapper.userOpts.typography;
+        const derived = this.wrapper.derivedOpts;
+        const maskScale = this.wrapper.userOpts.annotations.mask.canvasRadiusFactor ?? (2 / 3);
+        let r = Math.max(dim.width, typography.fontSizeLarge) * maskScale;
 
         ctx.globalCompositeOperation = 'destination-out';
         ctx.beginPath();
@@ -100,18 +102,18 @@ class CanvasTextDrawer {
         let cursorPosLeft = -dim.width / 2.0;
 
         ctx.fillStyle = this.wrapper.themeManager.getColor(elementName);
-        ctx.fillText(elementName, x + offsetX + cursorPos, y + this.wrapper.opts.halfFontSizeLarge + offsetY);
+        ctx.fillText(elementName, x + offsetX + cursorPos, y + derived.halfFontSizeLarge + offsetY);
         cursorPos += dim.width;
 
         if (charge) {
             ctx.font = this.wrapper.fontSmall;
-            ctx.fillText(chargeText, x + offsetX + cursorPos, y - this.wrapper.opts.fifthFontSizeSmall + offsetY);
+            ctx.fillText(chargeText, x + offsetX + cursorPos, y - derived.fifthFontSizeSmall + offsetY);
             cursorPos += chargeWidth;
         }
 
         if (isotope > 0) {
             ctx.font = this.wrapper.fontSmall;
-            ctx.fillText(isotopeText, x + offsetX + cursorPosLeft - isotopeWidth, y - this.wrapper.opts.fifthFontSizeSmall + offsetY);
+            ctx.fillText(isotopeText, x + offsetX + cursorPosLeft - isotopeWidth, y - derived.fifthFontSizeSmall + offsetY);
             cursorPosLeft -= isotopeWidth;
         }
 
@@ -122,7 +124,7 @@ class CanvasTextDrawer {
 
         if (hydrogens === 1) {
             let hx = x + offsetX;
-            let hy = y + offsetY + this.wrapper.opts.halfFontSizeLarge;
+            let hy = y + offsetY + derived.halfFontSizeLarge;
 
             hydrogenWidth = this.wrapper.hydrogenWidth;
             cursorPosLeft -= hydrogenWidth;
@@ -136,10 +138,10 @@ class CanvasTextDrawer {
             } else if (direction === 'down' && isTerminal) {
                 hx += cursorPos;
             } else if (direction === 'up' && !isTerminal) {
-                hy -= this.wrapper.opts.fontSizeLarge + this.wrapper.opts.quarterFontSizeLarge;
+                hy -= typography.fontSizeLarge + derived.quarterFontSizeLarge;
                 hx -= this.wrapper.halfHydrogenWidth;
             } else if (direction === 'down' && !isTerminal) {
-                hy += this.wrapper.opts.fontSizeLarge + this.wrapper.opts.quarterFontSizeLarge;
+                hy += typography.fontSizeLarge + derived.quarterFontSizeLarge;
                 hx -= this.wrapper.halfHydrogenWidth;
             }
 
@@ -148,7 +150,7 @@ class CanvasTextDrawer {
             cursorPos += hydrogenWidth;
         } else if (hydrogens > 1) {
             let hx = x + offsetX;
-            let hy = y + offsetY + this.wrapper.opts.halfFontSizeLarge;
+            let hy = y + offsetY + derived.halfFontSizeLarge;
 
             hydrogenWidth = this.wrapper.hydrogenWidth;
             ctx.font = this.wrapper.fontSmall;
@@ -164,10 +166,10 @@ class CanvasTextDrawer {
             } else if (direction === 'down' && isTerminal) {
                 hx += cursorPos;
             } else if (direction === 'up' && !isTerminal) {
-                hy -= this.wrapper.opts.fontSizeLarge + this.wrapper.opts.quarterFontSizeLarge;
+                hy -= typography.fontSizeLarge + derived.quarterFontSizeLarge;
                 hx -= this.wrapper.halfHydrogenWidth;
             } else if (direction === 'down' && !isTerminal) {
-                hy += this.wrapper.opts.fontSizeLarge + this.wrapper.opts.quarterFontSizeLarge;
+                hy += typography.fontSizeLarge + derived.quarterFontSizeLarge;
                 hx -= this.wrapper.halfHydrogenWidth;
             }
 
@@ -175,7 +177,7 @@ class CanvasTextDrawer {
             ctx.fillText('H', hx, hy)
 
             ctx.font = this.wrapper.fontSmall;
-            ctx.fillText(hydrogens.toString(), hx + this.wrapper.halfHydrogenWidth + hydrogenCountWidth, hy + this.wrapper.opts.fifthFontSizeSmall);
+            ctx.fillText(hydrogens.toString(), hx + this.wrapper.halfHydrogenWidth + hydrogenCountWidth, hy + derived.fifthFontSizeSmall);
 
             cursorPos += hydrogenWidth + this.wrapper.halfHydrogenWidth + hydrogenCountWidth;
         }
@@ -237,7 +239,7 @@ class CanvasTextDrawer {
             ctx.font = this.wrapper.fontLarge;
 
             let hx = x + offsetX;
-            let hy = y + offsetY + this.wrapper.opts.halfFontSizeLarge;
+            let hy = y + offsetY + derived.halfFontSizeLarge;
 
             ctx.fillStyle = this.wrapper.themeManager.getColor(element);
 
@@ -270,7 +272,7 @@ class CanvasTextDrawer {
 
                     if (hydrogenCount > 1) {
                         ctx.font = this.wrapper.fontSmall;
-                        ctx.fillText(hydrogenCount.toString(), hx + cursorPosLeft + hydrogenWidth, hy + this.wrapper.opts.fifthFontSizeSmall);
+                        ctx.fillText(hydrogenCount.toString(), hx + cursorPosLeft + hydrogenWidth, hy + derived.fifthFontSizeSmall);
                     }
                 } else {
                     ctx.fillText('H', hx + cursorPos, hy)
@@ -278,7 +280,7 @@ class CanvasTextDrawer {
 
                     if (hydrogenCount > 1) {
                         ctx.font = this.wrapper.fontSmall;
-                        ctx.fillText(hydrogenCount.toString(), hx + cursorPos, hy + this.wrapper.opts.fifthFontSizeSmall);
+                        ctx.fillText(hydrogenCount.toString(), hx + cursorPos, hy + derived.fifthFontSizeSmall);
                         cursorPos += hydrogenCountWidth;
                     }
                 }
@@ -302,9 +304,9 @@ class CanvasTextDrawer {
                 if (direction === 'left') {
                     ctx.fillText(elementCount.toString(), hx + cursorPosLeft +
                         openParenthesisWidth + closeParenthesisWidth + hydrogenWidth +
-                        hydrogenCountWidth + elementWidth, hy + this.wrapper.opts.fifthFontSizeSmall);
+                        hydrogenCountWidth + elementWidth, hy + derived.fifthFontSizeSmall);
                 } else {
-                    ctx.fillText(elementCount.toString(), hx + cursorPos, hy + this.wrapper.opts.fifthFontSizeSmall);
+                    ctx.fillText(elementCount.toString(), hx + cursorPos, hy + derived.fifthFontSizeSmall);
                     cursorPos += elementCountWidth;
                 }
             }
@@ -313,9 +315,9 @@ class CanvasTextDrawer {
                 if (direction === 'left') {
                     ctx.fillText(elementChargeText, hx + cursorPosLeft +
                         openParenthesisWidth + closeParenthesisWidth + hydrogenWidth +
-                        hydrogenCountWidth + elementWidth, y - this.wrapper.opts.fifthFontSizeSmall + offsetY);
+                        hydrogenCountWidth + elementWidth, y - derived.fifthFontSizeSmall + offsetY);
                 } else {
-                    ctx.fillText(elementChargeText, hx + cursorPos, y - this.wrapper.opts.fifthFontSizeSmall + offsetY);
+                    ctx.fillText(elementChargeText, hx + cursorPos, y - derived.fifthFontSizeSmall + offsetY);
                     cursorPos += elementChargeWidth;
                 }
             }

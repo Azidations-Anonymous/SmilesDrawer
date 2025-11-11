@@ -8,7 +8,7 @@ import CanvasWedgeDrawer = require('./draw/CanvasWedgeDrawer');
 import CanvasPrimitiveDrawer = require('./draw/CanvasPrimitiveDrawer');
 import CanvasTextDrawer = require('./draw/CanvasTextDrawer');
 import ThemeManager = require('../config/ThemeManager');
-import { IMoleculeOptions, IThemeColors, AttachedPseudoElements } from '../config/IOptions';
+import { IMoleculeOptions, IUserOptions, IDerivedOptions, IThemeColors, AttachedPseudoElements } from '../config/IOptions';
 import { TextDirection } from '../types/CommonTypes';
 
 /**
@@ -30,6 +30,8 @@ class CanvasDrawer {
     ctx: CanvasRenderingContext2D | null;
     themeManager: ThemeManager;
     opts: IMoleculeOptions;
+    userOpts: IUserOptions;
+    derivedOpts: IDerivedOptions;
     drawingWidth: number;
     drawingHeight: number;
     offsetX: number;
@@ -54,7 +56,7 @@ class CanvasDrawer {
      * @param {ThemeManager} themeManager Theme manager for setting proper colors.
      * @param {Object} options The smiles drawer options object.
      */
-    constructor(target: string | HTMLCanvasElement, themeManager: ThemeManager, options: IMoleculeOptions) {
+    constructor(target: string | HTMLCanvasElement, themeManager: ThemeManager, options: IMoleculeOptions, userOptions: IUserOptions, derivedOptions: IDerivedOptions) {
         if (typeof target === 'string') {
             this.canvas = document.getElementById(target) as HTMLCanvasElement;
         } else {
@@ -64,20 +66,23 @@ class CanvasDrawer {
         this.ctx = this.canvas.getContext('2d');
         this.themeManager = themeManager;
         this.opts = options;
+        this.userOpts = userOptions;
+        this.derivedOpts = derivedOptions;
         this.drawingWidth = 0.0;
         this.drawingHeight = 0.0;
         this.offsetX = 0.0;
         this.offsetY = 0.0;
 
-        this.fontLarge = this.opts.fontSizeLarge + 'pt Helvetica, Arial, sans-serif';
-        this.fontSmall = this.opts.fontSizeSmall + 'pt Helvetica, Arial, sans-serif';
+        const fontFamily = this.userOpts.typography.fontFamily;
+        this.fontLarge = `${this.userOpts.typography.fontSizeLarge}pt ${fontFamily}`;
+        this.fontSmall = `${this.userOpts.typography.fontSizeSmall}pt ${fontFamily}`;
 
-        this.updateSize(this.opts.width, this.opts.height);
+        this.updateSize(this.userOpts.canvas.width, this.userOpts.canvas.height);
 
         this.ctx.font = this.fontLarge;
         this.hydrogenWidth = this.ctx.measureText('H').width;
         this.halfHydrogenWidth = this.hydrogenWidth / 2.0;
-        this.halfBondThickness = this.opts.bondThickness / 2.0;
+        this.halfBondThickness = this.userOpts.rendering.bonds.bondThickness / 2.0;
 
                 this.wedgeDrawer = new CanvasWedgeDrawer(this);
                 this.primitiveDrawer = new CanvasPrimitiveDrawer(this);
@@ -143,7 +148,7 @@ class CanvasDrawer {
         }
 
         // Add padding
-        var padding = this.opts.padding;
+        var padding = this.userOpts.canvas.padding;
         maxX += padding;
         maxY += padding;
         minX -= padding;
