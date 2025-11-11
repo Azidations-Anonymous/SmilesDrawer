@@ -816,8 +816,22 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Number} [r=currentBondLength*2.0] The radius of vertices to include.
    * @returns {Vector2} The current center of mass.
    */
-  getCurrentCenterOfMassInNeigbourhood(vec: Vector2, r: number = this.userOpts.rendering.bonds.bondLength * 2.0): Vector2 {
-      return this.overlapResolver.getCurrentCenterOfMassInNeigbourhood(vec, r);
+  getCurrentCenterOfMassInNeigbourhood(vec: Vector2, r?: number): Vector2 {
+      const configuredFactor = this.userOpts.layout.graph.centerOfMassRadiusFactor;
+      const fallbackFactor = Number.isFinite(configuredFactor) && configuredFactor > 0 ? configuredFactor : 2.0;
+      const baseRadius = this.userOpts.rendering.bonds.bondLength * fallbackFactor;
+      const radius = typeof r === 'number' ? r : baseRadius;
+      return this.overlapResolver.getCurrentCenterOfMassInNeigbourhood(vec, radius);
+  }
+
+  getDefaultBranchAngle(): number {
+      const configured = this.userOpts.layout.graph.defaultBranchAngleRad;
+      const fallback = MathHelper.toRad(60);
+      if (!Number.isFinite(configured) || configured <= 0) {
+        return fallback;
+      }
+
+      return configured;
   }
 
   /**

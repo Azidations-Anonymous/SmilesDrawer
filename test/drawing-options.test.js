@@ -7,6 +7,7 @@ const ThemeManager = require('../src/config/ThemeManager');
 const SvgWrapper = require('../src/drawing/SvgWrapper');
 const SvgLabelRenderer = require('../src/drawing/renderers/SvgLabelRenderer');
 const SvgDrawer = require('../src/drawing/SvgDrawer');
+const SvgVertexDrawer = require('../src/drawing/draw/SvgVertexDrawer');
 const Parser = require('../src/parsing/Parser');
 
 const dom = new DOMParser().parseFromString('<html><body></body></html>', 'text/html');
@@ -24,6 +25,14 @@ function createWrapper(customOptions = {}) {
     manager,
     wrapper: new SvgWrapper(themeManager, svg, manager.userOpts, manager.derivedOpts, true)
   };
+}
+
+function layoutGraph(smiles, optionOverrides = {}) {
+  const manager = new OptionsManager({ canvas: {}, ...optionOverrides });
+  const drawer = new SvgDrawer(manager.userOpts);
+  const tree = Parser.parse(smiles, {});
+  drawer.draw(tree, null, 'light', null, false, [], false);
+  return { drawer, graph: drawer.preprocessor.graph };
 }
 
 test('SvgWrapper respects atom sizing options', () => {
@@ -138,4 +147,100 @@ test('SvgLabelRenderer uses typography defaults', () => {
   assert.equal(label.getAttribute('font-family'), 'TestFamily');
   assert.equal(label.getAttribute('stroke-width'), '1.5');
   assert.equal(label.getAttribute('stroke'), '#abcdef');
+});
+
+test('centerOfMassRadiusFactor limits neighbourhood averaging', () => {
+  const measureCenter = (factor) => {
+    const { drawer, graph } = layoutGraph('CC', { layout: { graph: { centerOfMassRadiusFactor: factor } } });
+    const left = graph.vertices[0];
+    const right = graph.vertices[1];
+    left.position.x = 0;
+    left.position.y = 0;
+    right.position.x = 100;
+    right.position.y = 0;
+    left.positioned = true;
+    right.positioned = true;
+    return drawer.preprocessor.getCurrentCenterOfMassInNeigbourhood(left.position).x;
+  };
+
+  const localAverage = measureCenter(1.2);
+  const wideAverage = measureCenter(5);
+
+  assert(Math.abs(localAverage) < 1e-6, 'Local radius should ignore distant vertices');
+  assert(Math.abs(wideAverage - 50) < 1e-6, 'Wide radius should include distant vertices');
+});
+
+test('defaultBranchAngleRad steers branch layout', () => {
+  const measureBranchAngle = (angleRad) => {
+    const { graph } = layoutGraph('C(Cl)C', { layout: { graph: { defaultBranchAngleRad: angleRad } } });
+    const center = graph.vertices.find((vertex) => vertex.neighbours.length === 2);
+    const neighbours = center.neighbours.map((id) => graph.vertices[id]);
+    const branch = neighbours.find((vertex) => vertex.value.element === 'Cl');
+    const chain = neighbours.find((vertex) => vertex.value.element === 'C');
+
+    const toBranch = {
+      x: branch.position.x - center.position.x,
+      y: branch.position.y - center.position.y
+    };
+    const toChain = {
+      x: chain.position.x - center.position.x,
+      y: chain.position.y - center.position.y
+    };
+    const dot = toBranch.x * toChain.x + toBranch.y * toChain.y;
+    const magProduct = Math.hypot(toBranch.x, toBranch.y) * Math.hypot(toChain.x, toChain.y);
+    return Math.acos(dot / magProduct);
+  };
+
+  const sixty = Math.PI / 3;
+  const ninety = Math.PI / 2;
+  const angleSixty = measureBranchAngle(sixty);
+  const angleNinety = measureBranchAngle(ninety);
+
+  assert(Math.abs(angleSixty - sixty) < 1e-3);
+  assert(Math.abs(angleNinety - ninety) < 1e-3);
+});
+
+test('linearBondToleranceRad toggles nearly-linear point rendering', () => {
+  const countPoints = (tolerance) => {
+    const { drawer, graph } = layoutGraph('CCC', { layout: { graph: { linearBondToleranceRad: tolerance } } });
+    const vertex = graph.vertices.find((v) => v.neighbours.length === 2);
+    const [leftId, rightId] = vertex.neighbours;
+    const left = graph.vertices[leftId];
+    const right = graph.vertices[rightId];
+
+    graph.vertices.forEach((v) => { v.forcePositioned = false; });
+    left.position.x = 0;
+    left.position.y = 0;
+    vertex.position.x = 5;
+    vertex.position.y = 0;
+    right.position.x = 10;
+    right.position.y = 0.5;
+    left.value.isDrawn = true;
+    right.value.isDrawn = true;
+    vertex.forcePositioned = true;
+
+    const calls = { points: 0 };
+    const renderer = {
+      drawBall() {},
+      drawText() {},
+      drawPoint() { calls.points += 1; },
+      drawAnnotation() {},
+      drawDebugText() {},
+      drawDebugPoint() {}
+    };
+    const fakeDrawer = {
+      preprocessor: drawer.preprocessor,
+      userOpts: drawer.userOpts,
+      getRenderer: () => renderer
+    };
+    const vertexDrawer = new SvgVertexDrawer(fakeDrawer);
+    vertexDrawer.drawVertices(false);
+    return calls.points;
+  };
+
+  const strict = countPoints(0.05);
+  const lenient = countPoints(0.2);
+
+  assert.equal(strict, 0);
+  assert.equal(lenient, 1);
 });

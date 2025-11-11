@@ -46,9 +46,10 @@ class GraphProcessingManager {
                 let vertexB = this.drawer.graph.vertices[b];
                 let neighboursB = vertexB.getNeighbours(a);
 
+                const rotationAngle = this.drawer.getDefaultBranchAngle() * 2;
                 if (neighboursB.length === 1) {
                   let neighbour = this.drawer.graph.vertices[neighboursB[0]];
-                  let angle = neighbour.position.getRotateAwayFromAngle(vertexA.position, vertexB.position, MathHelper.toRad(120));
+                  let angle = neighbour.position.getRotateAwayFromAngle(vertexA.position, vertexB.position, rotationAngle);
 
                   this.drawer.rotateSubtree(neighbour.id, vertexB.id, angle, vertexB.position);
                   // If the new overlap is bigger, undo change
@@ -78,8 +79,8 @@ class GraphProcessingManager {
                   } else if (neighbourA.value.rings.length !== 0 || neighbourB.value.rings.length !== 0) {
                     continue;
                   } else {
-                    let angleA = neighbourA.position.getRotateAwayFromAngle(vertexA.position, vertexB.position, MathHelper.toRad(120));
-                    let angleB = neighbourB.position.getRotateAwayFromAngle(vertexA.position, vertexB.position, MathHelper.toRad(120));
+                    let angleA = neighbourA.position.getRotateAwayFromAngle(vertexA.position, vertexB.position, rotationAngle);
+                    let angleB = neighbourB.position.getRotateAwayFromAngle(vertexA.position, vertexB.position, rotationAngle);
 
                     this.drawer.rotateSubtree(neighbourA.id, vertexB.id, angleA, vertexB.position);
                     this.drawer.rotateSubtree(neighbourB.id, vertexB.id, angleB, vertexB.position);

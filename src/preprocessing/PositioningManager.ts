@@ -210,8 +210,9 @@ class PositioningManager {
               this.createNextBond(nextVertex, vertex, previousAngle + nextVertex.angle);
             } else if (previousVertex && previousVertex.value.rings.length > 0) {
               // If coming out of a ring, always draw away from the center of mass
-              let proposedAngleA = MathHelper.toRad(60);
-              let proposedAngleB = -proposedAngleA;
+              const branchAngle = this.drawer.getDefaultBranchAngle();
+              let proposedAngleA = branchAngle;
+              let proposedAngleB = -branchAngle;
 
               let proposedVectorA = new Vector2(this.drawer.userOpts.rendering.bonds.bondLength, 0);
               let proposedVectorB = new Vector2(this.drawer.userOpts.rendering.bonds.bondLength, 0);
@@ -230,7 +231,8 @@ class PositioningManager {
             } else {
               // Always use 120° angles (1.0472 rad), choosing sign based on last angle direction
               let a = this.getLastAngle(vertex.id);
-              a = (a >= 0) ? 1.0472 : -1.0472;
+              const branchAngle = this.drawer.getDefaultBranchAngle();
+              a = (a >= 0) ? branchAngle : -branchAngle;
 
               // Handle configuration around double bonds
               if (previousVertex && !doubleBondConfigSet) {
@@ -265,7 +267,7 @@ class PositioningManager {
             // If the previous vertex comes out of a ring, it doesn't have an angle set
             let a = vertex.angle;
             if (!a) {
-              a = 1.0472;
+              a = this.drawer.getDefaultBranchAngle();
             }
 
             // Check for the longer subtree - always go with cis for the longer subtree
@@ -354,12 +356,13 @@ class PositioningManager {
               vertices[0].value.subtreeDepth > 1)
             {
               // Special logic for adding pinched crosses...
+              const branchAngle = this.drawer.getDefaultBranchAngle();
               if (vertex.angle >= 0) {
-                vertices[0].angle = -1.0472;
+                vertices[0].angle = -branchAngle;
                 vertices[1].angle = MathHelper.toRad(30);
                 vertices[2].angle = MathHelper.toRad(90);
               } else {
-                vertices[0].angle = +1.0472;
+                vertices[0].angle = branchAngle;
                 vertices[1].angle = -MathHelper.toRad(30);
                 vertices[2].angle = -MathHelper.toRad(90);
               }

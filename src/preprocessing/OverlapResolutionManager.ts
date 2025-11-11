@@ -450,10 +450,15 @@ class OverlapResolutionManager {
         return total.divide(count);
     }
 
-    getCurrentCenterOfMassInNeigbourhood(vec: Vector2, r: number = this.drawer.userOpts.rendering.bonds.bondLength * 2.0): Vector2 {
+    getCurrentCenterOfMassInNeigbourhood(vec: Vector2, r?: number): Vector2 {
+        const configuredFactor = this.drawer.userOpts.layout.graph.centerOfMassRadiusFactor;
+        const fallbackFactor = Number.isFinite(configuredFactor) && configuredFactor > 0 ? configuredFactor : 2.0;
+        const baseRadius = this.drawer.userOpts.rendering.bonds.bondLength * fallbackFactor;
+        const radius = typeof r === 'number' ? r : baseRadius;
+
         let total = new Vector2(0, 0);
         let count = 0;
-        let rSq = r * r;
+        let rSq = radius * radius;
 
         for (var i = 0; i < this.drawer.graph.vertices.length; i++) {
           let vertex = this.drawer.graph.vertices[i];
