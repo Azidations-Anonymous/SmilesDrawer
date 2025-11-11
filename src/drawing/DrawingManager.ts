@@ -188,8 +188,10 @@ class DrawingManager {
 
           }
         } else if (edge.bondType === '#') {
-          normals[0].multiplyScalar(bonds.bondSpacing / 1.5);
-          normals[1].multiplyScalar(bonds.bondSpacing / 1.5);
+          const divider = bonds.tripleBondSpacingDivider > 0 ? bonds.tripleBondSpacingDivider : 1.5;
+          const tripleSpacing = bonds.bondSpacing / divider;
+          normals[0].multiplyScalar(tripleSpacing);
+          normals[1].multiplyScalar(tripleSpacing);
 
           let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
           let lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);

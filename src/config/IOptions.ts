@@ -237,6 +237,7 @@ interface IRenderingBondOptions {
   shortBondLength: number;
   bondSpacing: number;
   dashPattern: number[];
+  tripleBondSpacingDivider: number;
 }
 
 interface IRenderingAtomOptions {

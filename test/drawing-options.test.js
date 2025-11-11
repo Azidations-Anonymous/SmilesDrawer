@@ -35,6 +35,38 @@ function layoutGraph(smiles, optionOverrides = {}) {
   return { drawer, graph: drawer.preprocessor.graph };
 }
 
+function measureTripleOffset(divider) {
+  ensureDom();
+  const captured = [];
+  const originalDrawLine = SvgWrapper.prototype.drawLine;
+  SvgWrapper.prototype.drawLine = function(line, ...rest) {
+    captured.push(line.clone());
+    return originalDrawLine.call(this, line, ...rest);
+  };
+  try {
+    const manager = new OptionsManager({
+      canvas: {},
+      rendering: { bonds: { tripleBondSpacingDivider: divider } }
+    });
+    const drawer = new SvgDrawer(manager.userOpts);
+    const tree = Parser.parse('C#C', {});
+    drawer.draw(tree, null, 'light');
+  } finally {
+    SvgWrapper.prototype.drawLine = originalDrawLine;
+  }
+
+  if (captured.length !== 3) {
+    throw new Error(`Expected three bond lines, saw ${captured.length}`);
+  }
+
+  const yValues = captured
+    .map(line => line.getLeftVector().y)
+    .sort((a, b) => a - b);
+  const center = yValues[1];
+  const outer = yValues[2];
+  return Math.abs(outer - center);
+}
+
 test('SvgWrapper respects atom sizing options', () => {
   const { manager, wrapper } = createWrapper({
     rendering: {
@@ -243,4 +275,10 @@ test('linearBondToleranceRad toggles nearly-linear point rendering', () => {
 
   assert.equal(strict, 0);
   assert.equal(lenient, 1);
+});
+
+test('tripleBondSpacingDivider controls offset distance', () => {
+  const wide = measureTripleOffset(1.5);
+  const tight = measureTripleOffset(3);
+  assert(wide > tight, `expected wider offset (${wide}) to exceed tighter spacing (${tight})`);
 });

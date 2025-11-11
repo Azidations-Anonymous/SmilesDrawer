@@ -271,7 +271,8 @@ export function getDefaultUserOptions(): IUserOptions {
         bondLength: 30,
         shortBondLength: 0.7,
         bondSpacing: 0.17 * 30,
-        dashPattern: [3, 2]
+        dashPattern: [3, 2],
+        tripleBondSpacingDivider: 1.5
       },
       atoms: {
         atomVisualization: 'default',
