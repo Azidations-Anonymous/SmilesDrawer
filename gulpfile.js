@@ -16,6 +16,7 @@ var rename = require("gulp-rename");
 var minify = require("gulp-babel-minify");
 var jsdoc = require("gulp-jsdoc3");
 var webpack = require("webpack-stream");
+var updateReadmeDefaultOptions = require("./scripts/update-readme-default-options").updateReadmeDefaultOptions;
 
 function compile(watch) {
   var bundler = watchify(
@@ -78,12 +79,19 @@ function watch() {
   return compile(true);
 }
 
-gulp.task("build", function() {
+function syncReadmeTask(done) {
+  updateReadmeDefaultOptions();
+  done();
+}
+
+gulp.task("sync-readme-default-options", syncReadmeTask);
+
+gulp.task("build", gulp.series(syncReadmeTask, function() {
   return new Promise(function(resolve, reject) {
     compile();
     resolve();
   });
-});
+}));
 
 gulp.task("watch", function() {
   return new Promise(function(resolve, reject) {
