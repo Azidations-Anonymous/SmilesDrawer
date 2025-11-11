@@ -8,7 +8,7 @@ import CanvasWedgeDrawer = require('./draw/CanvasWedgeDrawer');
 import CanvasPrimitiveDrawer = require('./draw/CanvasPrimitiveDrawer');
 import CanvasTextDrawer = require('./draw/CanvasTextDrawer');
 import ThemeManager = require('../config/ThemeManager');
-import { IMoleculeOptions, IUserOptions, IDerivedOptions, IThemeColors, AttachedPseudoElements } from '../config/IOptions';
+import { IUserOptions, IDerivedOptions, IThemeColors, AttachedPseudoElements } from '../config/IOptions';
 import { TextDirection } from '../types/CommonTypes';
 
 /**
@@ -29,7 +29,6 @@ class CanvasDrawer {
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D | null;
     themeManager: ThemeManager;
-    opts: IMoleculeOptions;
     userOpts: IUserOptions;
     derivedOpts: IDerivedOptions;
     drawingWidth: number;
@@ -56,7 +55,7 @@ class CanvasDrawer {
      * @param {ThemeManager} themeManager Theme manager for setting proper colors.
      * @param {Object} options The smiles drawer options object.
      */
-    constructor(target: string | HTMLCanvasElement, themeManager: ThemeManager, options: IMoleculeOptions, userOptions: IUserOptions, derivedOptions: IDerivedOptions) {
+    constructor(target: string | HTMLCanvasElement, themeManager: ThemeManager, userOptions: IUserOptions, derivedOptions: IDerivedOptions) {
         if (typeof target === 'string') {
             this.canvas = document.getElementById(target) as HTMLCanvasElement;
         } else {
@@ -65,7 +64,6 @@ class CanvasDrawer {
 
         this.ctx = this.canvas.getContext('2d');
         this.themeManager = themeManager;
-        this.opts = options;
         this.userOpts = userOptions;
         this.derivedOpts = derivedOptions;
         this.drawingWidth = 0.0;

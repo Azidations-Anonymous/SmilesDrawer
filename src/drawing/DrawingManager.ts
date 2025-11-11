@@ -22,8 +22,13 @@ class DrawingManager {
         this.drawer.initDraw(data, themeName, infoOnly, null);
 
         if (!this.drawer.infoOnly) {
-          this.drawer.themeManager = new ThemeManager(this.drawer.opts.themes, themeName);
-          this.drawer.canvasWrapper = new CanvasDrawer(target as string | HTMLCanvasElement, this.drawer.themeManager, this.drawer.opts);
+          this.drawer.themeManager = new ThemeManager(this.drawer.userOpts.appearance.themes, themeName);
+          this.drawer.canvasWrapper = new CanvasDrawer(
+            target as string | HTMLCanvasElement,
+            this.drawer.themeManager,
+            this.drawer.userOpts,
+            this.drawer.derivedOpts
+          );
         }
 
         if (!infoOnly) {
@@ -33,11 +38,11 @@ class DrawingManager {
           this.drawer.canvasWrapper.scale(this.drawer.graph.vertices);
 
           // Do the actual drawing
-          this.drawEdges(this.drawer.opts.debug);
-          this.drawVertices(this.drawer.opts.debug);
+          this.drawEdges(this.drawer.userOpts.meta.debug);
+          this.drawVertices(this.drawer.userOpts.meta.debug);
           this.drawer.canvasWrapper.reset();
 
-          if (this.drawer.opts.debug) {
+          if (this.drawer.userOpts.meta.debug) {
             console.log(this.drawer.graph);
             console.log(this.drawer.rings);
             console.log(this.drawer.ringConnections);
@@ -64,7 +69,7 @@ class DrawingManager {
         AromaticOverlayRenderer.render(
             this.drawer,
             this.drawer.canvasWrapper,
-            this.drawer.opts.aromaticPiSystemInset ?? 7,
+            this.drawer.userOpts.rendering.aromatic.overlayInset,
         );
     }
 
@@ -75,8 +80,10 @@ class DrawingManager {
         let vertexB = this.drawer.graph.vertices[edge.targetId];
         let elementA = vertexA.value.element;
         let elementB = vertexB.value.element;
+        const bonds = this.drawer.userOpts.rendering.bonds;
+        const derived = this.drawer.derivedOpts;
 
-        if ((!vertexA.value.isDrawn || !vertexB.value.isDrawn) && this.drawer.opts.atomVisualization === 'default') {
+        if ((!vertexA.value.isDrawn || !vertexB.value.isDrawn) && this.drawer.userOpts.rendering.atoms.atomVisualization === 'default') {
           return;
         }
 
@@ -102,8 +109,8 @@ class DrawingManager {
             let lcr = this.drawer.getLargestOrAromaticCommonRing(vertexA, vertexB);
             let center = lcr.center;
 
-            normals[0].multiplyScalar(that.drawer.opts.bondSpacing);
-            normals[1].multiplyScalar(that.drawer.opts.bondSpacing);
+            normals[0].multiplyScalar(bonds.bondSpacing);
+            normals[1].multiplyScalar(bonds.bondSpacing);
 
             // Choose the normal that is on the same side as the center
             let line = null;
@@ -114,7 +121,7 @@ class DrawingManager {
               line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
             }
 
-            line.shorten(this.drawer.opts.bondLength - this.drawer.opts.shortBondLength * this.drawer.opts.bondLength);
+            line.shorten(bonds.bondLength - bonds.shortBondLength * bonds.bondLength);
 
             // The shortened edge
             this.drawer.canvasWrapper.drawLine(line);
@@ -122,8 +129,8 @@ class DrawingManager {
             // The normal edge
             this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
           } else if (edge.center || vertexA.isTerminal() && vertexB.isTerminal()) {
-            normals[0].multiplyScalar(that.drawer.opts.halfBondSpacing);
-            normals[1].multiplyScalar(that.drawer.opts.halfBondSpacing);
+            normals[0].multiplyScalar(derived.halfBondSpacing);
+            normals[1].multiplyScalar(derived.halfBondSpacing);
 
             let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
             let lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
@@ -133,8 +140,8 @@ class DrawingManager {
           } else if (s.anCount == 0 && s.bnCount > 1 || s.bnCount == 0 && s.anCount > 1) {
             // Both lines are the same length here
             // Add the spacing to the edges (which are of unit length)
-            normals[0].multiplyScalar(that.drawer.opts.halfBondSpacing);
-            normals[1].multiplyScalar(that.drawer.opts.halfBondSpacing);
+            normals[0].multiplyScalar(derived.halfBondSpacing);
+            normals[1].multiplyScalar(derived.halfBondSpacing);
 
             let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
             let lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
@@ -142,47 +149,47 @@ class DrawingManager {
             this.drawer.canvasWrapper.drawLine(lineA);
             this.drawer.canvasWrapper.drawLine(lineB);
           } else if (s.sideCount[0] > s.sideCount[1]) {
-            normals[0].multiplyScalar(that.drawer.opts.bondSpacing);
-            normals[1].multiplyScalar(that.drawer.opts.bondSpacing);
+            normals[0].multiplyScalar(bonds.bondSpacing);
+            normals[1].multiplyScalar(bonds.bondSpacing);
 
             let line = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
 
-            line.shorten(this.drawer.opts.bondLength - this.drawer.opts.shortBondLength * this.drawer.opts.bondLength);
+            line.shorten(bonds.bondLength - bonds.shortBondLength * bonds.bondLength);
             this.drawer.canvasWrapper.drawLine(line);
             this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
           } else if (s.sideCount[0] < s.sideCount[1]) {
-            normals[0].multiplyScalar(that.drawer.opts.bondSpacing);
-            normals[1].multiplyScalar(that.drawer.opts.bondSpacing);
+            normals[0].multiplyScalar(bonds.bondSpacing);
+            normals[1].multiplyScalar(bonds.bondSpacing);
 
             let line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
-            line.shorten(this.drawer.opts.bondLength - this.drawer.opts.shortBondLength * this.drawer.opts.bondLength);
+            line.shorten(bonds.bondLength - bonds.shortBondLength * bonds.bondLength);
             this.drawer.canvasWrapper.drawLine(line);
             this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
           } else if (s.totalSideCount[0] > s.totalSideCount[1]) {
-            normals[0].multiplyScalar(that.drawer.opts.bondSpacing);
-            normals[1].multiplyScalar(that.drawer.opts.bondSpacing);
+            normals[0].multiplyScalar(bonds.bondSpacing);
+            normals[1].multiplyScalar(bonds.bondSpacing);
 
             let line = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
 
-            line.shorten(this.drawer.opts.bondLength - this.drawer.opts.shortBondLength * this.drawer.opts.bondLength);
+            line.shorten(bonds.bondLength - bonds.shortBondLength * bonds.bondLength);
             this.drawer.canvasWrapper.drawLine(line);
             this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
           } else if (s.totalSideCount[0] <= s.totalSideCount[1]) {
-            normals[0].multiplyScalar(that.drawer.opts.bondSpacing);
-            normals[1].multiplyScalar(that.drawer.opts.bondSpacing);
+            normals[0].multiplyScalar(bonds.bondSpacing);
+            normals[1].multiplyScalar(bonds.bondSpacing);
 
             let line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
-            line.shorten(this.drawer.opts.bondLength - this.drawer.opts.shortBondLength * this.drawer.opts.bondLength);
+            line.shorten(bonds.bondLength - bonds.shortBondLength * bonds.bondLength);
             this.drawer.canvasWrapper.drawLine(line);
             this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
           } else {
 
           }
         } else if (edge.bondType === '#') {
-          normals[0].multiplyScalar(that.drawer.opts.bondSpacing / 1.5);
-          normals[1].multiplyScalar(that.drawer.opts.bondSpacing / 1.5);
+          normals[0].multiplyScalar(bonds.bondSpacing / 1.5);
+          normals[1].multiplyScalar(bonds.bondSpacing / 1.5);
 
           let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
           let lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
@@ -226,7 +233,7 @@ class DrawingManager {
           let element = atom.element;
           let hydrogens = Atom.maxBonds[element] - bondCount;
           let dir = vertex.getTextDirection(this.drawer.graph.vertices);
-          let isTerminal = this.drawer.opts.terminalCarbons || element !== 'C' || atom.hasAttachedPseudoElements ? vertex.isTerminal() : false;
+          let isTerminal = this.drawer.userOpts.rendering.atoms.terminalCarbons || element !== 'C' || atom.hasAttachedPseudoElements ? vertex.isTerminal() : false;
           let isCarbon = atom.element === 'C';
           // This is a HACK to remove all hydrogens from nitrogens in aromatic rings, as this
           // should be the most common state. This has to be fixed by kekulization
@@ -246,13 +253,13 @@ class DrawingManager {
             isCarbon = false;
           }
 
-          if (this.drawer.opts.atomVisualization === 'allballs') {
+          if (this.drawer.userOpts.rendering.atoms.atomVisualization === 'allballs') {
             this.drawer.canvasWrapper.drawBall(vertex.position.x, vertex.position.y, element);
           } else if ((atom.isDrawn && (!isCarbon || atom.drawExplicit || isTerminal || atom.hasAttachedPseudoElements)) || this.drawer.graph.vertices.length === 1) {
-            if (this.drawer.opts.atomVisualization === 'default') {
+            if (this.drawer.userOpts.rendering.atoms.atomVisualization === 'default') {
               this.drawer.canvasWrapper.drawText(vertex.position.x, vertex.position.y,
                 element, hydrogens, dir, isTerminal, charge, isotope, this.drawer.graph.vertices.length, atom.getAttachedPseudoElements());
-            } else if (this.drawer.opts.atomVisualization === 'balls') {
+            } else if (this.drawer.userOpts.rendering.atoms.atomVisualization === 'balls') {
               this.drawer.canvasWrapper.drawBall(vertex.position.x, vertex.position.y, element);
             }
           } else if (vertex.getNeighbourCount() === 2 && vertex.forcePositioned == true) {
@@ -275,7 +282,7 @@ class DrawingManager {
         }
 
         // Draw the ring centers for debug purposes
-        if (this.drawer.opts.debug) {
+        if (this.drawer.userOpts.meta.debug) {
           for (var j = 0; j < this.drawer.rings.length; j++) {
             let center = this.drawer.rings[j].center;
             this.drawer.canvasWrapper.drawDebugPoint(center.x, center.y, 'r: ' + this.drawer.rings[j].id);
