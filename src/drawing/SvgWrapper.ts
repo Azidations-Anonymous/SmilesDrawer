@@ -433,43 +433,60 @@ class SvgWrapper implements IDrawingSurface {
       return;
     }
 
-    let l = line.getLeftVector().clone(),
-      r = line.getRightVector().clone(),
-      normals = Vector2.normals(l, r);
+    const stereo = this.userOpts.rendering.stereochemistry;
+    const inset = Number.isFinite(stereo.dashedInsetPx) ? Math.max(stereo.dashedInsetPx, 0) : 1.0;
+    const shortLine = line.clone();
+    const isRightChiralCenter = line.getRightChiral();
 
+    let start: Vector2;
+    let end: Vector2;
+
+    if (isRightChiralCenter) {
+      shortLine.shortenRight(inset);
+      start = shortLine.getRightVector().clone();
+      end = shortLine.getLeftVector().clone();
+    } else {
+      shortLine.shortenLeft(inset);
+      start = shortLine.getLeftVector().clone();
+      end = shortLine.getRightVector().clone();
+    }
+
+    const length = shortLine.getLength();
+    if (!isFinite(length) || length <= 0) {
+      return;
+    }
+
+    let normals = Vector2.normals(start.clone(), end.clone());
     normals[0].normalize();
     normals[1].normalize();
 
-    let isRightChiralCenter = line.getRightChiral(),
-      start,
-      end;
+    const dir = Vector2.subtract(end, start).normalize();
+    const bondThickness = this.userOpts.rendering.bonds.bondThickness || 1;
+    const baseUnit = bondThickness * 3.0;
+    const divisor = length / (baseUnit || 1);
+    const rawStep = divisor !== 0 ? stereo.dashedStepFactor / divisor : stereo.dashedStepFactor;
+    const step = Math.max(rawStep, 1e-3);
+    const widthFactor = this.userOpts.rendering.stereochemistry.dashedWidthFactorSvg ?? 0.5;
+    const baseFont = this.userOpts.typography.fontSizeLarge;
 
-    if (isRightChiralCenter) {
-      start = r;
-      end = l;
-    } else {
-      start = l;
-      end = r;
-    }
-
-    let dir = Vector2.subtract(end, start).normalize(),
-      length = line.getLength(),
-      step = this.userOpts.rendering.stereochemistry.dashedStepFactor / (length / (this.userOpts.rendering.bonds.bondLength / 10.0)),
-      changed = false;
-
-    let gradient = this.createGradient(line);
+    const defaultColor = this.themeManager.getColor('C');
+    const leftColor = this.themeManager.getColor(line.getLeftElement()) || defaultColor;
+    const rightColor = this.themeManager.getColor(line.getRightElement()) || defaultColor;
+    const thresholdRaw = typeof stereo.dashedColorSwitchThreshold === 'number' ? stereo.dashedColorSwitchThreshold : 0.5;
+    const threshold = Math.min(Math.max(thresholdRaw, 0), 1);
 
     for (let t = 0.0; t < 1.0; t += step) {
-      let to = Vector2.multiplyScalar(dir, t * length),
-        startDash = Vector2.add(start, to),
-        width = this.userOpts.typography.fontSizeLarge * this.userOpts.rendering.stereochemistry.dashedWidthFactorSvg * t,
-        dashOffset = Vector2.multiplyScalar(normals[0], width);
+      const to = Vector2.multiplyScalar(dir, t * length);
+      const width = baseFont * widthFactor * t;
+      const dashOffset = Vector2.multiplyScalar(normals[0], width);
 
+      let startDash = Vector2.add(start, to);
       startDash.subtract(dashOffset);
       let endDash = startDash.clone();
       endDash.add(Vector2.multiplyScalar(dashOffset, 2.0));
 
-      this.drawLine(new Line(startDash, endDash), null, gradient);
+      const color = t >= threshold ? rightColor : leftColor;
+      this.drawLine(new Line(startDash.clone(), endDash.clone(), line.elementFrom, line.elementTo), false, null, 'round', color);
     }
   }
 
@@ -564,7 +581,7 @@ class SvgWrapper implements IDrawingSurface {
    * @param {Boolean} dashed defaults to false.
    * @param {String} gradient gradient url. Defaults to null.
    */
-  drawLine(line: Line, dashed: boolean = false, gradient: string | null = null, linecap: string = 'round'): void {
+  drawLine(line: Line, dashed: boolean = false, gradient: string | null = null, linecap: string = 'round', strokeColor?: string): void {
     let stylesArr = [
         ['stroke-width', this.userOpts.rendering.bonds.bondThickness],
         ['stroke-linecap', linecap],
@@ -586,6 +603,11 @@ class SvgWrapper implements IDrawingSurface {
     lineElem.setAttributeNS(null, 'y2', toY.toString());
     lineElem.setAttributeNS(null, 'style', styles);
     this.paths.push(lineElem);
+
+    if (strokeColor) {
+      lineElem.setAttributeNS(null, 'stroke', strokeColor);
+      return;
+    }
 
     if (gradient == null) {
       gradient = this.createGradient(line);

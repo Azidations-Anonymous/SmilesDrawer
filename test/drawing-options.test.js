@@ -9,6 +9,8 @@ const SvgLabelRenderer = require('../src/drawing/renderers/SvgLabelRenderer');
 const SvgDrawer = require('../src/drawing/SvgDrawer');
 const SvgVertexDrawer = require('../src/drawing/draw/SvgVertexDrawer');
 const Parser = require('../src/parsing/Parser');
+const Line = require('../src/graph/Line');
+const Vector2 = require('../src/graph/Vector2');
 
 function ensureDom() {
   if (typeof document !== 'undefined' && typeof document.createElementNS === 'function') {
@@ -284,4 +286,74 @@ test('tripleBondSpacingDivider controls offset distance', () => {
   const wide = measureTripleOffset(1.5);
   const tight = measureTripleOffset(3);
   assert(wide > tight, `expected wider offset (${wide}) to exceed tighter spacing (${tight})`);
+});
+
+test('SvgWrapper dashed wedges respect inset padding', () => {
+  const inset = 5;
+  const { wrapper } = createWrapper({
+    rendering: {
+      bonds: { bondLength: 40, bondThickness: 2 },
+      stereochemistry: {
+        dashedInsetPx: inset,
+        dashedWidthFactorSvg: 0.2,
+        dashedStepFactor: 0.5
+      }
+    }
+  });
+
+  const segments = [];
+  const originalDrawLine = wrapper.drawLine;
+  wrapper.drawLine = function (segment) {
+    segments.push(segment.clone());
+  };
+
+  try {
+    const line = new Line(new Vector2(0, 0), new Vector2(40, 0), 'C', 'C');
+    wrapper.drawDashedWedge(line);
+  } finally {
+    wrapper.drawLine = originalDrawLine;
+  }
+
+  assert(segments.length > 0, 'expected at least one dash to be drawn');
+  const firstSegment = segments[0];
+  const startX = firstSegment.getLeftVector().x;
+  assert(Math.abs(startX - inset) < 1e-3, `expected first dash to start near inset ${inset}, saw ${startX}`);
+});
+
+test('SvgWrapper dashed wedges switch colors at the configured threshold', () => {
+  const threshold = 0.3;
+  const { wrapper } = createWrapper({
+    rendering: {
+      bonds: { bondLength: 40, bondThickness: 2 },
+      stereochemistry: {
+        dashedColorSwitchThreshold: threshold,
+        dashedInsetPx: 0,
+        dashedStepFactor: 0.4,
+        dashedWidthFactorSvg: 0.25
+      }
+    }
+  });
+
+  const strokes = [];
+  const originalDrawLine = wrapper.drawLine;
+  wrapper.drawLine = function (_segment, _dashed, _gradient, _linecap, strokeColor) {
+    strokes.push(strokeColor);
+  };
+
+  try {
+    const line = new Line(new Vector2(0, 0), new Vector2(40, 0), 'N', 'O');
+    wrapper.drawDashedWedge(line);
+  } finally {
+    wrapper.drawLine = originalDrawLine;
+  }
+
+  const leftColor = wrapper.themeManager.getColor('N');
+  const rightColor = wrapper.themeManager.getColor('O');
+  const coloredStrokes = strokes.filter(Boolean);
+  assert(coloredStrokes.includes(leftColor), 'expected left color to appear');
+  assert(coloredStrokes.includes(rightColor), 'expected right color to appear');
+  const firstColor = coloredStrokes[0];
+  const lastColor = coloredStrokes[coloredStrokes.length - 1];
+  assert.equal(firstColor, leftColor);
+  assert.equal(lastColor, rightColor);
 });
