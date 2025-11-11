@@ -282,6 +282,7 @@ interface ILayoutGraphOptions {
   linearBondToleranceRad: number;
   rotationSnapIncrementDeg: number;
   rotationSnapDeadzoneDeg: number;
+  finetuneRotationOffsetDeg: number;
   centerOfMassRadiusFactor: number;
   rotationJitterEpsilon: number;
 }
@@ -305,6 +306,7 @@ interface ILayoutOverlapOptions {
   ringDivisionSegments: number;
   finetuneClashDistanceFactor: number;
   rotatableEdgeCenteringFactor: number;
+  terminalPushAngleDeg: number;
 }
 
 interface ILayoutOptions {

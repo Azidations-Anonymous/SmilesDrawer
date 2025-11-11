@@ -4,6 +4,7 @@ import Vertex = require('../graph/Vertex');
 import Edge = require('../graph/Edge');
 import ArrayHelper = require("../utils/ArrayHelper");
 import MathHelper = require("../utils/MathHelper");
+import { IUserOptions } from "../config/IOptions";
 import { SideChoice, OverlapScore, SubtreeOverlapScore, VertexOverlapScoreEntry } from './MolecularDataTypes';
 
 class OverlapResolutionManager {
@@ -271,7 +272,9 @@ class OverlapResolutionManager {
           return;
         }
 
-        const stepAngle = MathHelper.toRad(30);
+        const rotationConfig = OverlapResolutionManager.getFinetuneRotationConfig(this.drawer.userOpts);
+        const stepAngle = rotationConfig.stepAngleRad;
+        const stepsPerRotation = rotationConfig.stepsPerRotation;
         const legacyMaxSteps = legacyOpts.finetuneOverlapMaxSteps;
         const chosenMaxSteps = legacyMaxSteps !== userFinetune.maxSteps
           ? legacyMaxSteps
@@ -336,7 +339,7 @@ class OverlapResolutionManager {
           let bestScore = currentScore;
           let bestStep = 0;
 
-          for (let step = 0; step < 12; step++) {
+          for (let step = 0; step < stepsPerRotation; step++) {
             this.rotateSubtree(rotatingId, parentId, stepAngle, parentVertex.position);
             const candidateScore = this.getOverlapScore().total;
 
@@ -346,9 +349,9 @@ class OverlapResolutionManager {
             }
           }
 
-          this.rotateSubtree(rotatingId, parentId, -stepAngle * 12, parentVertex.position);
+          this.rotateSubtree(rotatingId, parentId, -stepAngle * stepsPerRotation, parentVertex.position);
 
-          const finalAngle = MathHelper.toRad(30 * bestStep + 1);
+          const finalAngle = (stepAngle * bestStep) + rotationConfig.finalOffsetRad;
           this.rotateSubtree(rotatingId, parentId, finalAngle, parentVertex.position);
 
           const finalScore = this.getOverlapScore();
@@ -377,7 +380,9 @@ class OverlapResolutionManager {
 
                 let vertexPreviousPosition = vertex.id === 0 ? this.drawer.graph.vertices[1].position : vertex.previousPosition;
 
-                vertex.position.rotateAwayFrom(closestPosition, vertexPreviousPosition, MathHelper.toRad(20));
+                const pushDeg = this.drawer.userOpts.layout.overlap.terminalPushAngleDeg;
+                const pushAngle = MathHelper.toRad(Math.max(0, pushDeg || 0));
+                vertex.position.rotateAwayFrom(closestPosition, vertexPreviousPosition, pushAngle);
               }
             }
           }
@@ -431,6 +436,19 @@ class OverlapResolutionManager {
         return {
           value: score / count,
           center: center
+        };
+    }
+
+    static getFinetuneRotationConfig(userOpts: IUserOptions): { stepAngleRad: number; stepsPerRotation: number; finalOffsetRad: number } {
+        const incrementDegRaw = userOpts.layout.graph.rotationSnapIncrementDeg;
+        const incrementDeg = (incrementDegRaw && incrementDegRaw > 0) ? incrementDegRaw : 30;
+        const stepsPerRotation = Math.max(1, Math.floor(360 / incrementDeg));
+        const finalOffsetDegRaw = userOpts.layout.graph.finetuneRotationOffsetDeg ?? 1;
+        const finalOffsetDeg = finalOffsetDegRaw >= 0 ? finalOffsetDegRaw : 0;
+        return {
+            stepAngleRad: MathHelper.toRad(incrementDeg),
+            stepsPerRotation,
+            finalOffsetRad: MathHelper.toRad(finalOffsetDeg)
         };
     }
 

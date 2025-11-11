@@ -308,6 +308,7 @@ export function getDefaultUserOptions(): IUserOptions {
         linearBondToleranceRad: 0.1,
         rotationSnapIncrementDeg: 30,
         rotationSnapDeadzoneDeg: 15,
+        finetuneRotationOffsetDeg: 1,
         centerOfMassRadiusFactor: 2.0,
         rotationJitterEpsilon: 0.001
       },
@@ -327,7 +328,8 @@ export function getDefaultUserOptions(): IUserOptions {
       overlap: {
         ringDivisionSegments: 6,
         finetuneClashDistanceFactor: 0.8,
-        rotatableEdgeCenteringFactor: 0.5
+        rotatableEdgeCenteringFactor: 0.5,
+        terminalPushAngleDeg: 20
       }
     },
     typography: {
