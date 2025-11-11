@@ -11,7 +11,7 @@ interface IDrawingSurface {
   drawWedge(line: Line): void;
   drawDashedWedge(line: Line): void;
   drawRing(x: number, y: number, radius: number): void;
-  drawAtomHighlight(x: number, y: number, color?: string): void;
+  drawAtomHighlight?(x: number, y: number, color?: string): void;
   drawBall(x: number, y: number, elementName: string): void;
   drawPoint(x: number, y: number, elementName: string): void;
   drawDebugPoint(x: number, y: number, debugText?: string, color?: string): void;

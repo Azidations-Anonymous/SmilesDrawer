@@ -116,7 +116,9 @@ class SvgDrawer {
       renderer.determineDimensions(preprocessor.graph.vertices);
 
       // Do the actual drawing
-      this.drawAtomHighlights(preprocessor.userOpts.meta.debug);
+      if (typeof renderer.drawAtomHighlight === 'function') {
+        this.drawAtomHighlights(preprocessor.userOpts.meta.debug);
+      }
       this.drawEdges(preprocessor.userOpts.meta.debug);
       this.drawVertices(preprocessor.userOpts.meta.debug);
 
