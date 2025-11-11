@@ -15,7 +15,7 @@
         integrity="sha512-16ZUuuM/OceXU7i8U6zQqtDsG+PCKcWX9XlmNN0z+lqUlBMzDmIzrKt6TOmW48EAU47XIU6Spaelz8tM9LgGKQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
-        .svg-wrapper {
+        .render-wrapper {
             position: relative;
         }
 
@@ -23,6 +23,21 @@
             position: absolute;
             bottom: 12px;
             right: 12px;
+        }
+
+        .render-toggle {
+            margin-top: 0.5rem;
+        }
+
+        .render-toggle .button.is-selected {
+            pointer-events: none;
+        }
+
+        .render-wrapper svg,
+        .render-wrapper canvas {
+            width: 100%;
+            height: auto;
+            display: block;
         }
     </style>
 </head>
@@ -88,12 +103,25 @@
                                 <input id="input-1" class="input" type="text" placeholder="Custom SMILES"
                                     value="OC(C(=O)O[C@H]1C[N+]2(CCCOC3=CC=CC=C3)CCC1CC2)(C1=CC=CS1)C1=CC=CS1">
                                 <div class="content" style="overflow-x: auto; overflow-y: auto">
-                                    <div class="svg-wrapper">
-                                        <svg id="display-1"
+                                    <div class="render-wrapper">
+                                        <svg id="display-1-svg"
                                             data-smiles="OC(C(=O)O[C@H]1C[N+]2(CCCOC3=CC=CC=C3)CCC1CC2)(C1=CC=CS1)C1=CC=CS1"></svg>
-                                        <button class="button is-small download-button" data-download-target="#display-1">
+                                        <canvas id="display-1-canvas" width="500" height="500" style="display: none;"></canvas>
+                                        <button class="button is-small download-button" data-download-target="display-1">
                                             Download
                                         </button>
+                                    </div>
+                                    <div class="field has-addons render-toggle" data-toggle-target="display-1">
+                                        <p class="control">
+                                            <button class="button is-small is-link is-selected" data-render-mode="svg">
+                                                SVG
+                                            </button>
+                                        </p>
+                                        <p class="control">
+                                            <button class="button is-small" data-render-mode="png">
+                                                PNG
+                                            </button>
+                                        </p>
                                     </div>
                                 </div>
                             </article>
@@ -104,12 +132,25 @@
                                 <input id="input-2" class="input" type="text" placeholder="Custom SMILES"
                                     value="CC1=[O][Fe]2345ON1CCC[C@H]1NC(=O)CNC(=O)[C@H](CO)NC(=O)CNC(=O)[C@@H](CCCN(O2)C(C)=[O]3)NC(=O)[C@@H](CCCN(O4)C(C)=[O]5)NC1=O">
                                 <div class="content" style="overflow-x: auto; overflow-y: auto">
-                                    <div class="svg-wrapper">
-                                        <svg id="display-2"
+                                    <div class="render-wrapper">
+                                        <svg id="display-2-svg" style="display: none;"
                                             data-smiles="NC1=C(Br)C=C(Br)C=C1CN[C@]1CC[C@](O)CC1"></svg>
-                                        <button class="button is-small download-button" data-download-target="#display-2">
+                                        <canvas id="display-2-canvas" width="500" height="500"></canvas>
+                                        <button class="button is-small download-button" data-download-target="display-2">
                                             Download
                                         </button>
+                                    </div>
+                                    <div class="field has-addons render-toggle" data-toggle-target="display-2">
+                                        <p class="control">
+                                            <button class="button is-small" data-render-mode="svg">
+                                                SVG
+                                            </button>
+                                        </p>
+                                        <p class="control">
+                                            <button class="button is-small is-link is-selected" data-render-mode="png">
+                                                PNG
+                                            </button>
+                                        </p>
                                     </div>
                                 </div>
                             </article>
@@ -121,10 +162,10 @@
                             <input id="input-3" class="input" type="text" placeholder="Custom SMILES"
                                 value="C=CCBr.[Na+].[I-]>CC(=O)C>C=CCI.[Na+].[Br-]  __{'textBelowArrow': '90%'}__">
                             <div class="content" style="overflow-x: auto">
-                                <div class="svg-wrapper">
-                                    <svg id="display-3"
+                                <div class="render-wrapper">
+                                    <svg id="display-3-svg"
                                         data-smiles="C=CCBr.[Na+].[I-]>CC(=O)C>C=CCI.[Na+].[Br-]  __{'textBelowArrow': '90%'}__"></svg>
-                                    <button class="button is-small download-button" data-download-target="#display-3">
+                                    <button class="button is-small download-button" data-download-target="display-3">
                                         Download
                                     </button>
                                 </div>
@@ -611,6 +652,11 @@
             redraw();
         });
 
+        const renderModes = {
+            'display-1': 'svg',
+            'display-2': 'png'
+        };
+
         const themeMap = new Map([
             ['light', 'light'],
             ['oldschool', 'light'],
@@ -666,6 +712,25 @@
             setTimeout(() => URL.revokeObjectURL(url), 0);
         }
 
+        function downloadCanvas(canvasElement, fileName) {
+            if (!(canvasElement instanceof HTMLCanvasElement)) {
+                console.warn('downloadCanvas: target is not a canvas');
+                return;
+            }
+
+            try {
+                const url = canvasElement.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (err) {
+                console.warn('downloadCanvas failed', err);
+            }
+        }
+
         function setupDownloadButtons() {
             document.querySelectorAll('.download-button').forEach((button) => {
                 const targetSelector = button.getAttribute('data-download-target');
@@ -676,16 +741,27 @@
                         return;
                     }
 
-                    const svg = document.querySelector(targetSelector);
+                                        let targetElement = null;
+                    if (targetSelector === 'display-3') {
+                        targetElement = document.getElementById('display-3-svg');
+                    } else {
+                        const mode = renderModes[targetSelector] || 'svg';
+                        targetElement = document.getElementById(`${targetSelector}-${mode === 'png' ? 'canvas' : 'svg'}`);
+                    }
 
-                    if (!svg) {
+                    if (!targetElement) {
                         console.warn('download button missing target', targetSelector);
                         return;
                     }
 
                     const slug = targetSelector.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '');
-                    const filename = `${slug || 'diagram'}.svg`;
-                    downloadSvg(svg, filename);
+                    if (targetElement instanceof HTMLCanvasElement) {
+                        const filename = `${slug || 'diagram'}.png`;
+                        downloadCanvas(targetElement, filename);
+                    } else {
+                        const filename = `${slug || 'diagram'}.svg`;
+                        downloadSvg(targetElement, filename);
+                    }
                 });
             });
         }
@@ -703,12 +779,84 @@
             }
         }
 
-        function drawAndCollect(smiles, displaySelector) {
+        function updateToggleButtons(displayKey) {
+            document.querySelectorAll(`.render-toggle[data-toggle-target=\"${displayKey}\"] button`).forEach((button) => {
+                const mode = button.getAttribute('data-render-mode');
+                if (!mode) {
+                    return;
+                }
+                if ((renderModes[displayKey] || 'svg') === mode) {
+                    button.classList.add('is-link', 'is-selected');
+                } else {
+                    button.classList.remove('is-link', 'is-selected');
+                }
+            });
+        }
+
+        function setupRenderToggles() {
+            document.querySelectorAll('.render-toggle').forEach((group) => {
+                const target = group.getAttribute('data-toggle-target');
+                if (!target) {
+                    return;
+                }
+
+                group.querySelectorAll('button').forEach((button) => {
+                    button.addEventListener('click', () => {
+                        const mode = button.getAttribute('data-render-mode');
+                        if (!mode || renderModes[target] === mode) {
+                            return;
+                        }
+                        renderModes[target] = mode === 'png' ? 'png' : 'svg';
+                        updateToggleButtons(target);
+                        redraw();
+                    });
+                });
+
+                updateToggleButtons(target);
+            });
+        }
+
+        function drawAndCollect(smiles, displayKey) {
             const sd = new SmiDrawer(moleculeOptions, reactionOptions);
+            const isReaction = smiles.includes('>');
+            let targetElement = null;
+
+            if (isReaction || displayKey === 'display-3') {
+                const svgElement = document.getElementById(`${displayKey}-svg`);
+                if (svgElement) {
+                    svgElement.style.display = '';
+                }
+                const canvasElement = document.getElementById(`${displayKey}-canvas`);
+                if (canvasElement) {
+                    canvasElement.style.display = 'none';
+                }
+                targetElement = svgElement;
+                if (renderModes[displayKey]) {
+                    renderModes[displayKey] = 'svg';
+                }
+            } else {
+                const mode = renderModes[displayKey] || 'svg';
+                const svgElement = document.getElementById(`${displayKey}-svg`);
+                const canvasElement = document.getElementById(`${displayKey}-canvas`);
+                if (svgElement) {
+                    svgElement.style.display = mode === 'svg' ? '' : 'none';
+                }
+                if (canvasElement) {
+                    canvasElement.style.display = mode === 'png' ? '' : 'none';
+                }
+                targetElement = mode === 'png' ? canvasElement : svgElement;
+            }
+
+            if (!targetElement) {
+                console.warn('Missing render target for', displayKey);
+                return null;
+            }
+
+            const selector = targetElement.id ? `#${targetElement.id}` : targetElement;
+
             try {
-                sd.draw(smiles, displaySelector, theme);
-                const data = collectPositionData(sd);
-                return data;
+                sd.draw(smiles, selector, theme);
+                return collectPositionData(sd);
             } catch (err) {
                 console.error(err);
                 return null;
@@ -716,14 +864,26 @@
         }
 
         function redraw() {
-            // reset size in case scaling changed to > 0.0 and then back to 0.0
-            document.getElementById('display-1').style = '';
-            document.getElementById('display-2').style = '';
-            document.getElementById('display-3').style = '';
+            ['display-1', 'display-2', 'display-3'].forEach((key) => {
+                const svgElement = document.getElementById(`${key}-svg`);
+                if (svgElement) {
+                    svgElement.style.width = '';
+                    svgElement.style.height = '';
+                }
+                const canvasElement = document.getElementById(`${key}-canvas`);
+                if (canvasElement) {
+                    canvasElement.style.width = '';
+                    canvasElement.style.height = '';
+                    const targetWidth = canvasElement.width || 500;
+                    const targetHeight = canvasElement.height || 500;
+                    canvasElement.width = targetWidth;
+                    canvasElement.height = targetHeight;
+                }
+            });
 
-            const data1 = drawAndCollect(input1.value, '#display-1');
-            const data2 = drawAndCollect(input2.value, '#display-2');
-            drawAndCollect(input3.value, '#display-3');
+            const data1 = drawAndCollect(input1.value, 'display-1');
+            const data2 = drawAndCollect(input2.value, 'display-2');
+            drawAndCollect(input3.value, 'display-3');
 
             latestPositionData.display1 = data1;
             latestPositionData.display2 = data2;
@@ -739,6 +899,7 @@
             }
         }
 
+        setupRenderToggles();
         redraw();
         setupDownloadButtons();
 
