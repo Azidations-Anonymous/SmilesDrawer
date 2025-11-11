@@ -19,7 +19,7 @@ class SmilesDrawer {
         this.drawer = new SvgDrawer(moleculeOptions);
 
         // moleculeOptions gets edited in reactionOptions, so clone
-        this.reactionDrawer = new ReactionDrawer(reactionOptions, JSON.parse(JSON.stringify(this.drawer.opts)));
+        this.reactionDrawer = new ReactionDrawer(reactionOptions, JSON.parse(JSON.stringify(this.drawer.userOpts)));
     }
 
     static apply(moleculeOptions: Partial<IUserOptions> = {}, reactionOptions: Partial<IReactionOptions> = {}, attribute: string = 'data-smiles', theme: string = 'light', successCallback: ((result: SVGElement | HTMLCanvasElement | HTMLImageElement) => void) | null = null, errorCallback: ((error: Error) => void) | null = null): void {

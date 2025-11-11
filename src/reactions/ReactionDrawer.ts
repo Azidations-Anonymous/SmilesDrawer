@@ -1,11 +1,10 @@
 import SvgDrawer = require('../drawing/SvgDrawer');
-import SvgWrapper = require('../drawing/SvgWrapper');
 import SvgUnicodeHelper = require('../drawing/helpers/SvgUnicodeHelper');
 import SvgTextHelper = require('../drawing/helpers/SvgTextHelper');
 import Options = require('../config/Options');
 import ThemeManager = require('../config/ThemeManager');
 import formulaToCommonName = require('../utils/FormulaToCommonName');
-import { IMoleculeOptions, IReactionOptions } from '../config/IOptions';
+import { IMoleculeOptions, IUserOptions, IDerivedOptions, IReactionOptions } from '../config/IOptions';
 import Reaction = require('./Reaction');
 
 type ReactionWeights = {
@@ -18,7 +17,8 @@ class ReactionDrawer {
     defaultOptions: IReactionOptions;
     opts: IReactionOptions;
     drawer: SvgDrawer;
-    molOpts: IMoleculeOptions;
+    userOpts: IUserOptions;
+    derivedOpts: IDerivedOptions;
     themeManager: ThemeManager | null;
 
     /**
@@ -27,25 +27,33 @@ class ReactionDrawer {
      * @param {Object} options An object containing reaction drawing specitic options.
      * @param {Object} moleculeOptions An object containing molecule drawing specific options.
      */
-    constructor(options: Partial<IReactionOptions>, moleculeOptions: Partial<IMoleculeOptions>) {
+    constructor(options: Partial<IReactionOptions> = {}, moleculeOptions: Partial<IMoleculeOptions> | Partial<IUserOptions> = {}) {
         this.drawer = new SvgDrawer(moleculeOptions);
-        this.molOpts = this.drawer.opts;
+        this.userOpts = this.drawer.userOpts;
+        this.derivedOpts = this.drawer.derivedOpts;
         this.themeManager = null;
+        const bondLength = this.userOpts.rendering.bonds.bondLength;
+        const bondThickness = this.userOpts.rendering.bonds.bondThickness;
+        const scale = this.userOpts.canvas.scale > 0.0 ? this.userOpts.canvas.scale : 1.0;
+        const spacing = bondLength * (10 / 30);
+        const plusSize = bondLength * (9 / 30);
+        const arrowHeadSize = bondLength * (6 / 30);
+        const arrowMargin = bondLength * (3 / 30);
 
         this.defaultOptions = {
-            scale: this.molOpts.scale > 0.0 ? this.molOpts.scale : 1.0,
-            fontSize: this.molOpts.fontSizeLarge * 0.8,
-            fontFamily: 'Arial, Helvetica, sans-serif',
-            spacing: 10,
+            scale,
+            fontSize: this.userOpts.typography.fontSizeLarge * 0.8,
+            fontFamily: this.userOpts.typography.fontFamily,
+            spacing,
             plus: {
-                size: 9,
-                thickness: 1.0
+                size: plusSize,
+                thickness: bondThickness
             },
             arrow: {
-                length: this.molOpts.bondLength * 4.0,
-                headSize: 6.0,
-                thickness: 1.0,
-                margin: 3
+                length: bondLength * 4.0,
+                headSize: arrowHeadSize,
+                thickness: bondThickness,
+                margin: arrowMargin
             },
             weights: {
                 normalize: false
@@ -70,7 +78,7 @@ class ReactionDrawer {
    * @returns {SVGElement} The svg element
    */
     draw(reaction: Reaction, target: string | SVGElement | null, themeName: string = 'light', weights: ReactionWeights | null = null, textAbove: string = '{reagents}', textBelow: string = '', infoOnly: boolean = false): SVGElement {
-        this.themeManager = new ThemeManager(this.molOpts.themes, themeName);
+        this.themeManager = new ThemeManager(this.userOpts.appearance.themes, themeName);
 
         // Normalize the weights over the reaction molecules
         if (this.opts.weights.normalize) {
@@ -151,8 +159,8 @@ class ReactionDrawer {
         if (target === null || target === 'svg') {
             svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-            svg.setAttributeNS(null, 'width', 500 + '');
-            svg.setAttributeNS(null, 'height', 500 + '');
+            svg.setAttributeNS(null, 'width', this.userOpts.canvas.width + '');
+            svg.setAttributeNS(null, 'height', this.userOpts.canvas.height + '');
         } else if (typeof target === 'string') {
             svg = document.getElementById(target);
         } else {
@@ -186,9 +194,10 @@ class ReactionDrawer {
 
             this.drawer.draw(reaction.reactants[i], reactantSvg, themeName, reactantWeights, infoOnly, [], this.opts.weights.normalize);
 
+            const reactantDims = this.getSvgDimensions(reactantSvg);
             let element = {
-                width: reactantSvg.viewBox.baseVal.width * this.opts.scale,
-                height: reactantSvg.viewBox.baseVal.height * this.opts.scale,
+                width: reactantDims.width * this.opts.scale,
+                height: reactantDims.height * this.opts.scale,
                 svg: reactantSvg
             };
 
@@ -281,9 +290,10 @@ class ReactionDrawer {
 
             this.drawer.draw(reaction.products[i], productSvg, themeName, productWeights, infoOnly, [], this.opts.weights.normalize);
 
+            const productDims = this.getSvgDimensions(productSvg);
             let element = {
-                width: productSvg.viewBox.baseVal.width * this.opts.scale,
-                height: productSvg.viewBox.baseVal.height * this.opts.scale,
+                width: productDims.width * this.opts.scale,
+                height: productDims.height * this.opts.scale,
                 svg: productSvg
             };
 
@@ -417,6 +427,28 @@ class ReactionDrawer {
         svg.setAttributeNS(null, 'viewBox', `0 ${-s / 2.0} ${l + s * (7 / 4.5)} ${s}`);
 
         return svg;
+    }
+
+    private getSvgDimensions(svg: SVGElement): { width: number; height: number } {
+        const svgElement = svg as SVGSVGElement;
+        if (svgElement.viewBox && svgElement.viewBox.baseVal) {
+            const { width, height } = svgElement.viewBox.baseVal;
+            if (Number.isFinite(width) && Number.isFinite(height)) {
+                return { width, height };
+            }
+        }
+
+        const viewBoxAttr = svg.getAttribute('viewBox');
+        if (viewBoxAttr) {
+            const parts = viewBoxAttr.trim().split(/\s+/).map(Number);
+            if (parts.length === 4 && parts.every((value) => Number.isFinite(value))) {
+                return { width: parts[2], height: parts[3] };
+            }
+        }
+
+        const fallbackWidth = Number(svg.getAttribute('width')) || 0;
+        const fallbackHeight = Number(svg.getAttribute('height')) || 0;
+        return { width: fallbackWidth, height: fallbackHeight };
     }
 }
 
