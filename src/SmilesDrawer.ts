@@ -248,7 +248,7 @@ class SmilesDrawer {
                     this.reactionDrawer.draw(reaction, element as SVGElement, theme, reactionWeights, settings.textAboveArrow, settings.textBelowArrow);
                     // The svg has to have a css width and height set for the other
                     // tags, however, here it would overwrite the chosen width and height
-                    if (this.reactionDrawer.opts.scale <= 0) {
+                    if (this.reactionDrawer.getRenderOptions().scale <= 0) {
                         (element as HTMLElement).style.width = '';
                         (element as HTMLElement).style.height = '';
                     }

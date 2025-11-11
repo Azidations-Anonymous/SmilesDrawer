@@ -27,16 +27,17 @@ test('ReactionDrawer derives render defaults from IUserOptions', () => {
   userOptions.typography.fontSizeLarge = 30;
 
   const drawer = new ReactionDrawer({}, userOptions);
+  const opts = drawer.getRenderOptions();
 
-  assert.equal(drawer.opts.scale, 2);
-  assert.equal(drawer.opts.fontSize, 24);
-  assert.equal(drawer.opts.spacing, 60 * (10 / 30));
-  assert.equal(drawer.opts.plus.size, 60 * (9 / 30));
-  assert.equal(drawer.opts.plus.thickness, 1.5);
-  assert.equal(drawer.opts.arrow.length, 60 * 4);
-  assert.equal(drawer.opts.arrow.headSize, 60 * (6 / 30));
-  assert.equal(drawer.opts.arrow.thickness, 1.5);
-  assert.equal(drawer.opts.arrow.margin, 60 * (3 / 30));
+  assert.equal(opts.scale, 2);
+  assert.equal(opts.fontSize, 24);
+  assert.equal(opts.spacing, 60 * (10 / 30));
+  assert.equal(opts.plus.size, 60 * (9 / 30));
+  assert.equal(opts.plus.thickness, 1.5);
+  assert.equal(opts.arrow.length, 60 * 4);
+  assert.equal(opts.arrow.headSize, 60 * (6 / 30));
+  assert.equal(opts.arrow.thickness, 1.5);
+  assert.equal(opts.arrow.margin, 60 * (3 / 30));
 });
 
 test('ReactionDrawer uses custom typography for reagents text', () => {
@@ -49,6 +50,7 @@ test('ReactionDrawer uses custom typography for reagents text', () => {
   userOptions.reactions.font.family = 'ReagentFont';
 
   const drawer = new ReactionDrawer({}, userOptions);
+  const opts = drawer.getRenderOptions();
   const reaction = new Reaction('CC>O>CC');
   const svg = drawer.draw(reaction, null, 'light', null, '{reagents}', 'Yield 90%');
 
@@ -58,12 +60,12 @@ test('ReactionDrawer uses custom typography for reagents text', () => {
   assert(textStyles.length > 0);
   textStyles.forEach((style) => {
     assert(style.textContent.includes('ReagentFont'));
-    assert(style.textContent.includes(`${drawer.opts.fontSize}pt`));
+    assert(style.textContent.includes(`${opts.fontSize}pt`));
   });
 
   const arrowLine = svg.querySelector('#arrow line');
   assert(arrowLine);
-  assert.equal(Number(arrowLine.getAttribute('stroke-width')), drawer.opts.arrow.thickness);
+  assert.equal(Number(arrowLine.getAttribute('stroke-width')), opts.arrow.thickness);
 });
 
 test('ReactionDrawer honours reaction geometry multipliers', () => {
@@ -80,14 +82,14 @@ test('ReactionDrawer honours reaction geometry multipliers', () => {
   userOptions.reactions.arrow.marginBondLengthMultiplier = 0.2;
 
   const drawer = new ReactionDrawer({}, userOptions);
-
-  assert.equal(drawer.opts.spacing, 25);
-  assert.equal(drawer.opts.plus.size, 20);
-  assert.equal(drawer.opts.plus.thickness, 3);
-  assert.equal(drawer.opts.arrow.length, 250);
-  assert.equal(drawer.opts.arrow.headSize, 12.5);
-  assert.equal(drawer.opts.arrow.thickness, 1);
-  assert.equal(drawer.opts.arrow.margin, 10);
+  const opts = drawer.getRenderOptions();
+  assert.equal(opts.spacing, 25);
+  assert.equal(opts.plus.size, 20);
+  assert.equal(opts.plus.thickness, 3);
+  assert.equal(opts.arrow.length, 250);
+  assert.equal(opts.arrow.headSize, 12.5);
+  assert.equal(opts.arrow.thickness, 1);
+  assert.equal(opts.arrow.margin, 10);
 });
 
 test('ReactionDrawer uses reaction-specific scale and weight defaults', () => {
@@ -98,6 +100,7 @@ test('ReactionDrawer uses reaction-specific scale and weight defaults', () => {
   userOptions.reactions.weights.normalize = true;
 
   const drawer = new ReactionDrawer({}, userOptions);
-  assert.equal(drawer.opts.scale, 1.75);
-  assert.equal(drawer.opts.weights.normalize, true);
+  const opts = drawer.getRenderOptions();
+  assert.equal(opts.scale, 1.75);
+  assert.equal(opts.weights.normalize, true);
 });

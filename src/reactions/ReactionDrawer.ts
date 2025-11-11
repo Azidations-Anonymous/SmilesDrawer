@@ -15,7 +15,7 @@ type ReactionWeights = {
 
 class ReactionDrawer {
     defaultOptions: IReactionOptions;
-    opts: IReactionOptions;
+    renderOpts: IReactionOptions;
     drawer: SvgDrawer;
     userOpts: IUserOptions;
     derivedOpts: IDerivedOptions;
@@ -33,7 +33,7 @@ class ReactionDrawer {
         this.derivedOpts = this.drawer.derivedOpts;
         this.themeManager = null;
         this.defaultOptions = this.buildReactionDefaults();
-        this.opts = Options.extend(true, {}, this.defaultOptions, options) as IReactionOptions;
+        this.renderOpts = Options.extend(true, {}, this.defaultOptions, options) as IReactionOptions;
     }
 
     /**
@@ -54,7 +54,7 @@ class ReactionDrawer {
         this.themeManager = new ThemeManager(this.userOpts.appearance.themes, themeName);
 
         // Normalize the weights over the reaction molecules
-        if (this.opts.weights.normalize) {
+        if (this.renderOpts.weights.normalize) {
             let max = -Number.MAX_SAFE_INTEGER;
             let min = Number.MAX_SAFE_INTEGER;
 
@@ -152,8 +152,8 @@ class ReactionDrawer {
         for (var i = 0; i < reaction.reactants.length; i++) {
             if (i > 0) {
                 elements.push({
-                    width: this.opts.plus.size * this.opts.scale,
-                    height: this.opts.plus.size * this.opts.scale,
+                    width: this.renderOpts.plus.size * this.renderOpts.scale,
+                    height: this.renderOpts.plus.size * this.renderOpts.scale,
                     svg: this.getPlus()
                 });
             }
@@ -165,12 +165,12 @@ class ReactionDrawer {
 
             let reactantSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 
-            this.drawer.draw(reaction.reactants[i], reactantSvg, themeName, reactantWeights, infoOnly, [], this.opts.weights.normalize);
+            this.drawer.draw(reaction.reactants[i], reactantSvg, themeName, reactantWeights, infoOnly, [], this.renderOpts.weights.normalize);
 
             const reactantDims = this.getSvgDimensions(reactantSvg);
             let element = {
-                width: reactantDims.width * this.opts.scale,
-                height: reactantDims.height * this.opts.scale,
+                width: reactantDims.width * this.renderOpts.scale,
+                height: reactantDims.height * this.renderOpts.scale,
                 svg: reactantSvg
             };
 
@@ -183,8 +183,8 @@ class ReactionDrawer {
 
         // Arrow
         elements.push({
-            width: this.opts.arrow.length * this.opts.scale,
-            height: this.opts.arrow.headSize * 2.0 * this.opts.scale,
+            width: this.renderOpts.arrow.length * this.renderOpts.scale,
+            height: this.renderOpts.arrow.headSize * 2.0 * this.renderOpts.scale,
             svg: this.getArrow()
         });
 
@@ -209,20 +209,20 @@ class ReactionDrawer {
         const topText = SvgTextHelper.writeText(
             textAbove,
             this.themeManager,
-            this.opts.fontSize * this.opts.scale,
-            this.opts.fontFamily,
-            this.opts.arrow.length * this.opts.scale,
+            this.renderOpts.fontSize * this.renderOpts.scale,
+            this.renderOpts.fontFamily,
+            this.renderOpts.arrow.length * this.renderOpts.scale,
             measurementLineHeight
         );
 
-        let centerOffsetX = (this.opts.arrow.length * this.opts.scale - topText.width) / 2.0;
+        let centerOffsetX = (this.renderOpts.arrow.length * this.renderOpts.scale - topText.width) / 2.0;
 
         elements.push({
             svg: topText.svg,
             height: topText.height,
-            width: this.opts.arrow.length * this.opts.scale,
-            offsetX: -(this.opts.arrow.length * this.opts.scale + this.opts.spacing) + centerOffsetX,
-            offsetY: -(topText.height / 2.0) - this.opts.arrow.margin,
+            width: this.renderOpts.arrow.length * this.renderOpts.scale,
+            offsetX: -(this.renderOpts.arrow.length * this.renderOpts.scale + this.renderOpts.spacing) + centerOffsetX,
+            offsetY: -(topText.height / 2.0) - this.renderOpts.arrow.margin,
             position: 'relative'
         });
 
@@ -230,20 +230,20 @@ class ReactionDrawer {
         const bottomText = SvgTextHelper.writeText(
             textBelow,
             this.themeManager,
-            this.opts.fontSize * this.opts.scale,
-            this.opts.fontFamily,
-            this.opts.arrow.length * this.opts.scale,
+            this.renderOpts.fontSize * this.renderOpts.scale,
+            this.renderOpts.fontFamily,
+            this.renderOpts.arrow.length * this.renderOpts.scale,
             measurementLineHeight
         );
 
-        centerOffsetX = (this.opts.arrow.length * this.opts.scale - bottomText.width) / 2.0;
+        centerOffsetX = (this.renderOpts.arrow.length * this.renderOpts.scale - bottomText.width) / 2.0;
 
         elements.push({
             svg: bottomText.svg,
             height: bottomText.height,
-            width: this.opts.arrow.length * this.opts.scale,
-            offsetX: -(this.opts.arrow.length * this.opts.scale + this.opts.spacing) + centerOffsetX,
-            offsetY: bottomText.height / 2.0 + this.opts.arrow.margin,
+            width: this.renderOpts.arrow.length * this.renderOpts.scale,
+            offsetX: -(this.renderOpts.arrow.length * this.renderOpts.scale + this.renderOpts.spacing) + centerOffsetX,
+            offsetY: bottomText.height / 2.0 + this.renderOpts.arrow.margin,
             position: 'relative'
         });
 
@@ -251,8 +251,8 @@ class ReactionDrawer {
         for (var i = 0; i < reaction.products.length; i++) {
             if (i > 0) {
                 elements.push({
-                    width: this.opts.plus.size * this.opts.scale,
-                    height: this.opts.plus.size * this.opts.scale,
+                    width: this.renderOpts.plus.size * this.renderOpts.scale,
+                    height: this.renderOpts.plus.size * this.renderOpts.scale,
                     svg: this.getPlus()
                 });
             }
@@ -264,12 +264,12 @@ class ReactionDrawer {
 
             let productSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 
-            this.drawer.draw(reaction.products[i], productSvg, themeName, productWeights, infoOnly, [], this.opts.weights.normalize);
+            this.drawer.draw(reaction.products[i], productSvg, themeName, productWeights, infoOnly, [], this.renderOpts.weights.normalize);
 
             const productDims = this.getSvgDimensions(productSvg);
             let element = {
-                width: productDims.width * this.opts.scale,
-                height: productDims.height * this.opts.scale,
+                width: productDims.width * this.renderOpts.scale,
+                height: productDims.height * this.renderOpts.scale,
                 svg: productSvg
             };
 
@@ -293,7 +293,7 @@ class ReactionDrawer {
             svg.appendChild(element.svg);
 
             if (element.position !== 'relative') {
-                totalWidth += Math.round(element.width + this.opts.spacing + offsetX);
+                totalWidth += Math.round(element.width + this.renderOpts.spacing + offsetX);
             }
         });
 
@@ -304,9 +304,13 @@ class ReactionDrawer {
         return svg;
     }
 
+    getRenderOptions(): IReactionOptions {
+        return this.renderOpts;
+    }
+
     getPlus(): SVGElement {
-        let s = this.opts.plus.size;
-        let w = this.opts.plus.thickness;
+        let s = this.renderOpts.plus.size;
+        let w = this.renderOpts.plus.thickness;
         let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         let rect_h = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         let rect_v = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -333,7 +337,7 @@ class ReactionDrawer {
     }
 
     getArrowhead(): SVGElement {
-        let s = this.opts.arrow.headSize;
+        let s = this.renderOpts.arrow.headSize;
         let marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
         let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
 
@@ -355,7 +359,7 @@ class ReactionDrawer {
     }
 
     getCDArrowhead(): SVGElement {
-        let s = this.opts.arrow.headSize;
+        let s = this.renderOpts.arrow.headSize;
         let sw = s * (7 / 4.5);
         let marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
         let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -379,8 +383,8 @@ class ReactionDrawer {
     }
 
     getArrow(): SVGElement {
-        let s = this.opts.arrow.headSize;
-        let l = this.opts.arrow.length;
+        let s = this.renderOpts.arrow.headSize;
+        let l = this.renderOpts.arrow.length;
 
         let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
@@ -392,10 +396,10 @@ class ReactionDrawer {
         svg.setAttributeNS(null, 'id', 'arrow');
 
         line.setAttributeNS(null, 'x1', '0');
-        line.setAttributeNS(null, 'y1', (-this.opts.arrow.thickness / 2.0).toString());
+        line.setAttributeNS(null, 'y1', (-this.renderOpts.arrow.thickness / 2.0).toString());
         line.setAttributeNS(null, 'x2', l.toString());
-        line.setAttributeNS(null, 'y2', (-this.opts.arrow.thickness / 2.0).toString());
-        line.setAttributeNS(null, 'stroke-width', this.opts.arrow.thickness.toString());
+        line.setAttributeNS(null, 'y2', (-this.renderOpts.arrow.thickness / 2.0).toString());
+        line.setAttributeNS(null, 'stroke-width', this.renderOpts.arrow.thickness.toString());
         line.setAttributeNS(null, 'stroke', this.themeManager.getColor("C"));
         line.setAttributeNS(null, 'marker-end', 'url(#arrowhead)');
 
