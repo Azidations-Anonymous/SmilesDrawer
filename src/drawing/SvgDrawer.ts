@@ -23,7 +23,6 @@ type ParseTree = any;
 
 class SvgDrawer {
   preprocessor: IMolecularData;
-  opts: IMoleculeOptions;
   userOpts: IUserOptions;
   derivedOpts: IDerivedOptions;
   clear: boolean;
@@ -38,7 +37,6 @@ class SvgDrawer {
 
   constructor(options: Partial<IMoleculeOptions> | Partial<IUserOptions>, clear: boolean = true) {
       this.preprocessor = new MolecularPreprocessor(options);
-      this.opts = this.preprocessor.opts;
       this.userOpts = this.preprocessor.userOpts;
       this.derivedOpts = this.preprocessor.derivedOpts;
       this.clear = clear;
@@ -73,22 +71,14 @@ class SvgDrawer {
       target = document.getElementById(target) as unknown as SVGElement;
     }
 
-    let legacyOptionBackup = {
-      padding: this.opts.padding,
-      compactDrawing: this.opts.compactDrawing
-    };
-    let userOptionBackup = {
-      padding: this.userOpts.canvas.padding,
-      compactDrawing: this.userOpts.layout.graph.compactDrawing
-    };
+    const paddingBackup = this.userOpts.canvas.padding;
+    const compactBackup = this.userOpts.layout.graph.compactDrawing;
 
     // Overwrite options when weights are added
     if (weights !== null) {
       const paddingIncrease = this.userOpts.visualizations.weights.additionalPadding;
-      this.userOpts.canvas.padding += paddingIncrease;
+      this.userOpts.canvas.padding = paddingBackup + paddingIncrease;
       this.userOpts.layout.graph.compactDrawing = false;
-      this.opts.padding = this.userOpts.canvas.padding;
-      this.opts.compactDrawing = this.userOpts.layout.graph.compactDrawing;
     }
 
     let preprocessor = this.preprocessor;
@@ -137,10 +127,8 @@ class SvgDrawer {
 
     // Reset options in case weights were added.
     if (weights !== null) {
-      this.opts.padding = legacyOptionBackup.padding;
-      this.opts.compactDrawing = legacyOptionBackup.compactDrawing;
-      this.userOpts.canvas.padding = userOptionBackup.padding;
-      this.userOpts.layout.graph.compactDrawing = userOptionBackup.compactDrawing;
+      this.userOpts.canvas.padding = paddingBackup;
+      this.userOpts.layout.graph.compactDrawing = compactBackup;
     }
 
     return target;
@@ -226,7 +214,6 @@ class SvgDrawer {
   }
 
   setAtomAnnotationFormatter(formatter: AtomAnnotationFormatter | null): void {
-    this.opts.atomAnnotationFormatter = formatter;
     this.userOpts.annotations.formatter = formatter;
   }
 

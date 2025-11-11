@@ -139,14 +139,12 @@ test('SvgDrawer applies user padding increase when weights are supplied', () => 
   const basePadding = drawer.userOpts.canvas.padding;
   const additionalPadding = 25;
   drawer.userOpts.visualizations.weights.additionalPadding = additionalPadding;
-  drawer.opts.weights.additionalPadding = 0;
 
   const recordings = [];
   const originalInitDraw = drawer.preprocessor.initDraw.bind(drawer.preprocessor);
   drawer.preprocessor.initDraw = function (...args) {
     recordings.push({
-      userPadding: drawer.userOpts.canvas.padding,
-      legacyPadding: drawer.opts.padding
+      userPadding: drawer.userOpts.canvas.padding
     });
     return originalInitDraw(...args);
   };
@@ -157,11 +155,8 @@ test('SvgDrawer applies user padding increase when weights are supplied', () => 
 
   assert.equal(recordings.length, 2);
   assert.equal(recordings[0].userPadding, basePadding);
-  assert.equal(recordings[0].legacyPadding, basePadding);
   assert.equal(recordings[1].userPadding, basePadding + additionalPadding);
-  assert.equal(recordings[1].legacyPadding, basePadding + additionalPadding);
   assert.equal(drawer.userOpts.canvas.padding, basePadding);
-  assert.equal(drawer.opts.padding, basePadding);
 });
 
 test('SvgLabelRenderer uses typography defaults', () => {
