@@ -92,6 +92,11 @@ test('SvgWrapper respects atom sizing options', () => {
       highlights: {
         fallbackColor: '#123456',
         fallbackRadiusFactor: 0.33
+      },
+      themes: {
+        dark: {
+          HIGHLIGHT: '#123456'
+        }
       }
     }
   });
@@ -107,6 +112,46 @@ test('SvgWrapper respects atom sizing options', () => {
   const expectedRadius = (manager.userOpts.appearance.highlights.fallbackRadiusFactor * manager.userOpts.rendering.bonds.bondLength).toString();
   assert.equal(highlight.getAttribute('r'), expectedRadius);
   assert.equal(highlight.getAttribute('fill'), '#123456');
+});
+
+test('SvgWrapper falls back to appearance highlight color when theme lacks override', () => {
+  const manager = new OptionsManager({
+    canvas: {},
+    appearance: {
+      highlights: {
+        fallbackColor: '#abcdef'
+      }
+    }
+  });
+  delete manager.userOpts.appearance.themes.dark.HIGHLIGHT;
+  const themeManager = new ThemeManager(manager.userOpts.appearance.themes, 'dark');
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  const wrapper = new SvgWrapper(themeManager, svg, manager.userOpts, manager.derivedOpts, true);
+  wrapper.drawAtomHighlight(0, 0);
+  const highlight = wrapper.highlights.at(-1);
+  assert.equal(highlight.getAttribute('fill'), '#abcdef');
+});
+
+test('SvgWrapper drawAtomHighlight prefers theme highlight color', () => {
+  const manager = new OptionsManager({
+    canvas: {},
+    appearance: {
+      highlights: {
+        fallbackColor: '#111111'
+      },
+      themes: {
+        dark: {
+          HIGHLIGHT: '#2468ac'
+        }
+      }
+    }
+  });
+  const themeManager = new ThemeManager(manager.userOpts.appearance.themes, 'dark');
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  const wrapper = new SvgWrapper(themeManager, svg, manager.userOpts, manager.derivedOpts, true);
+  wrapper.drawAtomHighlight(1, 1);
+  const highlight = wrapper.highlights.at(-1);
+  assert.equal(highlight.getAttribute('fill'), '#2468ac');
 });
 
 test('SvgWrapper uses annotation mask scales', () => {

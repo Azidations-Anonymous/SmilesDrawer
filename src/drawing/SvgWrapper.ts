@@ -415,9 +415,11 @@ class SvgWrapper implements IDrawingSurface {
     let ball = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     ball.setAttributeNS(null, 'cx', x.toString());
     ball.setAttributeNS(null, 'cy', y.toString());
-    const highlightRadius = this.userOpts.appearance.highlights.fallbackRadiusFactor * this.userOpts.rendering.bonds.bondLength;
+    const highlightConfig = this.userOpts.appearance.highlights;
+    const highlightRadius = highlightConfig.fallbackRadiusFactor * this.userOpts.rendering.bonds.bondLength;
     ball.setAttributeNS(null, 'r', highlightRadius.toString());
-    ball.setAttributeNS(null, 'fill', color ?? this.userOpts.appearance.highlights.fallbackColor);
+    const fillColor = color ?? this.themeManager.getHighlightColor(highlightConfig.fallbackColor);
+    ball.setAttributeNS(null, 'fill', fillColor);
 
     this.highlights.push(ball);
   }

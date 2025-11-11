@@ -247,7 +247,7 @@ class CanvasDrawer {
 
         const highlightConfig = this.userOpts.appearance.highlights;
         const radius = highlightConfig.fallbackRadiusFactor * this.userOpts.rendering.bonds.bondLength;
-        const fill = color ?? highlightConfig.fallbackColor;
+        const fill = color ?? this.themeManager.getHighlightColor(highlightConfig.fallbackColor);
 
         this.ctx.save();
         this.ctx.beginPath();

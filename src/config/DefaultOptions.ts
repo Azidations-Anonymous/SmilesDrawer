@@ -21,7 +21,8 @@ const themeDefaults: IThemeMap = {
     B: '#e67e22',
     SI: '#e67e22',
     H: '#aaa',
-    BACKGROUND: '#141414'
+    BACKGROUND: '#141414',
+    HIGHLIGHT: '#03fc9d'
   },
   light: {
     C: '#222',
@@ -36,7 +37,8 @@ const themeDefaults: IThemeMap = {
     B: '#e67e22',
     SI: '#e67e22',
     H: '#666',
-    BACKGROUND: '#fff'
+    BACKGROUND: '#fff',
+    HIGHLIGHT: '#03fc9d'
   },
   oldschool: {
     C: '#000',
@@ -51,7 +53,8 @@ const themeDefaults: IThemeMap = {
     B: '#000',
     SI: '#000',
     H: '#000',
-    BACKGROUND: '#fff'
+    BACKGROUND: '#fff',
+    HIGHLIGHT: '#03fc9d'
   },
   "solarized": {
     C: "#586e75",
@@ -66,7 +69,8 @@ const themeDefaults: IThemeMap = {
     B: "#2aa198",
     SI: "#2aa198",
     H: "#657b83",
-    BACKGROUND: "#fff"
+    BACKGROUND: "#fff",
+    HIGHLIGHT: '#03fc9d'
   },
   "solarized-dark": {
     C: "#93a1a1",
@@ -81,7 +85,8 @@ const themeDefaults: IThemeMap = {
     B: "#2aa198",
     SI: "#2aa198",
     H: "#839496",
-    BACKGROUND: "#fff"
+    BACKGROUND: "#fff",
+    HIGHLIGHT: '#03fc9d'
   },
   "matrix": {
     C: "#678c61",
@@ -96,7 +101,8 @@ const themeDefaults: IThemeMap = {
     B: "#50b45a",
     SI: "#409931",
     H: "#426644",
-    BACKGROUND: "#fff"
+    BACKGROUND: "#fff",
+    HIGHLIGHT: '#03fc9d'
   },
   "github": {
     C: "#24292f",
@@ -111,7 +117,8 @@ const themeDefaults: IThemeMap = {
     B: "#fb8f44",
     SI: "#bc4c00",
     H: "#57606a",
-    BACKGROUND: "#fff"
+    BACKGROUND: "#fff",
+    HIGHLIGHT: '#03fc9d'
   },
   "carbon": {
     C: "#161616",
@@ -126,7 +133,8 @@ const themeDefaults: IThemeMap = {
     B: "#8a3800",
     SI: "#e67e22",
     H: "#525252",
-    BACKGROUND: "#fff"
+    BACKGROUND: "#fff",
+    HIGHLIGHT: '#03fc9d'
   },
   "cyberpunk": {
     C: "#ea00d9",
@@ -141,7 +149,8 @@ const themeDefaults: IThemeMap = {
     B: "#ff00ff",
     SI: "#ffffff",
     H: "#913cb1",
-    BACKGROUND: "#fff"
+    BACKGROUND: "#fff",
+    HIGHLIGHT: '#03fc9d'
   },
   "gruvbox": {
     C: "#665c54",
@@ -156,7 +165,8 @@ const themeDefaults: IThemeMap = {
     B: "#689d6a",
     SI: "#427b58",
     H: "#7c6f64",
-    BACKGROUND: "#fbf1c7"
+    BACKGROUND: "#fbf1c7",
+    HIGHLIGHT: '#03fc9d'
   },
   "gruvbox-dark": {
     C: "#ebdbb2",
@@ -171,7 +181,8 @@ const themeDefaults: IThemeMap = {
     B: "#8ec07c",
     SI: "#83a598",
     H: "#bdae93",
-    BACKGROUND: "#282828"
+    BACKGROUND: "#282828",
+    HIGHLIGHT: '#03fc9d'
   },
   custom: {
     C: '#222',
@@ -186,7 +197,8 @@ const themeDefaults: IThemeMap = {
     B: '#e67e22',
     SI: '#e67e22',
     H: '#666',
-    BACKGROUND: '#fff'
+    BACKGROUND: '#fff',
+    HIGHLIGHT: '#03fc9d'
   }
 };
 

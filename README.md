@@ -352,7 +352,8 @@ The default options are defined as follows (auto-generated via `node scripts/upd
       dashPattern: [
         3,
         2
-      ]
+      ],
+      tripleBondSpacingDivider: 1.5
     },
     atoms: {
       atomVisualization: 'default',
@@ -377,7 +378,8 @@ The default options are defined as follows (auto-generated via `node scripts/upd
     aromatic: {
       piSystemInset: 7,
       overlayInset: 7,
-      overlayClampRatio: 0.5
+      overlayClampRatio: 0.5,
+      overlayColor: 'C'
     }
   },
   layout: {
@@ -385,10 +387,11 @@ The default options are defined as follows (auto-generated via `node scripts/upd
       compactDrawing: true,
       overlapSensitivity: 0.42,
       overlapResolutionIterations: 1,
-      defaultBranchAngleRad: 1.0472,
+      defaultBranchAngleRad: 2.094395102393,
       linearBondToleranceRad: 0.1,
       rotationSnapIncrementDeg: 30,
       rotationSnapDeadzoneDeg: 15,
+      finetuneRotationOffsetDeg: 1,
       centerOfMassRadiusFactor: 2,
       rotationJitterEpsilon: 0.001
     },
@@ -408,7 +411,8 @@ The default options are defined as follows (auto-generated via `node scripts/upd
     overlap: {
       ringDivisionSegments: 6,
       finetuneClashDistanceFactor: 0.8,
-      rotatableEdgeCenteringFactor: 0.5
+      rotatableEdgeCenteringFactor: 0.5,
+      terminalPushAngleDeg: 20
     }
   },
   typography: {
@@ -464,6 +468,29 @@ The default options are defined as follows (auto-generated via `node scripts/upd
       ]
     }
   },
+  reactions: {
+    scale: null,
+    spacing: {
+      bondLengthMultiplier: 0.333333333333
+    },
+    font: {
+      scale: 0.8,
+      family: null
+    },
+    plus: {
+      sizeBondLengthMultiplier: 0.3,
+      thicknessBondThicknessMultiplier: 1
+    },
+    arrow: {
+      lengthBondLengthMultiplier: 4,
+      headSizeBondLengthMultiplier: 0.2,
+      thicknessBondThicknessMultiplier: 1,
+      marginBondLengthMultiplier: 0.1
+    },
+    weights: {
+      normalize: false
+    }
+  },
   appearance: {
     themes: {
       dark: {
@@ -479,7 +506,8 @@ The default options are defined as follows (auto-generated via `node scripts/upd
         B: '#e67e22',
         SI: '#e67e22',
         H: '#aaa',
-        BACKGROUND: '#141414'
+        BACKGROUND: '#141414',
+        HIGHLIGHT: '#03fc9d'
       },
       light: {
         C: '#222',
@@ -494,7 +522,8 @@ The default options are defined as follows (auto-generated via `node scripts/upd
         B: '#e67e22',
         SI: '#e67e22',
         H: '#666',
-        BACKGROUND: '#fff'
+        BACKGROUND: '#fff',
+        HIGHLIGHT: '#03fc9d'
       },
       oldschool: {
         C: '#000',
@@ -509,7 +538,8 @@ The default options are defined as follows (auto-generated via `node scripts/upd
         B: '#000',
         SI: '#000',
         H: '#000',
-        BACKGROUND: '#fff'
+        BACKGROUND: '#fff',
+        HIGHLIGHT: '#03fc9d'
       },
       solarized: {
         C: '#586e75',
@@ -524,7 +554,8 @@ The default options are defined as follows (auto-generated via `node scripts/upd
         B: '#2aa198',
         SI: '#2aa198',
         H: '#657b83',
-        BACKGROUND: '#fff'
+        BACKGROUND: '#fff',
+        HIGHLIGHT: '#03fc9d'
       },
       'solarized-dark': {
         C: '#93a1a1',
@@ -539,7 +570,8 @@ The default options are defined as follows (auto-generated via `node scripts/upd
         B: '#2aa198',
         SI: '#2aa198',
         H: '#839496',
-        BACKGROUND: '#fff'
+        BACKGROUND: '#fff',
+        HIGHLIGHT: '#03fc9d'
       },
       matrix: {
         C: '#678c61',
@@ -554,7 +586,8 @@ The default options are defined as follows (auto-generated via `node scripts/upd
         B: '#50b45a',
         SI: '#409931',
         H: '#426644',
-        BACKGROUND: '#fff'
+        BACKGROUND: '#fff',
+        HIGHLIGHT: '#03fc9d'
       },
       github: {
         C: '#24292f',
@@ -569,7 +602,8 @@ The default options are defined as follows (auto-generated via `node scripts/upd
         B: '#fb8f44',
         SI: '#bc4c00',
         H: '#57606a',
-        BACKGROUND: '#fff'
+        BACKGROUND: '#fff',
+        HIGHLIGHT: '#03fc9d'
       },
       carbon: {
         C: '#161616',
@@ -584,7 +618,8 @@ The default options are defined as follows (auto-generated via `node scripts/upd
         B: '#8a3800',
         SI: '#e67e22',
         H: '#525252',
-        BACKGROUND: '#fff'
+        BACKGROUND: '#fff',
+        HIGHLIGHT: '#03fc9d'
       },
       cyberpunk: {
         C: '#ea00d9',
@@ -599,7 +634,8 @@ The default options are defined as follows (auto-generated via `node scripts/upd
         B: '#ff00ff',
         SI: '#ffffff',
         H: '#913cb1',
-        BACKGROUND: '#fff'
+        BACKGROUND: '#fff',
+        HIGHLIGHT: '#03fc9d'
       },
       gruvbox: {
         C: '#665c54',
@@ -614,7 +650,8 @@ The default options are defined as follows (auto-generated via `node scripts/upd
         B: '#689d6a',
         SI: '#427b58',
         H: '#7c6f64',
-        BACKGROUND: '#fbf1c7'
+        BACKGROUND: '#fbf1c7',
+        HIGHLIGHT: '#03fc9d'
       },
       'gruvbox-dark': {
         C: '#ebdbb2',
@@ -629,7 +666,8 @@ The default options are defined as follows (auto-generated via `node scripts/upd
         B: '#8ec07c',
         SI: '#83a598',
         H: '#bdae93',
-        BACKGROUND: '#282828'
+        BACKGROUND: '#282828',
+        HIGHLIGHT: '#03fc9d'
       },
       custom: {
         C: '#222',
@@ -644,7 +682,8 @@ The default options are defined as follows (auto-generated via `node scripts/upd
         B: '#e67e22',
         SI: '#e67e22',
         H: '#666',
-        BACKGROUND: '#fff'
+        BACKGROUND: '#fff',
+        HIGHLIGHT: '#03fc9d'
       }
     },
     highlights: {

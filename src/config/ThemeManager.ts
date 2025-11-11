@@ -44,6 +44,14 @@ class ThemeManager {
     // manager that the theme has changed so that colors can be changed
     // on the fly
   }
+
+  getHighlightColor(fallback?: string): string {
+    if (this.theme && typeof this.theme.HIGHLIGHT === 'string' && this.theme.HIGHLIGHT.length > 0) {
+      return this.theme.HIGHLIGHT;
+    }
+
+    return fallback ?? this.getColor('C');
+  }
 }
 
 export = ThemeManager;

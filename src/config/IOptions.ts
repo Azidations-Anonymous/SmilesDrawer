@@ -23,6 +23,7 @@ interface IThemeColors {
   SI: string;
   H: string;
   BACKGROUND: string;
+  HIGHLIGHT?: string;
 }
 
 /**

@@ -101,6 +101,7 @@ test('CanvasDrawer drawAtomHighlight uses appearance configuration', () => {
   userOptions.appearance.highlights.fallbackColor = '#ff00ff';
   userOptions.appearance.highlights.fallbackRadiusFactor = 0.4;
   userOptions.rendering.bonds.bondLength = 50;
+  delete userOptions.appearance.themes.light.HIGHLIGHT;
   const themeManager = new ThemeManager(userOptions.appearance.themes, 'light');
   const drawer = new CanvasDrawer(canvas, themeManager, userOptions, {
     bondLengthSq: 0,
@@ -118,4 +119,25 @@ test('CanvasDrawer drawAtomHighlight uses appearance configuration', () => {
   const fillCall = calls.find((call) => call.type === 'fill');
   assert.equal(fillCall.fillStyle, '#ff00ff');
   assert.equal(fillCall.globalAlpha, 0.65);
+});
+
+test('CanvasDrawer drawAtomHighlight uses theme highlight color when available', () => {
+  ensureWindow();
+  const { canvas, calls } = createCanvasStub();
+  const userOptions = getDefaultUserOptions();
+  userOptions.appearance.themes.light.HIGHLIGHT = '#13579b';
+  userOptions.rendering.bonds.bondLength = 40;
+  const themeManager = new ThemeManager(userOptions.appearance.themes, 'light');
+  const drawer = new CanvasDrawer(canvas, themeManager, userOptions, {
+    bondLengthSq: 0,
+    halfBondSpacing: 0,
+    halfFontSizeLarge: 10,
+    quarterFontSizeLarge: 5,
+    fifthFontSizeSmall: 2
+  });
+
+  calls.length = 0;
+  drawer.drawAtomHighlight(5, 5);
+  const fillCall = calls.find((call) => call.type === 'fill');
+  assert.equal(fillCall.fillStyle, '#13579b');
 });
