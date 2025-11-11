@@ -164,10 +164,11 @@ class SvgDrawer {
 
     let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
-    // 500 as a size is arbritrary, but the canvas is scaled when drawn to the canvas anyway
-    svg.setAttributeNS(null, 'viewBox', '0 0 ' + 500 + ' ' + 500);
-    svg.setAttributeNS(null, 'width', 500 + '');
-    svg.setAttributeNS(null, 'height', 500 + '');
+    const canvasWidth = this.userOpts.canvas.width;
+    const canvasHeight = this.userOpts.canvas.height;
+    svg.setAttributeNS(null, 'viewBox', '0 0 ' + canvasWidth + ' ' + canvasHeight);
+    svg.setAttributeNS(null, 'width', canvasWidth + '');
+    svg.setAttributeNS(null, 'height', canvasHeight + '');
     svg.setAttributeNS(null, 'style', 'visibility: hidden: position: absolute; left: -1000px');
     document.body.appendChild(svg);
     this.draw(data, svg, themeName, null, infoOnly);
