@@ -80,11 +80,11 @@ class PositioningManager {
             // Since the first vertex is at (0, 0), create a vector at (bondLength, 0)
             // and rotate it by 90°
 
-            let dummy = new Vector2(this.drawer.opts.bondLength, 0);
+            let dummy = new Vector2(this.drawer.userOpts.rendering.bonds.bondLength, 0);
             dummy.rotate(MathHelper.toRad(-60));
 
             vertex.previousPosition = dummy;
-            vertex.setPosition(this.drawer.opts.bondLength, 0);
+            vertex.setPosition(this.drawer.userOpts.rendering.bonds.bondLength, 0);
             vertex.angle = MathHelper.toRad(-60);
 
             // Do not position the vertex if it belongs to a bridged ring that is positioned using a layout algorithm.
@@ -115,7 +115,7 @@ class PositioningManager {
                 }
               }
 
-              pos.invert().normalize().multiplyScalar(this.drawer.opts.bondLength).add(previousVertex.position);
+              pos.invert().normalize().multiplyScalar(this.drawer.userOpts.rendering.bonds.bondLength).add(previousVertex.position);
             } else {
               pos = joinedVertex.position.clone().rotateAround(Math.PI, previousVertex.position);
             }
@@ -126,7 +126,7 @@ class PositioningManager {
           } else {
             // If the previous vertex was not part of a ring, draw a bond based
             // on the global angle of the previous bond
-            let v = new Vector2(this.drawer.opts.bondLength, 0);
+            let v = new Vector2(this.drawer.userOpts.rendering.bonds.bondLength, 0);
 
             v.rotate(angle);
             v.add(previousVertex.position);
@@ -148,7 +148,7 @@ class PositioningManager {
             nextCenter.invert();
             nextCenter.normalize();
 
-            let r = MathHelper.polyCircumradius(this.drawer.opts.bondLength, nextRing.members.length);
+            let r = MathHelper.polyCircumradius(this.drawer.userOpts.rendering.bonds.bondLength, nextRing.members.length);
             nextCenter.multiplyScalar(r);
             nextCenter.add(vertex.position);
 
@@ -163,7 +163,7 @@ class PositioningManager {
             nextCenter.invert();
             nextCenter.normalize();
 
-            let r = MathHelper.polyCircumradius(this.drawer.opts.bondLength, nextRing.getSize());
+            let r = MathHelper.polyCircumradius(this.drawer.userOpts.rendering.bonds.bondLength, nextRing.getSize());
 
             nextCenter.multiplyScalar(r);
             nextCenter.add(vertex.position);
@@ -213,8 +213,8 @@ class PositioningManager {
               let proposedAngleA = MathHelper.toRad(60);
               let proposedAngleB = -proposedAngleA;
 
-              let proposedVectorA = new Vector2(this.drawer.opts.bondLength, 0);
-              let proposedVectorB = new Vector2(this.drawer.opts.bondLength, 0);
+              let proposedVectorA = new Vector2(this.drawer.userOpts.rendering.bonds.bondLength, 0);
+              let proposedVectorB = new Vector2(this.drawer.userOpts.rendering.bonds.bondLength, 0);
 
               proposedVectorA.rotate(proposedAngleA).add(vertex.position);
               proposedVectorB.rotate(proposedAngleB).add(vertex.position);

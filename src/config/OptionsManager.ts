@@ -1,13 +1,15 @@
-import { IMoleculeOptions, IUserOptions, IThemeColors } from './IOptions';
-import { normalizeUserOptions, materializeLegacyOptions } from './OptionsNormalizer';
+import { IMoleculeOptions, IUserOptions, IDerivedOptions, IThemeColors } from './IOptions';
+import { normalizeUserOptions, materializeLegacyOptions, computeDerivedOptions } from './OptionsNormalizer';
 
 class OptionsManager {
     userOpts: IUserOptions;
+    derivedOpts: IDerivedOptions;
     opts: IMoleculeOptions;
     theme: IThemeColors;
 
     constructor(userOptions: Partial<IMoleculeOptions> | Partial<IUserOptions> = {}) {
         this.userOpts = normalizeUserOptions(userOptions);
+        this.derivedOpts = computeDerivedOptions(this.userOpts);
         this.opts = materializeLegacyOptions(this.userOpts);
 
             this.opts.halfBondSpacing = this.opts.bondSpacing / 2.0;

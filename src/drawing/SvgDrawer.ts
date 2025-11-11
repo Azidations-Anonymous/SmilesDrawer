@@ -15,7 +15,7 @@ import GaussDrawer = require('./GaussDrawer');
 import SvgEdgeDrawer = require('./draw/SvgEdgeDrawer');
 import SvgVertexDrawer = require('./draw/SvgVertexDrawer');
 import SvgWeightsDrawer = require('./draw/SvgWeightsDrawer');
-import { AtomAnnotationFormatter, IMoleculeOptions } from '../config/IOptions';
+import { AtomAnnotationFormatter, IMoleculeOptions, IUserOptions } from '../config/IOptions';
 import { AtomHighlight } from '../preprocessing/MolecularDataTypes';
 import IDrawingSurface = require('./renderers/IDrawingSurface');
 
@@ -34,7 +34,7 @@ class SvgDrawer {
     private vertexDrawer: SvgVertexDrawer;
     private weightsDrawer: SvgWeightsDrawer;
 
-  constructor(options: Partial<IMoleculeOptions>, clear: boolean = true) {
+  constructor(options: Partial<IMoleculeOptions> | Partial<IUserOptions>, clear: boolean = true) {
       this.preprocessor = new MolecularPreprocessor(options);
       this.opts = this.preprocessor.opts;
       this.clear = clear;

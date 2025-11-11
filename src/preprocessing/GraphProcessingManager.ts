@@ -24,7 +24,7 @@ class GraphProcessingManager {
 
         this.drawer.totalOverlapScore = this.drawer.getOverlapScore().total;
 
-        for (var o = 0; o < this.drawer.opts.overlapResolutionIterations; o++) {
+        for (var o = 0; o < this.drawer.userOpts.layout.graph.overlapResolutionIterations; o++) {
           for (var i = 0; i < this.drawer.graph.edges.length; i++) {
             let edge = this.drawer.graph.edges[i];
             if (this.drawer.isEdgeRotatable(edge)) {
@@ -41,7 +41,7 @@ class GraphProcessingManager {
               }
 
               let subTreeOverlap = this.drawer.getSubtreeOverlapScore(b, a, overlapScore.vertexScores);
-              if (subTreeOverlap.value > this.drawer.opts.overlapSensitivity) {
+              if (subTreeOverlap.value > this.drawer.userOpts.layout.graph.overlapSensitivity) {
                 let vertexA = this.drawer.graph.vertices[a];
                 let vertexB = this.drawer.graph.vertices[b];
                 let neighboursB = vertexB.getNeighbours(a);
@@ -107,12 +107,13 @@ class GraphProcessingManager {
 
         this.drawer.resolveSecondaryOverlaps(overlapScore.scores);
 
-        if (this.drawer.opts.isomeric) {
+        if (this.drawer.userOpts.rendering.stereochemistry.isomeric) {
           this.drawer.annotateStereochemistry();
         }
 
         // Initialize pseudo elements or shortcuts
-        if (this.drawer.opts.compactDrawing && this.drawer.opts.atomVisualization === 'default') {
+        if (this.drawer.userOpts.layout.graph.compactDrawing &&
+            this.drawer.userOpts.rendering.atoms.atomVisualization === 'default') {
           this.drawer.initPseudoElements();
         }
 

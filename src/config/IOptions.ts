@@ -346,12 +346,21 @@ interface IUserOptions {
   pixelExport: IPixelExportOptions;
 }
 
+interface IDerivedOptions {
+  bondLengthSq: number;
+  halfBondSpacing: number;
+  halfFontSizeLarge: number;
+  quarterFontSizeLarge: number;
+  fifthFontSizeSmall: number;
+}
+
 export {
   IThemeColors,
   IThemeMap,
   IWeightOptions,
   IMoleculeOptions,
   IUserOptions,
+  IDerivedOptions,
   IUserMetaOptions,
   ICanvasOptions,
   IRenderingOptions,

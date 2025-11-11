@@ -18,7 +18,10 @@ class InitializationManager {
         this.drawer.ringIdCounter = 0;
         this.drawer.ringConnectionIdCounter = 0;
 
-        this.drawer.graph = new Graph(data, this.drawer.opts.isomeric);
+        this.drawer.graph = new Graph(
+            data,
+            this.drawer.userOpts.rendering.stereochemistry.isomeric
+        );
         this.drawer.rings = Array();
         this.drawer.ringConnections = Array();
 
@@ -40,7 +43,7 @@ class InitializationManager {
 
     initHydrogens(): void {
         // Do not draw hydrogens except when they are connected to a stereocenter connected to two or more rings.
-        if (!this.drawer.opts.explicitHydrogens) {
+        if (!this.drawer.userOpts.rendering.atoms.explicitHydrogens) {
           for (var i = 0; i < this.drawer.graph.vertices.length; i++) {
             let vertex = this.drawer.graph.vertices[i];
 

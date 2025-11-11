@@ -461,7 +461,10 @@ class RingManager {
         let orderedNeighbours = ring.getOrderedNeighbours(this.ringConnections);
         let startingAngle = startVertex ? Vector2.subtract(startVertex.position, center).angle() : 0;
 
-        let radius = MathHelper.polyCircumradius(this.drawer.opts.bondLength, ring.getSize());
+        let radius = MathHelper.polyCircumradius(
+          this.drawer.userOpts.rendering.bonds.bondLength,
+          ring.getSize()
+        );
         let angle = MathHelper.centralAngle(ring.getSize());
 
         ring.centralAngle = angle;
@@ -481,9 +484,19 @@ class RingManager {
         // If the ring is bridged, then draw the vertices inside the ring
         // using a force based approach
         if (ring.isBridged) {
-          this.drawer.graph.kkLayout(ring.members.slice(), center, startVertex.id, ring, this.drawer.opts.bondLength,
-            this.drawer.opts.kkThreshold, this.drawer.opts.kkInnerThreshold, this.drawer.opts.kkMaxIteration,
-            this.drawer.opts.kkMaxInnerIteration, this.drawer.opts.kkMaxEnergy);
+          const force = this.drawer.userOpts.layout.force;
+          this.drawer.graph.kkLayout(
+            ring.members.slice(),
+            center,
+            startVertex.id,
+            ring,
+            this.drawer.userOpts.rendering.bonds.bondLength,
+            force.kkThreshold,
+            force.kkInnerThreshold,
+            force.kkMaxIteration,
+            force.kkMaxInnerIteration,
+            force.kkMaxEnergy
+          );
           ring.positioned = true;
 
           // Update the center of the bridged ring
@@ -543,7 +556,10 @@ class RingManager {
             normals[1].normalize();
 
             // Set length from middle of side to center (the apothem)
-            let r = MathHelper.polyCircumradius(this.drawer.opts.bondLength, neighbour.getSize());
+            let r = MathHelper.polyCircumradius(
+              this.drawer.userOpts.rendering.bonds.bondLength,
+              neighbour.getSize()
+            );
             let apothem = MathHelper.apothem(r, neighbour.getSize());
 
             normals[0].multiplyScalar(apothem).add(midpoint);
@@ -583,7 +599,10 @@ class RingManager {
             nextCenter.normalize();
 
             // Get the distance from the vertex to the center
-            let r = MathHelper.polyCircumradius(this.drawer.opts.bondLength, neighbour.getSize());
+            let r = MathHelper.polyCircumradius(
+              this.drawer.userOpts.rendering.bonds.bondLength,
+              neighbour.getSize()
+            );
 
             nextCenter.multiplyScalar(r);
             nextCenter.add(vertexA.position);
@@ -635,7 +654,10 @@ class RingManager {
             continue;
           }
 
-          let radius = MathHelper.polyCircumradius(this.drawer.opts.bondLength, ring.getSize());
+          let radius = MathHelper.polyCircumradius(
+            this.drawer.userOpts.rendering.bonds.bondLength,
+            ring.getSize()
+          );
           let radiusSq = radius * radius;
 
           if (vec.distanceSq(ring.center) < radiusSq) {

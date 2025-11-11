@@ -27,7 +27,9 @@ class MolecularInfoManager {
         let molecularFormula = '';
         let counts = new Map();
 
-        let graph = data === null ? this.drawer.graph : new Graph(data, this.drawer.opts.isomeric);
+        let graph = data === null
+            ? this.drawer.graph
+            : new Graph(data, this.drawer.userOpts.rendering.stereochemistry.isomeric);
 
         // Initialize element count
         for (var i = 0; i < graph.vertices.length; i++) {

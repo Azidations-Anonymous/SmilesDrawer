@@ -120,7 +120,7 @@ class StereochemistryManager {
             wedgeB = 'down';
           }
 
-          if (vertex.value.hasHydrogen && this.drawer.opts.explicitHydrogens) {
+          if (vertex.value.hasHydrogen && this.drawer.userOpts.rendering.atoms.explicitHydrogens) {
             this.drawer.graph.getEdge(vertex.id, neighbours[order[order.length - 1]]).wedge = wedgeA;
           }
 
@@ -134,7 +134,7 @@ class StereochemistryManager {
           let wedgeOrder = new Array(neighbours.length - 1);
           let showHydrogen = vertex.value.rings.length > 1 &&
             vertex.value.hasHydrogen &&
-            this.drawer.opts.explicitHydrogens;
+            this.drawer.userOpts.rendering.atoms.explicitHydrogens;
           let offset = vertex.value.hasHydrogen ? 1 : 0;
 
           for (var j = 0; j < order.length - offset; j++) {

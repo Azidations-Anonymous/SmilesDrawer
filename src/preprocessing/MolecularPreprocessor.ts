@@ -11,7 +11,7 @@ import OptionsManager from "../config/OptionsManager";
 import RingManager = require("./RingManager");
 import IMolecularData = require("./IMolecularData");
 import { SideChoice, AtomHighlight, OverlapScore, SubtreeOverlapScore, VertexOverlapScoreEntry, PositionData } from "./MolecularDataTypes";
-import { IMoleculeOptions, IThemeColors } from "../config/IOptions";
+import { IMoleculeOptions, IUserOptions, IDerivedOptions, IThemeColors } from "../config/IOptions";
 import { BondType, CisTransOrientation } from '../types/CommonTypes';
 import { POSITION_DATA_VERSION } from '../config/Version';
 
@@ -51,6 +51,8 @@ class MolecularPreprocessor implements IMolecularData {
   canvasWrapper: CanvasDrawer | null;
   totalOverlapScore: number;
   opts: IMoleculeOptions;
+  userOpts: IUserOptions;
+  derivedOpts: IDerivedOptions;
   theme: IThemeColors;
   themeManager: ThemeManager;
   data: ParseTree;  // Parse tree data from SMILES parser
@@ -65,7 +67,7 @@ class MolecularPreprocessor implements IMolecularData {
    *
    * @param {Object} options An object containing custom values for different options. It is merged with the default options.
    */
-  constructor(options: Partial<IMoleculeOptions>) {
+  constructor(options: Partial<IMoleculeOptions> | Partial<IUserOptions>) {
       this.ringManager = new RingManager(this);
         this.stereochemistryManager = new StereochemistryManager(this);
         this.overlapResolver = new OverlapResolutionManager(this);
@@ -87,6 +89,8 @@ class MolecularPreprocessor implements IMolecularData {
       this.atomAnnotationNames = new Set();
 
       const optionsManager = new OptionsManager(options);
+          this.userOpts = optionsManager.userOpts;
+          this.derivedOpts = optionsManager.derivedOpts;
           this.opts = optionsManager.opts;
           this.theme = optionsManager.theme;
   }
@@ -812,7 +816,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {Number} [r=currentBondLength*2.0] The radius of vertices to include.
    * @returns {Vector2} The current center of mass.
    */
-  getCurrentCenterOfMassInNeigbourhood(vec: Vector2, r: number = this.opts.bondLength * 2.0): Vector2 {
+  getCurrentCenterOfMassInNeigbourhood(vec: Vector2, r: number = this.userOpts.rendering.bonds.bondLength * 2.0): Vector2 {
       return this.overlapResolver.getCurrentCenterOfMassInNeigbourhood(vec, r);
   }
 

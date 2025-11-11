@@ -1,7 +1,8 @@
 import Options = require('./Options');
 import {
   IMoleculeOptions,
-  IUserOptions
+  IUserOptions,
+  IDerivedOptions
 } from './IOptions';
 import {
   getLegacyDefaultOptions,
@@ -127,7 +128,23 @@ export function translateLegacyToUser(legacy: IMoleculeOptions): IUserOptions {
   };
 }
 
+export function computeDerivedOptions(user: IUserOptions): IDerivedOptions {
+  const bondLength = user.rendering.bonds.bondLength;
+  const bondSpacing = user.rendering.bonds.bondSpacing;
+  const fontSizeLarge = user.typography.fontSizeLarge;
+  const fontSizeSmall = user.typography.fontSizeSmall;
+
+  return {
+    bondLengthSq: bondLength * bondLength,
+    halfBondSpacing: bondSpacing / 2,
+    halfFontSizeLarge: fontSizeLarge / 2,
+    quarterFontSizeLarge: fontSizeLarge / 4,
+    fifthFontSizeSmall: fontSizeSmall / 5
+  };
+}
+
 export function materializeLegacyOptions(user: IUserOptions): IMoleculeOptions {
+  const derived = computeDerivedOptions(user);
   const legacyDefaults = getLegacyDefaultOptions();
 
   return {
@@ -171,7 +188,12 @@ export function materializeLegacyOptions(user: IUserOptions): IMoleculeOptions {
     weights: {
       ...user.visualizations.weights
     },
-    themes: user.appearance.themes || legacyDefaults.themes
+    themes: user.appearance.themes || legacyDefaults.themes,
+    halfBondSpacing: derived.halfBondSpacing,
+    bondLengthSq: derived.bondLengthSq,
+    halfFontSizeLarge: derived.halfFontSizeLarge,
+    quarterFontSizeLarge: derived.quarterFontSizeLarge,
+    fifthFontSizeSmall: derived.fifthFontSizeSmall
   };
 }
 

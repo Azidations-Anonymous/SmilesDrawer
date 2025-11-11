@@ -33,8 +33,9 @@ class OverlapResolutionManager {
 
             let dist = Vector2.subtract(a.position, b.position).lengthSq();
 
-            if (dist < this.drawer.opts.bondLengthSq) {
-              let weighted = (this.drawer.opts.bondLength - Math.sqrt(dist)) / this.drawer.opts.bondLength;
+            if (dist < this.drawer.derivedOpts.bondLengthSq) {
+              const bondLength = this.drawer.userOpts.rendering.bonds.bondLength;
+              let weighted = (bondLength - Math.sqrt(dist)) / bondLength;
               total += weighted;
               overlapScores[i] += weighted;
               overlapScores[j] += weighted;
@@ -204,17 +205,15 @@ class OverlapResolutionManager {
     }
 
     resolveFinetuneOverlaps(): void {
-        if (!this.drawer.opts.finetuneOverlap) {
+        if (!this.drawer.userOpts.layout.finetune.enabled) {
           return;
         }
 
-        if (this.drawer.totalOverlapScore <= this.drawer.opts.overlapSensitivity) {
+        if (this.drawer.totalOverlapScore <= this.drawer.userOpts.layout.graph.overlapSensitivity) {
           return;
         }
 
-        const bondLengthSq = this.drawer.opts.bondLengthSq !== undefined
-          ? this.drawer.opts.bondLengthSq
-          : this.drawer.opts.bondLength * this.drawer.opts.bondLength;
+        const bondLengthSq = this.drawer.derivedOpts.bondLengthSq;
         const threshold = 0.8 * bondLengthSq;
         const clashingPairs = this.findClashingVertices(threshold);
 
@@ -264,12 +263,12 @@ class OverlapResolutionManager {
         }
 
         const stepAngle = MathHelper.toRad(30);
-        const rawMaxSteps = this.drawer.opts.finetuneOverlapMaxSteps;
+        const rawMaxSteps = this.drawer.userOpts.layout.finetune.maxSteps;
         const maxSteps = Number.isFinite(rawMaxSteps) ? Math.floor(rawMaxSteps) : Number.POSITIVE_INFINITY;
         if (maxSteps <= 0) {
           return;
         }
-        const maxDuration = Math.max(0, this.drawer.opts.finetuneOverlapMaxDurationMs || 0);
+        const maxDuration = Math.max(0, this.drawer.userOpts.layout.finetune.maxDurationMs || 0);
         const startTime = Date.now();
         let processedSteps = 0;
 
@@ -282,7 +281,7 @@ class OverlapResolutionManager {
             break;
           }
 
-          if (this.drawer.totalOverlapScore <= this.drawer.opts.overlapSensitivity) {
+          if (this.drawer.totalOverlapScore <= this.drawer.userOpts.layout.graph.overlapSensitivity) {
             break;
           }
 
@@ -341,7 +340,7 @@ class OverlapResolutionManager {
 
     resolveSecondaryOverlaps(scores: VertexOverlapScoreEntry[]): void {
         for (var i = 0; i < scores.length; i++) {
-          if (scores[i].score > this.drawer.opts.overlapSensitivity) {
+          if (scores[i].score > this.drawer.userOpts.layout.graph.overlapSensitivity) {
             let vertex = this.drawer.graph.vertices[scores[i].id];
 
             if (vertex.isTerminal()) {
@@ -399,7 +398,7 @@ class OverlapResolutionManager {
           }
 
           let s = vertexOverlapScores[vertex.id];
-          if (s > that.drawer.opts.overlapSensitivity) {
+          if (s > that.drawer.userOpts.layout.graph.overlapSensitivity) {
             score += s;
             count++;
           }
@@ -433,7 +432,7 @@ class OverlapResolutionManager {
         return total.divide(count);
     }
 
-    getCurrentCenterOfMassInNeigbourhood(vec: Vector2, r: number = this.drawer.opts.bondLength * 2.0): Vector2 {
+    getCurrentCenterOfMassInNeigbourhood(vec: Vector2, r: number = this.drawer.userOpts.rendering.bonds.bondLength * 2.0): Vector2 {
         let total = new Vector2(0, 0);
         let count = 0;
         let rSq = r * r;
