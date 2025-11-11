@@ -302,10 +302,14 @@ class SmilesDrawer {
      * @returns {{w: Number, h: Number}} The width and height.
      */
     getDimensions(element: HTMLImageElement | HTMLCanvasElement | SVGElement, svg: SVGElement | null = null): {w: number, h: number} {
-        let w = this.drawer.opts.width;
-        let h = this.drawer.opts.height;
+        let w = this.drawer.userOpts.canvas.width;
+        let h = this.drawer.userOpts.canvas.height;
+        const scale = this.drawer.userOpts.canvas.scale;
 
-        if (this.drawer.opts.scale <= 0) {
+        if (scale <= 0) {
+            const hasStyle = typeof (element as HTMLElement).style !== 'undefined';
+            const widthStyle = hasStyle ? ((element as HTMLElement).style?.width ?? '') : '';
+            const heightStyle = hasStyle ? ((element as HTMLElement).style?.height ?? '') : '';
             if (w === null && element instanceof HTMLCanvasElement) {
                 w = element.width;
             } else if (w === null && element instanceof HTMLImageElement) {
@@ -318,12 +322,12 @@ class SmilesDrawer {
                 h = element.height;
             }
 
-            if (element.style.width !== "") {
-                w = parseInt(element.style.width);
+            if (widthStyle !== "") {
+                w = parseInt(widthStyle, 10);
             }
 
-            if (element.style.height !== "") {
-                h = parseInt(element.style.height);
+            if (heightStyle !== "") {
+                h = parseInt(heightStyle, 10);
             }
         } else if (svg) {
             w = parseFloat(svg.style.width);
