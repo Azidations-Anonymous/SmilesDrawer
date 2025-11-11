@@ -118,6 +118,9 @@ export function translateLegacyToUser(legacy: IMoleculeOptions): IUserOptions {
         ...defaults.visualizations.gaussianDefaults
       }
     },
+    reactions: {
+      ...defaults.reactions
+    },
     appearance: {
       ...defaults.appearance,
       themes: legacy.themes

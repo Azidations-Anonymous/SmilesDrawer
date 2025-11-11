@@ -373,6 +373,29 @@ export function getDefaultUserOptions(): IUserOptions {
         defaultColormap: [...defaultGaussianColormap]
       }
     },
+    reactions: {
+      scale: null,
+      spacing: {
+        bondLengthMultiplier: 10 / 30
+      },
+      font: {
+        scale: 0.8,
+        family: null
+      },
+      plus: {
+        sizeBondLengthMultiplier: 9 / 30,
+        thicknessBondThicknessMultiplier: 1.0
+      },
+      arrow: {
+        lengthBondLengthMultiplier: 4.0,
+        headSizeBondLengthMultiplier: 6 / 30,
+        thicknessBondThicknessMultiplier: 1.0,
+        marginBondLengthMultiplier: 3 / 30
+      },
+      weights: {
+        normalize: false
+      }
+    },
     appearance: {
       themes: cloneThemes(),
       highlights: {

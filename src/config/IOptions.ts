@@ -175,6 +175,36 @@ interface IReactionOptions {
   weights: IReactionWeightOptions;
 }
 
+interface IReactionFontOptions {
+  scale: number;
+  family: string | null;
+}
+
+interface IReactionSpacingOptions {
+  bondLengthMultiplier: number;
+}
+
+interface IReactionPlusUserOptions {
+  sizeBondLengthMultiplier: number;
+  thicknessBondThicknessMultiplier: number;
+}
+
+interface IReactionArrowUserOptions {
+  lengthBondLengthMultiplier: number;
+  headSizeBondLengthMultiplier: number;
+  thicknessBondThicknessMultiplier: number;
+  marginBondLengthMultiplier: number;
+}
+
+interface IReactionUserOptions {
+  scale: number | null;
+  spacing: IReactionSpacingOptions;
+  font: IReactionFontOptions;
+  plus: IReactionPlusUserOptions;
+  arrow: IReactionArrowUserOptions;
+  weights: IReactionWeightOptions;
+}
+
 /**
  * Attached pseudo element information for rendering
  */
@@ -348,6 +378,7 @@ interface IUserOptions {
   visualizations: IVisualizationsOptions;
   appearance: IAppearanceOptions;
   pixelExport: IPixelExportOptions;
+  reactions: IReactionUserOptions;
 }
 
 interface IDerivedOptions {
@@ -378,6 +409,7 @@ export {
   IPlusOptions,
   IReactionWeightOptions,
   IReactionOptions,
+  IReactionUserOptions,
   IAttachedPseudoElement,
   AttachedPseudoElements,
   AtomAnnotationFormatter

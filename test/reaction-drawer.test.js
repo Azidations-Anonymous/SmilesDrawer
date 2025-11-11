@@ -46,6 +46,7 @@ test('ReactionDrawer uses custom typography for reagents text', () => {
   userOptions.rendering.bonds.bondThickness = 2;
   userOptions.typography.fontFamily = 'ChemFont';
   userOptions.typography.fontSizeLarge = 28;
+  userOptions.reactions.font.family = 'ReagentFont';
 
   const drawer = new ReactionDrawer({}, userOptions);
   const reaction = new Reaction('CC>O>CC');
@@ -56,11 +57,47 @@ test('ReactionDrawer uses custom typography for reagents text', () => {
   );
   assert(textStyles.length > 0);
   textStyles.forEach((style) => {
-    assert(style.textContent.includes('ChemFont'));
+    assert(style.textContent.includes('ReagentFont'));
     assert(style.textContent.includes(`${drawer.opts.fontSize}pt`));
   });
 
   const arrowLine = svg.querySelector('#arrow line');
   assert(arrowLine);
   assert.equal(Number(arrowLine.getAttribute('stroke-width')), drawer.opts.arrow.thickness);
+});
+
+test('ReactionDrawer honours reaction geometry multipliers', () => {
+  ensureDom();
+  const userOptions = getDefaultUserOptions();
+  userOptions.rendering.bonds.bondLength = 50;
+  userOptions.rendering.bonds.bondThickness = 2;
+  userOptions.reactions.spacing.bondLengthMultiplier = 0.5;
+  userOptions.reactions.plus.sizeBondLengthMultiplier = 0.4;
+  userOptions.reactions.plus.thicknessBondThicknessMultiplier = 1.5;
+  userOptions.reactions.arrow.lengthBondLengthMultiplier = 5;
+  userOptions.reactions.arrow.headSizeBondLengthMultiplier = 0.25;
+  userOptions.reactions.arrow.thicknessBondThicknessMultiplier = 0.5;
+  userOptions.reactions.arrow.marginBondLengthMultiplier = 0.2;
+
+  const drawer = new ReactionDrawer({}, userOptions);
+
+  assert.equal(drawer.opts.spacing, 25);
+  assert.equal(drawer.opts.plus.size, 20);
+  assert.equal(drawer.opts.plus.thickness, 3);
+  assert.equal(drawer.opts.arrow.length, 250);
+  assert.equal(drawer.opts.arrow.headSize, 12.5);
+  assert.equal(drawer.opts.arrow.thickness, 1);
+  assert.equal(drawer.opts.arrow.margin, 10);
+});
+
+test('ReactionDrawer uses reaction-specific scale and weight defaults', () => {
+  ensureDom();
+  const userOptions = getDefaultUserOptions();
+  userOptions.canvas.scale = 0;
+  userOptions.reactions.scale = 1.75;
+  userOptions.reactions.weights.normalize = true;
+
+  const drawer = new ReactionDrawer({}, userOptions);
+  assert.equal(drawer.opts.scale, 1.75);
+  assert.equal(drawer.opts.weights.normalize, true);
 });

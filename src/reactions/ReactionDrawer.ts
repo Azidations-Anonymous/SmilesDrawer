@@ -32,35 +32,8 @@ class ReactionDrawer {
         this.userOpts = this.drawer.userOpts;
         this.derivedOpts = this.drawer.derivedOpts;
         this.themeManager = null;
-        const bondLength = this.userOpts.rendering.bonds.bondLength;
-        const bondThickness = this.userOpts.rendering.bonds.bondThickness;
-        const scale = this.userOpts.canvas.scale > 0.0 ? this.userOpts.canvas.scale : 1.0;
-        const spacing = bondLength * (10 / 30);
-        const plusSize = bondLength * (9 / 30);
-        const arrowHeadSize = bondLength * (6 / 30);
-        const arrowMargin = bondLength * (3 / 30);
-
-        this.defaultOptions = {
-            scale,
-            fontSize: this.userOpts.typography.fontSizeLarge * 0.8,
-            fontFamily: this.userOpts.typography.fontFamily,
-            spacing,
-            plus: {
-                size: plusSize,
-                thickness: bondThickness
-            },
-            arrow: {
-                length: bondLength * 4.0,
-                headSize: arrowHeadSize,
-                thickness: bondThickness,
-                margin: arrowMargin
-            },
-            weights: {
-                normalize: false
-            }
-        }
-
-        this.opts = Options.extend(true, this.defaultOptions, options) as IReactionOptions;
+        this.defaultOptions = this.buildReactionDefaults();
+        this.opts = Options.extend(true, {}, this.defaultOptions, options) as IReactionOptions;
     }
 
     /**
@@ -452,6 +425,45 @@ class ReactionDrawer {
         const fallbackWidth = Number(svg.getAttribute('width')) || 0;
         const fallbackHeight = Number(svg.getAttribute('height')) || 0;
         return { width: fallbackWidth, height: fallbackHeight };
+    }
+
+    private buildReactionDefaults(): IReactionOptions {
+        const reactionPrefs = this.userOpts.reactions;
+        const bondLength = this.userOpts.rendering.bonds.bondLength;
+        const bondThickness = this.userOpts.rendering.bonds.bondThickness;
+        const canvasScale = this.userOpts.canvas.scale > 0.0 ? this.userOpts.canvas.scale : 1.0;
+        const preferredScale = reactionPrefs.scale !== null ? reactionPrefs.scale : null;
+        const scale = preferredScale !== null && preferredScale > 0 ? preferredScale : canvasScale;
+
+        const spacing = bondLength * reactionPrefs.spacing.bondLengthMultiplier;
+        const fontSize = this.userOpts.typography.fontSizeLarge * reactionPrefs.font.scale;
+        const fontFamily = reactionPrefs.font.family || this.userOpts.typography.fontFamily;
+        const plusSize = bondLength * reactionPrefs.plus.sizeBondLengthMultiplier;
+        const plusThickness = bondThickness * reactionPrefs.plus.thicknessBondThicknessMultiplier;
+        const arrowLength = bondLength * reactionPrefs.arrow.lengthBondLengthMultiplier;
+        const arrowHeadSize = bondLength * reactionPrefs.arrow.headSizeBondLengthMultiplier;
+        const arrowThickness = bondThickness * reactionPrefs.arrow.thicknessBondThicknessMultiplier;
+        const arrowMargin = bondLength * reactionPrefs.arrow.marginBondLengthMultiplier;
+
+        return {
+            scale,
+            fontSize,
+            fontFamily,
+            spacing,
+            plus: {
+                size: plusSize,
+                thickness: plusThickness
+            },
+            arrow: {
+                length: arrowLength,
+                headSize: arrowHeadSize,
+                thickness: arrowThickness,
+                margin: arrowMargin
+            },
+            weights: {
+                normalize: reactionPrefs.weights.normalize
+            }
+        };
     }
 }
 
