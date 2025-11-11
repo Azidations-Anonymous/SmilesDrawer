@@ -5,7 +5,7 @@ import RingConnection = require('../graph/RingConnection');
 import Vertex = require('../graph/Vertex');
 import Edge = require('../graph/Edge');
 import Vector2 = require('../graph/Vector2');
-import { IMoleculeOptions, IUserOptions, IDerivedOptions } from '../config/IOptions';
+import { IUserOptions, IDerivedOptions } from '../config/IOptions';
 import { SideChoice, AtomHighlight, PositionData } from './MolecularDataTypes';
 import { BondType } from '../types/CommonTypes';
 
@@ -30,10 +30,6 @@ class MolecularDataSnapshot implements IMolecularData {
 
   get ringConnections(): RingConnection[] {
     return this.source.ringConnections;
-  }
-
-  get opts(): IMoleculeOptions {
-    return this.source.opts;
   }
 
   get userOpts(): IUserOptions {

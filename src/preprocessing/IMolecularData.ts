@@ -4,7 +4,7 @@ import RingConnection = require('../graph/RingConnection');
 import Vertex = require('../graph/Vertex');
 import Edge = require('../graph/Edge');
 import Vector2 = require('../graph/Vector2');
-import { IMoleculeOptions, IUserOptions, IDerivedOptions } from '../config/IOptions';
+import { IUserOptions, IDerivedOptions } from '../config/IOptions';
 import { AtomHighlight, SideChoice, PositionData } from './MolecularDataTypes';
 import { BondType } from '../types/CommonTypes';
 
@@ -14,7 +14,6 @@ interface IMolecularData {
   graph: Graph;
   rings: Ring[];
   ringConnections: RingConnection[];
-  opts: IMoleculeOptions;
   userOpts: IUserOptions;
   derivedOpts: IDerivedOptions;
   bridgedRing: boolean;

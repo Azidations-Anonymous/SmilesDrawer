@@ -50,7 +50,6 @@ class MolecularPreprocessor implements IMolecularData {
   doubleBondConfig: '/' | '\\' | null;
   canvasWrapper: CanvasDrawer | null;
   totalOverlapScore: number;
-  opts: IMoleculeOptions;
   userOpts: IUserOptions;
   derivedOpts: IDerivedOptions;
   theme: IThemeColors;
@@ -91,7 +90,6 @@ class MolecularPreprocessor implements IMolecularData {
       const optionsManager = new OptionsManager(options);
           this.userOpts = optionsManager.userOpts;
           this.derivedOpts = optionsManager.derivedOpts;
-          this.opts = optionsManager.opts;
           this.theme = optionsManager.theme;
   }
 

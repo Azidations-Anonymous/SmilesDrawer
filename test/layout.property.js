@@ -425,7 +425,8 @@ describe('Kamada-Kawai robustness properties', () => {
                 const baseline = new MolecularPreprocessor({});
                 baseline.initDraw(parseTree, 'light', false, []);
                 baseline.processGraph();
-                const baseEnergy = computeSpringEnergyAverage(baseline.graph, baseline.opts.bondLength);
+                const baselineBondLength = baseline.userOpts.rendering.bonds.bondLength;
+                const baseEnergy = computeSpringEnergyAverage(baseline.graph, baselineBondLength);
 
                 const rotated = new MolecularPreprocessor({});
                 rotated.initDraw(parseTree, 'light', false, []);
@@ -445,7 +446,8 @@ describe('Kamada-Kawai robustness properties', () => {
                 });
 
                 rotated.processGraph();
-                const rotatedEnergy = computeSpringEnergyAverage(rotated.graph, rotated.opts.bondLength);
+                const rotatedBondLength = rotated.userOpts.rendering.bonds.bondLength;
+                const rotatedEnergy = computeSpringEnergyAverage(rotated.graph, rotatedBondLength);
 
                 return Number.isFinite(baseEnergy) && Number.isFinite(rotatedEnergy) && Math.abs(baseEnergy - rotatedEnergy) < 100;
             }
