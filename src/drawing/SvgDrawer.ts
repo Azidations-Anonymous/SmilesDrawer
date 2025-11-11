@@ -15,7 +15,7 @@ import GaussDrawer = require('./GaussDrawer');
 import SvgEdgeDrawer = require('./draw/SvgEdgeDrawer');
 import SvgVertexDrawer = require('./draw/SvgVertexDrawer');
 import SvgWeightsDrawer = require('./draw/SvgWeightsDrawer');
-import { AtomAnnotationFormatter, IMoleculeOptions, IUserOptions } from '../config/IOptions';
+import { AtomAnnotationFormatter, IMoleculeOptions, IUserOptions, IDerivedOptions } from '../config/IOptions';
 import { AtomHighlight } from '../preprocessing/MolecularDataTypes';
 import IDrawingSurface = require('./renderers/IDrawingSurface');
 
@@ -24,6 +24,8 @@ type ParseTree = any;
 class SvgDrawer {
   preprocessor: IMolecularData;
   opts: IMoleculeOptions;
+  userOpts: IUserOptions;
+  derivedOpts: IDerivedOptions;
   clear: boolean;
   svgWrapper: SvgWrapper | null;
 // ensure property typed? Eh.
@@ -37,6 +39,8 @@ class SvgDrawer {
   constructor(options: Partial<IMoleculeOptions> | Partial<IUserOptions>, clear: boolean = true) {
       this.preprocessor = new MolecularPreprocessor(options);
       this.opts = this.preprocessor.opts;
+      this.userOpts = this.preprocessor.userOpts;
+      this.derivedOpts = this.preprocessor.derivedOpts;
       this.clear = clear;
       this.svgWrapper = null;
       this.renderer = null;
@@ -63,21 +67,28 @@ class SvgDrawer {
       target = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       target.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
       target.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-      target.setAttributeNS(null, 'width', this.opts.width.toString());
-      target.setAttributeNS(null, 'height', this.opts.height.toString());
+      target.setAttributeNS(null, 'width', this.userOpts.canvas.width.toString());
+      target.setAttributeNS(null, 'height', this.userOpts.canvas.height.toString());
     } else if (typeof target === 'string') {
       target = document.getElementById(target) as unknown as SVGElement;
     }
 
-    let optionBackup = {
+    let legacyOptionBackup = {
       padding: this.opts.padding,
       compactDrawing: this.opts.compactDrawing
+    };
+    let userOptionBackup = {
+      padding: this.userOpts.canvas.padding,
+      compactDrawing: this.userOpts.layout.graph.compactDrawing
     };
 
     // Overwrite options when weights are added
     if (weights !== null) {
-      this.opts.padding += this.opts.weights.additionalPadding;
-      this.opts.compactDrawing = false;
+      const paddingIncrease = this.userOpts.visualizations.weights.additionalPadding;
+      this.userOpts.canvas.padding += paddingIncrease;
+      this.userOpts.layout.graph.compactDrawing = false;
+      this.opts.padding = this.userOpts.canvas.padding;
+      this.opts.compactDrawing = this.userOpts.layout.graph.compactDrawing;
     }
 
     let preprocessor = this.preprocessor;
@@ -85,10 +96,10 @@ class SvgDrawer {
     preprocessor.initDraw(data, themeName, infoOnly, highlight_atoms);
 
     if (!infoOnly) {
-      this.themeManager = new ThemeManager(this.opts.themes, themeName);
+      this.themeManager = new ThemeManager(this.userOpts.appearance.themes, themeName);
       if (!usingExternalRenderer) {
         if (this.svgWrapper === null || this.clear) {
-          this.svgWrapper = new SvgWrapper(this.themeManager, target, this.opts, this.clear);
+          this.svgWrapper = new SvgWrapper(this.themeManager, target, this.userOpts, this.derivedOpts, this.clear);
         }
         this.renderer = this.svgWrapper;
       }
@@ -105,15 +116,15 @@ class SvgDrawer {
       renderer.determineDimensions(preprocessor.graph.vertices);
 
       // Do the actual drawing
-      this.drawAtomHighlights(preprocessor.opts.debug);
-      this.drawEdges(preprocessor.opts.debug);
-      this.drawVertices(preprocessor.opts.debug);
+      this.drawAtomHighlights(preprocessor.userOpts.meta.debug);
+      this.drawEdges(preprocessor.userOpts.meta.debug);
+      this.drawVertices(preprocessor.userOpts.meta.debug);
 
       if (weights !== null) {
         this.drawWeights(weights, weightsNormalized);
       }
 
-      if (preprocessor.opts.debug) {
+      if (preprocessor.userOpts.meta.debug) {
         console.log(preprocessor.graph);
         console.log(preprocessor.rings);
         console.log(preprocessor.ringConnections);
@@ -124,8 +135,10 @@ class SvgDrawer {
 
     // Reset options in case weights were added.
     if (weights !== null) {
-      this.opts.padding = optionBackup.padding;
-      this.opts.compactDrawing = optionBackup.compactDrawing;
+      this.opts.padding = legacyOptionBackup.padding;
+      this.opts.compactDrawing = legacyOptionBackup.compactDrawing;
+      this.userOpts.canvas.padding = userOptionBackup.padding;
+      this.userOpts.layout.graph.compactDrawing = userOptionBackup.compactDrawing;
     }
 
     return target;
@@ -157,7 +170,7 @@ class SvgDrawer {
     document.body.appendChild(svg);
     this.draw(data, svg, themeName, null, infoOnly);
     if (this.svgWrapper && this.svgWrapper.toCanvas) {
-      this.svgWrapper.toCanvas(canvas, this.opts.width, this.opts.height);
+      this.svgWrapper.toCanvas(canvas, this.userOpts.canvas.width, this.userOpts.canvas.height);
     }
     document.body.removeChild(svg);
     return target;
@@ -211,6 +224,7 @@ class SvgDrawer {
 
   setAtomAnnotationFormatter(formatter: AtomAnnotationFormatter | null): void {
     this.opts.atomAnnotationFormatter = formatter;
+    this.userOpts.annotations.formatter = formatter;
   }
 
   /**

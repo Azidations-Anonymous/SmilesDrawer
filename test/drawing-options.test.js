@@ -6,6 +6,8 @@ const OptionsManager = require('../src/config/OptionsManager');
 const ThemeManager = require('../src/config/ThemeManager');
 const SvgWrapper = require('../src/drawing/SvgWrapper');
 const SvgLabelRenderer = require('../src/drawing/renderers/SvgLabelRenderer');
+const SvgDrawer = require('../src/drawing/SvgDrawer');
+const Parser = require('../src/parsing/Parser');
 
 const dom = new DOMParser().parseFromString('<html><body></body></html>', 'text/html');
 global.window = dom.defaultView;
@@ -88,6 +90,37 @@ test('SvgWrapper draws dashed polygons using configured dash pattern', () => {
   assert(path, 'Expected dashed polygon path to be created');
   assert.equal(path.getAttribute('stroke-dasharray'), manager.userOpts.rendering.bonds.dashPattern.join(','));
   assert.equal(path.getAttribute('stroke-width'), manager.userOpts.rendering.bonds.bondThickness.toString());
+});
+
+test('SvgDrawer applies user padding increase when weights are supplied', () => {
+  const manager = new OptionsManager({ canvas: { padding: 15 } });
+  const drawer = new SvgDrawer(manager.userOpts);
+  const basePadding = drawer.userOpts.canvas.padding;
+  const additionalPadding = 25;
+  drawer.userOpts.visualizations.weights.additionalPadding = additionalPadding;
+  drawer.opts.weights.additionalPadding = 0;
+
+  const recordings = [];
+  const originalInitDraw = drawer.preprocessor.initDraw.bind(drawer.preprocessor);
+  drawer.preprocessor.initDraw = function (...args) {
+    recordings.push({
+      userPadding: drawer.userOpts.canvas.padding,
+      legacyPadding: drawer.opts.padding
+    });
+    return originalInitDraw(...args);
+  };
+
+  const data = Parser.parse('CC', {});
+  drawer.draw(data, null, 'light', null, false, [], false);
+  drawer.draw(data, null, 'light', [0.1, 0.2], false, [], false);
+
+  assert.equal(recordings.length, 2);
+  assert.equal(recordings[0].userPadding, basePadding);
+  assert.equal(recordings[0].legacyPadding, basePadding);
+  assert.equal(recordings[1].userPadding, basePadding + additionalPadding);
+  assert.equal(recordings[1].legacyPadding, basePadding + additionalPadding);
+  assert.equal(drawer.userOpts.canvas.padding, basePadding);
+  assert.equal(drawer.opts.padding, basePadding);
 });
 
 test('SvgLabelRenderer uses typography defaults', () => {
