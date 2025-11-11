@@ -220,6 +220,7 @@ export function getLegacyDefaultOptions(): IMoleculeOptions {
     terminalCarbons: false,
     explicitHydrogens: false,
     aromaticPiSystemInset: 7,
+    aromaticOverlayColor: 'C',
     overlapSensitivity: 0.42,
     overlapResolutionIterations: 1,
     finetuneOverlap: true,
@@ -299,7 +300,8 @@ export function getDefaultUserOptions(): IUserOptions {
       aromatic: {
         piSystemInset: 7,
         overlayInset: 7,
-        overlayClampRatio: 0.5
+        overlayClampRatio: 0.5,
+        overlayColor: 'C'
       }
     },
     layout: {

@@ -11,7 +11,9 @@ class AromaticOverlayRenderer {
             return;
         }
 
-        const userInset = insetOverride ?? molecule.userOpts.rendering.aromatic.overlayInset;
+        const aromaticOpts = molecule.userOpts.rendering.aromatic;
+        const userInset = insetOverride ?? aromaticOpts.overlayInset;
+        const overlayColor = aromaticOpts.overlayColor;
         const insetAmount = isFinite(userInset) && userInset > 0 ? userInset : molecule.userOpts.rendering.aromatic.overlayInset;
         const rings = molecule.getAromaticRings();
         for (const ring of rings) {
@@ -24,7 +26,7 @@ class AromaticOverlayRenderer {
                 continue;
             }
 
-            renderer.drawDashedPolygon(polygon);
+            renderer.drawDashedPolygon(polygon, overlayColor);
         }
     }
 

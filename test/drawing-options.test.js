@@ -11,6 +11,7 @@ const SvgVertexDrawer = require('../src/drawing/draw/SvgVertexDrawer');
 const Parser = require('../src/parsing/Parser');
 const Line = require('../src/graph/Line');
 const Vector2 = require('../src/graph/Vector2');
+const AromaticOverlayRenderer = require('../src/rendering/AromaticOverlayRenderer');
 
 function ensureDom() {
   if (typeof document !== 'undefined' && typeof document.createElementNS === 'function') {
@@ -356,4 +357,50 @@ test('SvgWrapper dashed wedges switch colors at the configured threshold', () =>
   const lastColor = coloredStrokes[coloredStrokes.length - 1];
   assert.equal(firstColor, leftColor);
   assert.equal(lastColor, rightColor);
+});
+
+test('Aromatic overlays use the configured stroke color', () => {
+  const overlayColor = '#123456';
+  const manager = new OptionsManager({
+    canvas: {},
+    rendering: {
+      aromatic: {
+        overlayColor
+      }
+    }
+  });
+
+  const ring = {
+    center: new Vector2(0, 0),
+    members: [0, 1, 2]
+  };
+
+  const molecule = {
+    bridgedRing: false,
+    userOpts: manager.userOpts,
+    graph: {
+      vertices: [
+        { value: { isAromaticByInput: true }, position: new Vector2(1, 0) },
+        { value: { isAromaticByInput: true }, position: new Vector2(-0.5, Math.sqrt(3) / 2) },
+        { value: { isAromaticByInput: true }, position: new Vector2(-0.5, -Math.sqrt(3) / 2) }
+      ]
+    },
+    getAromaticRings() {
+      return [ring];
+    }
+  };
+
+  let capturedColor = null;
+  let polygonCount = 0;
+  const renderer = {
+    drawDashedPolygon(points, color) {
+      polygonCount += 1;
+      capturedColor = color;
+      assert(points.length > 0, 'expected polygon points to be emitted');
+    }
+  };
+
+  AromaticOverlayRenderer.render(molecule, renderer);
+  assert.equal(polygonCount, 1);
+  assert.equal(capturedColor, overlayColor);
 });

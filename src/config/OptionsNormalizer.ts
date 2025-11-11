@@ -58,7 +58,8 @@ export function translateLegacyToUser(legacy: IMoleculeOptions): IUserOptions {
       },
       aromatic: {
         ...defaults.rendering.aromatic,
-        piSystemInset: legacy.aromaticPiSystemInset ?? defaults.rendering.aromatic.piSystemInset
+        piSystemInset: legacy.aromaticPiSystemInset ?? defaults.rendering.aromatic.piSystemInset,
+        overlayColor: legacy.aromaticOverlayColor ?? defaults.rendering.aromatic.overlayColor
       }
     },
     layout: {
@@ -164,6 +165,7 @@ export function materializeLegacyOptions(user: IUserOptions): IMoleculeOptions {
     terminalCarbons: user.rendering.atoms.terminalCarbons,
     explicitHydrogens: user.rendering.atoms.explicitHydrogens,
     aromaticPiSystemInset: user.rendering.aromatic.piSystemInset,
+    aromaticOverlayColor: user.rendering.aromatic.overlayColor,
     isomeric: user.rendering.stereochemistry.isomeric,
     compactDrawing: user.layout.graph.compactDrawing,
     overlapSensitivity: user.layout.graph.overlapSensitivity,

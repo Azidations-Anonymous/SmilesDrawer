@@ -605,7 +605,7 @@ class SvgWrapper implements IDrawingSurface {
     this.paths.push(lineElem);
 
     if (strokeColor) {
-      lineElem.setAttributeNS(null, 'stroke', strokeColor);
+      lineElem.setAttributeNS(null, 'stroke', this.resolveStrokeColor(strokeColor));
       return;
     }
 
@@ -668,7 +668,7 @@ class SvgWrapper implements IDrawingSurface {
     const segments = points.map((point, index) => `${index === 0 ? 'M' : 'L'}${point.x} ${point.y}`);
     path.setAttributeNS(null, 'd', `${segments.join(' ')} Z`);
     path.setAttributeNS(null, 'fill', 'none');
-    path.setAttributeNS(null, 'stroke', color || this.themeManager.getColor('C'));
+    path.setAttributeNS(null, 'stroke', this.resolveStrokeColor(color));
     path.setAttributeNS(null, 'stroke-width', this.userOpts.rendering.bonds.bondThickness.toString());
     path.setAttributeNS(null, 'stroke-linecap', 'round');
     path.setAttributeNS(null, 'stroke-linejoin', 'round');
@@ -1089,6 +1089,28 @@ class SvgWrapper implements IDrawingSurface {
     };
 
     image.src = 'data:image/svg+xml;charset-utf-8,' + encodeURIComponent(this.svg.outerHTML);
+  }
+
+  private resolveStrokeColor(preference?: string): string {
+    if (!preference) {
+      return this.themeManager.getColor('C');
+    }
+
+    const trimmed = preference.trim();
+    if (!trimmed) {
+      return this.themeManager.getColor('C');
+    }
+
+    const lower = trimmed.toLowerCase();
+    if (trimmed.startsWith('#') ||
+      lower.startsWith('rgb') ||
+      lower.startsWith('hsl') ||
+      trimmed.startsWith('var(') ||
+      lower === 'currentcolor') {
+      return trimmed;
+    }
+
+    return this.themeManager.getColor(trimmed);
   }
 }
 

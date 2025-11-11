@@ -247,9 +247,31 @@ class CanvasPrimitiveDrawer {
         ctx.closePath();
         ctx.setLineDash(this.wrapper.userOpts.rendering.bonds.dashPattern);
         ctx.lineWidth = this.wrapper.userOpts.rendering.bonds.bondThickness / 1.5;
-        ctx.strokeStyle = color || this.wrapper.themeManager.getColor('C');
+        ctx.strokeStyle = this.resolveStrokeColor(color);
         ctx.stroke();
         ctx.restore();
+    }
+
+    private resolveStrokeColor(preference?: string): string {
+        if (!preference) {
+            return this.wrapper.themeManager.getColor('C');
+        }
+
+        const trimmed = preference.trim();
+        if (!trimmed) {
+            return this.wrapper.themeManager.getColor('C');
+        }
+
+        const lower = trimmed.toLowerCase();
+        if (trimmed.startsWith('#') ||
+            lower.startsWith('rgb') ||
+            lower.startsWith('hsl') ||
+            trimmed.startsWith('var(') ||
+            lower === 'currentcolor') {
+            return trimmed;
+        }
+
+        return this.wrapper.themeManager.getColor(trimmed);
     }
 
 }

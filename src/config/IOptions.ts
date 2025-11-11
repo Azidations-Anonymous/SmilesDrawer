@@ -74,6 +74,7 @@ interface IMoleculeOptions {
   terminalCarbons: boolean;
   explicitHydrogens: boolean;
   aromaticPiSystemInset?: number;
+  aromaticOverlayColor?: string;
 
   // Stereochemistry
   isomeric: boolean;
@@ -266,6 +267,7 @@ interface IRenderingAromaticOptions {
   piSystemInset: number;
   overlayInset: number;
   overlayClampRatio: number;
+  overlayColor: string;
 }
 
 interface IRenderingOptions {
