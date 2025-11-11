@@ -101,7 +101,10 @@ class SvgVertexDrawer {
         let angle = Vector2.threePointangle(vertex.position, a, b);
 
         const tolerance = this.drawer.userOpts.layout.graph.linearBondToleranceRad;
-        const linearTolerance = Number.isFinite(tolerance) && tolerance > 0 ? tolerance : 0.1;
+        const normalizedTolerance = Number.isFinite(tolerance) && tolerance > 0
+          ? Math.min(tolerance, Math.PI)
+          : null;
+        const linearTolerance = normalizedTolerance ?? 0.1;
         if (Math.abs(Math.PI - angle) < linearTolerance) {
           renderer.drawPoint(vertex.position.x, vertex.position.y, element);
         }

@@ -824,12 +824,11 @@ class MolecularPreprocessor implements IMolecularData {
 
   getDefaultBranchAngle(): number {
       const configured = this.userOpts.layout.graph.defaultBranchAngleRad;
-      const fallback = MathHelper.toRad(60);
-      if (!Number.isFinite(configured) || configured <= 0) {
-        return fallback;
-      }
-
-      return configured;
+      const fallbackAngle = MathHelper.toRad(120);
+      const target = Number.isFinite(configured) && configured > 0 ? configured : fallbackAngle;
+      const absolute = Math.abs(target);
+      const clamped = Math.min(absolute, Math.PI);
+      return clamped / 2;
   }
 
   /**

@@ -5,6 +5,8 @@ import {
 } from './IOptions';
 import packageJson = require('../../package.json');
 
+const DEFAULT_BRANCH_ANGLE_RAD = (2 * Math.PI) / 3;
+
 const themeDefaults: IThemeMap = {
   dark: {
     C: '#fff',
@@ -305,7 +307,7 @@ export function getDefaultUserOptions(): IUserOptions {
         compactDrawing: true,
         overlapSensitivity: 0.42,
         overlapResolutionIterations: 1,
-        defaultBranchAngleRad: 1.0472,
+        defaultBranchAngleRad: DEFAULT_BRANCH_ANGLE_RAD,
         linearBondToleranceRad: 0.1,
         rotationSnapIncrementDeg: 30,
         rotationSnapDeadzoneDeg: 15,

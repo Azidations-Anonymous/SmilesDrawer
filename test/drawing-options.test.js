@@ -10,12 +10,20 @@ const SvgDrawer = require('../src/drawing/SvgDrawer');
 const SvgVertexDrawer = require('../src/drawing/draw/SvgVertexDrawer');
 const Parser = require('../src/parsing/Parser');
 
-const dom = new DOMParser().parseFromString('<html><body></body></html>', 'text/html');
-global.window = dom.defaultView;
-global.document = dom;
-global.SVGElement = window.SVGElement;
-global.HTMLElement = window.HTMLElement;
-global.Node = window.Node;
+function ensureDom() {
+  if (typeof document !== 'undefined' && typeof document.createElementNS === 'function') {
+    return;
+  }
+
+  const dom = new DOMParser().parseFromString('<html><body></body></html>', 'text/html');
+  global.window = dom.defaultView;
+  global.document = dom;
+  global.SVGElement = window.SVGElement;
+  global.HTMLElement = window.HTMLElement;
+  global.Node = window.Node;
+}
+
+ensureDom();
 
 function createWrapper(customOptions = {}) {
   const manager = new OptionsManager({ canvas: {}, ...customOptions });
@@ -241,7 +249,7 @@ test('linearBondToleranceRad toggles nearly-linear point rendering', () => {
     vertex.position.x = 5;
     vertex.position.y = 0;
     right.position.x = 10;
-    right.position.y = 0.5;
+    right.position.y = 1;
     left.value.isDrawn = true;
     right.value.isDrawn = true;
     vertex.forcePositioned = true;

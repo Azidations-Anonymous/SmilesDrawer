@@ -80,12 +80,13 @@ class PositioningManager {
             // Since the first vertex is at (0, 0), create a vector at (bondLength, 0)
             // and rotate it by 90°
 
+            const defaultAngle = this.drawer.getDefaultBranchAngle();
             let dummy = new Vector2(this.drawer.userOpts.rendering.bonds.bondLength, 0);
-            dummy.rotate(MathHelper.toRad(-60));
+            dummy.rotate(-defaultAngle);
 
             vertex.previousPosition = dummy;
             vertex.setPosition(this.drawer.userOpts.rendering.bonds.bondLength, 0);
-            vertex.angle = MathHelper.toRad(-60);
+            vertex.angle = -defaultAngle;
 
             // Do not position the vertex if it belongs to a bridged ring that is positioned using a layout algorithm.
             if (vertex.value.bridgedRing === null) {
