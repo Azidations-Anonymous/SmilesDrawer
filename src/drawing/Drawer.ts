@@ -1,7 +1,7 @@
 import SvgDrawer = require('./SvgDrawer');
 import IMolecularData = require('../preprocessing/IMolecularData');
 import { AtomHighlight } from '../preprocessing/MolecularDataTypes';
-import { AtomAnnotationFormatter, IMoleculeOptions } from '../config/IOptions';
+import { AtomAnnotationFormatter, IMoleculeOptions, IUserOptions } from '../config/IOptions';
 
 type ParseTree = any;
 
@@ -25,7 +25,7 @@ class Drawer {
    *
    * @param {Object} options An object containing custom values for different options. It is merged with the default options.
    */
-  constructor(options: Partial<IMoleculeOptions>) {
+  constructor(options: Partial<IMoleculeOptions> | Partial<IUserOptions>) {
     this.svgDrawer = new SvgDrawer(options);
   }
 
@@ -47,12 +47,13 @@ class Drawer {
 
     let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
-    svg.setAttributeNS(null, 'viewBox', '0 0 ' + this.svgDrawer.opts.width + ' ' + this.svgDrawer.opts.height);
-    svg.setAttributeNS(null, 'width', this.svgDrawer.opts.width + '');
-    svg.setAttributeNS(null, 'height', this.svgDrawer.opts.height + '');
+    const { width, height } = this.svgDrawer.userOpts.canvas;
+    svg.setAttributeNS(null, 'viewBox', '0 0 ' + width + ' ' + height);
+    svg.setAttributeNS(null, 'width', width + '');
+    svg.setAttributeNS(null, 'height', height + '');
     this.svgDrawer.draw(data, svg, themeName, null, infoOnly, highlight_atoms);
     if (this.svgDrawer.svgWrapper && this.svgDrawer.svgWrapper.toCanvas) {
-      this.svgDrawer.svgWrapper.toCanvas(canvas, this.svgDrawer.opts.width, this.svgDrawer.opts.height);
+      this.svgDrawer.svgWrapper.toCanvas(canvas, width, height);
     }
   }
 

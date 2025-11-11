@@ -17,9 +17,7 @@ class SvgVertexDrawer {
    */
   drawAtomHighlights(debug: boolean): void {
     let preprocessor = this.drawer.preprocessor;
-    let opts = preprocessor.opts;
     let graph = preprocessor.graph;
-    let rings = preprocessor.rings;
     let renderer = this.drawer.getRenderer();
 
     for (var i = 0; i < graph.vertices.length; i++) {
@@ -44,10 +42,11 @@ class SvgVertexDrawer {
    */
   drawVertices(debug: boolean): void {
     let preprocessor = this.drawer.preprocessor,
-      opts = preprocessor.opts,
       graph = preprocessor.graph,
       rings = preprocessor.rings,
       renderer = this.drawer.getRenderer();
+    const userOpts = preprocessor.userOpts;
+    const atomRendering = userOpts.rendering.atoms;
 
     for (var i = 0; i < graph.vertices.length; i++) {
       let vertex = graph.vertices[i];
@@ -58,7 +57,7 @@ class SvgVertexDrawer {
       let element = atom.element;
       let hydrogens = Atom.maxBonds[element] - bondCount;
       let dir = vertex.getTextDirection(graph.vertices, atom.hasAttachedPseudoElements);
-      let isTerminal = opts.terminalCarbons || element !== 'C' || atom.hasAttachedPseudoElements ? vertex.isTerminal() : false;
+      let isTerminal = atomRendering.terminalCarbons || element !== 'C' || atom.hasAttachedPseudoElements ? vertex.isTerminal() : false;
       let isCarbon = atom.element === 'C';
 
       // This is a HACK to remove all hydrogens from nitrogens in aromatic rings, as this
@@ -79,10 +78,10 @@ class SvgVertexDrawer {
         isCarbon = false;
       }
 
-      if (opts.atomVisualization === 'allballs') {
+      if (atomRendering.atomVisualization === 'allballs') {
         renderer.drawBall(vertex.position.x, vertex.position.y, element);
       } else if ((atom.isDrawn && (!isCarbon || atom.drawExplicit || isTerminal || atom.hasAttachedPseudoElements)) || graph.vertices.length === 1) {
-        if (opts.atomVisualization === 'default') {
+        if (atomRendering.atomVisualization === 'default') {
           let attachedPseudoElements = atom.getAttachedPseudoElements();
 
           // Draw to the right if the whole molecule is concatenated into one string
@@ -92,7 +91,7 @@ class SvgVertexDrawer {
 
           renderer.drawText(vertex.position.x, vertex.position.y,
             element, hydrogens, dir, isTerminal, charge, isotope, graph.vertices.length, attachedPseudoElements);
-        } else if (opts.atomVisualization === 'balls') {
+        } else if (atomRendering.atomVisualization === 'balls') {
           renderer.drawBall(vertex.position.x, vertex.position.y, element);
         }
       } else if (vertex.getNeighbourCount() === 2 && vertex.forcePositioned == true) {
@@ -118,7 +117,7 @@ class SvgVertexDrawer {
     }
 
     // Draw the ring centers for debug purposes
-    if (opts.debug) {
+    if (userOpts.meta.debug) {
       for (var j = 0; j < rings.length; j++) {
         let center = rings[j].center;
         renderer.drawDebugPoint(center.x, center.y, 'r: ' + rings[j].id);
@@ -127,8 +126,8 @@ class SvgVertexDrawer {
   }
 
   private renderAnnotations(vertex: Vertex, atom: Atom, renderer: IDrawingSurface): void {
-    const opts = this.drawer.opts;
-    if (!opts.showAtomAnnotations || typeof renderer.drawAnnotation !== 'function') {
+    const annotationsConfig = this.drawer.userOpts.annotations;
+    if (!annotationsConfig.enabled || typeof renderer.drawAnnotation !== 'function') {
       return;
     }
 
@@ -139,7 +138,7 @@ class SvgVertexDrawer {
       return;
     }
 
-    const formatter = opts.atomAnnotationFormatter;
+    const formatter = annotationsConfig.formatter;
     const formatted = formatter
       ? formatter({ vertex, annotations })
       : this.defaultAnnotationFormatter(keys, annotations);
@@ -148,9 +147,9 @@ class SvgVertexDrawer {
       return;
     }
 
-    const fontSize = opts.atomAnnotationFontSize || opts.fontSizeSmall;
-    const color = opts.atomAnnotationColor;
-    const offset = opts.atomAnnotationOffset ?? 0;
+    const fontSize = annotationsConfig.fontSize || this.drawer.userOpts.typography.fontSizeSmall;
+    const color = annotationsConfig.color;
+    const offset = annotationsConfig.offset ?? 0;
 
     renderer.drawAnnotation!(
       vertex.position.x,

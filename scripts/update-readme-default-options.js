@@ -36,11 +36,27 @@ function compileDefaultOptionsModule(filePath = DEFAULT_OPTIONS_PATH) {
   mod.paths = Module._nodeModulePaths(path.dirname(filePath));
   mod._compile(outputText, filePath);
 
-  if (typeof mod.exports !== "function") {
-    throw new Error("Expected DefaultOptions module to export a function.");
+  const exported = mod.exports;
+
+  if (typeof exported === "function") {
+    return exported;
   }
 
-  return mod.exports;
+  if (exported && typeof exported === "object") {
+    if (typeof exported.getDefaultUserOptions === "function") {
+      return exported.getDefaultUserOptions;
+    }
+
+    if (typeof exported.default === "function") {
+      return exported.default;
+    }
+
+    if (typeof exported.getLegacyDefaultOptions === "function") {
+      return exported.getLegacyDefaultOptions;
+    }
+  }
+
+  throw new Error("Expected DefaultOptions module to export a function.");
 }
 
 function formatDefaultOptions(filePath = DEFAULT_OPTIONS_PATH) {

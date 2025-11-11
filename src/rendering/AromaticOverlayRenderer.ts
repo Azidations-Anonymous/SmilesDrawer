@@ -6,12 +6,13 @@ import Vector2 = require('../graph/Vector2');
 type PolygonRenderer = Pick<IDrawingSurface, 'drawDashedPolygon'> | null;
 
 class AromaticOverlayRenderer {
-    static render(molecule: IMolecularData, renderer: PolygonRenderer, inset: number): void {
+    static render(molecule: IMolecularData, renderer: PolygonRenderer, insetOverride?: number): void {
         if (!renderer || molecule.bridgedRing) {
             return;
         }
 
-        const insetAmount = isFinite(inset) && inset > 0 ? inset : 7;
+        const userInset = insetOverride ?? molecule.userOpts.rendering.aromatic.overlayInset;
+        const insetAmount = isFinite(userInset) && userInset > 0 ? userInset : molecule.userOpts.rendering.aromatic.overlayInset;
         const rings = molecule.getAromaticRings();
         for (const ring of rings) {
             if (!AromaticOverlayRenderer.isImplicitRing(molecule, ring)) {
@@ -61,7 +62,8 @@ class AromaticOverlayRenderer {
                 continue;
             }
 
-            const insetAmount = Math.min(inset, distance * 0.5);
+            const clampRatio = molecule.userOpts.rendering.aromatic.overlayClampRatio;
+            const insetAmount = Math.min(inset, distance * clampRatio);
             const insetVector = toVertex.clone().normalize().multiplyScalar(insetAmount);
             polygon.push(vertex.position.clone().subtract(insetVector));
         }

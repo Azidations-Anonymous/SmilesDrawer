@@ -38,10 +38,11 @@ class SvgWeightsDrawer {
       );
     }
 
+    const weightOptions = this.drawer.userOpts.visualizations.weights;
     let gd = new GaussDrawer(
       points, weights, bounds.width, bounds.height,
-      this.drawer.opts.weights.sigma, this.drawer.opts.weights.interval, this.drawer.opts.weights.colormap,
-      this.drawer.opts.weights.opacity, weightsNormalized
+      weightOptions.sigma, weightOptions.interval, weightOptions.colormap,
+      weightOptions.opacity, weightsNormalized
     );
 
     gd.draw();

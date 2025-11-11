@@ -47,8 +47,7 @@ class SvgEdgeDrawer {
 
     AromaticOverlayRenderer.render(
       preprocessor,
-      this.drawer.getRenderer(),
-      preprocessor.opts.aromaticPiSystemInset ?? 7,
+      this.drawer.getRenderer()
     );
   }
 
@@ -62,15 +61,17 @@ class SvgEdgeDrawer {
    */
   drawEdge(edgeId: number, debug: boolean): void {
     let preprocessor = this.drawer.preprocessor,
-      opts = preprocessor.opts,
       renderer = this.drawer.getRenderer(),
       edge = preprocessor.graph.edges[edgeId],
       vertexA = preprocessor.graph.vertices[edge.sourceId],
       vertexB = preprocessor.graph.vertices[edge.targetId],
       elementA = vertexA.value.element,
       elementB = vertexB.value.element;
+    const bonds = this.drawer.userOpts.rendering.bonds;
+    const atomRendering = this.drawer.userOpts.rendering.atoms;
+    const derived = this.drawer.derivedOpts;
 
-    if ((!vertexA.value.isDrawn || !vertexB.value.isDrawn) && preprocessor.opts.atomVisualization === 'default') {
+    if ((!vertexA.value.isDrawn || !vertexB.value.isDrawn) && atomRendering.atomVisualization === 'default') {
       return;
     }
 
@@ -95,8 +96,8 @@ class SvgEdgeDrawer {
         let lcr = preprocessor.getLargestOrAromaticCommonRing(vertexA, vertexB);
         let center = lcr.center;
 
-        normals[0].multiplyScalar(opts.bondSpacing);
-        normals[1].multiplyScalar(opts.bondSpacing);
+        normals[0].multiplyScalar(bonds.bondSpacing);
+        normals[1].multiplyScalar(bonds.bondSpacing);
 
         // Choose the normal that is on the same side as the center
         let line = null;
@@ -107,7 +108,7 @@ class SvgEdgeDrawer {
           line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
         }
 
-        line.shorten(opts.bondLength - opts.shortBondLength * opts.bondLength);
+        line.shorten(bonds.bondLength - bonds.shortBondLength * bonds.bondLength);
 
         // The shortened edge
         renderer.drawLine(line);
@@ -115,7 +116,7 @@ class SvgEdgeDrawer {
         renderer.drawLine(new Line(a, b, elementA, elementB));
       } else if ((edge.center || vertexA.isTerminal() && vertexB.isTerminal()) ||
         (s.anCount == 0 && s.bnCount > 1 || s.bnCount == 0 && s.anCount > 1)) {
-        this.multiplyNormals(normals, opts.halfBondSpacing);
+        this.multiplyNormals(normals, derived.halfBondSpacing);
 
         let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB),
           lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
@@ -124,27 +125,27 @@ class SvgEdgeDrawer {
         renderer.drawLine(lineB);
       } else if ((s.sideCount[0] > s.sideCount[1]) ||
         (s.totalSideCount[0] > s.totalSideCount[1])) {
-        this.multiplyNormals(normals, opts.bondSpacing);
+        this.multiplyNormals(normals, bonds.bondSpacing);
 
         let line = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
 
-        line.shorten(opts.bondLength - opts.shortBondLength * opts.bondLength);
+        line.shorten(bonds.bondLength - bonds.shortBondLength * bonds.bondLength);
 
         renderer.drawLine(line);
         renderer.drawLine(new Line(a, b, elementA, elementB));
       } else if ((s.sideCount[0] < s.sideCount[1]) ||
         (s.totalSideCount[0] <= s.totalSideCount[1])) {
-        this.multiplyNormals(normals, opts.bondSpacing);
+        this.multiplyNormals(normals, bonds.bondSpacing);
 
         let line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
-        line.shorten(opts.bondLength - opts.shortBondLength * opts.bondLength);
+        line.shorten(bonds.bondLength - bonds.shortBondLength * bonds.bondLength);
         renderer.drawLine(line);
         renderer.drawLine(new Line(a, b, elementA, elementB));
       }
     } else if (edge.bondType === '#') {
-      normals[0].multiplyScalar(opts.bondSpacing / 1.5);
-      normals[1].multiplyScalar(opts.bondSpacing / 1.5);
+      normals[0].multiplyScalar(bonds.bondSpacing / 1.5);
+      normals[1].multiplyScalar(bonds.bondSpacing / 1.5);
 
       let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
       let lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);

@@ -270,12 +270,16 @@ export function getDefaultUserOptions(): IUserOptions {
         bondThickness: 1.0,
         bondLength: 30,
         shortBondLength: 0.7,
-        bondSpacing: 0.17 * 30
+        bondSpacing: 0.17 * 30,
+        dashPattern: [3, 2]
       },
       atoms: {
         atomVisualization: 'default',
         terminalCarbons: false,
-        explicitHydrogens: false
+        explicitHydrogens: false,
+        ballRadiusBondFraction: 1 / 4.5,
+        pointRadius: 0.75,
+        pointMaskRadius: 1.5
       },
       stereochemistry: {
         isomeric: true,
@@ -336,7 +340,7 @@ export function getDefaultUserOptions(): IUserOptions {
       isotopeOffsetFactor: 0.5,
       labelSpacing: {
         baseUnitScale: 0.1,
-        chargeMultiplier: 0.25,
+        chargeMultiplier: 0.5,
         isotopeMultiplier: 1.0,
         hydrogenMultiplier: 1.0,
         hydrogenCountMultiplier: 0.0

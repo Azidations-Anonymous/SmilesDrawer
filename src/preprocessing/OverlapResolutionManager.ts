@@ -205,11 +205,20 @@ class OverlapResolutionManager {
     }
 
     resolveFinetuneOverlaps(): void {
-        if (!this.drawer.userOpts.layout.finetune.enabled) {
+        const legacyOpts = this.drawer.opts;
+        const userFinetune = this.drawer.userOpts.layout.finetune;
+        const finetuneEnabled = legacyOpts.finetuneOverlap !== userFinetune.enabled
+          ? legacyOpts.finetuneOverlap
+          : userFinetune.enabled;
+        if (!finetuneEnabled) {
           return;
         }
 
-        if (this.drawer.totalOverlapScore <= this.drawer.userOpts.layout.graph.overlapSensitivity) {
+        const userOverlapSensitivity = this.drawer.userOpts.layout.graph.overlapSensitivity;
+        const overlapSensitivity = legacyOpts.overlapSensitivity !== userOverlapSensitivity
+          ? legacyOpts.overlapSensitivity
+          : userOverlapSensitivity;
+        if (this.drawer.totalOverlapScore <= overlapSensitivity) {
           return;
         }
 
@@ -263,12 +272,21 @@ class OverlapResolutionManager {
         }
 
         const stepAngle = MathHelper.toRad(30);
-        const rawMaxSteps = this.drawer.userOpts.layout.finetune.maxSteps;
+        const legacyMaxSteps = legacyOpts.finetuneOverlapMaxSteps;
+        const chosenMaxSteps = legacyMaxSteps !== userFinetune.maxSteps
+          ? legacyMaxSteps
+          : userFinetune.maxSteps;
+        const rawMaxSteps = chosenMaxSteps ?? Number.POSITIVE_INFINITY;
         const maxSteps = Number.isFinite(rawMaxSteps) ? Math.floor(rawMaxSteps) : Number.POSITIVE_INFINITY;
         if (maxSteps <= 0) {
           return;
         }
-        const maxDuration = Math.max(0, this.drawer.userOpts.layout.finetune.maxDurationMs || 0);
+        const legacyMaxDuration = legacyOpts.finetuneOverlapMaxDurationMs;
+        const chosenMaxDuration = legacyMaxDuration !== userFinetune.maxDurationMs
+          ? legacyMaxDuration
+          : userFinetune.maxDurationMs;
+        const rawMaxDuration = chosenMaxDuration ?? 0;
+        const maxDuration = Math.max(0, rawMaxDuration || 0);
         const startTime = Date.now();
         let processedSteps = 0;
 
@@ -281,7 +299,7 @@ class OverlapResolutionManager {
             break;
           }
 
-          if (this.drawer.totalOverlapScore <= this.drawer.userOpts.layout.graph.overlapSensitivity) {
+          if (this.drawer.totalOverlapScore <= overlapSensitivity) {
             break;
           }
 

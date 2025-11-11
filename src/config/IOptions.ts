@@ -206,12 +206,16 @@ interface IRenderingBondOptions {
   bondLength: number;
   shortBondLength: number;
   bondSpacing: number;
+  dashPattern: number[];
 }
 
 interface IRenderingAtomOptions {
   atomVisualization: AtomVisualization;
   terminalCarbons: boolean;
   explicitHydrogens: boolean;
+  ballRadiusBondFraction: number;
+  pointRadius: number;
+  pointMaskRadius: number;
 }
 
 interface IRenderingStereochemistryOptions {

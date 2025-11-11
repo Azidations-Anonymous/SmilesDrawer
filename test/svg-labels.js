@@ -33,10 +33,11 @@ describe('SVG label rendering', () => {
     ensureDom();
 
     const optionsManager = new OptionsManager({});
-    const opts = optionsManager.opts;
-    const themeManager = new ThemeManager(opts.themes, 'light');
+    const userOpts = optionsManager.userOpts;
+    const derivedOpts = optionsManager.derivedOpts;
+    const themeManager = new ThemeManager(userOpts.appearance.themes, 'light');
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    const wrapper = new SvgWrapper(themeManager, svg, opts, true);
+    const wrapper = new SvgWrapper(themeManager, svg, userOpts, derivedOpts, true);
 
     wrapper.drawText(0, 0, 'N', 1, 'right', true, 1, 0, 2);
 
@@ -55,8 +56,9 @@ describe('SVG label rendering', () => {
 
     const primaryDisplay = primary.textContent;
     const satelliteDisplay = satellite.textContent;
-    const primaryMetrics = SvgTextHelper.measureText(primaryDisplay, opts.fontSizeLarge, opts.fontFamily);
-    const satelliteMetrics = SvgTextHelper.measureText(satelliteDisplay, opts.fontSizeLarge, opts.fontFamily);
+    const typography = userOpts.typography;
+    const primaryMetrics = SvgTextHelper.measureText(primaryDisplay, typography.fontSizeLarge, typography.fontFamily);
+    const satelliteMetrics = SvgTextHelper.measureText(satelliteDisplay, typography.fontSizeLarge, typography.fontFamily);
     const primaryX = Number(primary.getAttribute('x'));
     const satelliteX = Number(satellite.getAttribute('x'));
     assert(Math.abs(primaryX) < 1e-6, 'primary label should stay anchored at the input coordinate');
@@ -78,11 +80,15 @@ describe('SVG label rendering', () => {
   it('uses tighter spacing for charges than other satellites', () => {
     ensureDom();
 
-    const optionsManager = new OptionsManager({ labelOutlineWidth: 2 });
-    const opts = optionsManager.opts;
-    const themeManager = new ThemeManager(opts.themes, 'light');
+    const optionsManager = new OptionsManager({
+      canvas: {},
+      typography: { labelOutlineWidth: 2 }
+    });
+    const userOpts = optionsManager.userOpts;
+    const derivedOpts = optionsManager.derivedOpts;
+    const themeManager = new ThemeManager(userOpts.appearance.themes, 'light');
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    const wrapper = new SvgWrapper(themeManager, svg, opts, true);
+    const wrapper = new SvgWrapper(themeManager, svg, userOpts, derivedOpts, true);
 
     const getSpacing = wrapper['getCategorySpacing'].bind(wrapper);
     const mainHydrogen = getSpacing('main', 'hydrogen');

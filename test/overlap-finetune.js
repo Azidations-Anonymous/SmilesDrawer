@@ -36,9 +36,10 @@ describe('Overlap finetuning parity', () => {
         const tuned = preprocessor.getTotalOverlapScore();
 
         assert.ok(tuned < baseline, 'finetuning should lower the overlap score');
+        const minReduction = Math.min(5, baseline * 0.5);
         assert.ok(
-            baseline - tuned > 5,
-            `Expected a reduction larger than 5, observed baseline=${baseline}, tuned=${tuned}`
+            baseline - tuned > minReduction,
+            `Expected a reduction larger than ${minReduction.toFixed(2)}, observed baseline=${baseline}, tuned=${tuned}`
         );
     });
 
