@@ -23,20 +23,8 @@ class CanvasWedgeDrawer {
         let offsetX = this.wrapper.offsetX;
         let offsetY = this.wrapper.offsetY;
 
-        // Add a shadow behind the line
-        let shortLine = line.clone().shorten(5.0);
-
-        let l = shortLine.getLeftVector().clone();
-        let r = shortLine.getRightVector().clone();
-
-        l.x += offsetX;
-        l.y += offsetY;
-
-        r.x += offsetX;
-        r.y += offsetY;
-
-        l = line.getLeftVector().clone();
-        r = line.getRightVector().clone();
+        let l = line.getLeftVector().clone();
+        let r = line.getRightVector().clone();
 
         l.x += offsetX;
         l.y += offsetY;
@@ -61,10 +49,13 @@ class CanvasWedgeDrawer {
             end = l;
         }
 
+        const stereo = this.wrapper.userOpts.rendering.stereochemistry;
+        const tipPadding = stereo.wedgeTipPaddingPx;
+        const sidePadding = stereo.wedgeSidePaddingPx;
         let t = Vector2.add(start, Vector2.multiplyScalar(normals[0], this.wrapper.halfBondThickness));
-        let u = Vector2.add(end, Vector2.multiplyScalar(normals[0], 1.5 + this.wrapper.halfBondThickness));
-        let v = Vector2.add(end, Vector2.multiplyScalar(normals[1], 1.5 + this.wrapper.halfBondThickness));
-        let w = Vector2.add(start, Vector2.multiplyScalar(normals[1], this.wrapper.halfBondThickness));
+        let u = Vector2.add(end, Vector2.multiplyScalar(normals[0], tipPadding + this.wrapper.halfBondThickness));
+        let v = Vector2.add(end, Vector2.multiplyScalar(normals[1], tipPadding + this.wrapper.halfBondThickness));
+        let w = Vector2.add(start, Vector2.multiplyScalar(normals[1], sidePadding + this.wrapper.halfBondThickness));
 
         ctx.beginPath();
         ctx.moveTo(t.x, t.y);
@@ -72,7 +63,7 @@ class CanvasWedgeDrawer {
         ctx.lineTo(v.x, v.y);
         ctx.lineTo(w.x, w.y);
 
-        let gradient = this.wrapper.ctx.createRadialGradient(r.x, r.y, this.wrapper.opts.bondLength, r.x, r.y, 0);
+        let gradient = this.wrapper.ctx.createRadialGradient(r.x, r.y, this.wrapper.userOpts.rendering.bonds.bondLength, r.x, r.y, 0);
         gradient.addColorStop(0.4, this.wrapper.themeManager.getColor(line.getLeftElement()) ||
             this.wrapper.themeManager.getColor('C'));
         gradient.addColorStop(0.6, this.wrapper.themeManager.getColor(line.getRightElement()) ||
@@ -125,13 +116,14 @@ class CanvasWedgeDrawer {
         let sStart;
         let sEnd;
 
+        const stereo = this.wrapper.userOpts.rendering.stereochemistry;
         let shortLine = line.clone();
 
         if (isRightChiralCenter) {
             start = r;
             end = l;
 
-            shortLine.shortenRight(1.0);
+            shortLine.shortenRight(stereo.dashedInsetPx ?? 1.0);
 
             sStart = shortLine.getRightVector().clone();
             sEnd = shortLine.getLeftVector().clone();
@@ -139,7 +131,7 @@ class CanvasWedgeDrawer {
             start = l;
             end = r;
 
-            shortLine.shortenLeft(1.0);
+            shortLine.shortenLeft(stereo.dashedInsetPx ?? 1.0);
 
             sStart = shortLine.getLeftVector().clone();
             sEnd = shortLine.getRightVector().clone();
@@ -153,19 +145,20 @@ class CanvasWedgeDrawer {
         let dir = Vector2.subtract(end, start).normalize();
         ctx.strokeStyle = this.wrapper.themeManager.getColor('C');
         ctx.lineCap = 'round';
-        ctx.lineWidth = this.wrapper.opts.bondThickness;
+        const bondThickness = this.wrapper.userOpts.rendering.bonds.bondThickness;
+        ctx.lineWidth = bondThickness;
         ctx.beginPath();
         let length = line.getLength();
-        let step = 1.25 / (length / (this.wrapper.opts.bondThickness * 3.0));
+        let step = stereo.dashedStepFactor / (length / (bondThickness * 3.0));
 
         let changed = false;
         for (var t = 0.0; t < 1.0; t += step) {
             let to = Vector2.multiplyScalar(dir, t * length);
             let startDash = Vector2.add(start, to);
-            let width = 1.5 * t;
+            let width = stereo.dashedWidthFactorCanvas * t;
             let dashOffset = Vector2.multiplyScalar(normals[0], width);
 
-            if (!changed && t > 0.5) {
+            if (!changed && t > stereo.dashedColorSwitchThreshold) {
                 ctx.stroke();
                 ctx.beginPath();
                 ctx.strokeStyle = this.wrapper.themeManager.getColor(line.getRightElement()) || this.wrapper.themeManager.getColor('C');

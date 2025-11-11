@@ -4,8 +4,6 @@ import Line = require('../../graph/Line');
 import Ring = require('../../graph/Ring');
 import Vector2 = require('../../graph/Vector2');
 
-const DASH_PATTERN: [number, number] = [3, 2];
-
 class CanvasPrimitiveDrawer {
   constructor(private wrapper: CanvasDrawer) {}
 
@@ -68,9 +66,11 @@ class CanvasPrimitiveDrawer {
         let ctx = this.wrapper.ctx;
         let offsetX = this.wrapper.offsetX;
         let offsetY = this.wrapper.offsetY;
+        const bondThickness = this.wrapper.userOpts.rendering.bonds.bondThickness;
 
+        const shadowShorten = this.wrapper.userOpts.rendering.stereochemistry.shadowShortenPx ?? 4.0;
         // Add a shadow behind the line
-        let shortLine = line.clone().shorten(4.0);
+        let shortLine = line.clone().shorten(shadowShorten);
 
         let l = shortLine.getLeftVector().clone();
         let r = shortLine.getRightVector().clone();
@@ -89,7 +89,7 @@ class CanvasPrimitiveDrawer {
             ctx.moveTo(l.x, l.y);
             ctx.lineTo(r.x, r.y);
             ctx.lineCap = 'round';
-            ctx.lineWidth = this.wrapper.opts.bondThickness + 1.2;
+            ctx.lineWidth = bondThickness + 1.2;
             ctx.strokeStyle = this.wrapper.themeManager.getColor('BACKGROUND');
             ctx.stroke();
             ctx.globalCompositeOperation = 'source-over';
@@ -110,7 +110,7 @@ class CanvasPrimitiveDrawer {
         ctx.moveTo(l.x, l.y);
         ctx.lineTo(r.x, r.y);
         ctx.lineCap = 'round';
-        ctx.lineWidth = this.wrapper.opts.bondThickness;
+        ctx.lineWidth = bondThickness;
 
         let gradient = this.wrapper.ctx.createLinearGradient(l.x, l.y, r.x, r.y);
         gradient.addColorStop(0.4, this.wrapper.themeManager.getColor(line.getLeftElement()) ||
@@ -119,9 +119,9 @@ class CanvasPrimitiveDrawer {
             this.wrapper.themeManager.getColor('C'));
 
         if (dashed) {
-            const [dashLength, gapLength] = DASH_PATTERN;
+            const [dashLength, gapLength] = this.wrapper.userOpts.rendering.bonds.dashPattern;
             ctx.setLineDash([dashLength, gapLength]);
-            ctx.lineWidth = this.wrapper.opts.bondThickness / 1.5;
+            ctx.lineWidth = bondThickness / 1.5;
         }
 
         if (alpha < 1.0) {
@@ -148,7 +148,8 @@ class CanvasPrimitiveDrawer {
 
         ctx.save();
         ctx.beginPath();
-        ctx.arc(x + this.wrapper.offsetX, y + this.wrapper.offsetY, this.wrapper.opts.bondLength / 4.5, 0, MathHelper.twoPI, false);
+        const radius = this.wrapper.userOpts.rendering.atoms.ballRadiusBondFraction * this.wrapper.userOpts.rendering.bonds.bondLength;
+        ctx.arc(x + this.wrapper.offsetX, y + this.wrapper.offsetY, radius, 0, MathHelper.twoPI, false);
         ctx.fillStyle = this.wrapper.themeManager.getColor(elementName);
         ctx.fill();
         ctx.restore();
@@ -171,13 +172,14 @@ class CanvasPrimitiveDrawer {
         ctx.save();
         ctx.globalCompositeOperation = 'destination-out';
         ctx.beginPath();
-        ctx.arc(x + offsetX, y + offsetY, 1.5, 0, MathHelper.twoPI, true);
+        const maskRadius = this.wrapper.userOpts.rendering.atoms.pointMaskRadius;
+        ctx.arc(x + offsetX, y + offsetY, maskRadius, 0, MathHelper.twoPI, true);
         ctx.closePath();
         ctx.fill();
         ctx.globalCompositeOperation = 'source-over';
 
         ctx.beginPath();
-        ctx.arc(x + this.wrapper.offsetX, y + this.wrapper.offsetY, 0.75, 0, MathHelper.twoPI, false);
+        ctx.arc(x + this.wrapper.offsetX, y + this.wrapper.offsetY, this.wrapper.userOpts.rendering.atoms.pointRadius, 0, MathHelper.twoPI, false);
         ctx.fillStyle = this.wrapper.themeManager.getColor(elementName);
         ctx.fill();
         ctx.restore();
@@ -192,14 +194,15 @@ class CanvasPrimitiveDrawer {
      */
     drawAromaticityRing(ring: Ring): void {
         let ctx = this.wrapper.ctx;
-        let radius = MathHelper.apothemFromSideLength(this.wrapper.opts.bondLength, ring.getSize());
+        const bondThickness = this.wrapper.userOpts.rendering.bonds.bondThickness;
+        let radius = MathHelper.apothemFromSideLength(this.wrapper.userOpts.rendering.bonds.bondLength, ring.getSize());
 
         ctx.save();
         ctx.strokeStyle = this.wrapper.themeManager.getColor('C');
-        ctx.lineWidth = this.wrapper.opts.bondThickness;
+        ctx.lineWidth = bondThickness;
         ctx.beginPath();
         ctx.arc(ring.center.x + this.wrapper.offsetX, ring.center.y + this.wrapper.offsetY,
-            radius - this.wrapper.opts.bondSpacing, 0, Math.PI * 2, true);
+            radius - this.wrapper.userOpts.rendering.bonds.bondSpacing, 0, Math.PI * 2, true);
         ctx.closePath();
         ctx.stroke();
         ctx.restore();
@@ -242,8 +245,8 @@ class CanvasPrimitiveDrawer {
             ctx.lineTo(points[i].x + offsetX, points[i].y + offsetY);
         }
         ctx.closePath();
-        ctx.setLineDash(DASH_PATTERN);
-        ctx.lineWidth = this.wrapper.opts.bondThickness / 1.5;
+        ctx.setLineDash(this.wrapper.userOpts.rendering.bonds.dashPattern);
+        ctx.lineWidth = this.wrapper.userOpts.rendering.bonds.bondThickness / 1.5;
         ctx.strokeStyle = color || this.wrapper.themeManager.getColor('C');
         ctx.stroke();
         ctx.restore();
