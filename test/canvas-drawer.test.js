@@ -18,15 +18,27 @@ function createCanvasStub() {
   const ctx = {
     font: '',
     lineWidth: 0,
+    fillStyle: '#000',
+    globalAlpha: 1,
     measureText() {
       return { width: 7 };
     },
     setTransform() {},
-    beginPath() {},
-    closePath() {},
-    arc() {},
-    fill() {},
-    stroke() {},
+    beginPath() {
+      calls.push({ type: 'beginPath' });
+    },
+    closePath() {
+      calls.push({ type: 'closePath' });
+    },
+    arc(x, y, radius) {
+      calls.push({ type: 'arc', x, y, radius });
+    },
+    fill() {
+      calls.push({ type: 'fill', fillStyle: this.fillStyle, globalAlpha: this.globalAlpha });
+    },
+    stroke() {
+      calls.push({ type: 'stroke' });
+    },
     save() {},
     restore() {}
   };
@@ -80,4 +92,30 @@ test('CanvasDrawer derives hydrogen and bond thickness from user options', () =>
   const drawer = new CanvasDrawer(canvas, themeManager, userOptions, derived);
   assert.equal(drawer.halfBondThickness, userOptions.rendering.bonds.bondThickness / 2);
   assert.equal(drawer.hydrogenWidth, 7);
+});
+
+test('CanvasDrawer drawAtomHighlight uses appearance configuration', () => {
+  ensureWindow();
+  const { canvas, calls } = createCanvasStub();
+  const userOptions = getDefaultUserOptions();
+  userOptions.appearance.highlights.fallbackColor = '#ff00ff';
+  userOptions.appearance.highlights.fallbackRadiusFactor = 0.4;
+  userOptions.rendering.bonds.bondLength = 50;
+  const themeManager = new ThemeManager(userOptions.appearance.themes, 'light');
+  const drawer = new CanvasDrawer(canvas, themeManager, userOptions, {
+    bondLengthSq: 0,
+    halfBondSpacing: 0,
+    halfFontSizeLarge: 10,
+    quarterFontSizeLarge: 5,
+    fifthFontSizeSmall: 2
+  });
+
+  calls.length = 0;
+  drawer.drawAtomHighlight(10, 20);
+  const arcCall = calls.find((call) => call.type === 'arc');
+  assert(arcCall, 'expected highlight arc call');
+  assert.equal(arcCall.radius, userOptions.appearance.highlights.fallbackRadiusFactor * userOptions.rendering.bonds.bondLength);
+  const fillCall = calls.find((call) => call.type === 'fill');
+  assert.equal(fillCall.fillStyle, '#ff00ff');
+  assert.equal(fillCall.globalAlpha, 0.65);
 });

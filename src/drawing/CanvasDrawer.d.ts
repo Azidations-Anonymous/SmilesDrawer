@@ -99,6 +99,7 @@ declare class CanvasDrawer {
     drawLine(line: Line, dashed?: boolean, alpha?: number): void;
     drawBall(x: number, y: number, elementName: string): void;
     drawPoint(x: number, y: number, elementName: string): void;
+    drawAtomHighlight(x: number, y: number, color?: string): void;
     drawAromaticityRing(ring: Ring): void;
     drawDashedPolygon(points: Vector2[], color?: string): void;
     drawDebugText(x: number, y: number, text: string): void;

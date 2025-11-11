@@ -240,6 +240,25 @@ class CanvasDrawer {
         this.primitiveDrawer.drawPoint(x, y, elementName);
     }
 
+    drawAtomHighlight(x: number, y: number, color?: string): void {
+        if (!this.ctx) {
+            return;
+        }
+
+        const highlightConfig = this.userOpts.appearance.highlights;
+        const radius = highlightConfig.fallbackRadiusFactor * this.userOpts.rendering.bonds.bondLength;
+        const fill = color ?? highlightConfig.fallbackColor;
+
+        this.ctx.save();
+        this.ctx.beginPath();
+        this.ctx.arc(x + this.offsetX, y + this.offsetY, radius, 0, MathHelper.twoPI, true);
+        this.ctx.closePath();
+        this.ctx.globalAlpha = 0.65;
+        this.ctx.fillStyle = fill;
+        this.ctx.fill();
+        this.ctx.restore();
+    }
+
     drawAromaticityRing(ring: Ring): void {
         this.primitiveDrawer.drawAromaticityRing(ring);
     }
