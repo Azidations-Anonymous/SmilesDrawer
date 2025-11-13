@@ -126,35 +126,6 @@
                                 </div>
                             </article>
                         </div>
-                        <div class="tile is-parent">
-                            <article class="tile is-child notification">
-                                <p class="title">Custom SMILES #2</p>
-                                <input id="input-2" class="input" type="text" placeholder="Custom SMILES"
-                                    value="CC1=[O][Fe]2345ON1CCC[C@H]1NC(=O)CNC(=O)[C@H](CO)NC(=O)CNC(=O)[C@@H](CCCN(O2)C(C)=[O]3)NC(=O)[C@@H](CCCN(O4)C(C)=[O]5)NC1=O">
-                                <div class="content" style="overflow-x: auto; overflow-y: auto">
-                                    <div class="render-wrapper">
-                                        <svg id="display-2-svg" style="display: none;"
-                                            data-smiles="NC1=C(Br)C=C(Br)C=C1CN[C@]1CC[C@](O)CC1"></svg>
-                                        <canvas id="display-2-canvas" width="500" height="500"></canvas>
-                                        <button class="button is-small download-button" data-download-target="display-2">
-                                            Download
-                                        </button>
-                                    </div>
-                                    <div class="field has-addons render-toggle" data-toggle-target="display-2">
-                                        <p class="control">
-                                            <button class="button is-small" data-render-mode="svg">
-                                                SVG
-                                            </button>
-                                        </p>
-                                        <p class="control">
-                                            <button class="button is-small is-link is-selected" data-render-mode="png">
-                                                PNG
-                                            </button>
-                                        </p>
-                                    </div>
-                                </div>
-                            </article>
-                        </div>
                     </div>
                     <div class="tile is-parent">
                         <article class="tile is-child notification">
@@ -607,6 +578,12 @@
             }
         };
 
+        let lastFixedCanvasScale = moleculeOptions.canvas.scale > 0 ? moleculeOptions.canvas.scale : 1.0;
+
+        const uiState = {
+            dynamicCanvasScale: moleculeOptions.canvas.scale <= 0
+        };
+
         const folderCanvas = pane.addFolder({
             title: 'Canvas',
         });
@@ -663,18 +640,22 @@
             title: 'Export',
         });
 
+        const dynamicScaleInput = folderCanvas.addInput(uiState, 'dynamicCanvasScale', {
+            label: 'Dynamic size'
+        });
+
+        const canvasScaleInput = folderCanvas.addInput(moleculeOptions.canvas, 'scale', {
+            step: 0.1,
+            min: 0.0,
+            max: 5.0,
+        });
+
         folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'atomVisualization', {
             options: {
                 default: 'default',
                 balls: 'balls',
                 allballs: 'allballs'
             },
-        });
-
-        folderCanvas.addInput(moleculeOptions.canvas, 'scale', {
-            step: 0.1,
-            min: 0.0,
-            max: 5.0,
         });
 
         folderRenderingBonds.addInput(moleculeOptions.rendering.bonds, 'bondThickness', {
@@ -789,6 +770,38 @@
             max: 10.0,
         });
 
+        const applyCanvasScaleMode = (isDynamic) => {
+            if (isDynamic) {
+                if (moleculeOptions.canvas.scale > 0) {
+                    lastFixedCanvasScale = moleculeOptions.canvas.scale;
+                }
+                moleculeOptions.canvas.scale = 0.0;
+            } else {
+                moleculeOptions.canvas.scale = lastFixedCanvasScale > 0 ? lastFixedCanvasScale : 1.0;
+            }
+            uiState.dynamicCanvasScale = isDynamic;
+            dynamicScaleInput.refresh();
+            canvasScaleInput.disabled = isDynamic;
+            canvasScaleInput.refresh();
+        };
+
+        canvasScaleInput.disabled = uiState.dynamicCanvasScale;
+
+        dynamicScaleInput.on('change', (event) => {
+            applyCanvasScaleMode(event.value);
+        });
+
+        canvasScaleInput.on('change', (event) => {
+            if (uiState.dynamicCanvasScale) {
+                return;
+            }
+            if (event.value > 0) {
+                lastFixedCanvasScale = event.value;
+            } else {
+                applyCanvasScaleMode(true);
+            }
+        });
+
 
         const btnExport = folderExport.addButton({
             title: 'Export Settings',
@@ -801,17 +814,12 @@
         });
 
         let input1 = document.getElementById('input-1');
-        let input2 = document.getElementById('input-2');
         let input3 = document.getElementById('input-3');
 
         let themeSelector = document.getElementById('theme-selector');
         let articles = document.querySelectorAll('article.tile');
 
         input1.addEventListener('input', () => {
-            redraw();
-        });
-
-        input2.addEventListener('input', () => {
             redraw();
         });
 
@@ -829,8 +837,7 @@
         });
 
         const renderModes = {
-            'display-1': 'svg',
-            'display-2': 'png'
+            'display-1': 'svg'
         };
 
         const themeMap = new Map([
@@ -850,13 +857,11 @@
 
         const latestPositionData = {
             display1: null,
-            display2: null,
         };
 
         window.getPositionData = function () {
             return {
                 display1: latestPositionData.display1,
-                display2: latestPositionData.display2,
             };
         };
 
@@ -1040,7 +1045,7 @@
         }
 
         function redraw() {
-            ['display-1', 'display-2', 'display-3'].forEach((key) => {
+            ['display-1', 'display-3'].forEach((key) => {
                 const svgElement = document.getElementById(`${key}-svg`);
                 if (svgElement) {
                     svgElement.style.width = '';
@@ -1058,11 +1063,9 @@
             });
 
             const data1 = drawAndCollect(input1.value, 'display-1');
-            const data2 = drawAndCollect(input2.value, 'display-2');
             drawAndCollect(input3.value, 'display-3');
 
             latestPositionData.display1 = data1;
-            latestPositionData.display2 = data2;
 
             if (themeMap.get(theme) === 'light') {
                 articles.forEach(a => {
