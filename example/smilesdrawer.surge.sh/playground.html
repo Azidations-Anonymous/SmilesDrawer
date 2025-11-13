@@ -607,31 +607,63 @@
             }
         };
 
-        const folderBasic = pane.addFolder({
-            title: 'Basic',
+        const folderCanvas = pane.addFolder({
+            title: 'Canvas',
         });
 
-        const folderColours = pane.addFolder({
-            title: 'Colours',
+        const folderRendering = pane.addFolder({
+            title: 'Rendering',
         });
 
-        const folderReaction = pane.addFolder({
-            title: 'Reaction',
+        const folderRenderingAtoms = folderRendering.addFolder({
+            title: 'Atoms',
         });
 
-        const folderReactionPlus = pane.addFolder({
-            title: 'Reaction Plus',
+        const folderRenderingBonds = folderRendering.addFolder({
+            title: 'Bonds',
         });
 
-        const folderReactionArrow = pane.addFolder({
-            title: 'Reaction Arrow',
+        const folderLayout = pane.addFolder({
+            title: 'Layout',
+        });
+
+        const folderLayoutGraph = folderLayout.addFolder({
+            title: 'Graph',
+        });
+
+        const folderTypography = pane.addFolder({
+            title: 'Typography',
+        });
+
+        const folderAppearance = pane.addFolder({
+            title: 'Appearance',
+        });
+
+        const folderAppearanceTheme = folderAppearance.addFolder({
+            title: 'Custom Theme',
+        });
+
+        const folderReactions = pane.addFolder({
+            title: 'Reactions',
+        });
+
+        const folderReactionGeneral = folderReactions.addFolder({
+            title: 'General',
+        });
+
+        const folderReactionPlus = folderReactions.addFolder({
+            title: 'Plus',
+        });
+
+        const folderReactionArrow = folderReactions.addFolder({
+            title: 'Arrow',
         });
 
         const folderExport = pane.addFolder({
             title: 'Export',
         });
 
-        folderBasic.addInput(moleculeOptions.rendering.atoms, 'atomVisualization', {
+        folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'atomVisualization', {
             options: {
                 default: 'default',
                 balls: 'balls',
@@ -639,83 +671,83 @@
             },
         });
 
-        folderBasic.addInput(moleculeOptions.canvas, 'scale', {
+        folderCanvas.addInput(moleculeOptions.canvas, 'scale', {
             step: 0.1,
             min: 0.0,
             max: 5.0,
         });
 
-        folderBasic.addInput(moleculeOptions.rendering.bonds, 'bondThickness', {
+        folderRenderingBonds.addInput(moleculeOptions.rendering.bonds, 'bondThickness', {
             step: 0.1,
             min: 0.1,
             max: 5.0,
         });
 
-        folderBasic.addInput(moleculeOptions.rendering.bonds, 'shortBondLength', {
+        folderRenderingBonds.addInput(moleculeOptions.rendering.bonds, 'shortBondLength', {
             step: 0.1,
             min: 0.1,
             max: 1.0,
         });
-        folderBasic.addInput(moleculeOptions.rendering.bonds, 'bondSpacing', {
+        folderRenderingBonds.addInput(moleculeOptions.rendering.bonds, 'bondSpacing', {
             step: 0.1,
             min: 0.0,
             max: 10.0,
         });
-        folderBasic.addInput(moleculeOptions.rendering.atoms, 'terminalCarbons');
-        folderBasic.addInput(moleculeOptions.layout.graph, 'compactDrawing');
-        folderBasic.addInput(moleculeOptions.typography, 'fontSizeLarge', {
+        folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'terminalCarbons');
+        folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'compactDrawing');
+        folderTypography.addInput(moleculeOptions.typography, 'fontSizeLarge', {
             step: 0.1,
             min: 1.0,
             max: 20.0,
         });
 
-        folderColours.addInput(moleculeOptions.appearance.themes.custom, 'C', {
+        folderAppearanceTheme.addInput(moleculeOptions.appearance.themes.custom, 'C', {
             input: 'color',
         });
-        folderColours.addInput(moleculeOptions.appearance.themes.custom, 'O', {
+        folderAppearanceTheme.addInput(moleculeOptions.appearance.themes.custom, 'O', {
             input: 'color',
         });
-        folderColours.addInput(moleculeOptions.appearance.themes.custom, 'N', {
+        folderAppearanceTheme.addInput(moleculeOptions.appearance.themes.custom, 'N', {
             input: 'color',
         });
-        folderColours.addInput(moleculeOptions.appearance.themes.custom, 'F', {
+        folderAppearanceTheme.addInput(moleculeOptions.appearance.themes.custom, 'F', {
             input: 'color',
         });
-        folderColours.addInput(moleculeOptions.appearance.themes.custom, 'CL', {
+        folderAppearanceTheme.addInput(moleculeOptions.appearance.themes.custom, 'CL', {
             input: 'color',
         });
-        folderColours.addInput(moleculeOptions.appearance.themes.custom, 'BR', {
+        folderAppearanceTheme.addInput(moleculeOptions.appearance.themes.custom, 'BR', {
             input: 'color',
         });
-        folderColours.addInput(moleculeOptions.appearance.themes.custom, 'I', {
+        folderAppearanceTheme.addInput(moleculeOptions.appearance.themes.custom, 'I', {
             input: 'color',
         });
-        folderColours.addInput(moleculeOptions.appearance.themes.custom, 'P', {
+        folderAppearanceTheme.addInput(moleculeOptions.appearance.themes.custom, 'P', {
             input: 'color',
         });
-        folderColours.addInput(moleculeOptions.appearance.themes.custom, 'S', {
+        folderAppearanceTheme.addInput(moleculeOptions.appearance.themes.custom, 'S', {
             input: 'color',
         });
-        folderColours.addInput(moleculeOptions.appearance.themes.custom, 'B', {
+        folderAppearanceTheme.addInput(moleculeOptions.appearance.themes.custom, 'B', {
             input: 'color',
         });
-        folderColours.addInput(moleculeOptions.appearance.themes.custom, 'SI', {
+        folderAppearanceTheme.addInput(moleculeOptions.appearance.themes.custom, 'SI', {
             input: 'color',
         });
-        folderColours.addInput(moleculeOptions.appearance.themes.custom, 'H', {
+        folderAppearanceTheme.addInput(moleculeOptions.appearance.themes.custom, 'H', {
             input: 'color',
         });
-        folderColours.addInput(moleculeOptions.appearance.themes.custom, 'BACKGROUND', {
+        folderAppearanceTheme.addInput(moleculeOptions.appearance.themes.custom, 'BACKGROUND', {
             input: 'color',
         });
 
-        folderReaction.addInput(reactionOptions, 'spacing', {
+        folderReactionGeneral.addInput(reactionOptions, 'spacing', {
             step: 0.1,
             min: 0.0,
             max: 20.0,
         });
 
-        folderReaction.addInput(reactionOptions, 'fontSize', {
+        folderReactionGeneral.addInput(reactionOptions, 'fontSize', {
             step: 0.1,
             min: 0.0,
             max: 20.0,
