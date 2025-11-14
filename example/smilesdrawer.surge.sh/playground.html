@@ -629,6 +629,10 @@
             dynamicCanvasScale: moleculeOptions.canvas.scale <= 0
         };
 
+        const folderMeta = pane.addFolder({
+            title: 'Meta',
+        });
+
         const folderCanvas = pane.addFolder({
             title: 'Canvas',
         });
@@ -684,6 +688,14 @@
         const folderExport = pane.addFolder({
             title: 'Export',
         });
+
+        folderMeta.addMonitor(moleculeOptions.meta, 'version', {
+            label: 'Version'
+        });
+        folderMeta.addMonitor(moleculeOptions.meta, 'schemaRevision', {
+            label: 'Schema revision'
+        });
+        folderMeta.addInput(moleculeOptions.meta, 'debug');
 
         const dynamicScaleInput = folderCanvas.addInput(uiState, 'dynamicCanvasScale', {
             label: 'Dynamic size'
