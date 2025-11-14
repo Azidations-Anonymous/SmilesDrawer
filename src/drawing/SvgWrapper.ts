@@ -523,6 +523,15 @@ class SvgWrapper implements IDrawingSurface {
     textElem.setAttributeNS(null, 'y', y.toString());
     textElem.setAttributeNS(null, 'class', 'debug');
     textElem.setAttributeNS(null, 'fill', '#ff0000');
+    const outlineWidth = this.userOpts.meta.debugTextOutline ?? 2;
+    if (outlineWidth > 0) {
+      const outlineColor = this.themeManager.getColor('BACKGROUND');
+      textElem.setAttributeNS(null, 'stroke', outlineColor);
+      textElem.setAttributeNS(null, 'stroke-width', outlineWidth.toString());
+      textElem.setAttributeNS(null, 'stroke-linejoin', 'round');
+      textElem.setAttributeNS(null, 'paint-order', 'stroke fill');
+      textElem.setAttributeNS(null, 'vector-effect', 'non-scaling-stroke');
+    }
     textElem.setAttributeNS(null, 'style', `
                 font: 5px Droid Sans, sans-serif;
             `);

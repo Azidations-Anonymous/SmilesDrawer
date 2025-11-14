@@ -335,7 +335,8 @@ The default options are defined as follows (auto-generated via `node scripts/upd
   meta: {
     version: '3.0.0',
     schemaRevision: 1,
-    debug: false
+    debug: false,
+    debugTextOutline: 3
   },
   canvas: {
     width: 500,

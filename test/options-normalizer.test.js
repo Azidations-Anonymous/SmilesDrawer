@@ -18,6 +18,7 @@ test('normalizeUserOptions() with no input returns default user options', () => 
   assert.deepEqual(normalized.canvas, defaults.canvas);
   assert.equal(normalized.rendering.bonds.bondLength, defaults.rendering.bonds.bondLength);
   assert.equal(normalized.meta.version, defaults.meta.version);
+  assert.equal(normalized.meta.debugTextOutline, defaults.meta.debugTextOutline);
 });
 
 test('normalizeUserOptions() translates legacy options', () => {

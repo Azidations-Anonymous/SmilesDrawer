@@ -224,6 +224,7 @@ interface IUserMetaOptions {
   version: string;
   schemaRevision: number;
   debug: boolean;
+  debugTextOutline: number;
 }
 
 interface ICanvasOptions {

@@ -277,7 +277,8 @@
             meta: {
                 version: '3.0.0',
                 schemaRevision: 1,
-                debug: false
+                debug: false,
+                debugTextOutline: 3
             },
             canvas: {
                 width: 500,
@@ -696,6 +697,12 @@
             label: 'Schema revision'
         });
         folderMeta.addInput(moleculeOptions.meta, 'debug');
+        folderMeta.addInput(moleculeOptions.meta, 'debugTextOutline', {
+            label: 'Debug outline width',
+            min: 0,
+            max: 10,
+            step: 0.1
+        });
 
         const dynamicScaleInput = folderCanvas.addInput(uiState, 'dynamicCanvasScale', {
             label: 'Dynamic size'

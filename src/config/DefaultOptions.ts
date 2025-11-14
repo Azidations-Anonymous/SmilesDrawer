@@ -272,7 +272,8 @@ export function getDefaultUserOptions(): IUserOptions {
     meta: {
       version: packageJson.version,
       schemaRevision: 1,
-      debug: false
+      debug: false,
+      debugTextOutline: 3
     },
     canvas: {
       width: 500,

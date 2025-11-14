@@ -224,8 +224,19 @@ class CanvasPrimitiveDrawer {
         ctx.font = '5px Droid Sans, sans-serif';
         ctx.textAlign = 'start';
         ctx.textBaseline = 'top';
+        const px = x + this.wrapper.offsetX;
+        const py = y + this.wrapper.offsetY;
         ctx.fillStyle = '#ff0000';
-        ctx.fillText(text, x + this.wrapper.offsetX, y + this.wrapper.offsetY);
+
+        const outlineWidth = this.wrapper.userOpts.meta.debugTextOutline ?? 2;
+        if (outlineWidth > 0) {
+            ctx.strokeStyle = this.wrapper.themeManager.getColor('BACKGROUND');
+            ctx.lineWidth = outlineWidth;
+            ctx.lineJoin = 'round';
+            ctx.strokeText(text, px, py);
+        }
+
+        ctx.fillText(text, px, py);
         ctx.restore();
     }
 
