@@ -624,10 +624,23 @@
         };
 
         let lastFixedCanvasScale = moleculeOptions.canvas.scale > 0 ? moleculeOptions.canvas.scale : 1.0;
-
+        const dashPattern = moleculeOptions.rendering.bonds.dashPattern || [];
+        const normalizeDashSegment = (value, fallback) => Number.isFinite(value) ? value : fallback;
         const uiState = {
-            dynamicCanvasScale: moleculeOptions.canvas.scale <= 0
+            dynamicCanvasScale: moleculeOptions.canvas.scale <= 0,
+            dashPatternOn: normalizeDashSegment(dashPattern[0], 3),
+            dashPatternOff: normalizeDashSegment(dashPattern[1], 2),
         };
+        const syncDashPattern = () => {
+            const existingPattern = moleculeOptions.rendering.bonds.dashPattern || [];
+            const remainingSegments = existingPattern.length > 2 ? existingPattern.slice(2) : [];
+            moleculeOptions.rendering.bonds.dashPattern = [
+                uiState.dashPatternOn,
+                uiState.dashPatternOff,
+                ...remainingSegments
+            ];
+        };
+        syncDashPattern();
 
         const folderMeta = pane.addFolder({
             title: 'Meta',
@@ -770,7 +783,12 @@
             min: 0.1,
             max: 5.0,
         });
-
+        folderRenderingBonds.addInput(moleculeOptions.rendering.bonds, 'bondLength', {
+            label: 'Bond length',
+            step: 1,
+            min: 5,
+            max: 300,
+        });
         folderRenderingBonds.addInput(moleculeOptions.rendering.bonds, 'shortBondLength', {
             step: 0.1,
             min: 0.1,
@@ -779,6 +797,43 @@
         folderRenderingBonds.addInput(moleculeOptions.rendering.bonds, 'bondSpacing', {
             step: 0.1,
             min: 0.0,
+            max: 10.0,
+        });
+        const folderRenderingBondsDash = folderRenderingBonds.addFolder({
+            title: 'Aromatic dash pattern',
+        });
+        const dashPatternOnInput = folderRenderingBondsDash.addInput(uiState, 'dashPatternOn', {
+            label: 'Dash length',
+            min: 0,
+            max: 50,
+            step: 0.1,
+        });
+        dashPatternOnInput.on('change', (event) => {
+            const sanitizedValue = Number.isFinite(event.value) ? Math.max(0, event.value) : 0;
+            if (sanitizedValue !== uiState.dashPatternOn) {
+                uiState.dashPatternOn = sanitizedValue;
+                dashPatternOnInput.refresh();
+            }
+            syncDashPattern();
+        });
+        const dashPatternOffInput = folderRenderingBondsDash.addInput(uiState, 'dashPatternOff', {
+            label: 'Gap length',
+            min: 0,
+            max: 50,
+            step: 0.1,
+        });
+        dashPatternOffInput.on('change', (event) => {
+            const sanitizedValue = Number.isFinite(event.value) ? Math.max(0, event.value) : 0;
+            if (sanitizedValue !== uiState.dashPatternOff) {
+                uiState.dashPatternOff = sanitizedValue;
+                dashPatternOffInput.refresh();
+            }
+            syncDashPattern();
+        });
+        folderRenderingBonds.addInput(moleculeOptions.rendering.bonds, 'tripleBondSpacingDivider', {
+            label: 'Triple bond spacing divider',
+            step: 0.1,
+            min: 0.1,
             max: 10.0,
         });
         folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'compactDrawing');
