@@ -292,13 +292,6 @@ export function getDefaultUserOptions(): IUserOptions {
         dashPattern: [3, 2],
         tripleBondSpacingDivider: 1.5
       },
-      atoms: {
-        atomVisualization: 'default',
-        terminalCarbons: false,
-        explicitHydrogens: false,
-        pointRadius: DEFAULT_POINT_RADIUS,
-        pointMaskRadius: 1.5
-      },
       stereochemistry: {
         isomeric: true,
         shadowShortenPx: 5.0,
@@ -311,6 +304,13 @@ export function getDefaultUserOptions(): IUserOptions {
         dashedWidthFactorCanvas: 1.5,
         dashedColorSwitchThreshold: 0.5,
         dashedInsetPx: 1.0
+      },
+      atoms: {
+        atomVisualization: 'default',
+        terminalCarbons: false,
+        explicitHydrogens: false,
+        pointRadius: DEFAULT_POINT_RADIUS,
+        pointMaskRadius: 1.5
       },
       aromatic: {
         piSystemInset: 7,
