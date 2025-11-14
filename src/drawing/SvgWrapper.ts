@@ -478,7 +478,9 @@ class SvgWrapper implements IDrawingSurface {
 
     const dir = Vector2.subtract(end, start).normalize();
     const bondThickness = this.userOpts.rendering.bonds.bondThickness || 1;
-    const baseUnit = bondThickness * 3.0;
+    const spacingMultiplierRaw = stereo.dashedSpacingMultiplier;
+    const spacingMultiplier = Number.isFinite(spacingMultiplierRaw) && spacingMultiplierRaw > 0 ? spacingMultiplierRaw : 3.0;
+    const baseUnit = bondThickness * spacingMultiplier;
     const divisor = length / (baseUnit || 1);
     const rawStep = divisor !== 0 ? stereo.dashedStepFactor / divisor : stereo.dashedStepFactor;
     const step = Math.max(rawStep, 1e-3);

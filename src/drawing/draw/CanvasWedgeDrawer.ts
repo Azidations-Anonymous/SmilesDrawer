@@ -146,10 +146,14 @@ class CanvasWedgeDrawer {
         ctx.strokeStyle = this.wrapper.themeManager.getColor('C');
         ctx.lineCap = 'round';
         const bondThickness = this.wrapper.userOpts.rendering.bonds.bondThickness;
+        const spacingMultiplierRaw = this.wrapper.userOpts.rendering.stereochemistry.dashedSpacingMultiplier;
+        const spacingMultiplier = Number.isFinite(spacingMultiplierRaw) && spacingMultiplierRaw > 0 ? spacingMultiplierRaw : 3.0;
         ctx.lineWidth = bondThickness;
         ctx.beginPath();
         let length = line.getLength();
-        let step = stereo.dashedStepFactor / (length / (bondThickness * 3.0));
+        const baseUnit = bondThickness * spacingMultiplier;
+        const divisor = baseUnit !== 0 ? length / baseUnit : 0;
+        const step = divisor !== 0 ? stereo.dashedStepFactor / divisor : stereo.dashedStepFactor;
 
         let changed = false;
         for (var t = 0.0; t < 1.0; t += step) {

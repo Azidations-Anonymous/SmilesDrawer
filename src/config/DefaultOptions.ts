@@ -306,6 +306,7 @@ export function getDefaultUserOptions(): IUserOptions {
         wedgeTipFontScale: 0.25,
         wedgeSidePaddingPx: 1.5,
         dashedStepFactor: 1.25,
+        dashedSpacingMultiplier: 3.0,
         dashedWidthFactorSvg: 0.5,
         dashedWidthFactorCanvas: 1.5,
         dashedColorSwitchThreshold: 0.5,

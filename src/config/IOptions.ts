@@ -258,6 +258,7 @@ interface IRenderingStereochemistryOptions {
   wedgeTipFontScale: number;
   wedgeSidePaddingPx: number;
   dashedStepFactor: number;
+  dashedSpacingMultiplier: number;
   dashedWidthFactorSvg: number;
   dashedWidthFactorCanvas: number;
   dashedColorSwitchThreshold: number;
