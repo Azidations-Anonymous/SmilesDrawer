@@ -1,4 +1,5 @@
 import MathHelper = require('../../utils/MathHelper');
+import { DEFAULT_POINT_RADIUS } from '../../config/DefaultOptions';
 import CanvasDrawer = require('../CanvasDrawer');
 import Line = require('../../graph/Line');
 import Ring = require('../../graph/Ring');
@@ -148,22 +149,22 @@ class CanvasPrimitiveDrawer {
         const offsetX = this.wrapper.offsetX;
         const offsetY = this.wrapper.offsetY;
         const radius = this.wrapper.userOpts.rendering.atoms.pointRadius;
-        const maskRadius = Math.max(radius, this.wrapper.userOpts.rendering.atoms.pointMaskRadius);
+        const strokeBase = Math.max(0, this.wrapper.userOpts.rendering.atoms.pointMaskRadius);
+        const strokeScale = DEFAULT_POINT_RADIUS > 0 ? radius / DEFAULT_POINT_RADIUS : 1;
+        const strokeWidth = strokeBase * strokeScale;
 
         ctx.save();
-        if (maskRadius > 0) {
-            ctx.globalCompositeOperation = 'destination-out';
-            ctx.beginPath();
-            ctx.arc(x + offsetX, y + offsetY, maskRadius, 0, MathHelper.twoPI, true);
-            ctx.closePath();
-            ctx.fill();
-            ctx.globalCompositeOperation = 'source-over';
-        }
-
         ctx.beginPath();
         ctx.arc(x + offsetX, y + offsetY, radius, 0, MathHelper.twoPI, false);
         ctx.fillStyle = this.wrapper.themeManager.getColor(elementName);
         ctx.fill();
+
+        if (strokeWidth > 0) {
+            ctx.lineWidth = strokeWidth;
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = this.wrapper.themeManager.getColor('BACKGROUND');
+            ctx.stroke();
+        }
         ctx.restore();
     }
 
@@ -181,19 +182,23 @@ class CanvasPrimitiveDrawer {
         let offsetX = this.wrapper.offsetX;
         let offsetY = this.wrapper.offsetY;
 
-        ctx.save();
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.beginPath();
-        const maskRadius = this.wrapper.userOpts.rendering.atoms.pointMaskRadius;
-        ctx.arc(x + offsetX, y + offsetY, maskRadius, 0, MathHelper.twoPI, true);
-        ctx.closePath();
-        ctx.fill();
-        ctx.globalCompositeOperation = 'source-over';
+        const radius = this.wrapper.userOpts.rendering.atoms.pointRadius;
+        const strokeBase = Math.max(0, this.wrapper.userOpts.rendering.atoms.pointMaskRadius);
+        const strokeScale = DEFAULT_POINT_RADIUS > 0 ? radius / DEFAULT_POINT_RADIUS : 1;
+        const strokeWidth = strokeBase * strokeScale;
 
+        ctx.save();
         ctx.beginPath();
-        ctx.arc(x + this.wrapper.offsetX, y + this.wrapper.offsetY, this.wrapper.userOpts.rendering.atoms.pointRadius, 0, MathHelper.twoPI, false);
+        ctx.arc(x + offsetX, y + offsetY, radius, 0, MathHelper.twoPI, false);
         ctx.fillStyle = this.wrapper.themeManager.getColor(elementName);
         ctx.fill();
+
+        if (strokeWidth > 0) {
+            ctx.lineWidth = strokeWidth;
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = this.wrapper.themeManager.getColor('BACKGROUND');
+            ctx.stroke();
+        }
         ctx.restore();
     }
 

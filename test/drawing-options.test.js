@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const { DOMParser } = require('linkedom');
 
 const OptionsManager = require('../src/config/OptionsManager');
+const { DEFAULT_POINT_RADIUS } = require('../src/config/DefaultOptions');
 const ThemeManager = require('../src/config/ThemeManager');
 const SvgWrapper = require('../src/drawing/SvgWrapper');
 const SvgLabelRenderer = require('../src/drawing/renderers/SvgLabelRenderer');
@@ -101,10 +102,10 @@ test('SvgWrapper respects atom sizing options', () => {
   });
 
   wrapper.drawPoint(0, 0, 'C');
-  const maskCircle = wrapper.maskElements.at(-1);
   const pointCircle = wrapper.vertices.at(-1);
   assert.equal(pointCircle.getAttribute('r'), '2.5');
-  assert.equal(maskCircle.getAttribute('r'), '4.5');
+  const expectedStroke = (2.5 / DEFAULT_POINT_RADIUS) * 4.5;
+  assert.equal(pointCircle.getAttribute('stroke-width'), `${expectedStroke}`);
 
   wrapper.drawAtomHighlight(1, 1);
   const highlight = wrapper.highlights.at(-1);

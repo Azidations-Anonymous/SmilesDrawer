@@ -8,6 +8,7 @@ import Vector2 = require('../graph/Vector2');
 import MathHelper = require('../utils/MathHelper');
 import { IUserOptions, IDerivedOptions, AttachedPseudoElements } from '../config/IOptions';
 import ThemeManager = require('../config/ThemeManager');
+import { DEFAULT_POINT_RADIUS } from '../config/DefaultOptions';
 import { TextDirection } from '../types/CommonTypes';
 import IDrawingSurface = require('./renderers/IDrawingSurface');
 import SvgLabelRenderer = require('./renderers/SvgLabelRenderer');
@@ -345,9 +346,10 @@ class SvgWrapper implements IDrawingSurface {
    */
   drawBall(x: number, y: number, elementName: string): void {
     const radius = this.userOpts.rendering.atoms.pointRadius;
-    const maskRadius = Math.max(radius, this.userOpts.rendering.atoms.pointMaskRadius);
-
-    const boundRadius = Math.max(radius, maskRadius);
+    const strokeBase = Math.max(0, this.userOpts.rendering.atoms.pointMaskRadius);
+    const strokeScale = DEFAULT_POINT_RADIUS > 0 ? radius / DEFAULT_POINT_RADIUS : 1;
+    const strokeWidth = strokeBase * strokeScale;
+    const boundRadius = radius + strokeWidth / 2;
 
     if (x - boundRadius < this.minX) {
       this.minX = x - boundRadius;
@@ -365,20 +367,20 @@ class SvgWrapper implements IDrawingSurface {
       this.maxY = y + boundRadius;
     }
 
-    if (maskRadius > 0) {
-      const mask = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      mask.setAttributeNS(null, 'cx', x.toString());
-      mask.setAttributeNS(null, 'cy', y.toString());
-      mask.setAttributeNS(null, 'r', maskRadius.toString());
-      mask.setAttributeNS(null, 'fill', 'black');
-      this.maskElements.push(mask);
-    }
-
     const ball = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     ball.setAttributeNS(null, 'cx', x.toString());
     ball.setAttributeNS(null, 'cy', y.toString());
     ball.setAttributeNS(null, 'r', radius.toString());
     ball.setAttributeNS(null, 'fill', this.themeManager.getColor(elementName));
+
+    if (strokeWidth > 0) {
+      const outline = this.themeManager.getColor('BACKGROUND');
+      ball.setAttributeNS(null, 'stroke', outline);
+      ball.setAttributeNS(null, 'stroke-width', strokeWidth.toString());
+      ball.setAttributeNS(null, 'stroke-linejoin', 'round');
+      ball.setAttributeNS(null, 'paint-order', 'stroke fill');
+      ball.setAttributeNS(null, 'vector-effect', 'non-scaling-stroke');
+    }
 
     this.vertices.push(ball);
   }
@@ -646,39 +648,43 @@ class SvgWrapper implements IDrawingSurface {
    * @param {String} elementName The name of the element (single-letter).
    */
   drawPoint(x: number, y: number, elementName: string): void {
-    const r = this.userOpts.rendering.atoms.pointRadius;
-    const maskRadius = this.userOpts.rendering.atoms.pointMaskRadius;
+    const radius = this.userOpts.rendering.atoms.pointRadius;
+    const strokeBase = Math.max(0, this.userOpts.rendering.atoms.pointMaskRadius);
+    const strokeScale = DEFAULT_POINT_RADIUS > 0 ? radius / DEFAULT_POINT_RADIUS : 1;
+    const strokeWidth = strokeBase * strokeScale;
+    const boundRadius = radius + strokeWidth / 2;
 
-    if (x - r < this.minX) {
-      this.minX = x - r;
+    if (x - boundRadius < this.minX) {
+      this.minX = x - boundRadius;
     }
 
-    if (x + r > this.maxX) {
-      this.maxX = x + r;
+    if (x + boundRadius > this.maxX) {
+      this.maxX = x + boundRadius;
     }
 
-    if (y - r < this.minY) {
-      this.minY = y - r;
+    if (y - boundRadius < this.minY) {
+      this.minY = y - boundRadius;
     }
 
-    if (y + r > this.maxY) {
-      this.maxY = y + r;
+    if (y + boundRadius > this.maxY) {
+      this.maxY = y + boundRadius;
     }
 
-    // first create a mask
-    let mask = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    mask.setAttributeNS(null, 'cx', x.toString());
-    mask.setAttributeNS(null, 'cy', y.toString());
-    mask.setAttributeNS(null, 'r', maskRadius.toString());
-    mask.setAttributeNS(null, 'fill', 'black');
-    this.maskElements.push(mask);
-
-    // now create the point
-    let point = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    const point = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     point.setAttributeNS(null, 'cx', x.toString());
     point.setAttributeNS(null, 'cy', y.toString());
-    point.setAttributeNS(null, 'r', r.toString());
+    point.setAttributeNS(null, 'r', radius.toString());
     point.setAttributeNS(null, 'fill', this.themeManager.getColor(elementName));
+
+    if (strokeWidth > 0) {
+      const outline = this.themeManager.getColor('BACKGROUND');
+      point.setAttributeNS(null, 'stroke', outline);
+      point.setAttributeNS(null, 'stroke-width', strokeWidth.toString());
+      point.setAttributeNS(null, 'stroke-linejoin', 'round');
+      point.setAttributeNS(null, 'paint-order', 'stroke fill');
+      point.setAttributeNS(null, 'vector-effect', 'non-scaling-stroke');
+    }
+
     this.vertices.push(point);
   }
 

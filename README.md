@@ -316,7 +316,7 @@ The following options are available:
 | Show Terminal Carbons (CH3)                                     | terminalCarbons             | boolean                             | false         |
 | Show explicit hydrogens                                         | explicitHydrogens           | boolean                             | false         |
 | Point/Ball radius (px)                                          | pointRadius                 | number                              | 6.666666666666667 |
-| Point/Ball mask radius (px)                                     | pointMaskRadius             | number                              | 1.5           |
+| Point/Ball stroke width (px)                                    | pointMaskRadius             | number                              | 1.5           |
 | Overlap sensitivity                                             | overlapSensitivity          | number                              | 0.42          |
 | # of overlap resolution iterations                              | overlapResolutionIterations | number                              | 1             |
 | Enable overlap finetuning pass                                  | finetuneOverlap             | boolean                             | true          |
