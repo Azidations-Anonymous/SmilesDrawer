@@ -704,6 +704,24 @@
             step: 0.1
         });
 
+        folderCanvas.addInput(moleculeOptions.canvas, 'width', {
+            label: 'Width',
+            min: 50,
+            max: 5000,
+            step: 1
+        });
+        folderCanvas.addInput(moleculeOptions.canvas, 'height', {
+            label: 'Height',
+            min: 50,
+            max: 5000,
+            step: 1
+        });
+        folderCanvas.addInput(moleculeOptions.canvas, 'padding', {
+            label: 'Padding',
+            min: 0,
+            max: 200,
+            step: 0.5
+        });
         const dynamicScaleInput = folderCanvas.addInput(uiState, 'dynamicCanvasScale', {
             label: 'Dynamic size'
         });
@@ -720,6 +738,31 @@
                 balls: 'balls',
                 allballs: 'allballs'
             },
+        });
+
+        folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'terminalCarbons', {
+            label: 'Show terminal carbons'
+        });
+        folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'explicitHydrogens', {
+            label: 'Explicit hydrogens'
+        });
+        folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'ballRadiusBondFraction', {
+            label: 'Ball radius fraction',
+            min: 0,
+            max: 1,
+            step: 0.01
+        });
+        folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'pointRadius', {
+            label: 'Point radius',
+            min: 0,
+            max: 10,
+            step: 0.01
+        });
+        folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'pointMaskRadius', {
+            label: 'Point mask radius',
+            min: 0,
+            max: 10,
+            step: 0.01
         });
 
         folderRenderingBonds.addInput(moleculeOptions.rendering.bonds, 'bondThickness', {
