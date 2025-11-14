@@ -731,7 +731,7 @@
             max: 5.0,
         });
 
-        folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'atomVisualization', {
+        const atomVisualizationInput = folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'atomVisualization', {
             options: {
                 default: 'default',
                 balls: 'balls',
@@ -739,23 +739,30 @@
             },
         });
 
-        folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'pointRadius', {
+        const pointRadiusInput = folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'pointRadius', {
             label: 'Point/Ball radius',
             min: 0,
             max: 10,
             step: 0.01
         });
+        const pointStrokeWidthInput = folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'pointMaskRadius', {
+            label: 'Point/Ball stroke width',
+            min: 0,
+            max: 50,
+            step: 0.1
+        });
+        const updatePointInputVisibility = () => {
+            const isDefaultMode = moleculeOptions.rendering.atoms.atomVisualization === 'default';
+            pointRadiusInput.hidden = isDefaultMode;
+            pointStrokeWidthInput.hidden = isDefaultMode;
+        };
+        atomVisualizationInput.on('change', updatePointInputVisibility);
+        updatePointInputVisibility();
         folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'terminalCarbons', {
             label: 'Show terminal carbons'
         });
         folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'explicitHydrogens', {
             label: 'Explicit hydrogens'
-        });
-        folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'pointMaskRadius', {
-            label: 'Point/Ball stroke width',
-            min: 0,
-            max: 50,
-            step: 0.1
         });
 
         folderRenderingBonds.addInput(moleculeOptions.rendering.bonds, 'bondThickness', {
