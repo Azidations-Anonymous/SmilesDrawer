@@ -867,6 +867,18 @@
             max: 25,
             step: 1,
         });
+        folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'rotationSnapIncrementDeg', {
+            label: 'Rotation snap increment (deg)',
+            min: 0,
+            max: 360,
+            step: 1,
+        });
+        folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'rotationSnapDeadzoneDeg', {
+            label: 'Rotation snap deadzone (deg)',
+            min: 0,
+            max: 180,
+            step: 1,
+        });
         folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'defaultBranchAngleRad', {
             label: 'Default branch angle (rad)',
             min: 0,
@@ -879,17 +891,23 @@
             max: 1,
             step: 0.01,
         });
-        folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'rotationSnapIncrementDeg', {
-            label: 'Rotation snap increment (deg)',
+        folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'finetuneRotationOffsetDeg', {
+            label: 'Finetune rotation offset (deg)',
             min: 0,
-            max: 360,
-            step: 1,
+            max: 90,
+            step: 0.1,
         });
-        folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'rotationSnapDeadzoneDeg', {
-            label: 'Rotation snap deadzone (deg)',
+        folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'centerOfMassRadiusFactor', {
+            label: 'Center of mass radius factor',
             min: 0,
-            max: 180,
-            step: 1,
+            max: 10,
+            step: 0.1,
+        });
+        folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'rotationJitterEpsilon', {
+            label: 'Rotation jitter epsilon',
+            min: 0,
+            max: 0.1,
+            step: 0.0001,
         });
         folderTypography.addInput(moleculeOptions.typography, 'fontSizeLarge', {
             step: 0.1,
