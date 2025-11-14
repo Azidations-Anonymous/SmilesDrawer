@@ -84,8 +84,7 @@ test('SvgWrapper respects atom sizing options', () => {
       bonds: { bondLength: 40 },
       atoms: {
         pointRadius: 2.5,
-        pointMaskRadius: 4.5,
-        ballRadiusBondFraction: 0.4
+        pointMaskRadius: 4.5
       }
     },
     appearance: {

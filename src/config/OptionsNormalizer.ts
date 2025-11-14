@@ -13,6 +13,8 @@ type UserOrLegacy =
   | Partial<IMoleculeOptions>
   | Partial<IUserOptions>;
 
+const BALL_RADIUS_POINT_CONVERSION = 30;
+
 function isUserOptionsShape(input: unknown): input is Partial<IUserOptions> {
   if (!input || typeof input !== 'object') {
     return false;
@@ -20,6 +22,20 @@ function isUserOptionsShape(input: unknown): input is Partial<IUserOptions> {
 
   const candidate = input as Record<string, unknown>;
   return 'canvas' in candidate || 'meta' in candidate;
+}
+
+function migrateBallRadiusToPoint(atoms?: Record<string, unknown>): void {
+  if (!atoms || typeof atoms !== 'object') {
+    return;
+  }
+
+  if (typeof (atoms as Record<string, unknown>).ballRadiusBondFraction === 'number') {
+    const legacyFraction = (atoms as { ballRadiusBondFraction: number }).ballRadiusBondFraction;
+    if (typeof (atoms as Record<string, unknown>).pointRadius !== 'number') {
+      (atoms as { pointRadius: number }).pointRadius = legacyFraction * BALL_RADIUS_POINT_CONVERSION;
+    }
+    delete (atoms as Record<string, unknown>).ballRadiusBondFraction;
+  }
 }
 
 export function translateLegacyToUser(legacy: IMoleculeOptions): IUserOptions {
@@ -210,6 +226,9 @@ export function normalizeUserOptions(
   }
 
   if (isUserOptionsShape(input)) {
+    if (input.rendering && input.rendering.atoms) {
+      migrateBallRadiusToPoint(input.rendering.atoms as unknown as Record<string, unknown>);
+    }
     return Options.extend<IUserOptions>(true, getDefaultUserOptions(), input);
   }
 

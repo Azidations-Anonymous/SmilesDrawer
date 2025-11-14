@@ -11,7 +11,7 @@ This document inventories the hard-coded multipliers and thresholds that current
 | `src/drawing/draw/CanvasPrimitiveDrawer.ts:92` | `lineWidth = bondThickness + 1.2` | Shadows grow bond lines by a hard-coded 1.2 px. | `rendering.bonds.shadowThicknessPadding`. |
 | `src/drawing/draw/CanvasPrimitiveDrawer.ts:121`<br>`src/drawing/SvgWrapper.ts:571` | Dash pattern `[3, 2]` / `'3,2'` | All dashed bonds share this pattern; users cannot match external style guides. | `rendering.bonds.dashPattern` (tuple) exposed to both Canvas+SVG drawers. |
 | `src/drawing/draw/CanvasPrimitiveDrawer.ts:116/118`<br>`src/drawing/draw/CanvasWedgeDrawer.ts:75-78`<br>`src/drawing/SvgWrapper.ts:222` | Gradient stops at `0.4/0.6` (Canvas) and `20%/100%` (SVG) | The fade between left/right atom colours is frozen, yielding inconsistent looks with wide bonds. | `rendering.bonds.gradientStopOffsets` with normalized offsets (apply to both Canvas and SVG). |
-| `src/drawing/SvgWrapper.ts:347`<br>`src/drawing/draw/CanvasPrimitiveDrawer.ts:151` | `bondLength / 4.5` | “Ball-and-stick” mode scales spheres with a fixed divisor, independent of theme or zoom. | `rendering.atoms.ballRadiusBondFraction`. |
+| `src/drawing/SvgWrapper.ts:346`<br>`src/drawing/draw/CanvasPrimitiveDrawer.ts:146` | Absolute `pointRadius` in px | Ball-and-stick atoms now reuse the generic point radius, so sizing no longer depends on bond length. | `rendering.atoms.pointRadius`. |
 
 ## 2. Stereochemistry & Wedges
 
@@ -33,7 +33,7 @@ This document inventories the hard-coded multipliers and thresholds that current
 | `src/drawing/SvgWrapper.ts:1026-1034` | `fallback = fontSizeLarge * 0.1`, `spacing/4` | Charge/isotope spacing falls back to 10% of font size and divides that by four for charges. | `typography.labelSpacing.baseUnitScale` + per-category multipliers (`chargeMultiplier`, `isotopeMultiplier`, `hydrogenMultiplier`, `hydrogenCountMultiplier`). |
 | `src/drawing/draw/CanvasTextDrawer.ts:89-95` | `r /= 1.5` | Canvas label masks shrink by 1/1.5 of the glyph width regardless of outline thickness. | `annotations.mask.canvasRadiusFactor`. |
 | `src/drawing/SvgWrapper.ts:604-634`<br>`src/drawing/draw/CanvasPrimitiveDrawer.ts:174-182` | `point radius = 0.75`, mask radius `1.5` | Terminal “dot” atoms use constant radii. | `rendering.atoms.pointRadius` and `rendering.atoms.pointMaskRadius`. |
-| `src/drawing/SvgWrapper.ts:346-354`<br>`src/drawing/draw/CanvasPrimitiveDrawer.ts:151` | `bondLength / 4.5` | Same ball radius constant as §1; include here for completeness. | `rendering.atoms.ballRadiusBondFraction`. |
+| `src/drawing/SvgWrapper.ts:346-354`<br>`src/drawing/draw/CanvasPrimitiveDrawer.ts:146` | Absolute `pointRadius` in px | Duplicate entry for the ball radius constant; see §1. | `rendering.atoms.pointRadius`. |
 | `src/drawing/SvgWrapper.ts:414-418` | Highlight defaults: color `#03fc9d`, radius `bondLength / 3` | Atom highlighting ignores themes. | Add `highlight` color (and optional radius factor) per theme entry, plus an `appearance.highlights.fallbackColor` / `fallbackRadiusFactor` pair used only when a theme omits the value. |
 | `src/drawing/SvgWrapper.ts:982-983` | Fallback scales `0.75` and `1.1` | Label mask radii silently default even when the user provides typography overrides. | Move to `annotations.mask.baseScale` / `annotations.mask.wideScale` defaults fed by `IUserOptions`. |
 

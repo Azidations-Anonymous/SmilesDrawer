@@ -299,8 +299,7 @@
                     atomVisualization: 'default',
                     terminalCarbons: false,
                     explicitHydrogens: true,
-                    ballRadiusBondFraction: 1 / 4.5,
-                    pointRadius: 0.75,
+                    pointRadius: 6.666666666666667,
                     pointMaskRadius: 1.5
                 },
                 stereochemistry: {
@@ -732,19 +731,18 @@
             max: 5.0,
         });
 
-        const atomVisualizationInput = folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'atomVisualization', {
+        folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'atomVisualization', {
             options: {
                 default: 'default',
                 balls: 'balls',
-                allballs: 'allballs',
-                points: 'points'
+                allballs: 'allballs'
             },
         });
 
-        const ballRadiusInput = folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'ballRadiusBondFraction', {
-            label: 'Ball radius fraction',
+        folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'pointRadius', {
+            label: 'Point/Ball radius',
             min: 0,
-            max: 1,
+            max: 10,
             step: 0.01
         });
         folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'terminalCarbons', {
@@ -753,28 +751,12 @@
         folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'explicitHydrogens', {
             label: 'Explicit hydrogens'
         });
-        folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'pointRadius', {
-            label: 'Point radius',
-            min: 0,
-            max: 10,
-            step: 0.01
-        });
         folderRenderingAtoms.addInput(moleculeOptions.rendering.atoms, 'pointMaskRadius', {
-            label: 'Point mask radius',
+            label: 'Point/Ball mask radius',
             min: 0,
             max: 10,
             step: 0.01
         });
-
-        const updateBallControlsVisibility = () => {
-            const mode = moleculeOptions.rendering.atoms.atomVisualization;
-            const showBallControls = mode === 'balls' || mode === 'allballs';
-            ballRadiusInput.hidden = !showBallControls;
-            ballRadiusInput.refresh();
-        };
-
-        atomVisualizationInput.on('change', updateBallControlsVisibility);
-        updateBallControlsVisibility();
 
         folderRenderingBonds.addInput(moleculeOptions.rendering.bonds, 'bondThickness', {
             step: 0.1,

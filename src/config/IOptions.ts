@@ -247,7 +247,6 @@ interface IRenderingAtomOptions {
   atomVisualization: AtomVisualization;
   terminalCarbons: boolean;
   explicitHydrogens: boolean;
-  ballRadiusBondFraction: number;
   pointRadius: number;
   pointMaskRadius: number;
 }

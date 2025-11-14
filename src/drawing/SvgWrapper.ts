@@ -344,28 +344,40 @@ class SvgWrapper implements IDrawingSurface {
    * @param {String} elementName The name of the element (single-letter).
    */
   drawBall(x: number, y: number, elementName: string): void {
-    let r = this.userOpts.rendering.atoms.ballRadiusBondFraction * this.userOpts.rendering.bonds.bondLength;
+    const radius = this.userOpts.rendering.atoms.pointRadius;
+    const maskRadius = Math.max(radius, this.userOpts.rendering.atoms.pointMaskRadius);
 
-    if (x - r < this.minX) {
-      this.minX = x - r;
+    const boundRadius = Math.max(radius, maskRadius);
+
+    if (x - boundRadius < this.minX) {
+      this.minX = x - boundRadius;
     }
 
-    if (x + r > this.maxX) {
-      this.maxX = x + r;
+    if (x + boundRadius > this.maxX) {
+      this.maxX = x + boundRadius;
     }
 
-    if (y - r < this.minY) {
-      this.minY = y - r;
+    if (y - boundRadius < this.minY) {
+      this.minY = y - boundRadius;
     }
 
-    if (y + r > this.maxY) {
-      this.maxY = y + r;
+    if (y + boundRadius > this.maxY) {
+      this.maxY = y + boundRadius;
     }
 
-    let ball = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    if (maskRadius > 0) {
+      const mask = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      mask.setAttributeNS(null, 'cx', x.toString());
+      mask.setAttributeNS(null, 'cy', y.toString());
+      mask.setAttributeNS(null, 'r', maskRadius.toString());
+      mask.setAttributeNS(null, 'fill', 'black');
+      this.maskElements.push(mask);
+    }
+
+    const ball = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     ball.setAttributeNS(null, 'cx', x.toString());
     ball.setAttributeNS(null, 'cy', y.toString());
-    ball.setAttributeNS(null, 'r', r.toString());
+    ball.setAttributeNS(null, 'r', radius.toString());
     ball.setAttributeNS(null, 'fill', this.themeManager.getColor(elementName));
 
     this.vertices.push(ball);

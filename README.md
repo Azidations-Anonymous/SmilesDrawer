@@ -306,7 +306,7 @@ The following options are available:
 | Bond length                                                     | bondLength                  | number                              | 15            |
 | Short bond length (e.g. double bonds) in percent of bond length | shortBondLength             | number                              | 0.75          |
 | Bond spacing (e.g. space between double bonds)                  | bondSpacing                 | number                              | 0.18 \* 15    |
-| Atom Visualization                                              | atomVisualization           | string ['default', 'balls', 'allballs', 'points'] | 'default'     |
+| Atom Visualization                                              | atomVisualization           | string ['default', 'balls', 'allballs'] | 'default'     |
 | Large Font Size (in pt for elements)                            | fontSizeLarge               | number                              | 6             |
 | Small Font Size (in pt for numbers)                             | fontSizeSmall               | number                              | 4             |
 | Label outline width (px)                                        | labelOutlineWidth           | number                              | 1             |
@@ -315,6 +315,8 @@ The following options are available:
 | Padding                                                         | padding                     | number                              | 20.0          |
 | Show Terminal Carbons (CH3)                                     | terminalCarbons             | boolean                             | false         |
 | Show explicit hydrogens                                         | explicitHydrogens           | boolean                             | false         |
+| Point/Ball radius (px)                                          | pointRadius                 | number                              | 6.666666666666667 |
+| Point/Ball mask radius (px)                                     | pointMaskRadius             | number                              | 1.5           |
 | Overlap sensitivity                                             | overlapSensitivity          | number                              | 0.42          |
 | # of overlap resolution iterations                              | overlapResolutionIterations | number                              | 1             |
 | Enable overlap finetuning pass                                  | finetuneOverlap             | boolean                             | true          |
@@ -360,8 +362,7 @@ The default options are defined as follows (auto-generated via `node scripts/upd
       atomVisualization: 'default',
       terminalCarbons: false,
       explicitHydrogens: false,
-      ballRadiusBondFraction: 0.222222222222,
-      pointRadius: 0.75,
+      pointRadius: 6.666666666667,
       pointMaskRadius: 1.5
     },
     stereochemistry: {

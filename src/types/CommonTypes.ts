@@ -27,7 +27,7 @@ export type WedgeType = 'up' | 'down' | null;
 /**
  * Atom visualization mode
  */
-export type AtomVisualization = 'default' | 'balls' | 'allballs' | 'points';
+export type AtomVisualization = 'default' | 'balls' | 'allballs';
 
 /**
  * SMILES chirality notation (used in bracket atoms)

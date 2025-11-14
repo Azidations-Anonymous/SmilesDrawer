@@ -104,3 +104,20 @@ test('normalizeUserOptions() merges nested user options', () => {
   assert.equal(normalized.annotations.mask.baseScale, 0.95);
   assert.equal(normalized.canvas.height, getDefaultUserOptions().canvas.height);
 });
+
+test('normalizeUserOptions() converts deprecated ballRadiusBondFraction to pointRadius', () => {
+  const userOverrides = {
+    rendering: {
+      atoms: {
+        ballRadiusBondFraction: 0.25
+      }
+    }
+  };
+
+  const normalized = normalizeUserOptions(userOverrides);
+  assert.equal(normalized.rendering.atoms.pointRadius, 0.25 * 30);
+  assert.equal(
+    'ballRadiusBondFraction' in (normalized.rendering.atoms),
+    false
+  );
+});

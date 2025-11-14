@@ -145,11 +145,23 @@ class CanvasPrimitiveDrawer {
      */
     drawBall(x: number, y: number, elementName: string): void {
         let ctx = this.wrapper.ctx;
+        const offsetX = this.wrapper.offsetX;
+        const offsetY = this.wrapper.offsetY;
+        const radius = this.wrapper.userOpts.rendering.atoms.pointRadius;
+        const maskRadius = Math.max(radius, this.wrapper.userOpts.rendering.atoms.pointMaskRadius);
 
         ctx.save();
+        if (maskRadius > 0) {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath();
+            ctx.arc(x + offsetX, y + offsetY, maskRadius, 0, MathHelper.twoPI, true);
+            ctx.closePath();
+            ctx.fill();
+            ctx.globalCompositeOperation = 'source-over';
+        }
+
         ctx.beginPath();
-        const radius = this.wrapper.userOpts.rendering.atoms.ballRadiusBondFraction * this.wrapper.userOpts.rendering.bonds.bondLength;
-        ctx.arc(x + this.wrapper.offsetX, y + this.wrapper.offsetY, radius, 0, MathHelper.twoPI, false);
+        ctx.arc(x + offsetX, y + offsetY, radius, 0, MathHelper.twoPI, false);
         ctx.fillStyle = this.wrapper.themeManager.getColor(elementName);
         ctx.fill();
         ctx.restore();

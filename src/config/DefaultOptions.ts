@@ -294,8 +294,7 @@ export function getDefaultUserOptions(): IUserOptions {
         atomVisualization: 'default',
         terminalCarbons: false,
         explicitHydrogens: false,
-        ballRadiusBondFraction: 1 / 4.5,
-        pointRadius: 0.75,
+        pointRadius: 6.666666666666667,
         pointMaskRadius: 1.5
       },
       stereochemistry: {

@@ -83,8 +83,7 @@ class DrawingManager {
         const bonds = this.drawer.userOpts.rendering.bonds;
         const derived = this.drawer.derivedOpts;
 
-        const atomViz = this.drawer.userOpts.rendering.atoms.atomVisualization;
-        if ((!vertexA.value.isDrawn || !vertexB.value.isDrawn) && (atomViz === 'default' || atomViz === 'points')) {
+        if ((!vertexA.value.isDrawn || !vertexB.value.isDrawn) && this.drawer.userOpts.rendering.atoms.atomVisualization === 'default') {
             return;
         }
 
@@ -258,10 +257,6 @@ class DrawingManager {
 
           if (this.drawer.userOpts.rendering.atoms.atomVisualization === 'allballs') {
             this.drawer.canvasWrapper.drawBall(vertex.position.x, vertex.position.y, element);
-          } else if (this.drawer.userOpts.rendering.atoms.atomVisualization === 'points') {
-            if (atom.isDrawn || this.drawer.graph.vertices.length === 1) {
-              this.drawer.canvasWrapper.drawPoint(vertex.position.x, vertex.position.y, element);
-            }
           } else if ((atom.isDrawn && (!isCarbon || atom.drawExplicit || isTerminal || atom.hasAttachedPseudoElements)) || this.drawer.graph.vertices.length === 1) {
             if (this.drawer.userOpts.rendering.atoms.atomVisualization === 'default') {
               this.drawer.canvasWrapper.drawText(vertex.position.x, vertex.position.y,
