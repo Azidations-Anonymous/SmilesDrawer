@@ -80,6 +80,10 @@ class SvgVertexDrawer {
 
       if (atomRendering.atomVisualization === 'allballs') {
         renderer.drawBall(vertex.position.x, vertex.position.y, element);
+      } else if (atomRendering.atomVisualization === 'points') {
+        if (atom.isDrawn || graph.vertices.length === 1) {
+          renderer.drawPoint(vertex.position.x, vertex.position.y, element);
+        }
       } else if ((atom.isDrawn && (!isCarbon || atom.drawExplicit || isTerminal || atom.hasAttachedPseudoElements)) || graph.vertices.length === 1) {
         if (atomRendering.atomVisualization === 'default') {
           let attachedPseudoElements = atom.getAttachedPseudoElements();

@@ -71,7 +71,7 @@ class SvgEdgeDrawer {
     const atomRendering = this.drawer.userOpts.rendering.atoms;
     const derived = this.drawer.derivedOpts;
 
-    if ((!vertexA.value.isDrawn || !vertexB.value.isDrawn) && atomRendering.atomVisualization === 'default') {
+    if ((!vertexA.value.isDrawn || !vertexB.value.isDrawn) && (atomRendering.atomVisualization === 'default' || atomRendering.atomVisualization === 'points')) {
       return;
     }
 

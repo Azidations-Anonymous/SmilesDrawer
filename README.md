@@ -306,7 +306,7 @@ The following options are available:
 | Bond length                                                     | bondLength                  | number                              | 15            |
 | Short bond length (e.g. double bonds) in percent of bond length | shortBondLength             | number                              | 0.75          |
 | Bond spacing (e.g. space between double bonds)                  | bondSpacing                 | number                              | 0.18 \* 15    |
-| Atom Visualization                                              | atomVisualization           | string ['default', 'balls', 'none'] | 'default'     |
+| Atom Visualization                                              | atomVisualization           | string ['default', 'balls', 'allballs', 'points'] | 'default'     |
 | Large Font Size (in pt for elements)                            | fontSizeLarge               | number                              | 6             |
 | Small Font Size (in pt for numbers)                             | fontSizeSmall               | number                              | 4             |
 | Label outline width (px)                                        | labelOutlineWidth           | number                              | 1             |
