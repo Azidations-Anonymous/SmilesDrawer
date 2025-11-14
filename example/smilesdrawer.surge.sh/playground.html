@@ -39,12 +39,17 @@
             height: auto;
             display: block;
         }
+
+        #smiles-layout {
+            padding-right: 0;
+            transition: padding-right 0.2s ease;
+        }
     </style>
 </head>
 
 <body>
     <section class="section">
-        <div class="container">
+        <div class="container" id="smiles-layout">
             <h1 class="title">
                 SmilesDrawer 2.0
             </h1>
@@ -98,7 +103,7 @@
                 <div class="tile is-vertical is-12">
                     <div class="tile">
                         <div class="tile is-parent">
-                            <article class="tile is-child notification">
+                            <article class="tile is-child notification" id="primary-smiles-box">
                                 <p class="title">Custom SMILES #1</p>
                                 <input id="input-1" class="input" type="text" placeholder="Custom SMILES"
                                     value="OC(C(=O)O[C@H]1C[N+]2(CCCOC3=CC=CC=C3)CCC1CC2)(C1=CC=CS1)C1=CC=CS1">
@@ -189,6 +194,46 @@
 
     <script>
         const pane = new Tweakpane.Pane();
+        const paneElement = pane?.element ?? null;
+        const paneAnchor = document.getElementById('primary-smiles-box');
+        const layoutContainer = document.getElementById('smiles-layout');
+
+        function updateLayoutPadding() {
+            if (!layoutContainer || !paneElement) {
+                return;
+            }
+            const { width } = paneElement.getBoundingClientRect();
+            layoutContainer.style.paddingRight = `${Math.ceil(width)}px`;
+            alignPaneTop();
+        }
+
+        function alignPaneTop() {
+            if (!paneElement || !paneAnchor) {
+                return;
+            }
+
+            const anchorBounds = paneAnchor.getBoundingClientRect();
+            const offsetTop = anchorBounds.top + window.pageYOffset;
+            paneElement.style.position = 'absolute';
+            paneElement.style.right = '24px';
+            paneElement.style.top = `${offsetTop}px`;
+        }
+
+        if ('ResizeObserver' in window) {
+            if (paneElement) {
+                const paneObserver = new ResizeObserver(updateLayoutPadding);
+                paneObserver.observe(paneElement);
+            }
+            if (paneAnchor) {
+                const anchorObserver = new ResizeObserver(alignPaneTop);
+                anchorObserver.observe(paneAnchor);
+            }
+        }
+
+        window.addEventListener('resize', updateLayoutPadding);
+        window.addEventListener('scroll', alignPaneTop, { passive: true });
+        updateLayoutPadding();
+        alignPaneTop();
 
         const logBuffer = [];
         const runtimeLog = document.getElementById('runtime-log');
