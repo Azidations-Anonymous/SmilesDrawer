@@ -290,20 +290,20 @@ export function getDefaultUserOptions(): IUserOptions {
         shortBondLength: 0.7,
         bondSpacing: 0.17 * 30,
         dashPattern: [3, 2],
-        tripleBondSpacingDivider: 1.5
+        tripleBondSpacingDivider: 1.5,
+        dashedStepFactor: 1.25,
+        dashedWedgeSpacingMultiplier: 3.0,
+        dashedWidthFactorSvg: 0.5,
+        dashedWidthFactorCanvas: 1.5,
+        dashedColorSwitchThreshold: 0.5,
+        dashedInsetPx: 1.0
       },
       stereochemistry: {
         isomeric: true,
         shadowShortenPx: 5.0,
         wedgeTipPaddingPx: 3.0,
         wedgeTipFontScale: 0.25,
-        wedgeSidePaddingPx: 1.5,
-        dashedStepFactor: 1.25,
-        dashedSpacingMultiplier: 3.0,
-        dashedWidthFactorSvg: 0.5,
-        dashedWidthFactorCanvas: 1.5,
-        dashedColorSwitchThreshold: 0.5,
-        dashedInsetPx: 1.0
+        wedgeSidePaddingPx: 1.5
       },
       atoms: {
         atomVisualization: 'default',

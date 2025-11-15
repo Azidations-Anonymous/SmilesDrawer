@@ -44,14 +44,18 @@ function createCanvasWrapper(overrides = {}) {
       rendering: {
         bonds: {
           bondThickness: 2,
-          bondLength: 40
-        },
-        stereochemistry: {
-          shadowShortenPx: 8,
+          bondLength: 40,
           dashedInsetPx: 2,
           dashedStepFactor: 1.2,
           dashedWidthFactorCanvas: 0.5,
           dashedColorSwitchThreshold: 0.4,
+          dashedWedgeSpacingMultiplier: 3,
+          dashPattern: [3, 2],
+          tripleBondSpacingDivider: 1.5,
+          bondSpacing: 6
+        },
+        stereochemistry: {
+          shadowShortenPx: 8,
           wedgeTipPaddingPx: 3,
           wedgeSidePaddingPx: 1
         }
@@ -111,10 +115,20 @@ test('CanvasPrimitiveDrawer uses shadowShortenPx for line shadows', () => {
       rendering: {
         bonds: {
           bondThickness: 2,
-          bondLength: 40
+          bondLength: 40,
+          dashedInsetPx: 2,
+          dashedStepFactor: 1.2,
+          dashedWidthFactorCanvas: 0.5,
+          dashedColorSwitchThreshold: 0.4,
+          dashedWedgeSpacingMultiplier: 3,
+          dashPattern: [3, 2],
+          tripleBondSpacingDivider: 1.5,
+          bondSpacing: 6
         },
         stereochemistry: {
-          shadowShortenPx: 12
+          shadowShortenPx: 12,
+          wedgeTipPaddingPx: 3,
+          wedgeSidePaddingPx: 1
         }
       }
     }
@@ -163,15 +177,20 @@ test('CanvasWedgeDrawer uses dashedInsetPx for dashed wedges', () => {
       rendering: {
         bonds: {
           bondThickness: 2,
-          bondLength: 40
-        },
-        stereochemistry: {
+          bondLength: 40,
           dashedInsetPx: 3,
           dashedStepFactor: 1,
           dashedWidthFactorCanvas: 0.5,
           dashedColorSwitchThreshold: 0.4,
+          dashedWedgeSpacingMultiplier: 3,
+          dashPattern: [3, 2],
+          tripleBondSpacingDivider: 1.5,
+          bondSpacing: 6
+        },
+        stereochemistry: {
           wedgeTipPaddingPx: 0,
-          wedgeSidePaddingPx: 0
+          wedgeSidePaddingPx: 0,
+          shadowShortenPx: 8
         }
       }
     }

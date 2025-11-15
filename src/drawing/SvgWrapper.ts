@@ -450,7 +450,8 @@ class SvgWrapper implements IDrawingSurface {
     }
 
     const stereo = this.userOpts.rendering.stereochemistry;
-    const inset = Number.isFinite(stereo.dashedInsetPx) ? Math.max(stereo.dashedInsetPx, 0) : 1.0;
+    const bondDash = this.userOpts.rendering.bonds;
+    const inset = Number.isFinite(bondDash.dashedInsetPx) ? Math.max(bondDash.dashedInsetPx, 0) : 1.0;
     const shortLine = line.clone();
     const isRightChiralCenter = line.getRightChiral();
 
@@ -478,19 +479,19 @@ class SvgWrapper implements IDrawingSurface {
 
     const dir = Vector2.subtract(end, start).normalize();
     const bondThickness = this.userOpts.rendering.bonds.bondThickness || 1;
-    const spacingMultiplierRaw = stereo.dashedSpacingMultiplier;
+    const spacingMultiplierRaw = bondDash.dashedWedgeSpacingMultiplier;
     const spacingMultiplier = Number.isFinite(spacingMultiplierRaw) && spacingMultiplierRaw > 0 ? spacingMultiplierRaw : 3.0;
     const baseUnit = bondThickness * spacingMultiplier;
-    const divisor = length / (baseUnit || 1);
-    const rawStep = divisor !== 0 ? stereo.dashedStepFactor / divisor : stereo.dashedStepFactor;
+    const divisor = baseUnit !== 0 ? length / baseUnit : 0;
+    const rawStep = divisor !== 0 ? bondDash.dashedStepFactor / divisor : bondDash.dashedStepFactor;
     const step = Math.max(rawStep, 1e-3);
-    const widthFactor = this.userOpts.rendering.stereochemistry.dashedWidthFactorSvg ?? 0.5;
+    const widthFactor = bondDash.dashedWidthFactorSvg ?? 0.5;
     const baseFont = this.userOpts.typography.fontSizeLarge;
 
     const defaultColor = this.themeManager.getColor('C');
     const leftColor = this.themeManager.getColor(line.getLeftElement()) || defaultColor;
     const rightColor = this.themeManager.getColor(line.getRightElement()) || defaultColor;
-    const thresholdRaw = typeof stereo.dashedColorSwitchThreshold === 'number' ? stereo.dashedColorSwitchThreshold : 0.5;
+    const thresholdRaw = typeof bondDash.dashedColorSwitchThreshold === 'number' ? bondDash.dashedColorSwitchThreshold : 0.5;
     const threshold = Math.min(Math.max(thresholdRaw, 0), 1);
 
     for (let t = 0.0; t < 1.0; t += step) {

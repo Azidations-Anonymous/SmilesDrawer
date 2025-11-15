@@ -338,12 +338,19 @@ test('SvgWrapper dashed wedges respect inset padding', () => {
   const inset = 5;
   const { wrapper } = createWrapper({
     rendering: {
-      bonds: { bondLength: 40, bondThickness: 2 },
-      stereochemistry: {
+      bonds: {
+        bondLength: 40,
+        bondThickness: 2,
         dashedInsetPx: inset,
         dashedWidthFactorSvg: 0.2,
-        dashedStepFactor: 0.5
-      }
+        dashedStepFactor: 0.5,
+        dashedColorSwitchThreshold: 0.5,
+        dashedWedgeSpacingMultiplier: 3,
+        dashPattern: [3, 2],
+        tripleBondSpacingDivider: 1.5,
+        bondSpacing: 6
+      },
+      stereochemistry: {}
     }
   });
 
@@ -370,13 +377,19 @@ test('SvgWrapper dashed wedges switch colors at the configured threshold', () =>
   const threshold = 0.3;
   const { wrapper } = createWrapper({
     rendering: {
-      bonds: { bondLength: 40, bondThickness: 2 },
-      stereochemistry: {
+      bonds: {
+        bondLength: 40,
+        bondThickness: 2,
         dashedColorSwitchThreshold: threshold,
         dashedInsetPx: 0,
         dashedStepFactor: 0.4,
-        dashedWidthFactorSvg: 0.25
-      }
+        dashedWidthFactorSvg: 0.25,
+        dashedWedgeSpacingMultiplier: 3,
+        dashPattern: [3, 2],
+        tripleBondSpacingDivider: 1.5,
+        bondSpacing: 6
+      },
+      stereochemistry: {}
     }
   });
 

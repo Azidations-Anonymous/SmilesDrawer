@@ -119,11 +119,14 @@ class CanvasWedgeDrawer {
         const stereo = this.wrapper.userOpts.rendering.stereochemistry;
         let shortLine = line.clone();
 
+        const bondDash = this.wrapper.userOpts.rendering.bonds;
+        const inset = Number.isFinite(bondDash.dashedInsetPx) ? Math.max(bondDash.dashedInsetPx, 0) : 1.0;
+
         if (isRightChiralCenter) {
             start = r;
             end = l;
 
-            shortLine.shortenRight(stereo.dashedInsetPx ?? 1.0);
+            shortLine.shortenRight(inset);
 
             sStart = shortLine.getRightVector().clone();
             sEnd = shortLine.getLeftVector().clone();
@@ -131,7 +134,7 @@ class CanvasWedgeDrawer {
             start = l;
             end = r;
 
-            shortLine.shortenLeft(stereo.dashedInsetPx ?? 1.0);
+            shortLine.shortenLeft(inset);
 
             sStart = shortLine.getLeftVector().clone();
             sEnd = shortLine.getRightVector().clone();
@@ -146,23 +149,25 @@ class CanvasWedgeDrawer {
         ctx.strokeStyle = this.wrapper.themeManager.getColor('C');
         ctx.lineCap = 'round';
         const bondThickness = this.wrapper.userOpts.rendering.bonds.bondThickness;
-        const spacingMultiplierRaw = this.wrapper.userOpts.rendering.stereochemistry.dashedSpacingMultiplier;
-        const spacingMultiplier = Number.isFinite(spacingMultiplierRaw) && spacingMultiplierRaw > 0 ? spacingMultiplierRaw : 3.0;
         ctx.lineWidth = bondThickness;
         ctx.beginPath();
         let length = line.getLength();
+        const spacingMultiplierRaw = bondDash.dashedWedgeSpacingMultiplier;
+        const spacingMultiplier = Number.isFinite(spacingMultiplierRaw) && spacingMultiplierRaw > 0 ? spacingMultiplierRaw : 3.0;
         const baseUnit = bondThickness * spacingMultiplier;
         const divisor = baseUnit !== 0 ? length / baseUnit : 0;
-        const step = divisor !== 0 ? stereo.dashedStepFactor / divisor : stereo.dashedStepFactor;
+        const step = divisor !== 0 ? bondDash.dashedStepFactor / divisor : bondDash.dashedStepFactor;
 
         let changed = false;
         for (var t = 0.0; t < 1.0; t += step) {
             let to = Vector2.multiplyScalar(dir, t * length);
             let startDash = Vector2.add(start, to);
-            let width = stereo.dashedWidthFactorCanvas * t;
+            const widthFactor = Number.isFinite(bondDash.dashedWidthFactorCanvas) ? bondDash.dashedWidthFactorCanvas : 1.5;
+            let width = widthFactor * t;
             let dashOffset = Vector2.multiplyScalar(normals[0], width);
 
-            if (!changed && t > stereo.dashedColorSwitchThreshold) {
+            const switchThreshold = typeof bondDash.dashedColorSwitchThreshold === 'number' ? bondDash.dashedColorSwitchThreshold : 0.5;
+            if (!changed && t > switchThreshold) {
                 ctx.stroke();
                 ctx.beginPath();
                 ctx.strokeStyle = this.wrapper.themeManager.getColor(line.getRightElement()) || this.wrapper.themeManager.getColor('C');

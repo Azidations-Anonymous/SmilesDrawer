@@ -356,7 +356,20 @@ The default options are defined as follows (auto-generated via `node scripts/upd
         3,
         2
       ],
-      tripleBondSpacingDivider: 1.5
+      tripleBondSpacingDivider: 1.5,
+      dashedStepFactor: 1.25,
+      dashedWedgeSpacingMultiplier: 3,
+      dashedWidthFactorSvg: 0.5,
+      dashedWidthFactorCanvas: 1.5,
+      dashedColorSwitchThreshold: 0.5,
+      dashedInsetPx: 1
+    },
+    stereochemistry: {
+      isomeric: true,
+      shadowShortenPx: 5,
+      wedgeTipPaddingPx: 3,
+      wedgeTipFontScale: 0.25,
+      wedgeSidePaddingPx: 1.5
     },
     atoms: {
       atomVisualization: 'default',
@@ -364,18 +377,6 @@ The default options are defined as follows (auto-generated via `node scripts/upd
       explicitHydrogens: false,
       pointRadius: 6.666666666667,
       pointMaskRadius: 1.5
-    },
-    stereochemistry: {
-      isomeric: true,
-      shadowShortenPx: 5,
-      wedgeTipPaddingPx: 3,
-      wedgeTipFontScale: 0.25,
-      wedgeSidePaddingPx: 1.5,
-      dashedStepFactor: 1.25,
-      dashedWidthFactorSvg: 0.5,
-      dashedWidthFactorCanvas: 1.5,
-      dashedColorSwitchThreshold: 0.5,
-      dashedInsetPx: 1
     },
     aromatic: {
       piSystemInset: 7,
@@ -399,8 +400,8 @@ The default options are defined as follows (auto-generated via `node scripts/upd
     },
     finetune: {
       enabled: true,
-      maxSteps: 64,
-      maxDurationMs: 50
+      maxSteps: 256,
+      maxDurationMs: 250
     },
     force: {
       kkThreshold: 0.1,

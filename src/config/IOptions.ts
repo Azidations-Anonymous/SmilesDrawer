@@ -241,6 +241,12 @@ interface IRenderingBondOptions {
   bondSpacing: number;
   dashPattern: number[];
   tripleBondSpacingDivider: number;
+  dashedStepFactor: number;
+  dashedWedgeSpacingMultiplier: number;
+  dashedWidthFactorSvg: number;
+  dashedWidthFactorCanvas: number;
+  dashedColorSwitchThreshold: number;
+  dashedInsetPx: number;
 }
 
 interface IRenderingAtomOptions {
@@ -257,12 +263,6 @@ interface IRenderingStereochemistryOptions {
   wedgeTipPaddingPx: number;
   wedgeTipFontScale: number;
   wedgeSidePaddingPx: number;
-  dashedStepFactor: number;
-  dashedSpacingMultiplier: number;
-  dashedWidthFactorSvg: number;
-  dashedWidthFactorCanvas: number;
-  dashedColorSwitchThreshold: number;
-  dashedInsetPx: number;
 }
 
 interface IRenderingAromaticOptions {
