@@ -678,6 +678,12 @@
         const folderRenderingBonds = folderRendering.addFolder({
             title: 'Bonds',
         });
+        const folderRenderingStereochemistry = folderRendering.addFolder({
+            title: 'Stereochemistry',
+        });
+        const folderRenderingAromatic = folderRendering.addFolder({
+            title: 'Aromatic',
+        });
 
         const folderLayout = pane.addFolder({
             title: 'Layout',
@@ -685,6 +691,18 @@
 
         const folderLayoutGraph = folderLayout.addFolder({
             title: 'Graph',
+        });
+
+        const folderLayoutFinetune = folderLayout.addFolder({
+            title: 'Finetune',
+        });
+
+        const folderLayoutForce = folderLayout.addFolder({
+            title: 'Force',
+        });
+
+        const folderLayoutOverlap = folderLayout.addFolder({
+            title: 'Overlap',
         });
 
         const folderTypography = pane.addFolder({
@@ -859,6 +877,55 @@
             }
             syncDashPattern();
         });
+        folderRenderingStereochemistry.addInput(moleculeOptions.rendering.stereochemistry, 'isomeric', {
+            label: 'Enable stereochemistry',
+        });
+        folderRenderingStereochemistry.addInput(moleculeOptions.rendering.stereochemistry, 'shadowShortenPx', {
+            label: 'Shadow shorten (px)',
+            min: 0,
+            max: 50,
+            step: 0.1,
+        });
+        folderRenderingStereochemistry.addInput(moleculeOptions.rendering.stereochemistry, 'wedgeTipPaddingPx', {
+            label: 'Wedge tip padding (px)',
+            min: 0,
+            max: 20,
+            step: 0.1,
+        });
+        folderRenderingStereochemistry.addInput(moleculeOptions.rendering.stereochemistry, 'wedgeTipFontScale', {
+            label: 'Wedge tip font scale',
+            min: 0,
+            max: 1,
+            step: 0.01,
+        });
+        folderRenderingStereochemistry.addInput(moleculeOptions.rendering.stereochemistry, 'wedgeSidePaddingPx', {
+            label: 'Wedge side padding (px)',
+            min: 0,
+            max: 20,
+            step: 0.1,
+        });
+        folderRenderingAromatic.addInput(moleculeOptions.rendering.aromatic, 'piSystemInset', {
+            label: 'Pi system inset',
+            min: 0,
+            max: 20,
+            step: 0.1,
+        });
+        folderRenderingAromatic.addInput(moleculeOptions.rendering.aromatic, 'overlayInset', {
+            label: 'Overlay inset',
+            min: 0,
+            max: 20,
+            step: 0.1,
+        });
+        folderRenderingAromatic.addInput(moleculeOptions.rendering.aromatic, 'overlayClampRatio', {
+            label: 'Overlay clamp ratio',
+            min: 0,
+            max: 1,
+            step: 0.01,
+        });
+        folderRenderingAromatic.addInput(moleculeOptions.rendering.aromatic, 'overlayColor', {
+            label: 'Overlay color',
+            input: 'color',
+        });
         folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'compactDrawing', {
             label: 'Compact drawing',
         });
@@ -916,10 +983,152 @@
             max: 0.1,
             step: 0.0001,
         });
+        folderLayoutFinetune.addInput(moleculeOptions.layout.finetune, 'enabled', {
+            label: 'Enable finetune',
+        });
+        folderLayoutFinetune.addInput(moleculeOptions.layout.finetune, 'maxSteps', {
+            label: 'Finetune max steps',
+            min: 0,
+            max: 10000,
+            step: 1,
+        });
+        folderLayoutFinetune.addInput(moleculeOptions.layout.finetune, 'maxDurationMs', {
+            label: 'Finetune max duration (ms)',
+            min: 0,
+            max: 10000,
+            step: 1,
+        });
+        folderLayoutForce.addInput(moleculeOptions.layout.force, 'kkThreshold', {
+            label: 'KK threshold',
+            min: 0,
+            max: 1,
+            step: 0.01,
+        });
+        folderLayoutForce.addInput(moleculeOptions.layout.force, 'kkInnerThreshold', {
+            label: 'KK inner threshold',
+            min: 0,
+            max: 1,
+            step: 0.01,
+        });
+        folderLayoutForce.addInput(moleculeOptions.layout.force, 'kkMaxIteration', {
+            label: 'KK max iterations',
+            min: 0,
+            max: 100000,
+            step: 10,
+        });
+        folderLayoutForce.addInput(moleculeOptions.layout.force, 'kkMaxInnerIteration', {
+            label: 'KK max inner iterations',
+            min: 0,
+            max: 5000,
+            step: 1,
+        });
+        folderLayoutForce.addInput(moleculeOptions.layout.force, 'kkMaxEnergy', {
+            label: 'KK max energy',
+            min: 0,
+            max: 1e10,
+            step: 1000,
+        });
+        folderLayoutForce.addInput(moleculeOptions.layout.force, 'hessianMinimum', {
+            label: 'Hessian minimum',
+            min: 0,
+            max: 10,
+            step: 0.01,
+        });
+        folderLayoutOverlap.addInput(moleculeOptions.layout.overlap, 'ringDivisionSegments', {
+            label: 'Ring division segments',
+            min: 1,
+            max: 32,
+            step: 1,
+        });
+        folderLayoutOverlap.addInput(moleculeOptions.layout.overlap, 'finetuneClashDistanceFactor', {
+            label: 'Finetune clash distance factor',
+            min: 0,
+            max: 5,
+            step: 0.01,
+        });
+        folderLayoutOverlap.addInput(moleculeOptions.layout.overlap, 'rotatableEdgeCenteringFactor', {
+            label: 'Rotatable edge centering factor',
+            min: 0,
+            max: 5,
+            step: 0.01,
+        });
+        folderLayoutOverlap.addInput(moleculeOptions.layout.overlap, 'terminalPushAngleDeg', {
+            label: 'Terminal push angle (deg)',
+            min: 0,
+            max: 180,
+            step: 1,
+        });
+        folderTypography.addInput(moleculeOptions.typography, 'fontFamily', {
+            label: 'Font family',
+        });
         folderTypography.addInput(moleculeOptions.typography, 'fontSizeLarge', {
+            label: 'Large font size',
             step: 0.1,
             min: 1.0,
             max: 20.0,
+        });
+        folderTypography.addInput(moleculeOptions.typography, 'fontSizeSmall', {
+            label: 'Small font size',
+            step: 0.1,
+            min: 1.0,
+            max: 20.0,
+        });
+        folderTypography.addInput(moleculeOptions.typography, 'labelOutlineWidth', {
+            label: 'Outline width',
+            step: 0.1,
+            min: 0,
+            max: 10,
+        });
+        folderTypography.addInput(moleculeOptions.typography, 'svgBaselineShiftEm', {
+            label: 'SVG baseline shift (em)',
+            step: 0.01,
+            min: -2,
+            max: 2,
+        });
+        folderTypography.addInput(moleculeOptions.typography, 'measurementLineHeight', {
+            label: 'Measurement line height',
+            step: 0.01,
+            min: 0,
+            max: 5,
+        });
+        folderTypography.addInput(moleculeOptions.typography, 'isotopeOffsetFactor', {
+            label: 'Isotope offset factor',
+            step: 0.01,
+            min: 0,
+            max: 5,
+        });
+        const folderTypographySpacing = folderTypography.addFolder({
+            title: 'Label spacing',
+        });
+        folderTypographySpacing.addInput(moleculeOptions.typography.labelSpacing, 'baseUnitScale', {
+            label: 'Base unit scale',
+            step: 0.01,
+            min: 0,
+            max: 5,
+        });
+        folderTypographySpacing.addInput(moleculeOptions.typography.labelSpacing, 'chargeMultiplier', {
+            label: 'Charge multiplier',
+            step: 0.01,
+            min: -5,
+            max: 5,
+        });
+        folderTypographySpacing.addInput(moleculeOptions.typography.labelSpacing, 'isotopeMultiplier', {
+            label: 'Isotope multiplier',
+            step: 0.01,
+            min: -5,
+            max: 5,
+        });
+        folderTypographySpacing.addInput(moleculeOptions.typography.labelSpacing, 'hydrogenMultiplier', {
+            label: 'Hydrogen multiplier',
+            step: 0.01,
+            min: -5,
+            max: 5,
+        });
+        folderTypographySpacing.addInput(moleculeOptions.typography.labelSpacing, 'hydrogenCountMultiplier', {
+            label: 'Hydrogen count multiplier',
+            step: 0.01,
+            min: -5,
+            max: 5,
         });
 
         folderAppearanceTheme.addInput(moleculeOptions.appearance.themes.custom, 'C', {
