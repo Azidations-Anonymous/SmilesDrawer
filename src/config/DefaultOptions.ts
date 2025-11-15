@@ -238,8 +238,8 @@ export function getLegacyDefaultOptions(): IMoleculeOptions {
     overlapSensitivity: 0.42,
     overlapResolutionIterations: 1,
     finetuneOverlap: true,
-    finetuneOverlapMaxSteps: 64,
-    finetuneOverlapMaxDurationMs: 50,
+    finetuneOverlapMaxSteps: 256,
+    finetuneOverlapMaxDurationMs: 250,
     showAtomAnnotations: false,
     atomAnnotationColor: '#ff4081',
     atomAnnotationFontSize: 9,
@@ -334,8 +334,8 @@ export function getDefaultUserOptions(): IUserOptions {
       },
       finetune: {
         enabled: true,
-        maxSteps: 64,
-        maxDurationMs: 50
+        maxSteps: 256,
+        maxDurationMs: 250
       },
       force: {
         kkThreshold: 0.1,

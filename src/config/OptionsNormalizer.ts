@@ -21,7 +21,7 @@ function isUserOptionsShape(input: unknown): input is Partial<IUserOptions> {
   }
 
   const candidate = input as Record<string, unknown>;
-  return 'canvas' in candidate || 'meta' in candidate;
+  return 'canvas' in candidate || 'meta' in candidate || 'rendering' in candidate || 'layout' in candidate;
 }
 
 function migrateBallRadiusToPoint(atoms?: Record<string, unknown>): void {
@@ -221,15 +221,18 @@ export function materializeLegacyOptions(user: IUserOptions): IMoleculeOptions {
 export function normalizeUserOptions(
   input?: UserOrLegacy
 ): IUserOptions {
+  const defaults = getDefaultUserOptions();
   if (!input) {
-    return getDefaultUserOptions();
+    return defaults;
   }
 
+  const possibleAtoms = (input as Partial<IUserOptions>)?.rendering?.atoms;
+  migrateBallRadiusToPoint(possibleAtoms as unknown as Record<string, unknown>);
+
   if (isUserOptionsShape(input)) {
-    if (input.rendering && input.rendering.atoms) {
-      migrateBallRadiusToPoint(input.rendering.atoms as unknown as Record<string, unknown>);
-    }
-    return Options.extend<IUserOptions>(true, getDefaultUserOptions(), input);
+    const merged = Options.extend<IUserOptions>(true, defaults, input);
+    migrateBallRadiusToPoint(merged.rendering?.atoms as unknown as Record<string, unknown>);
+    return merged;
   }
 
   const legacy = Options.extend<IMoleculeOptions>(
@@ -238,5 +241,7 @@ export function normalizeUserOptions(
     input
   );
 
-  return translateLegacyToUser(legacy);
+  const translated = translateLegacyToUser(legacy);
+  migrateBallRadiusToPoint(translated.rendering?.atoms as unknown as Record<string, unknown>);
+  return translated;
 }

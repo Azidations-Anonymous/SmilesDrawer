@@ -218,53 +218,6 @@ class OverlapResolutionManager {
 
         const bondLengthSq = this.drawer.derivedOpts.bondLengthSq;
         const threshold = 0.8 * bondLengthSq;
-        const clashingPairs = this.findClashingVertices(threshold);
-
-        if (clashingPairs.length === 0) {
-          return;
-        }
-
-        const candidateEdgeIds = new Set<number>();
-
-        for (const [vertexA, vertexB] of clashingPairs) {
-          if (vertexA.id === null || vertexB.id === null) {
-            continue;
-          }
-
-          const path = this.findShortestPath(vertexA.id, vertexB.id);
-          if (path.length === 0) {
-            continue;
-          }
-
-          const averageDistance = path.length / 2.0;
-          let bestEdge: Edge | null = null;
-          let bestMetric = Number.POSITIVE_INFINITY;
-
-          for (let i = 0; i < path.length; i++) {
-            const edge = path[i];
-            if (!this.drawer.isEdgeRotatable(edge)) {
-              continue;
-            }
-
-            const distance1 = i;
-            const distance2 = path.length - i;
-            const distanceMetric = Math.abs(averageDistance - distance1) + Math.abs(averageDistance - distance2);
-
-            if (distanceMetric < bestMetric) {
-              bestMetric = distanceMetric;
-              bestEdge = edge;
-            }
-          }
-
-          if (bestEdge && bestEdge.id !== null) {
-            candidateEdgeIds.add(bestEdge.id);
-          }
-        }
-
-        if (candidateEdgeIds.size === 0) {
-          return;
-        }
-
         const rotationConfig = OverlapResolutionManager.getFinetuneRotationConfig(this.drawer.userOpts);
         const stepAngle = rotationConfig.stepAngleRad;
         const stepsPerRotation = rotationConfig.stepsPerRotation;
@@ -278,11 +231,49 @@ class OverlapResolutionManager {
         const startTime = Date.now();
         let processedSteps = 0;
 
-        for (const edgeId of candidateEdgeIds) {
-          if (processedSteps >= maxSteps) {
-            break;
+        const collectCandidateEdges = (): Set<number> => {
+          const clashingPairs = this.findClashingVertices(threshold);
+          const candidateEdgeIds = new Set<number>();
+
+          for (const [vertexA, vertexB] of clashingPairs) {
+            if (vertexA.id === null || vertexB.id === null) {
+              continue;
+            }
+
+            const path = this.findShortestPath(vertexA.id, vertexB.id);
+            if (path.length === 0) {
+              continue;
+            }
+
+            const averageDistance = path.length / 2.0;
+            let bestEdge: Edge | null = null;
+            let bestMetric = Number.POSITIVE_INFINITY;
+
+            for (let i = 0; i < path.length; i++) {
+              const edge = path[i];
+              if (!this.drawer.isEdgeRotatable(edge)) {
+                continue;
+              }
+
+              const distance1 = i;
+              const distance2 = path.length - i;
+              const distanceMetric = Math.abs(averageDistance - distance1) + Math.abs(averageDistance - distance2);
+
+              if (distanceMetric < bestMetric) {
+                bestMetric = distanceMetric;
+                bestEdge = edge;
+              }
+            }
+
+            if (bestEdge && bestEdge.id !== null) {
+              candidateEdgeIds.add(bestEdge.id);
+            }
           }
 
+          return candidateEdgeIds;
+        };
+
+        while (processedSteps < maxSteps) {
           if (maxDuration > 0 && Date.now() - startTime >= maxDuration) {
             break;
           }
@@ -291,56 +282,93 @@ class OverlapResolutionManager {
             break;
           }
 
-          processedSteps++;
-
-          const edge = this.drawer.graph.edges[edgeId];
-
-          if (!edge) {
-            continue;
+          const candidateEdgeIds = collectCandidateEdges();
+          if (candidateEdgeIds.size === 0) {
+            break;
           }
 
-          const sourceId = edge.sourceId;
-          const targetId = edge.targetId;
+          let madeProgress = false;
 
-          const subtreeSizeSource = this.getSubgraphSize(sourceId, new Set<number>([targetId]));
-          const subtreeSizeTarget = this.getSubgraphSize(targetId, new Set<number>([sourceId]));
+          for (const edgeId of candidateEdgeIds) {
+            if (processedSteps >= maxSteps) {
+              break;
+            }
 
-          let rotatingId = sourceId;
-          let parentId = targetId;
+            if (maxDuration > 0 && Date.now() - startTime >= maxDuration) {
+              processedSteps = maxSteps;
+              break;
+            }
 
-          if (subtreeSizeSource >= subtreeSizeTarget) {
-            rotatingId = targetId;
-            parentId = sourceId;
-          }
+            const edge = this.drawer.graph.edges[edgeId];
+            if (!edge) {
+              continue;
+            }
 
-          const parentVertex = this.drawer.graph.vertices[parentId];
-          const rotatingVertex = this.drawer.graph.vertices[rotatingId];
+            processedSteps++;
 
-          if (!parentVertex || !rotatingVertex || !rotatingVertex.value.isDrawn) {
-            continue;
-          }
+            const sourceId = edge.sourceId;
+            const targetId = edge.targetId;
 
-          const currentScore = this.getOverlapScore().total;
-          let bestScore = currentScore;
-          let bestStep = 0;
+            const subtreeSizeSource = this.getSubgraphSize(sourceId, new Set<number>([targetId]));
+            const subtreeSizeTarget = this.getSubgraphSize(targetId, new Set<number>([sourceId]));
 
-          for (let step = 0; step < stepsPerRotation; step++) {
-            this.rotateSubtree(rotatingId, parentId, stepAngle, parentVertex.position);
-            const candidateScore = this.getOverlapScore().total;
+            let rotatingId = sourceId;
+            let parentId = targetId;
 
-            if (candidateScore < bestScore) {
-              bestScore = candidateScore;
-              bestStep = step + 1;
+            if (subtreeSizeSource >= subtreeSizeTarget) {
+              rotatingId = targetId;
+              parentId = sourceId;
+            }
+
+            const parentVertex = this.drawer.graph.vertices[parentId];
+            const rotatingVertex = this.drawer.graph.vertices[rotatingId];
+
+            if (!parentVertex || !rotatingVertex || !rotatingVertex.value.isDrawn) {
+              continue;
+            }
+
+            if (!this.drawer.graph.hasEdge(parentVertex.id, rotatingVertex.id)) {
+              continue;
+            }
+
+            const currentScore = this.getOverlapScore().total;
+            let bestScore = currentScore;
+            let bestStep = 0;
+
+            for (let step = 0; step < stepsPerRotation; step++) {
+              this.rotateSubtree(rotatingId, parentId, stepAngle, parentVertex.position);
+              const candidateScore = this.getOverlapScore().total;
+
+              if (candidateScore < bestScore) {
+                bestScore = candidateScore;
+                bestStep = step + 1;
+              }
+            }
+
+            this.rotateSubtree(rotatingId, parentId, -stepAngle * stepsPerRotation, parentVertex.position);
+
+            if (bestStep === 0 || bestScore >= currentScore) {
+              continue;
+            }
+
+            const finalAngle = (stepAngle * bestStep) + rotationConfig.finalOffsetRad;
+            if (finalAngle !== 0) {
+              this.rotateSubtree(rotatingId, parentId, finalAngle, parentVertex.position);
+            }
+
+            const finalScore = this.getOverlapScore();
+            if (finalScore.total < this.drawer.totalOverlapScore) {
+              madeProgress = true;
+              this.drawer.totalOverlapScore = finalScore.total;
+            } else if (finalAngle !== 0) {
+              // Revert if the final rotation failed to improve the score.
+              this.rotateSubtree(rotatingId, parentId, -finalAngle, parentVertex.position);
             }
           }
 
-          this.rotateSubtree(rotatingId, parentId, -stepAngle * stepsPerRotation, parentVertex.position);
-
-          const finalAngle = (stepAngle * bestStep) + rotationConfig.finalOffsetRad;
-          this.rotateSubtree(rotatingId, parentId, finalAngle, parentVertex.position);
-
-          const finalScore = this.getOverlapScore();
-          this.drawer.totalOverlapScore = finalScore.total;
+          if (!madeProgress) {
+            break;
+          }
         }
     }
 
