@@ -255,21 +255,20 @@
             originalConsoleLog(...args);
         };
 
-        function logNormalizedDefaultOptions() {
+        const logCurrentOptions = () => {
             try {
-                const defaultDrawer = new SmiDrawer();
-                const normalizedDefaults = defaultDrawer && defaultDrawer.drawer ? defaultDrawer.drawer.userOpts : null;
-                if (!normalizedDefaults) {
-                    console.warn('Unable to determine normalized default options');
-                    return;
-                }
-                console.log('[normalized-default-options]\n' + JSON.stringify(normalizedDefaults, null, 2));
+                const snapshot = {
+                    moleculeOptions: JSON.parse(JSON.stringify(moleculeOptions)),
+                    reactionOptions: JSON.parse(JSON.stringify(reactionOptions)),
+                };
+                logBuffer.length = 0;
+                console.log('[current-options]\n' + JSON.stringify(snapshot, null, 2));
             } catch (err) {
-                console.error('Failed to print normalized default options', err);
+                console.error('Failed to capture current options', err);
             }
-        }
+        };
 
-        logNormalizedDefaultOptions();
+        logCurrentOptions();
 
         let theme = 'custom';
 
@@ -647,6 +646,7 @@
             dynamicCanvasScale: moleculeOptions.canvas.scale <= 0,
             dashPatternOn: normalizeDashSegment(dashPattern[0], 3),
             dashPatternOff: normalizeDashSegment(dashPattern[1], 2),
+            showAdvanced: false,
         };
         const syncDashPattern = () => {
             const existingPattern = moleculeOptions.rendering.bonds.dashPattern || [];
@@ -659,9 +659,45 @@
         };
         syncDashPattern();
 
+        const advancedOnlyInputs = [];
+        const exclusiveAdvancedFolders = new Set();
+        const registerAdvancedInput = (folder, target, key, config, options = {}) => {
+            const input = folder.addInput(target, key, config);
+            input.hidden = !uiState.showAdvanced;
+            advancedOnlyInputs.push({ input, folder });
+            if (options.exclusive) {
+                exclusiveAdvancedFolders.add(folder);
+                folder.hidden = !uiState.showAdvanced;
+            }
+            return input;
+        };
+
+        const applyAdvancedMode = (isAdvanced) => {
+            if (paneElement) {
+                paneElement.dataset.advancedMode = isAdvanced ? 'true' : 'false';
+                paneElement.classList.toggle('is-advanced', !!isAdvanced);
+            }
+            uiState.showAdvanced = isAdvanced;
+            advancedOnlyInputs.forEach(({ input }) => {
+                input.hidden = !isAdvanced;
+                input.refresh();
+            });
+            exclusiveAdvancedFolders.forEach((folder) => {
+                folder.hidden = !isAdvanced;
+            });
+        };
+        const advancedToggle = pane.addInput(uiState, 'showAdvanced', {
+            label: 'Advanced mode',
+        });
+        advancedToggle.on('change', (event) => {
+            applyAdvancedMode(!!event.value);
+        });
+        applyAdvancedMode(uiState.showAdvanced);
+
         const folderMeta = pane.addFolder({
             title: 'Meta',
         });
+        moleculeOptions.rendering.stereochemistry.dashedSpacingMultiplier = moleculeOptions.rendering.bonds.dashedWedgeSpacingMultiplier;
 
         const folderCanvas = pane.addFolder({
             title: 'Canvas',
@@ -696,14 +732,17 @@
         const folderLayoutFinetune = folderLayout.addFolder({
             title: 'Finetune',
         });
+        folderLayoutFinetune.hidden = !uiState.showAdvanced;
 
         const folderLayoutForce = folderLayout.addFolder({
             title: 'Force',
         });
+        folderLayoutForce.hidden = !uiState.showAdvanced;
 
         const folderLayoutOverlap = folderLayout.addFolder({
             title: 'Overlap',
         });
+        folderLayoutOverlap.hidden = !uiState.showAdvanced;
 
         const folderTypography = pane.addFolder({
             title: 'Typography',
@@ -840,11 +879,14 @@
             min: 0.1,
             max: 10.0,
         });
-        folderRenderingBonds.addInput(moleculeOptions.rendering.bonds, 'dashedWedgeSpacingMultiplier', {
+        const dashedSpacingInput = folderRenderingBonds.addInput(moleculeOptions.rendering.bonds, 'dashedWedgeSpacingMultiplier', {
             label: 'Dashed wedge spacing multiplier',
             min: 0.1,
             max: 10.0,
             step: 0.1,
+        });
+        dashedSpacingInput.on('change', (event) => {
+            moleculeOptions.rendering.stereochemistry.dashedSpacingMultiplier = event.value;
         });
         const folderRenderingBondsDash = folderRenderingBonds.addFolder({
             title: 'Aromatic dash pattern',
@@ -929,93 +971,135 @@
         folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'compactDrawing', {
             label: 'Compact drawing',
         });
-        folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'overlapSensitivity', {
+        registerAdvancedInput(folderLayoutGraph, moleculeOptions.layout.graph, 'overlapSensitivity', {
             label: 'Overlap sensitivity',
             min: 0,
             max: 5,
             step: 0.01,
         });
-        folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'overlapResolutionIterations', {
+        registerAdvancedInput(folderLayoutGraph, moleculeOptions.layout.graph, 'overlapResolutionIterations', {
             label: 'Overlap resolution passes',
             min: 0,
             max: 25,
             step: 1,
         });
-        folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'rotationSnapIncrementDeg', {
+        registerAdvancedInput(folderLayoutGraph, moleculeOptions.layout.graph, 'rotationSnapIncrementDeg', {
             label: 'Rotation snap increment (deg)',
             min: 0,
             max: 360,
             step: 1,
         });
-        folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'rotationSnapDeadzoneDeg', {
+        registerAdvancedInput(folderLayoutGraph, moleculeOptions.layout.graph, 'rotationSnapDeadzoneDeg', {
             label: 'Rotation snap deadzone (deg)',
             min: 0,
             max: 180,
             step: 1,
         });
-        folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'defaultBranchAngleRad', {
+        registerAdvancedInput(folderLayoutGraph, moleculeOptions.layout.graph, 'defaultBranchAngleRad', {
             label: 'Default branch angle (rad)',
             min: 0,
             max: Math.PI,
             step: 0.01,
         });
-        folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'linearBondToleranceRad', {
+        registerAdvancedInput(folderLayoutGraph, moleculeOptions.layout.graph, 'linearBondToleranceRad', {
             label: 'Linear bond tolerance (rad)',
             min: 0,
             max: 1,
             step: 0.01,
         });
-        folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'finetuneRotationOffsetDeg', {
+        registerAdvancedInput(folderLayoutGraph, moleculeOptions.layout.graph, 'finetuneRotationOffsetDeg', {
             label: 'Finetune rotation offset (deg)',
             min: 0,
             max: 90,
             step: 0.1,
         });
-        folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'centerOfMassRadiusFactor', {
+        registerAdvancedInput(folderLayoutGraph, moleculeOptions.layout.graph, 'centerOfMassRadiusFactor', {
             label: 'Center of mass radius factor',
             min: 0,
             max: 10,
             step: 0.1,
         });
-        folderLayoutGraph.addInput(moleculeOptions.layout.graph, 'rotationJitterEpsilon', {
+        registerAdvancedInput(folderLayoutGraph, moleculeOptions.layout.graph, 'rotationJitterEpsilon', {
             label: 'Rotation jitter epsilon',
             min: 0,
             max: 0.1,
             step: 0.0001,
         });
-        folderLayoutFinetune.addInput(moleculeOptions.layout.finetune, 'enabled', {
+        registerAdvancedInput(folderLayoutFinetune, moleculeOptions.layout.finetune, 'enabled', {
             label: 'Enable finetune',
-        });
-        folderLayoutFinetune.addInput(moleculeOptions.layout.finetune, 'maxSteps', {
+        }, { exclusive: true });
+        registerAdvancedInput(folderLayoutFinetune, moleculeOptions.layout.finetune, 'maxSteps', {
             label: 'Finetune max steps',
             min: 0,
             max: 10000,
             step: 1,
-        });
-        folderLayoutFinetune.addInput(moleculeOptions.layout.finetune, 'maxDurationMs', {
+        }, { exclusive: true });
+        registerAdvancedInput(folderLayoutFinetune, moleculeOptions.layout.finetune, 'maxDurationMs', {
             label: 'Finetune max duration (ms)',
             min: 0,
             max: 10000,
             step: 1,
-        });
-        folderLayoutForce.addInput(moleculeOptions.layout.force, 'kkThreshold', {
+        }, { exclusive: true });
+        registerAdvancedInput(folderLayoutForce, moleculeOptions.layout.force, 'kkThreshold', {
             label: 'KK threshold',
             min: 0,
             max: 1,
             step: 0.01,
-        });
-        folderLayoutForce.addInput(moleculeOptions.layout.force, 'kkInnerThreshold', {
+        }, { exclusive: true });
+        registerAdvancedInput(folderLayoutForce, moleculeOptions.layout.force, 'kkInnerThreshold', {
             label: 'KK inner threshold',
             min: 0,
             max: 1,
             step: 0.01,
-        });
-        folderLayoutForce.addInput(moleculeOptions.layout.force, 'kkMaxIteration', {
+        }, { exclusive: true });
+        registerAdvancedInput(folderLayoutForce, moleculeOptions.layout.force, 'kkMaxIteration', {
             label: 'KK max iterations',
             min: 0,
             max: 100000,
             step: 10,
-        });
+        }, { exclusive: true });
+        registerAdvancedInput(folderLayoutForce, moleculeOptions.layout.force, 'kkMaxInnerIteration', {
+            label: 'KK max inner iterations',
+            min: 0,
+            max: 5000,
+            step: 1,
+        }, { exclusive: true });
+        registerAdvancedInput(folderLayoutForce, moleculeOptions.layout.force, 'kkMaxEnergy', {
+            label: 'KK max energy',
+            min: 0,
+            max: 1e10,
+            step: 1000,
+        }, { exclusive: true });
+        registerAdvancedInput(folderLayoutForce, moleculeOptions.layout.force, 'hessianMinimum', {
+            label: 'Hessian minimum',
+            min: 0,
+            max: 10,
+            step: 0.01,
+        }, { exclusive: true });
+        registerAdvancedInput(folderLayoutOverlap, moleculeOptions.layout.overlap, 'ringDivisionSegments', {
+            label: 'Ring division segments',
+            min: 1,
+            max: 32,
+            step: 1,
+        }, { exclusive: true });
+        registerAdvancedInput(folderLayoutOverlap, moleculeOptions.layout.overlap, 'finetuneClashDistanceFactor', {
+            label: 'Finetune clash distance factor',
+            min: 0,
+            max: 5,
+            step: 0.01,
+        }, { exclusive: true });
+        registerAdvancedInput(folderLayoutOverlap, moleculeOptions.layout.overlap, 'rotatableEdgeCenteringFactor', {
+            label: 'Rotatable edge centering factor',
+            min: 0,
+            max: 5,
+            step: 0.01,
+        }, { exclusive: true });
+        registerAdvancedInput(folderLayoutOverlap, moleculeOptions.layout.overlap, 'terminalPushAngleDeg', {
+            label: 'Terminal push angle (deg)',
+            min: 0,
+            max: 180,
+            step: 1,
+        }, { exclusive: true });
         folderLayoutForce.addInput(moleculeOptions.layout.force, 'kkMaxInnerIteration', {
             label: 'KK max inner iterations',
             min: 0,
@@ -1283,6 +1367,7 @@
 
         pane.on('change', e => {
             redraw();
+            logCurrentOptions();
         });
 
         const renderModes = {
