@@ -671,6 +671,10 @@
             }
             return input;
         };
+        const markFolderExclusive = (folder) => {
+            exclusiveAdvancedFolders.add(folder);
+            folder.hidden = !uiState.showAdvanced;
+        };
 
         const applyAdvancedMode = (isAdvanced) => {
             if (paneElement) {
@@ -696,84 +700,117 @@
 
         const folderMeta = pane.addFolder({
             title: 'Meta',
+            expanded: false,
         });
         moleculeOptions.rendering.stereochemistry.dashedSpacingMultiplier = moleculeOptions.rendering.bonds.dashedWedgeSpacingMultiplier;
 
         const folderCanvas = pane.addFolder({
             title: 'Canvas',
+            expanded: false,
         });
 
         const folderRendering = pane.addFolder({
             title: 'Rendering',
+            expanded: false,
         });
 
         const folderRenderingAtoms = folderRendering.addFolder({
             title: 'Atoms',
+            expanded: false,
         });
 
         const folderRenderingBonds = folderRendering.addFolder({
             title: 'Bonds',
+            expanded: false,
         });
         const folderRenderingStereochemistry = folderRendering.addFolder({
             title: 'Stereochemistry',
+            expanded: false,
         });
+        markFolderExclusive(folderRenderingStereochemistry);
         const folderRenderingAromatic = folderRendering.addFolder({
             title: 'Aromatic',
+            expanded: false,
         });
+        markFolderExclusive(folderRenderingAromatic);
 
         const folderLayout = pane.addFolder({
             title: 'Layout',
+            expanded: false,
         });
 
         const folderLayoutGraph = folderLayout.addFolder({
             title: 'Graph',
+            expanded: false,
         });
 
         const folderLayoutFinetune = folderLayout.addFolder({
             title: 'Finetune',
+            expanded: false,
         });
         folderLayoutFinetune.hidden = !uiState.showAdvanced;
 
         const folderLayoutForce = folderLayout.addFolder({
             title: 'Force',
+            expanded: false,
         });
         folderLayoutForce.hidden = !uiState.showAdvanced;
 
         const folderLayoutOverlap = folderLayout.addFolder({
             title: 'Overlap',
+            expanded: false,
         });
         folderLayoutOverlap.hidden = !uiState.showAdvanced;
 
         const folderTypography = pane.addFolder({
             title: 'Typography',
+            expanded: false,
         });
 
         const folderAppearance = pane.addFolder({
             title: 'Appearance',
+            expanded: false,
         });
 
         const folderAppearanceTheme = folderAppearance.addFolder({
             title: 'Custom Theme',
+            expanded: false,
         });
+        markFolderExclusive(folderAppearanceTheme);
+
+        const folderVisualizations = pane.addFolder({
+            title: 'Visualizations',
+            expanded: false,
+        });
+        markFolderExclusive(folderVisualizations);
 
         const folderReactions = pane.addFolder({
             title: 'Reactions',
+            expanded: false,
         });
+        markFolderExclusive(folderReactions);
 
         const folderReactionGeneral = folderReactions.addFolder({
             title: 'General',
+            expanded: false,
         });
+        markFolderExclusive(folderReactionGeneral);
 
         const folderReactionPlus = folderReactions.addFolder({
             title: 'Plus',
+            expanded: false,
         });
+        markFolderExclusive(folderReactionPlus);
 
         const folderReactionArrow = folderReactions.addFolder({
             title: 'Arrow',
+            expanded: false,
         });
+        markFolderExclusive(folderReactionArrow);
 
         const folderExport = pane.addFolder({
             title: 'Export',
+            expanded: false,
         });
 
         folderMeta.addMonitor(moleculeOptions.meta, 'version', {
@@ -782,13 +819,22 @@
         folderMeta.addMonitor(moleculeOptions.meta, 'schemaRevision', {
             label: 'Schema revision'
         });
-        folderMeta.addInput(moleculeOptions.meta, 'debug');
-        folderMeta.addInput(moleculeOptions.meta, 'debugTextOutline', {
+        const debugInput = folderMeta.addInput(moleculeOptions.meta, 'debug');
+        const debugOutlineInput = folderMeta.addInput(moleculeOptions.meta, 'debugTextOutline', {
             label: 'Debug outline width',
             min: 0,
             max: 10,
             step: 0.1
         });
+        const syncDebugOutlineVisibility = () => {
+            debugOutlineInput.hidden = !moleculeOptions.meta.debug;
+            debugOutlineInput.refresh();
+        };
+        debugInput.on('change', (event) => {
+            moleculeOptions.meta.debug = event.value;
+            syncDebugOutlineVisibility();
+        });
+        syncDebugOutlineVisibility();
 
         folderCanvas.addInput(moleculeOptions.canvas, 'width', {
             label: 'Width',
@@ -890,6 +936,7 @@
         });
         const folderRenderingBondsDash = folderRenderingBonds.addFolder({
             title: 'Aromatic dash pattern',
+            expanded: false,
         });
         const dashPatternOnInput = folderRenderingBondsDash.addInput(uiState, 'dashPatternOn', {
             label: 'Dash length',
@@ -919,52 +966,52 @@
             }
             syncDashPattern();
         });
-        folderRenderingStereochemistry.addInput(moleculeOptions.rendering.stereochemistry, 'isomeric', {
+        registerAdvancedInput(folderRenderingStereochemistry, moleculeOptions.rendering.stereochemistry, 'isomeric', {
             label: 'Enable stereochemistry',
-        });
-        folderRenderingStereochemistry.addInput(moleculeOptions.rendering.stereochemistry, 'shadowShortenPx', {
+        }, { exclusive: true });
+        registerAdvancedInput(folderRenderingStereochemistry, moleculeOptions.rendering.stereochemistry, 'shadowShortenPx', {
             label: 'Shadow shorten (px)',
             min: 0,
             max: 50,
             step: 0.1,
         });
-        folderRenderingStereochemistry.addInput(moleculeOptions.rendering.stereochemistry, 'wedgeTipPaddingPx', {
+        registerAdvancedInput(folderRenderingStereochemistry, moleculeOptions.rendering.stereochemistry, 'wedgeTipPaddingPx', {
             label: 'Wedge tip padding (px)',
             min: 0,
             max: 20,
             step: 0.1,
         });
-        folderRenderingStereochemistry.addInput(moleculeOptions.rendering.stereochemistry, 'wedgeTipFontScale', {
+        registerAdvancedInput(folderRenderingStereochemistry, moleculeOptions.rendering.stereochemistry, 'wedgeTipFontScale', {
             label: 'Wedge tip font scale',
             min: 0,
             max: 1,
             step: 0.01,
         });
-        folderRenderingStereochemistry.addInput(moleculeOptions.rendering.stereochemistry, 'wedgeSidePaddingPx', {
+        registerAdvancedInput(folderRenderingStereochemistry, moleculeOptions.rendering.stereochemistry, 'wedgeSidePaddingPx', {
             label: 'Wedge side padding (px)',
             min: 0,
             max: 20,
             step: 0.1,
         });
-        folderRenderingAromatic.addInput(moleculeOptions.rendering.aromatic, 'piSystemInset', {
+        registerAdvancedInput(folderRenderingAromatic, moleculeOptions.rendering.aromatic, 'piSystemInset', {
             label: 'Pi system inset',
             min: 0,
             max: 20,
             step: 0.1,
-        });
-        folderRenderingAromatic.addInput(moleculeOptions.rendering.aromatic, 'overlayInset', {
+        }, { exclusive: true });
+        registerAdvancedInput(folderRenderingAromatic, moleculeOptions.rendering.aromatic, 'overlayInset', {
             label: 'Overlay inset',
             min: 0,
             max: 20,
             step: 0.1,
         });
-        folderRenderingAromatic.addInput(moleculeOptions.rendering.aromatic, 'overlayClampRatio', {
+        registerAdvancedInput(folderRenderingAromatic, moleculeOptions.rendering.aromatic, 'overlayClampRatio', {
             label: 'Overlay clamp ratio',
             min: 0,
             max: 1,
             step: 0.01,
         });
-        folderRenderingAromatic.addInput(moleculeOptions.rendering.aromatic, 'overlayColor', {
+        registerAdvancedInput(folderRenderingAromatic, moleculeOptions.rendering.aromatic, 'overlayColor', {
             label: 'Overlay color',
             input: 'color',
         });
@@ -1163,19 +1210,19 @@
             min: 0,
             max: 10,
         });
-        folderTypography.addInput(moleculeOptions.typography, 'svgBaselineShiftEm', {
+        registerAdvancedInput(folderTypography, moleculeOptions.typography, 'svgBaselineShiftEm', {
             label: 'SVG baseline shift (em)',
             step: 0.01,
             min: -2,
             max: 2,
         });
-        folderTypography.addInput(moleculeOptions.typography, 'measurementLineHeight', {
+        registerAdvancedInput(folderTypography, moleculeOptions.typography, 'measurementLineHeight', {
             label: 'Measurement line height',
             step: 0.01,
             min: 0,
             max: 5,
         });
-        folderTypography.addInput(moleculeOptions.typography, 'isotopeOffsetFactor', {
+        registerAdvancedInput(folderTypography, moleculeOptions.typography, 'isotopeOffsetFactor', {
             label: 'Isotope offset factor',
             step: 0.01,
             min: 0,
@@ -1183,32 +1230,34 @@
         });
         const folderTypographySpacing = folderTypography.addFolder({
             title: 'Label spacing',
+            expanded: false,
         });
-        folderTypographySpacing.addInput(moleculeOptions.typography.labelSpacing, 'baseUnitScale', {
+        markFolderExclusive(folderTypographySpacing);
+        registerAdvancedInput(folderTypographySpacing, moleculeOptions.typography.labelSpacing, 'baseUnitScale', {
             label: 'Base unit scale',
             step: 0.01,
             min: 0,
             max: 5,
-        });
-        folderTypographySpacing.addInput(moleculeOptions.typography.labelSpacing, 'chargeMultiplier', {
+        }, { exclusive: true });
+        registerAdvancedInput(folderTypographySpacing, moleculeOptions.typography.labelSpacing, 'chargeMultiplier', {
             label: 'Charge multiplier',
             step: 0.01,
             min: -5,
             max: 5,
         });
-        folderTypographySpacing.addInput(moleculeOptions.typography.labelSpacing, 'isotopeMultiplier', {
+        registerAdvancedInput(folderTypographySpacing, moleculeOptions.typography.labelSpacing, 'isotopeMultiplier', {
             label: 'Isotope multiplier',
             step: 0.01,
             min: -5,
             max: 5,
         });
-        folderTypographySpacing.addInput(moleculeOptions.typography.labelSpacing, 'hydrogenMultiplier', {
+        registerAdvancedInput(folderTypographySpacing, moleculeOptions.typography.labelSpacing, 'hydrogenMultiplier', {
             label: 'Hydrogen multiplier',
             step: 0.01,
             min: -5,
             max: 5,
         });
-        folderTypographySpacing.addInput(moleculeOptions.typography.labelSpacing, 'hydrogenCountMultiplier', {
+        registerAdvancedInput(folderTypographySpacing, moleculeOptions.typography.labelSpacing, 'hydrogenCountMultiplier', {
             label: 'Hydrogen count multiplier',
             step: 0.01,
             min: -5,
@@ -1254,50 +1303,93 @@
         folderAppearanceTheme.addInput(moleculeOptions.appearance.themes.custom, 'BACKGROUND', {
             input: 'color',
         });
+        const folderVisualizationsWeights = folderVisualizations.addFolder({
+            title: 'Weights',
+            expanded: false,
+        });
+        registerAdvancedInput(folderVisualizationsWeights, moleculeOptions.visualizations.weights, 'additionalPadding', {
+            label: 'Additional padding',
+            min: 0,
+            max: 200,
+            step: 0.1,
+        }, { exclusive: true });
+        registerAdvancedInput(folderVisualizationsWeights, moleculeOptions.visualizations.weights, 'sigma', {
+            label: 'Sigma',
+            min: 0,
+            max: 100,
+            step: 0.1,
+        });
+        registerAdvancedInput(folderVisualizationsWeights, moleculeOptions.visualizations.weights, 'interval', {
+            label: 'Interval',
+            min: -10,
+            max: 10,
+            step: 0.1,
+        });
+        registerAdvancedInput(folderVisualizationsWeights, moleculeOptions.visualizations.weights, 'opacity', {
+            label: 'Opacity',
+            min: 0,
+            max: 1,
+            step: 0.01,
+        });
+        const folderVisualizationsGaussian = folderVisualizations.addFolder({
+            title: 'Gaussian defaults',
+            expanded: false,
+        });
+        registerAdvancedInput(folderVisualizationsGaussian, moleculeOptions.visualizations.gaussianDefaults, 'defaultSigma', {
+            label: 'Default sigma',
+            min: 0,
+            max: 10,
+            step: 0.01,
+        }, { exclusive: true });
+        registerAdvancedInput(folderVisualizationsGaussian, moleculeOptions.visualizations.gaussianDefaults, 'domainMin', {
+            label: 'Domain min',
+            min: -10,
+            max: 10,
+            step: 0.1,
+        });
+        registerAdvancedInput(folderVisualizationsGaussian, moleculeOptions.visualizations.gaussianDefaults, 'domainMax', {
+            label: 'Domain max',
+            min: -10,
+            max: 10,
+            step: 0.1,
+        });
 
-        folderReactionGeneral.addInput(reactionOptions, 'spacing', {
+        registerAdvancedInput(folderReactionGeneral, reactionOptions, 'spacing', {
+            step: 0.1,
+            min: 0.0,
+            max: 20.0,
+        }, { exclusive: true });
+        registerAdvancedInput(folderReactionGeneral, reactionOptions, 'fontSize', {
             step: 0.1,
             min: 0.0,
             max: 20.0,
         });
-
-        folderReactionGeneral.addInput(reactionOptions, 'fontSize', {
+        registerAdvancedInput(folderReactionPlus, reactionOptions.plus, 'size', {
             step: 0.1,
             min: 0.0,
             max: 20.0,
-        });
-
-        folderReactionPlus.addInput(reactionOptions.plus, 'size', {
-            step: 0.1,
-            min: 0.0,
-            max: 20.0,
-        });
-
-        folderReactionPlus.addInput(reactionOptions.plus, 'thickness', {
+        }, { exclusive: true });
+        registerAdvancedInput(folderReactionPlus, reactionOptions.plus, 'thickness', {
             step: 0.1,
             min: 0.0,
             max: 5.0,
         });
-
-        folderReactionArrow.addInput(reactionOptions.arrow, 'length', {
+        registerAdvancedInput(folderReactionArrow, reactionOptions.arrow, 'length', {
             step: 1,
             min: 0.0,
             max: 500,
-        });
-
-        folderReactionArrow.addInput(reactionOptions.arrow, 'thickness', {
+        }, { exclusive: true });
+        registerAdvancedInput(folderReactionArrow, reactionOptions.arrow, 'thickness', {
             step: 0.1,
             min: 0.1,
             max: 10.0,
         });
-
-        folderReactionArrow.addInput(reactionOptions.arrow, 'headSize', {
+        registerAdvancedInput(folderReactionArrow, reactionOptions.arrow, 'headSize', {
             step: 0.1,
             min: 1.0,
             max: 10.0,
         });
-
-        folderReactionArrow.addInput(reactionOptions.arrow, 'margin', {
+        registerAdvancedInput(folderReactionArrow, reactionOptions.arrow, 'margin', {
             step: 0.1,
             min: 0.0,
             max: 10.0,
