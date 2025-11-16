@@ -642,11 +642,24 @@
         let lastFixedCanvasScale = moleculeOptions.canvas.scale > 0 ? moleculeOptions.canvas.scale : 1.0;
         const dashPattern = moleculeOptions.rendering.bonds.dashPattern || [];
         const normalizeDashSegment = (value, fallback) => Number.isFinite(value) ? value : fallback;
+        const formatAnnotationFormatterSource = (formatter) => typeof formatter === 'function' ? formatter.toString() : '';
+        const serializeColormap = (value) => Array.isArray(value) ? JSON.stringify(value) : '';
+        const initialWeightsColormapSource = serializeColormap(moleculeOptions.visualizations.weights.colormap);
+        const initialGaussianColormapSource = serializeColormap(moleculeOptions.visualizations.gaussianDefaults.defaultColormap) || '[]';
+        const initialReactionScaleEnabled = typeof moleculeOptions.reactions.scale === 'number';
+        const initialReactionScaleValue = initialReactionScaleEnabled ? moleculeOptions.reactions.scale : 1.0;
+        const initialReactionFontFamily = moleculeOptions.reactions.font.family || '';
         const uiState = {
             dynamicCanvasScale: moleculeOptions.canvas.scale <= 0,
             dashPatternOn: normalizeDashSegment(dashPattern[0], 3),
             dashPatternOff: normalizeDashSegment(dashPattern[1], 2),
             showAdvanced: false,
+            annotationFormatterSource: formatAnnotationFormatterSource(moleculeOptions.annotations.formatter),
+            weightsColormapSource: initialWeightsColormapSource,
+            gaussianDefaultColormapSource: initialGaussianColormapSource,
+            reactionScaleEnabled: initialReactionScaleEnabled,
+            reactionScaleValue: initialReactionScaleValue,
+            reactionFontFamily: initialReactionFontFamily,
         };
         const syncDashPattern = () => {
             const existingPattern = moleculeOptions.rendering.bonds.dashPattern || [];
@@ -658,6 +671,28 @@
             ];
         };
         syncDashPattern();
+        const parseColormapSource = (sourceText) => {
+            const trimmed = sourceText.trim();
+            if (!trimmed) {
+                return [];
+            }
+            const parsed = JSON.parse(trimmed);
+            if (!Array.isArray(parsed) || !parsed.every((entry) => typeof entry === 'string')) {
+                throw new Error('Colormap must be an array of color strings.');
+            }
+            return parsed;
+        };
+        const compileAnnotationFormatter = (sourceText) => {
+            const trimmed = sourceText.trim();
+            if (!trimmed) {
+                return null;
+            }
+            const created = new Function(`return (${trimmed})`)();
+            if (typeof created !== 'function') {
+                throw new Error('Formatter input must evaluate to a function.');
+            }
+            return created;
+        };
 
         const advancedOnlyInputs = [];
         const exclusiveAdvancedFolders = new Set();
@@ -767,6 +802,12 @@
             expanded: false,
         });
 
+        const folderAnnotations = pane.addFolder({
+            title: 'Annotations',
+            expanded: false,
+        });
+        markFolderExclusive(folderAnnotations);
+
         const folderAppearance = pane.addFolder({
             title: 'Appearance',
             expanded: false,
@@ -783,6 +824,12 @@
             expanded: false,
         });
         markFolderExclusive(folderVisualizations);
+
+        const folderReactionDefaults = pane.addFolder({
+            title: 'Reaction defaults',
+            expanded: false,
+        });
+        markFolderExclusive(folderReactionDefaults);
 
         const folderReactions = pane.addFolder({
             title: 'Reactions',
@@ -933,6 +980,36 @@
         });
         dashedSpacingInput.on('change', (event) => {
             moleculeOptions.rendering.stereochemistry.dashedSpacingMultiplier = event.value;
+        });
+        registerAdvancedInput(folderRenderingBonds, moleculeOptions.rendering.bonds, 'dashedStepFactor', {
+            label: 'Dashed step factor',
+            min: 0.1,
+            max: 5,
+            step: 0.01,
+        });
+        registerAdvancedInput(folderRenderingBonds, moleculeOptions.rendering.bonds, 'dashedWidthFactorSvg', {
+            label: 'Dashed width factor (SVG)',
+            min: 0.1,
+            max: 5,
+            step: 0.01,
+        });
+        registerAdvancedInput(folderRenderingBonds, moleculeOptions.rendering.bonds, 'dashedWidthFactorCanvas', {
+            label: 'Dashed width factor (canvas)',
+            min: 0.1,
+            max: 5,
+            step: 0.01,
+        });
+        registerAdvancedInput(folderRenderingBonds, moleculeOptions.rendering.bonds, 'dashedColorSwitchThreshold', {
+            label: 'Dashed color switch threshold',
+            min: 0,
+            max: 1,
+            step: 0.01,
+        });
+        registerAdvancedInput(folderRenderingBonds, moleculeOptions.rendering.bonds, 'dashedInsetPx', {
+            label: 'Dashed inset (px)',
+            min: 0,
+            max: 10,
+            step: 0.1,
         });
         const folderRenderingBondsDash = folderRenderingBonds.addFolder({
             title: 'Aromatic dash pattern',
@@ -1264,6 +1341,66 @@
             max: 5,
         });
 
+        registerAdvancedInput(folderAnnotations, moleculeOptions.annotations, 'enabled', {
+            label: 'Enable annotations',
+        }, { exclusive: true });
+        registerAdvancedInput(folderAnnotations, moleculeOptions.annotations, 'color', {
+            label: 'Color',
+            input: 'color',
+        });
+        registerAdvancedInput(folderAnnotations, moleculeOptions.annotations, 'fontSize', {
+            label: 'Font size',
+            min: 1,
+            max: 50,
+            step: 0.1,
+        });
+        registerAdvancedInput(folderAnnotations, moleculeOptions.annotations, 'offset', {
+            label: 'Offset',
+            min: 0,
+            max: 100,
+            step: 0.1,
+        });
+        const annotationFormatterInput = registerAdvancedInput(folderAnnotations, uiState, 'annotationFormatterSource', {
+            label: 'Formatter (fn expression)',
+        });
+        annotationFormatterInput.on('change', (event) => {
+            const nextSource = (event.value || '').trim();
+            if (!nextSource) {
+                moleculeOptions.annotations.formatter = null;
+                return;
+            }
+            try {
+                moleculeOptions.annotations.formatter = compileAnnotationFormatter(nextSource);
+            } catch (err) {
+                console.error('Failed to parse annotation formatter', err);
+                uiState.annotationFormatterSource = formatAnnotationFormatterSource(moleculeOptions.annotations.formatter);
+                annotationFormatterInput.refresh();
+            }
+        });
+        const folderAnnotationsMask = folderAnnotations.addFolder({
+            title: 'Mask',
+            expanded: false,
+        });
+        markFolderExclusive(folderAnnotationsMask);
+        registerAdvancedInput(folderAnnotationsMask, moleculeOptions.annotations.mask, 'baseScale', {
+            label: 'Base scale',
+            min: 0,
+            max: 5,
+            step: 0.01,
+        }, { exclusive: true });
+        registerAdvancedInput(folderAnnotationsMask, moleculeOptions.annotations.mask, 'wideScale', {
+            label: 'Wide scale',
+            min: 0,
+            max: 5,
+            step: 0.01,
+        });
+        registerAdvancedInput(folderAnnotationsMask, moleculeOptions.annotations.mask, 'canvasRadiusFactor', {
+            label: 'Canvas radius factor',
+            min: 0,
+            max: 5,
+            step: 0.01,
+        });
+
         folderAppearanceTheme.addInput(moleculeOptions.appearance.themes.custom, 'C', {
             input: 'color',
         });
@@ -1303,6 +1440,16 @@
         folderAppearanceTheme.addInput(moleculeOptions.appearance.themes.custom, 'BACKGROUND', {
             input: 'color',
         });
+        registerAdvancedInput(folderAppearance, moleculeOptions.appearance.highlights, 'fallbackColor', {
+            label: 'Highlight fallback color',
+            input: 'color',
+        });
+        registerAdvancedInput(folderAppearance, moleculeOptions.appearance.highlights, 'fallbackRadiusFactor', {
+            label: 'Highlight radius factor',
+            min: 0,
+            max: 5,
+            step: 0.01,
+        });
         const folderVisualizationsWeights = folderVisualizations.addFolder({
             title: 'Weights',
             expanded: false,
@@ -1331,6 +1478,24 @@
             max: 1,
             step: 0.01,
         });
+        const weightsColormapInput = registerAdvancedInput(folderVisualizationsWeights, uiState, 'weightsColormapSource', {
+            label: 'Colormap JSON (optional)',
+        });
+        weightsColormapInput.on('change', (event) => {
+            const nextValue = (event.value || '').trim();
+            if (!nextValue) {
+                moleculeOptions.visualizations.weights.colormap = null;
+                uiState.weightsColormapSource = '';
+                return;
+            }
+            try {
+                moleculeOptions.visualizations.weights.colormap = parseColormapSource(nextValue);
+            } catch (err) {
+                console.error('Invalid weights colormap JSON', err);
+                uiState.weightsColormapSource = serializeColormap(moleculeOptions.visualizations.weights.colormap) || '';
+                weightsColormapInput.refresh();
+            }
+        });
         const folderVisualizationsGaussian = folderVisualizations.addFolder({
             title: 'Gaussian defaults',
             expanded: false,
@@ -1353,6 +1518,124 @@
             max: 10,
             step: 0.1,
         });
+        const gaussianColormapInput = registerAdvancedInput(folderVisualizationsGaussian, uiState, 'gaussianDefaultColormapSource', {
+            label: 'Default colormap JSON',
+        });
+        gaussianColormapInput.on('change', (event) => {
+            const nextValue = (event.value || '').trim();
+            try {
+                const parsed = parseColormapSource(nextValue || '[]');
+                moleculeOptions.visualizations.gaussianDefaults.defaultColormap = parsed;
+            } catch (err) {
+                console.error('Invalid gaussian colormap JSON', err);
+                uiState.gaussianDefaultColormapSource = serializeColormap(moleculeOptions.visualizations.gaussianDefaults.defaultColormap) || '[]';
+                gaussianColormapInput.refresh();
+            }
+        });
+        const folderReactionDefaultsGeneral = folderReactionDefaults.addFolder({
+            title: 'General',
+            expanded: false,
+        });
+        let reactionScaleValueInput = null;
+        const syncReactionScaleState = () => {
+            moleculeOptions.reactions.scale = uiState.reactionScaleEnabled ? uiState.reactionScaleValue : null;
+            if (reactionScaleValueInput) {
+                reactionScaleValueInput.disabled = !uiState.reactionScaleEnabled;
+                reactionScaleValueInput.refresh();
+            }
+        };
+        registerAdvancedInput(folderReactionDefaultsGeneral, moleculeOptions.reactions.spacing, 'bondLengthMultiplier', {
+            label: 'Spacing bond length multiplier',
+            min: 0,
+            max: 5,
+            step: 0.01,
+        }, { exclusive: true });
+        const reactionScaleToggle = registerAdvancedInput(folderReactionDefaultsGeneral, uiState, 'reactionScaleEnabled', {
+            label: 'Override reaction scale',
+        });
+        reactionScaleToggle.on('change', () => {
+            syncReactionScaleState();
+        });
+        reactionScaleValueInput = registerAdvancedInput(folderReactionDefaultsGeneral, uiState, 'reactionScaleValue', {
+            label: 'Reaction scale',
+            min: 0.1,
+            max: 5,
+            step: 0.01,
+        });
+        reactionScaleValueInput.on('change', (event) => {
+            if (uiState.reactionScaleEnabled) {
+                moleculeOptions.reactions.scale = event.value;
+            }
+        });
+        syncReactionScaleState();
+        const folderReactionDefaultsFont = folderReactionDefaults.addFolder({
+            title: 'Font',
+            expanded: false,
+        });
+        registerAdvancedInput(folderReactionDefaultsFont, moleculeOptions.reactions.font, 'scale', {
+            label: 'Font scale',
+            min: 0,
+            max: 5,
+            step: 0.01,
+        }, { exclusive: true });
+        const reactionFontFamilyInput = registerAdvancedInput(folderReactionDefaultsFont, uiState, 'reactionFontFamily', {
+            label: 'Font family (optional)',
+        });
+        reactionFontFamilyInput.on('change', (event) => {
+            const nextValue = (event.value || '').trim();
+            moleculeOptions.reactions.font.family = nextValue || null;
+        });
+        const folderReactionDefaultsPlus = folderReactionDefaults.addFolder({
+            title: 'Plus',
+            expanded: false,
+        });
+        registerAdvancedInput(folderReactionDefaultsPlus, moleculeOptions.reactions.plus, 'sizeBondLengthMultiplier', {
+            label: 'Size bond length multiplier',
+            min: 0,
+            max: 5,
+            step: 0.01,
+        }, { exclusive: true });
+        registerAdvancedInput(folderReactionDefaultsPlus, moleculeOptions.reactions.plus, 'thicknessBondThicknessMultiplier', {
+            label: 'Thickness bond thickness multiplier',
+            min: 0,
+            max: 5,
+            step: 0.01,
+        });
+        const folderReactionDefaultsArrow = folderReactionDefaults.addFolder({
+            title: 'Arrow',
+            expanded: false,
+        });
+        registerAdvancedInput(folderReactionDefaultsArrow, moleculeOptions.reactions.arrow, 'lengthBondLengthMultiplier', {
+            label: 'Length bond length multiplier',
+            min: 0,
+            max: 10,
+            step: 0.01,
+        }, { exclusive: true });
+        registerAdvancedInput(folderReactionDefaultsArrow, moleculeOptions.reactions.arrow, 'headSizeBondLengthMultiplier', {
+            label: 'Head size bond length multiplier',
+            min: 0,
+            max: 5,
+            step: 0.01,
+        });
+        registerAdvancedInput(folderReactionDefaultsArrow, moleculeOptions.reactions.arrow, 'thicknessBondThicknessMultiplier', {
+            label: 'Thickness bond thickness multiplier',
+            min: 0,
+            max: 5,
+            step: 0.01,
+        });
+        registerAdvancedInput(folderReactionDefaultsArrow, moleculeOptions.reactions.arrow, 'marginBondLengthMultiplier', {
+            label: 'Margin bond length multiplier',
+            min: 0,
+            max: 5,
+            step: 0.01,
+        });
+        const folderReactionDefaultsWeights = folderReactionDefaults.addFolder({
+            title: 'Weights',
+            expanded: false,
+        });
+        registerAdvancedInput(folderReactionDefaultsWeights, moleculeOptions.reactions.weights, 'normalize', {
+            label: 'Normalize reaction weights',
+        }, { exclusive: true });
 
         registerAdvancedInput(folderReactionGeneral, reactionOptions, 'spacing', {
             step: 0.1,
@@ -1427,6 +1710,13 @@
             }
         });
 
+
+        registerAdvancedInput(folderExport, moleculeOptions.pixelExport, 'viewboxYOffset', {
+            label: 'Viewbox Y offset',
+            min: -5,
+            max: 5,
+            step: 0.1,
+        });
 
         const btnExport = folderExport.addButton({
             title: 'Export Settings',
