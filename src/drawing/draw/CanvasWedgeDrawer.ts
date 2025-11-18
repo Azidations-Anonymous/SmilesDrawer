@@ -5,6 +5,31 @@ import Line = require('../../graph/Line');
 class CanvasWedgeDrawer {
   constructor(private wrapper: CanvasDrawer) {}
 
+  private resolveWedgeContext(line: Line): {
+    baseIsRight: boolean;
+    baseColor: string;
+    tipColor: string;
+    leftVector: Vector2;
+    rightVector: Vector2;
+  } {
+    const leftVector = line.getLeftVector();
+    const rightVector = line.getRightVector();
+    const chiralVector = line.chiralFrom ? line.from : (line.chiralTo ? line.to : null);
+    const baseIsRight = chiralVector ? rightVector === chiralVector : line.getRightChiral();
+    const defaultColor = this.wrapper.themeManager.getColor('C');
+    const leftElement = line.getLeftElement();
+    const rightElement = line.getRightElement();
+    const leftColor = leftElement ? this.wrapper.themeManager.getColor(leftElement) : defaultColor;
+    const rightColor = rightElement ? this.wrapper.themeManager.getColor(rightElement) : defaultColor;
+    return {
+      baseIsRight,
+      baseColor: baseIsRight ? rightColor : leftColor,
+      tipColor: baseIsRight ? leftColor : rightColor,
+      leftVector,
+      rightVector,
+    };
+  }
+
 
 
     /**
@@ -23,8 +48,9 @@ class CanvasWedgeDrawer {
         let offsetX = this.wrapper.offsetX;
         let offsetY = this.wrapper.offsetY;
 
-        let l = line.getLeftVector().clone();
-        let r = line.getRightVector().clone();
+        const wedge = this.resolveWedgeContext(line);
+        let l = wedge.leftVector.clone();
+        let r = wedge.rightVector.clone();
 
         l.x += offsetX;
         l.y += offsetY;
@@ -39,15 +65,8 @@ class CanvasWedgeDrawer {
         normals[0].normalize();
         normals[1].normalize();
 
-        let isRightChiralCenter = line.getRightChiral();
-
-        let start = l;
-        let end = r;
-
-        if (isRightChiralCenter) {
-            start = r;
-            end = l;
-        }
+        let start = wedge.baseIsRight ? r : l;
+        let end = wedge.baseIsRight ? l : r;
 
         const stereo = this.wrapper.userOpts.rendering.stereochemistry;
         const tipPadding = stereo.wedgeTipPaddingPx;
@@ -63,11 +82,10 @@ class CanvasWedgeDrawer {
         ctx.lineTo(v.x, v.y);
         ctx.lineTo(w.x, w.y);
 
+        const { baseColor, tipColor } = wedge;
         let gradient = this.wrapper.ctx.createRadialGradient(r.x, r.y, this.wrapper.userOpts.rendering.bonds.bondLength, r.x, r.y, 0);
-        gradient.addColorStop(0.4, this.wrapper.themeManager.getColor(line.getLeftElement()) ||
-            this.wrapper.themeManager.getColor('C'));
-        gradient.addColorStop(0.6, this.wrapper.themeManager.getColor(line.getRightElement()) ||
-            this.wrapper.themeManager.getColor('C'));
+        gradient.addColorStop(0.4, baseColor);
+        gradient.addColorStop(0.6, tipColor);
 
         ctx.fillStyle = gradient;
 
@@ -92,8 +110,9 @@ class CanvasWedgeDrawer {
         let offsetX = this.wrapper.offsetX;
         let offsetY = this.wrapper.offsetY;
 
-        let l = line.getLeftVector().clone();
-        let r = line.getRightVector().clone();
+        const wedge = this.resolveWedgeContext(line);
+        let l = wedge.leftVector.clone();
+        let r = wedge.rightVector.clone();
 
         l.x += offsetX;
         l.y += offsetY;
@@ -107,46 +126,28 @@ class CanvasWedgeDrawer {
 
         normals[0].normalize();
         normals[1].normalize();
-
-
-        let isRightChiralCenter = line.getRightChiral();
-
         let start;
         let end;
-        let sStart;
-        let sEnd;
-
-        const stereo = this.wrapper.userOpts.rendering.stereochemistry;
         let shortLine = line.clone();
 
         const bondDash = this.wrapper.userOpts.rendering.bonds;
         const inset = Number.isFinite(bondDash.dashedInsetPx) ? Math.max(bondDash.dashedInsetPx, 0) : 1.0;
 
-        if (isRightChiralCenter) {
+        if (wedge.baseIsRight) {
             start = r;
             end = l;
 
             shortLine.shortenRight(inset);
-
-            sStart = shortLine.getRightVector().clone();
-            sEnd = shortLine.getLeftVector().clone();
         } else {
             start = l;
             end = r;
 
             shortLine.shortenLeft(inset);
-
-            sStart = shortLine.getLeftVector().clone();
-            sEnd = shortLine.getRightVector().clone();
         }
 
-        sStart.x += offsetX;
-        sStart.y += offsetY;
-        sEnd.x += offsetX;
-        sEnd.y += offsetY;
-
         let dir = Vector2.subtract(end, start).normalize();
-        ctx.strokeStyle = this.wrapper.themeManager.getColor('C');
+        const { baseColor, tipColor } = wedge;
+        ctx.strokeStyle = baseColor;
         ctx.lineCap = 'round';
         const bondThickness = this.wrapper.userOpts.rendering.bonds.bondThickness;
         ctx.lineWidth = bondThickness;
@@ -159,6 +160,8 @@ class CanvasWedgeDrawer {
         const step = divisor !== 0 ? bondDash.dashedStepFactor / divisor : bondDash.dashedStepFactor;
 
         let changed = false;
+        const rawThreshold = typeof bondDash.dashedColorSwitchThreshold === 'number' ? bondDash.dashedColorSwitchThreshold : 0.5;
+        const switchThreshold = Math.min(Math.max(rawThreshold, 0), 1);
         for (var t = 0.0; t < 1.0; t += step) {
             let to = Vector2.multiplyScalar(dir, t * length);
             let startDash = Vector2.add(start, to);
@@ -166,11 +169,10 @@ class CanvasWedgeDrawer {
             let width = widthFactor * t;
             let dashOffset = Vector2.multiplyScalar(normals[0], width);
 
-            const switchThreshold = typeof bondDash.dashedColorSwitchThreshold === 'number' ? bondDash.dashedColorSwitchThreshold : 0.5;
-            if (!changed && t > switchThreshold) {
+            if (!changed && t >= switchThreshold) {
                 ctx.stroke();
                 ctx.beginPath();
-                ctx.strokeStyle = this.wrapper.themeManager.getColor(line.getRightElement()) || this.wrapper.themeManager.getColor('C');
+                ctx.strokeStyle = tipColor;
                 changed = true;
             }
 

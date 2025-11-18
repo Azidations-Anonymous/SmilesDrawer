@@ -389,33 +389,27 @@ class SvgWrapper implements IDrawingSurface {
    * @param {Line} line the line object to create the wedge from
    */
   drawWedge(line: Line): void {
-    let l = line.getLeftVector().clone(),
-      r = line.getRightVector().clone();
+    const wedge = this.resolveWedgeContext(line);
+    let l = wedge.leftVector.clone(),
+      r = wedge.rightVector.clone();
 
     let normals = Vector2.normals(l, r);
 
     normals[0].normalize();
     normals[1].normalize();
 
-    let isRightChiralCenter = line.getRightChiral();
-
-    let start = l,
-      end = r;
-
-    if (isRightChiralCenter) {
-      start = r;
-      end = l;
-    }
+    let start = wedge.baseIsRight ? r : l,
+      end = wedge.baseIsRight ? l : r;
 
     let t = Vector2.add(start, Vector2.multiplyScalar(normals[0], this.halfBondThickness)),
       u = Vector2.add(end, Vector2.multiplyScalar(normals[0], this.userOpts.rendering.stereochemistry.wedgeTipPaddingPx + this.halfBondThickness)),
       v = Vector2.add(end, Vector2.multiplyScalar(normals[1], this.userOpts.rendering.stereochemistry.wedgeTipPaddingPx + this.halfBondThickness)),
       w = Vector2.add(start, Vector2.multiplyScalar(normals[1], this.userOpts.rendering.stereochemistry.wedgeSidePaddingPx + this.halfBondThickness));
 
-    let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon'),
-      gradient = this.createGradient(line);
+    let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    const gradientId = this.createWedgeGradient(line, start, end, wedge.baseColor, wedge.tipColor);
     polygon.setAttributeNS(null, 'points', `${t.x},${t.y} ${u.x},${u.y} ${v.x},${v.y} ${w.x},${w.y}`);
-    polygon.setAttributeNS(null, 'fill', `url('#${gradient}')`);
+    polygon.setAttributeNS(null, 'fill', `url('#${gradientId}')`);
     this.paths.push(polygon);
   }
 
@@ -449,16 +443,15 @@ class SvgWrapper implements IDrawingSurface {
       return;
     }
 
-    const stereo = this.userOpts.rendering.stereochemistry;
     const bondDash = this.userOpts.rendering.bonds;
     const inset = Number.isFinite(bondDash.dashedInsetPx) ? Math.max(bondDash.dashedInsetPx, 0) : 1.0;
     const shortLine = line.clone();
-    const isRightChiralCenter = line.getRightChiral();
+    const wedge = this.resolveWedgeContext(line);
 
     let start: Vector2;
     let end: Vector2;
 
-    if (isRightChiralCenter) {
+    if (wedge.baseIsRight) {
       shortLine.shortenRight(inset);
       start = shortLine.getRightVector().clone();
       end = shortLine.getLeftVector().clone();
@@ -488,11 +481,7 @@ class SvgWrapper implements IDrawingSurface {
     const widthFactor = bondDash.dashedWidthFactorSvg ?? 0.5;
     const baseFont = this.userOpts.typography.fontSizeLarge;
 
-    const defaultColor = this.themeManager.getColor('C');
-    const leftColor = this.themeManager.getColor(line.getLeftElement()) || defaultColor;
-    const rightColor = this.themeManager.getColor(line.getRightElement()) || defaultColor;
-    const thresholdRaw = typeof bondDash.dashedColorSwitchThreshold === 'number' ? bondDash.dashedColorSwitchThreshold : 0.5;
-    const threshold = Math.min(Math.max(thresholdRaw, 0), 1);
+    const gradientId = this.createWedgeGradient(line, start, end, wedge.baseColor, wedge.tipColor);
 
     for (let t = 0.0; t < 1.0; t += step) {
       const to = Vector2.multiplyScalar(dir, t * length);
@@ -504,8 +493,7 @@ class SvgWrapper implements IDrawingSurface {
       let endDash = startDash.clone();
       endDash.add(Vector2.multiplyScalar(dashOffset, 2.0));
 
-      const color = t >= threshold ? rightColor : leftColor;
-      this.drawLine(new Line(startDash.clone(), endDash.clone(), line.elementFrom, line.elementTo), false, null, 'round', color);
+      this.drawLine(new Line(startDash.clone(), endDash.clone(), line.elementFrom, line.elementTo), false, gradientId, 'round');
     }
   }
 
@@ -1143,6 +1131,52 @@ class SvgWrapper implements IDrawingSurface {
     }
 
     return this.themeManager.getColor(trimmed);
+  }
+
+  private createWedgeGradient(line: Line, start: Vector2, end: Vector2, baseColor: string, tipColor: string): string {
+    const gradientId = this.uid + `-wedge-${this.gradientId++}`;
+    const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+    gradient.setAttributeNS(null, 'id', gradientId);
+    gradient.setAttributeNS(null, 'gradientUnits', 'userSpaceOnUse');
+    gradient.setAttributeNS(null, 'x1', start.x.toString());
+    gradient.setAttributeNS(null, 'y1', start.y.toString());
+    gradient.setAttributeNS(null, 'x2', end.x.toString());
+    gradient.setAttributeNS(null, 'y2', end.y.toString());
+    const firstStop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    firstStop.setAttributeNS(null, 'stop-color', baseColor);
+    firstStop.setAttributeNS(null, 'offset', '20%');
+    const secondStop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    secondStop.setAttributeNS(null, 'stop-color', tipColor);
+    secondStop.setAttributeNS(null, 'offset', '100%');
+    gradient.appendChild(firstStop);
+    gradient.appendChild(secondStop);
+    this.gradients.push(gradient);
+    return gradientId;
+  }
+
+  private resolveWedgeContext(line: Line): {
+    baseIsRight: boolean;
+    baseColor: string;
+    tipColor: string;
+    leftVector: Vector2;
+    rightVector: Vector2;
+  } {
+    const leftVector = line.getLeftVector();
+    const rightVector = line.getRightVector();
+    const chiralVector = line.chiralFrom ? line.from : (line.chiralTo ? line.to : null);
+    const baseIsRight = chiralVector ? rightVector === chiralVector : line.getRightChiral();
+    const defaultColor = this.themeManager.getColor('C');
+    const leftElement = line.getLeftElement();
+    const rightElement = line.getRightElement();
+    const leftColor = leftElement ? this.themeManager.getColor(leftElement) : defaultColor;
+    const rightColor = rightElement ? this.themeManager.getColor(rightElement) : defaultColor;
+    return {
+      baseIsRight,
+      baseColor: baseIsRight ? rightColor : leftColor,
+      tipColor: baseIsRight ? leftColor : rightColor,
+      leftVector,
+      rightVector,
+    };
   }
 }
 
