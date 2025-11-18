@@ -30,6 +30,53 @@ class CanvasWedgeDrawer {
     };
   }
 
+  private getWedgeHalfWidth(): number {
+    const dashConfig = this.wrapper.userOpts.rendering.bonds;
+    const factor = Number.isFinite(dashConfig.dashedWidthFactorCanvas) ? dashConfig.dashedWidthFactorCanvas : 1.5;
+    return Math.max(factor, 0);
+  }
+
+  private computeWedgeGeometry(line: Line, inset: number = 0): {
+    basePoint: Vector2;
+    tipPoint: Vector2;
+    normals: Vector2[];
+    direction: Vector2;
+    length: number;
+    baseColor: string;
+    tipColor: string;
+    baseIsRight: boolean;
+  } {
+    const context = this.resolveWedgeContext(line);
+    const workingLine = line.clone();
+    if (inset > 0) {
+      if (context.baseIsRight) {
+        workingLine.shortenRight(inset);
+      } else {
+        workingLine.shortenLeft(inset);
+      }
+    }
+
+    const basePoint = context.baseIsRight ? workingLine.getRightVector().clone() : workingLine.getLeftVector().clone();
+    const tipPoint = context.baseIsRight ? workingLine.getLeftVector().clone() : workingLine.getRightVector().clone();
+    const normals = Vector2.normals(basePoint.clone(), tipPoint.clone());
+    normals[0].normalize();
+    normals[1].normalize();
+    const direction = Vector2.subtract(tipPoint.clone(), basePoint.clone());
+    const length = direction.length();
+    direction.normalize();
+
+    return {
+      basePoint,
+      tipPoint,
+      normals,
+      direction,
+      length,
+      baseColor: context.baseColor,
+      tipColor: context.tipColor,
+      baseIsRight: context.baseIsRight,
+    };
+  }
+
 
 
     /**
@@ -48,47 +95,43 @@ class CanvasWedgeDrawer {
         let offsetX = this.wrapper.offsetX;
         let offsetY = this.wrapper.offsetY;
 
-        const wedge = this.resolveWedgeContext(line);
-        let l = wedge.leftVector.clone();
-        let r = wedge.rightVector.clone();
+        const dashConfig = this.wrapper.userOpts.rendering.bonds;
+        const inset = Number.isFinite(dashConfig.dashedInsetPx) ? Math.max(dashConfig.dashedInsetPx, 0) : 0;
+        const geometry = this.computeWedgeGeometry(line, inset);
+        const maxHalfWidth = this.getWedgeHalfWidth();
+        const baseHalfWidth = 0;
+        const tipHalfWidth = maxHalfWidth;
+        const basePoint = geometry.baseIsRight ? line.getRightVector().clone() : line.getLeftVector().clone();
 
-        l.x += offsetX;
-        l.y += offsetY;
+        const baseA = Vector2.add(basePoint.clone(), Vector2.multiplyScalar(geometry.normals[0].clone(), baseHalfWidth));
+        const baseB = Vector2.add(basePoint.clone(), Vector2.multiplyScalar(geometry.normals[1].clone(), baseHalfWidth));
+        const tipA = Vector2.add(geometry.tipPoint.clone(), Vector2.multiplyScalar(geometry.normals[0].clone(), tipHalfWidth));
+        const tipB = Vector2.add(geometry.tipPoint.clone(), Vector2.multiplyScalar(geometry.normals[1].clone(), tipHalfWidth));
 
-        r.x += offsetX;
-        r.y += offsetY;
+        [baseA, tipA, tipB, baseB].forEach((point) => {
+            point.x += offsetX;
+            point.y += offsetY;
+        });
 
         ctx.save();
-
-        let normals = Vector2.normals(l, r);
-
-        normals[0].normalize();
-        normals[1].normalize();
-
-        let start = wedge.baseIsRight ? r : l;
-        let end = wedge.baseIsRight ? l : r;
-
-        const stereo = this.wrapper.userOpts.rendering.stereochemistry;
-        const tipPadding = stereo.wedgeTipPaddingPx;
-        const sidePadding = stereo.wedgeSidePaddingPx;
-        let t = Vector2.add(start, Vector2.multiplyScalar(normals[0], this.wrapper.halfBondThickness));
-        let u = Vector2.add(end, Vector2.multiplyScalar(normals[0], tipPadding + this.wrapper.halfBondThickness));
-        let v = Vector2.add(end, Vector2.multiplyScalar(normals[1], tipPadding + this.wrapper.halfBondThickness));
-        let w = Vector2.add(start, Vector2.multiplyScalar(normals[1], sidePadding + this.wrapper.halfBondThickness));
-
         ctx.beginPath();
-        ctx.moveTo(t.x, t.y);
-        ctx.lineTo(u.x, u.y);
-        ctx.lineTo(v.x, v.y);
-        ctx.lineTo(w.x, w.y);
+        ctx.moveTo(baseA.x, baseA.y);
+        ctx.lineTo(tipA.x, tipA.y);
+        ctx.lineTo(tipB.x, tipB.y);
+        ctx.lineTo(baseB.x, baseB.y);
 
-        const { baseColor, tipColor } = wedge;
-        let gradient = this.wrapper.ctx.createRadialGradient(r.x, r.y, this.wrapper.userOpts.rendering.bonds.bondLength, r.x, r.y, 0);
-        gradient.addColorStop(0.4, baseColor);
-        gradient.addColorStop(0.6, tipColor);
+        let gradient = this.wrapper.ctx.createRadialGradient(
+            geometry.tipPoint.x + offsetX,
+            geometry.tipPoint.y + offsetY,
+            this.wrapper.userOpts.rendering.bonds.bondLength,
+            geometry.tipPoint.x + offsetX,
+            geometry.tipPoint.y + offsetY,
+            0
+        );
+        gradient.addColorStop(0.4, geometry.baseColor);
+        gradient.addColorStop(0.6, geometry.tipColor);
 
         ctx.fillStyle = gradient;
-
         ctx.fill();
         ctx.restore();
     }
@@ -110,49 +153,30 @@ class CanvasWedgeDrawer {
         let offsetX = this.wrapper.offsetX;
         let offsetY = this.wrapper.offsetY;
 
-        const wedge = this.resolveWedgeContext(line);
-        let l = wedge.leftVector.clone();
-        let r = wedge.rightVector.clone();
+        const bondDash = this.wrapper.userOpts.rendering.bonds;
+        const inset = Number.isFinite(bondDash.dashedInsetPx) ? Math.max(bondDash.dashedInsetPx, 0) : 1.0;
+        const geometry = this.computeWedgeGeometry(line, inset);
+        const maxHalfWidth = this.getWedgeHalfWidth();
+        const baseHalfWidth = maxHalfWidth;
+        const tipHalfWidth = 0;
 
-        l.x += offsetX;
-        l.y += offsetY;
-
-        r.x += offsetX;
-        r.y += offsetY;
+        let start = geometry.basePoint.clone();
+        let end = geometry.tipPoint.clone();
+        start.x += offsetX;
+        start.y += offsetY;
+        end.x += offsetX;
+        end.y += offsetY;
 
         ctx.save();
 
-        let normals = Vector2.normals(l, r);
-
-        normals[0].normalize();
-        normals[1].normalize();
-        let start;
-        let end;
-        let shortLine = line.clone();
-
-        const bondDash = this.wrapper.userOpts.rendering.bonds;
-        const inset = Number.isFinite(bondDash.dashedInsetPx) ? Math.max(bondDash.dashedInsetPx, 0) : 1.0;
-
-        if (wedge.baseIsRight) {
-            start = r;
-            end = l;
-
-            shortLine.shortenRight(inset);
-        } else {
-            start = l;
-            end = r;
-
-            shortLine.shortenLeft(inset);
-        }
-
-        let dir = Vector2.subtract(end, start).normalize();
-        const { baseColor, tipColor } = wedge;
+        let dir = geometry.direction.clone();
+        const { baseColor, tipColor } = geometry;
         ctx.strokeStyle = baseColor;
         ctx.lineCap = 'round';
         const bondThickness = this.wrapper.userOpts.rendering.bonds.bondThickness;
         ctx.lineWidth = bondThickness;
         ctx.beginPath();
-        let length = line.getLength();
+        let length = geometry.length;
         const spacingMultiplierRaw = bondDash.dashedWedgeSpacingMultiplier;
         const spacingMultiplier = Number.isFinite(spacingMultiplierRaw) && spacingMultiplierRaw > 0 ? spacingMultiplierRaw : 3.0;
         const baseUnit = bondThickness * spacingMultiplier;
@@ -163,11 +187,10 @@ class CanvasWedgeDrawer {
         const rawThreshold = typeof bondDash.dashedColorSwitchThreshold === 'number' ? bondDash.dashedColorSwitchThreshold : 0.5;
         const switchThreshold = Math.min(Math.max(rawThreshold, 0), 1);
         for (var t = 0.0; t < 1.0; t += step) {
-            let to = Vector2.multiplyScalar(dir, t * length);
-            let startDash = Vector2.add(start, to);
-            const widthFactor = Number.isFinite(bondDash.dashedWidthFactorCanvas) ? bondDash.dashedWidthFactorCanvas : 1.5;
-            let width = widthFactor * t;
-            let dashOffset = Vector2.multiplyScalar(normals[0], width);
+            let to = Vector2.multiplyScalar(dir.clone(), t * length);
+            let startDash = Vector2.add(start.clone(), to);
+            const width = tipHalfWidth + (baseHalfWidth - tipHalfWidth) * t;
+            let dashOffset = Vector2.multiplyScalar(geometry.normals[0].clone(), width);
 
             if (!changed && t >= switchThreshold) {
                 ctx.stroke();

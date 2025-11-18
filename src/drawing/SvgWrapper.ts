@@ -389,25 +389,21 @@ class SvgWrapper implements IDrawingSurface {
    * @param {Line} line the line object to create the wedge from
    */
   drawWedge(line: Line): void {
-    const wedge = this.resolveWedgeContext(line);
-    let l = wedge.leftVector.clone(),
-      r = wedge.rightVector.clone();
+    const bondDash = this.userOpts.rendering.bonds;
+    const inset = Number.isFinite(bondDash.dashedInsetPx) ? Math.max(bondDash.dashedInsetPx, 0) : 0;
+    const geometry = this.computeWedgeGeometry(line, inset);
+    const maxHalfWidth = this.getWedgeHalfWidth();
+    const baseHalfWidth = 0;
+    const tipHalfWidth = maxHalfWidth;
+    const basePoint = geometry.baseIsRight ? line.getRightVector().clone() : line.getLeftVector().clone();
 
-    let normals = Vector2.normals(l, r);
-
-    normals[0].normalize();
-    normals[1].normalize();
-
-    let start = wedge.baseIsRight ? r : l,
-      end = wedge.baseIsRight ? l : r;
-
-    let t = Vector2.add(start, Vector2.multiplyScalar(normals[0], this.halfBondThickness)),
-      u = Vector2.add(end, Vector2.multiplyScalar(normals[0], this.userOpts.rendering.stereochemistry.wedgeTipPaddingPx + this.halfBondThickness)),
-      v = Vector2.add(end, Vector2.multiplyScalar(normals[1], this.userOpts.rendering.stereochemistry.wedgeTipPaddingPx + this.halfBondThickness)),
-      w = Vector2.add(start, Vector2.multiplyScalar(normals[1], this.userOpts.rendering.stereochemistry.wedgeSidePaddingPx + this.halfBondThickness));
+    let t = Vector2.add(basePoint.clone(), Vector2.multiplyScalar(geometry.normals[0].clone(), baseHalfWidth)),
+      u = Vector2.add(geometry.tipPoint.clone(), Vector2.multiplyScalar(geometry.normals[0].clone(), tipHalfWidth)),
+      v = Vector2.add(geometry.tipPoint.clone(), Vector2.multiplyScalar(geometry.normals[1].clone(), tipHalfWidth)),
+      w = Vector2.add(basePoint.clone(), Vector2.multiplyScalar(geometry.normals[1].clone(), baseHalfWidth));
 
     let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-    const gradientId = this.createWedgeGradient(line, start, end, wedge.baseColor, wedge.tipColor);
+    const gradientId = this.createWedgeGradient(line, geometry.basePoint.clone(), geometry.tipPoint.clone(), geometry.baseColor, geometry.tipColor);
     polygon.setAttributeNS(null, 'points', `${t.x},${t.y} ${u.x},${u.y} ${v.x},${v.y} ${w.x},${w.y}`);
     polygon.setAttributeNS(null, 'fill', `url('#${gradientId}')`);
     this.paths.push(polygon);
@@ -445,32 +441,16 @@ class SvgWrapper implements IDrawingSurface {
 
     const bondDash = this.userOpts.rendering.bonds;
     const inset = Number.isFinite(bondDash.dashedInsetPx) ? Math.max(bondDash.dashedInsetPx, 0) : 1.0;
-    const shortLine = line.clone();
-    const wedge = this.resolveWedgeContext(line);
-
-    let start: Vector2;
-    let end: Vector2;
-
-    if (wedge.baseIsRight) {
-      shortLine.shortenRight(inset);
-      start = shortLine.getRightVector().clone();
-      end = shortLine.getLeftVector().clone();
-    } else {
-      shortLine.shortenLeft(inset);
-      start = shortLine.getLeftVector().clone();
-      end = shortLine.getRightVector().clone();
-    }
-
-    const length = shortLine.getLength();
+    const geometry = this.computeWedgeGeometry(line, inset);
+    const maxHalfWidth = this.getWedgeHalfWidth();
+    const baseHalfWidth = maxHalfWidth;
+    const tipHalfWidth = 0;
+    const length = geometry.length;
     if (!isFinite(length) || length <= 0) {
       return;
     }
 
-    let normals = Vector2.normals(start.clone(), end.clone());
-    normals[0].normalize();
-    normals[1].normalize();
-
-    const dir = Vector2.subtract(end, start).normalize();
+    const dir = geometry.direction.clone();
     const bondThickness = this.userOpts.rendering.bonds.bondThickness || 1;
     const spacingMultiplierRaw = bondDash.dashedWedgeSpacingMultiplier;
     const spacingMultiplier = Number.isFinite(spacingMultiplierRaw) && spacingMultiplierRaw > 0 ? spacingMultiplierRaw : 3.0;
@@ -478,17 +458,15 @@ class SvgWrapper implements IDrawingSurface {
     const divisor = baseUnit !== 0 ? length / baseUnit : 0;
     const rawStep = divisor !== 0 ? bondDash.dashedStepFactor / divisor : bondDash.dashedStepFactor;
     const step = Math.max(rawStep, 1e-3);
-    const widthFactor = bondDash.dashedWidthFactorSvg ?? 0.5;
-    const baseFont = this.userOpts.typography.fontSizeLarge;
 
-    const gradientId = this.createWedgeGradient(line, start, end, wedge.baseColor, wedge.tipColor);
+    const gradientId = this.createWedgeGradient(line, geometry.basePoint.clone(), geometry.tipPoint.clone(), geometry.baseColor, geometry.tipColor);
 
     for (let t = 0.0; t < 1.0; t += step) {
-      const to = Vector2.multiplyScalar(dir, t * length);
-      const width = baseFont * widthFactor * t;
-      const dashOffset = Vector2.multiplyScalar(normals[0], width);
+      const to = Vector2.multiplyScalar(dir.clone(), t * length);
+      const width = tipHalfWidth + (baseHalfWidth - tipHalfWidth) * t;
+      const dashOffset = Vector2.multiplyScalar(geometry.normals[0].clone(), width);
 
-      let startDash = Vector2.add(start, to);
+      let startDash = Vector2.add(geometry.basePoint.clone(), to);
       startDash.subtract(dashOffset);
       let endDash = startDash.clone();
       endDash.add(Vector2.multiplyScalar(dashOffset, 2.0));
@@ -1176,6 +1154,53 @@ class SvgWrapper implements IDrawingSurface {
       tipColor: baseIsRight ? leftColor : rightColor,
       leftVector,
       rightVector,
+    };
+  }
+
+  private getWedgeHalfWidth(): number {
+    const bondDash = this.userOpts.rendering.bonds;
+    const widthFactor = Number.isFinite(bondDash.dashedWidthFactorSvg) ? bondDash.dashedWidthFactorSvg : 0.5;
+    return this.userOpts.typography.fontSizeLarge * widthFactor;
+  }
+
+  private computeWedgeGeometry(line: Line, inset: number = 0): {
+    basePoint: Vector2;
+    tipPoint: Vector2;
+    normals: Vector2[];
+    direction: Vector2;
+    length: number;
+    baseColor: string;
+    tipColor: string;
+    baseIsRight: boolean;
+  } {
+    const context = this.resolveWedgeContext(line);
+    const workingLine = line.clone();
+    if (inset > 0) {
+      if (context.baseIsRight) {
+        workingLine.shortenRight(inset);
+      } else {
+        workingLine.shortenLeft(inset);
+      }
+    }
+
+    const basePoint = context.baseIsRight ? workingLine.getRightVector().clone() : workingLine.getLeftVector().clone();
+    const tipPoint = context.baseIsRight ? workingLine.getLeftVector().clone() : workingLine.getRightVector().clone();
+    const normals = Vector2.normals(basePoint.clone(), tipPoint.clone());
+    normals[0].normalize();
+    normals[1].normalize();
+    const direction = Vector2.subtract(tipPoint.clone(), basePoint.clone());
+    const length = direction.length();
+    direction.normalize();
+
+    return {
+      basePoint,
+      tipPoint,
+      normals,
+      direction,
+      length,
+      baseColor: context.baseColor,
+      tipColor: context.tipColor,
+      baseIsRight: context.baseIsRight,
     };
   }
 }
