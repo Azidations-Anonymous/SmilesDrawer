@@ -5,7 +5,7 @@ import {
 } from './IOptions';
 import packageJson = require('../../package.json');
 
-export const DEFAULT_POINT_RADIUS = 30 / 4.5;
+export const DEFAULT_POINT_RADIUS = 0.75;
 
 const DEFAULT_BRANCH_ANGLE_RAD = (2 * Math.PI) / 3;
 
