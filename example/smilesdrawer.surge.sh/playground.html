@@ -128,6 +128,10 @@
                                             </button>
                                         </p>
                                     </div>
+                                    <div class="field png-resolution-control" data-toggle-target="display-1" style="display: none;">
+                                        <label class="label is-small">PNG resolution: <span class="png-resolution-value">2</span>x</label>
+                                        <input type="range" class="png-resolution-slider" min="1" max="8" step="1" value="2" style="width: 100%;">
+                                    </div>
                                 </div>
                             </article>
                         </div>
@@ -660,6 +664,7 @@
             reactionScaleEnabled: initialReactionScaleEnabled,
             reactionScaleValue: initialReactionScaleValue,
             reactionFontFamily: initialReactionFontFamily,
+            pngResolution: 2,
         };
         const syncDashPattern = () => {
             const existingPattern = moleculeOptions.rendering.bonds.dashPattern || [];
@@ -1888,6 +1893,10 @@
                     button.classList.remove('is-link', 'is-selected');
                 }
             });
+            const isPng = (renderModes[displayKey] || 'svg') === 'png';
+            document.querySelectorAll(`.png-resolution-control[data-toggle-target=\"${displayKey}\"]`).forEach((el) => {
+                el.style.display = isPng ? '' : 'none';
+            });
         }
 
         function setupRenderToggles() {
@@ -1911,48 +1920,86 @@
 
                 updateToggleButtons(target);
             });
+
+            document.querySelectorAll('.png-resolution-slider').forEach((slider) => {
+                const control = slider.closest('.png-resolution-control');
+                const valueLabel = control ? control.querySelector('.png-resolution-value') : null;
+                slider.addEventListener('input', () => {
+                    uiState.pngResolution = parseInt(slider.value, 10) || 2;
+                    if (valueLabel) {
+                        valueLabel.textContent = uiState.pngResolution;
+                    }
+                    redraw();
+                });
+            });
+        }
+
+        function rasterizeSvgToCanvas(svgElement, canvasElement) {
+            const logicalW = moleculeOptions.canvas.width || 500;
+            const logicalH = moleculeOptions.canvas.height || 500;
+            const res = uiState.pngResolution || 1;
+            const pixelW = logicalW * res;
+            const pixelH = logicalH * res;
+
+            const clone = svgElement.cloneNode(true);
+            if (!clone.getAttribute('xmlns')) {
+                clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            }
+            clone.setAttribute('width', pixelW.toString());
+            clone.setAttribute('height', pixelH.toString());
+
+            const image = new Image();
+            image.onload = function () {
+                canvasElement.width = pixelW;
+                canvasElement.height = pixelH;
+                const ctx = canvasElement.getContext('2d');
+                ctx.drawImage(image, 0, 0, pixelW, pixelH);
+            };
+            image.src = 'data:image/svg+xml;charset-utf-8,' + encodeURIComponent(clone.outerHTML);
         }
 
         function drawAndCollect(smiles, displayKey) {
-            const sd = new SmiDrawer(moleculeOptions, reactionOptions);
             const isReaction = smiles.includes('>');
-            let targetElement = null;
+            const svgElement = document.getElementById(`${displayKey}-svg`);
+            const canvasElement = document.getElementById(`${displayKey}-canvas`);
+            let isPngMode = false;
 
             if (isReaction || displayKey === 'display-3') {
-                const svgElement = document.getElementById(`${displayKey}-svg`);
                 if (svgElement) {
                     svgElement.style.display = '';
                 }
-                const canvasElement = document.getElementById(`${displayKey}-canvas`);
                 if (canvasElement) {
                     canvasElement.style.display = 'none';
                 }
-                targetElement = svgElement;
                 if (renderModes[displayKey]) {
                     renderModes[displayKey] = 'svg';
                 }
             } else {
                 const mode = renderModes[displayKey] || 'svg';
-                const svgElement = document.getElementById(`${displayKey}-svg`);
-                const canvasElement = document.getElementById(`${displayKey}-canvas`);
+                isPngMode = mode === 'png';
                 if (svgElement) {
-                    svgElement.style.display = mode === 'svg' ? '' : 'none';
+                    svgElement.style.display = isPngMode ? 'none' : '';
                 }
                 if (canvasElement) {
-                    canvasElement.style.display = mode === 'png' ? '' : 'none';
+                    canvasElement.style.display = isPngMode ? '' : 'none';
                 }
-                targetElement = mode === 'png' ? canvasElement : svgElement;
             }
 
-            if (!targetElement) {
+            if (!svgElement) {
                 console.warn('Missing render target for', displayKey);
                 return null;
             }
 
-            const selector = targetElement.id ? `#${targetElement.id}` : targetElement;
+            const sd = new SmiDrawer(moleculeOptions, reactionOptions);
+            const selector = `#${svgElement.id}`;
 
             try {
                 sd.draw(smiles, selector, theme);
+
+                if (isPngMode && canvasElement) {
+                    rasterizeSvgToCanvas(svgElement, canvasElement);
+                }
+
                 return collectPositionData(sd);
             } catch (err) {
                 console.error(err);
@@ -1969,12 +2016,10 @@
                 }
                 const canvasElement = document.getElementById(`${key}-canvas`);
                 if (canvasElement) {
-                    canvasElement.style.width = '';
-                    canvasElement.style.height = '';
-                    const targetWidth = canvasElement.width || 500;
-                    const targetHeight = canvasElement.height || 500;
-                    canvasElement.width = targetWidth;
-                    canvasElement.height = targetHeight;
+                    const logicalW = moleculeOptions.canvas.width || 500;
+                    const logicalH = moleculeOptions.canvas.height || 500;
+                    canvasElement.style.width = logicalW + 'px';
+                    canvasElement.style.height = logicalH + 'px';
                 }
             });
 
