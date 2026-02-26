@@ -263,6 +263,7 @@ interface IRenderingStereochemistryOptions {
   wedgeTipPaddingPx: number;
   wedgeTipFontScale: number;
   wedgeSidePaddingPx: number;
+  wedgeBaseWidthPx: number;
 }
 
 interface IRenderingAromaticOptions {

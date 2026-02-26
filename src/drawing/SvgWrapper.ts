@@ -1161,7 +1161,9 @@ class SvgWrapper implements IDrawingSurface {
     const inset = Number.isFinite(bondDash.dashedInsetPx) ? Math.max(bondDash.dashedInsetPx, 0) : (options.solid ? 0 : 1.0);
     const geometry = this.computeWedgeGeometry(line, inset);
     const maxHalfWidth = this.getWedgeHalfWidth();
-    const baseHalfWidth = options.solid ? 0 : maxHalfWidth;
+    const stereoOpts = this.userOpts.rendering.stereochemistry;
+    const solidBaseWidth = Number.isFinite(stereoOpts.wedgeBaseWidthPx) ? Math.max(stereoOpts.wedgeBaseWidthPx, 0) : 0.75;
+    const baseHalfWidth = options.solid ? solidBaseWidth / 2 : maxHalfWidth;
     const tipHalfWidth = options.solid ? maxHalfWidth : 0;
     const basePoint = options.solid
       ? geometry.baseIsRight ? line.getRightVector().clone() : line.getLeftVector().clone()

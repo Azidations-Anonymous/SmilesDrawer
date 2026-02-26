@@ -57,7 +57,8 @@ function createCanvasWrapper(overrides = {}) {
         stereochemistry: {
           shadowShortenPx: 8,
           wedgeTipPaddingPx: 3,
-          wedgeSidePaddingPx: 1
+          wedgeSidePaddingPx: 1,
+          wedgeBaseWidthPx: 0.75
         }
       }
     },
@@ -128,7 +129,8 @@ test('CanvasPrimitiveDrawer uses shadowShortenPx for line shadows', () => {
         stereochemistry: {
           shadowShortenPx: 12,
           wedgeTipPaddingPx: 3,
-          wedgeSidePaddingPx: 1
+          wedgeSidePaddingPx: 1,
+          wedgeBaseWidthPx: 0.75
         }
       }
     }
@@ -190,7 +192,8 @@ test('CanvasWedgeDrawer uses dashedInsetPx for dashed wedges', () => {
         stereochemistry: {
           wedgeTipPaddingPx: 0,
           wedgeSidePaddingPx: 0,
-          shadowShortenPx: 8
+          shadowShortenPx: 8,
+          wedgeBaseWidthPx: 0.75
         }
       }
     }
