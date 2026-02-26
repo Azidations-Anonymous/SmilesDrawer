@@ -369,13 +369,14 @@ The default options are defined as follows (auto-generated via `node scripts/upd
       shadowShortenPx: 5,
       wedgeTipPaddingPx: 3,
       wedgeTipFontScale: 0.25,
-      wedgeSidePaddingPx: 1.5
+      wedgeSidePaddingPx: 1.5,
+      wedgeBaseWidthPx: 1
     },
     atoms: {
       atomVisualization: 'default',
       terminalCarbons: false,
       explicitHydrogens: false,
-      pointRadius: 6.666666666667,
+      pointRadius: 0.75,
       pointMaskRadius: 1.5
     },
     aromatic: {
