@@ -389,24 +389,7 @@ class SvgWrapper implements IDrawingSurface {
    * @param {Line} line the line object to create the wedge from
    */
   drawWedge(line: Line): void {
-    const bondDash = this.userOpts.rendering.bonds;
-    const inset = Number.isFinite(bondDash.dashedInsetPx) ? Math.max(bondDash.dashedInsetPx, 0) : 0;
-    const geometry = this.computeWedgeGeometry(line, inset);
-    const maxHalfWidth = this.getWedgeHalfWidth();
-    const baseHalfWidth = 0;
-    const tipHalfWidth = maxHalfWidth;
-    const basePoint = geometry.baseIsRight ? line.getRightVector().clone() : line.getLeftVector().clone();
-
-    let t = Vector2.add(basePoint.clone(), Vector2.multiplyScalar(geometry.normals[0].clone(), baseHalfWidth)),
-      u = Vector2.add(geometry.tipPoint.clone(), Vector2.multiplyScalar(geometry.normals[0].clone(), tipHalfWidth)),
-      v = Vector2.add(geometry.tipPoint.clone(), Vector2.multiplyScalar(geometry.normals[1].clone(), tipHalfWidth)),
-      w = Vector2.add(basePoint.clone(), Vector2.multiplyScalar(geometry.normals[1].clone(), baseHalfWidth));
-
-    let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-    const gradientId = this.createWedgeGradient(line, geometry.basePoint.clone(), geometry.tipPoint.clone(), geometry.baseColor, geometry.tipColor);
-    polygon.setAttributeNS(null, 'points', `${t.x},${t.y} ${u.x},${u.y} ${v.x},${v.y} ${w.x},${w.y}`);
-    polygon.setAttributeNS(null, 'fill', `url('#${gradientId}')`);
-    this.paths.push(polygon);
+    this.renderWedge(line, { solid: true });
   }
 
   /* Draw a highlight for an atom
@@ -434,45 +417,9 @@ class SvgWrapper implements IDrawingSurface {
    * @param {Line} line A line.
    */
   drawDashedWedge(line: Line): void {
-    if (isNaN(line.from.x) || isNaN(line.from.y) ||
-      isNaN(line.to.x) || isNaN(line.to.y)) {
-      return;
-    }
-
-    const bondDash = this.userOpts.rendering.bonds;
-    const inset = Number.isFinite(bondDash.dashedInsetPx) ? Math.max(bondDash.dashedInsetPx, 0) : 1.0;
-    const geometry = this.computeWedgeGeometry(line, inset);
-    const maxHalfWidth = this.getWedgeHalfWidth();
-    const baseHalfWidth = maxHalfWidth;
-    const tipHalfWidth = 0;
-    const length = geometry.length;
-    if (!isFinite(length) || length <= 0) {
-      return;
-    }
-
-    const dir = geometry.direction.clone();
-    const bondThickness = this.userOpts.rendering.bonds.bondThickness || 1;
-    const spacingMultiplierRaw = bondDash.dashedWedgeSpacingMultiplier;
-    const spacingMultiplier = Number.isFinite(spacingMultiplierRaw) && spacingMultiplierRaw > 0 ? spacingMultiplierRaw : 3.0;
-    const baseUnit = bondThickness * spacingMultiplier;
-    const divisor = baseUnit !== 0 ? length / baseUnit : 0;
-    const rawStep = divisor !== 0 ? bondDash.dashedStepFactor / divisor : bondDash.dashedStepFactor;
-    const step = Math.max(rawStep, 1e-3);
-
-    const gradientId = this.createWedgeGradient(line, geometry.basePoint.clone(), geometry.tipPoint.clone(), geometry.baseColor, geometry.tipColor);
-
-    for (let t = 0.0; t < 1.0; t += step) {
-      const to = Vector2.multiplyScalar(dir.clone(), t * length);
-      const width = tipHalfWidth + (baseHalfWidth - tipHalfWidth) * t;
-      const dashOffset = Vector2.multiplyScalar(geometry.normals[0].clone(), width);
-
-      let startDash = Vector2.add(geometry.basePoint.clone(), to);
-      startDash.subtract(dashOffset);
-      let endDash = startDash.clone();
-      endDash.add(Vector2.multiplyScalar(dashOffset, 2.0));
-
-      this.drawLine(new Line(startDash.clone(), endDash.clone(), line.elementFrom, line.elementTo), false, gradientId, 'round');
-    }
+    this.renderWedge(line, {
+      solid: false,
+    });
   }
 
   /**
@@ -1202,6 +1149,63 @@ class SvgWrapper implements IDrawingSurface {
       tipColor: context.tipColor,
       baseIsRight: context.baseIsRight,
     };
+  }
+
+  private renderWedge(line: Line, options: { solid: boolean }): void {
+    if (isNaN(line.from.x) || isNaN(line.from.y) ||
+      isNaN(line.to.x) || isNaN(line.to.y)) {
+      return;
+    }
+
+    const bondDash = this.userOpts.rendering.bonds;
+    const inset = Number.isFinite(bondDash.dashedInsetPx) ? Math.max(bondDash.dashedInsetPx, 0) : (options.solid ? 0 : 1.0);
+    const geometry = this.computeWedgeGeometry(line, inset);
+    const maxHalfWidth = this.getWedgeHalfWidth();
+    const baseHalfWidth = options.solid ? 0 : maxHalfWidth;
+    const tipHalfWidth = options.solid ? maxHalfWidth : 0;
+    const basePoint = options.solid
+      ? geometry.baseIsRight ? line.getRightVector().clone() : line.getLeftVector().clone()
+      : geometry.basePoint.clone();
+    const tipPoint = geometry.tipPoint.clone();
+
+    const length = geometry.length;
+
+    if (options.solid) {
+      let t = Vector2.add(basePoint.clone(), Vector2.multiplyScalar(geometry.normals[0].clone(), baseHalfWidth)),
+        u = Vector2.add(tipPoint.clone(), Vector2.multiplyScalar(geometry.normals[0].clone(), tipHalfWidth)),
+        v = Vector2.add(tipPoint.clone(), Vector2.multiplyScalar(geometry.normals[1].clone(), tipHalfWidth)),
+        w = Vector2.add(basePoint.clone(), Vector2.multiplyScalar(geometry.normals[1].clone(), baseHalfWidth));
+
+      let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      const gradientId = this.createWedgeGradient(line, geometry.basePoint.clone(), tipPoint.clone(), geometry.baseColor, geometry.tipColor);
+      polygon.setAttributeNS(null, 'points', `${t.x},${t.y} ${u.x},${u.y} ${v.x},${v.y} ${w.x},${w.y}`);
+      polygon.setAttributeNS(null, 'fill', `url('#${gradientId}')`);
+      this.paths.push(polygon);
+      return;
+    }
+
+    const spacingMultiplierRaw = bondDash.dashedWedgeSpacingMultiplier;
+    const spacingMultiplier = Number.isFinite(spacingMultiplierRaw) && spacingMultiplierRaw > 0 ? spacingMultiplierRaw : 3.0;
+    const bondThickness = this.userOpts.rendering.bonds.bondThickness || 1;
+    const baseUnit = bondThickness * spacingMultiplier;
+    const divisor = baseUnit !== 0 ? length / baseUnit : 0;
+    const step = divisor !== 0 ? bondDash.dashedStepFactor / divisor : bondDash.dashedStepFactor;
+
+    const dir = geometry.direction.clone();
+    const gradientId = this.createWedgeGradient(line, geometry.basePoint.clone(), tipPoint.clone(), geometry.baseColor, geometry.tipColor);
+
+    for (let t = 0.0; t < 1.0; t += step) {
+      const to = Vector2.multiplyScalar(dir.clone(), t * length);
+      const width = tipHalfWidth + (baseHalfWidth - tipHalfWidth) * t;
+      const dashOffset = Vector2.multiplyScalar(geometry.normals[0].clone(), width);
+
+      let startDash = Vector2.add(basePoint.clone(), to);
+      startDash.subtract(dashOffset);
+      let endDash = startDash.clone();
+      endDash.add(Vector2.multiplyScalar(dashOffset, 2.0));
+
+      this.drawLine(new Line(startDash.clone(), endDash.clone(), line.elementFrom, line.elementTo), false, gradientId, 'round');
+    }
   }
 }
 
