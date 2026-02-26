@@ -35,9 +35,10 @@
 
         .render-wrapper svg,
         .render-wrapper canvas {
-            width: 100%;
+            max-width: 100%;
             height: auto;
             display: block;
+            margin: 0 auto;
         }
 
         #smiles-layout {
@@ -1945,6 +1946,7 @@
             if (!clone.getAttribute('xmlns')) {
                 clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
             }
+            clone.style.cssText = '';
             clone.setAttribute('width', pixelW.toString());
             clone.setAttribute('height', pixelH.toString());
 
@@ -2008,16 +2010,16 @@
         }
 
         function redraw() {
+            const logicalW = moleculeOptions.canvas.width || 500;
+            const logicalH = moleculeOptions.canvas.height || 500;
             ['display-1', 'display-3'].forEach((key) => {
                 const svgElement = document.getElementById(`${key}-svg`);
                 if (svgElement) {
-                    svgElement.style.width = '';
-                    svgElement.style.height = '';
+                    svgElement.style.width = logicalW + 'px';
+                    svgElement.style.height = logicalH + 'px';
                 }
                 const canvasElement = document.getElementById(`${key}-canvas`);
                 if (canvasElement) {
-                    const logicalW = moleculeOptions.canvas.width || 500;
-                    const logicalH = moleculeOptions.canvas.height || 500;
                     canvasElement.style.width = logicalW + 'px';
                     canvasElement.style.height = logicalH + 'px';
                 }
