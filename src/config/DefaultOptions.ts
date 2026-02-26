@@ -304,7 +304,7 @@ export function getDefaultUserOptions(): IUserOptions {
         wedgeTipPaddingPx: 3.0,
         wedgeTipFontScale: 0.25,
         wedgeSidePaddingPx: 1.5,
-        wedgeBaseWidthPx: 0.75
+        wedgeBaseWidthPx: 1
       },
       atoms: {
         atomVisualization: 'default',

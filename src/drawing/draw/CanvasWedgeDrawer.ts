@@ -109,7 +109,7 @@ class CanvasWedgeDrawer {
         const geometry = this.computeWedgeGeometry(line, inset);
         const maxHalfWidth = this.getWedgeHalfWidth();
         const stereoOpts = this.wrapper.userOpts.rendering.stereochemistry;
-        const solidBaseWidth = Number.isFinite(stereoOpts.wedgeBaseWidthPx) ? Math.max(stereoOpts.wedgeBaseWidthPx, 0) : 0.75;
+        const solidBaseWidth = Number.isFinite(stereoOpts.wedgeBaseWidthPx) ? Math.max(stereoOpts.wedgeBaseWidthPx, 0) : 1;
         const baseHalfWidth = options.solid ? solidBaseWidth / 2 : maxHalfWidth;
         const tipHalfWidth = options.solid ? maxHalfWidth : 0;
 
