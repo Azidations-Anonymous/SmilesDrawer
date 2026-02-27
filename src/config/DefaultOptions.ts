@@ -87,7 +87,7 @@ const themeDefaults: IThemeMap = {
     B: "#2aa198",
     SI: "#2aa198",
     H: "#839496",
-    BACKGROUND: "#fff",
+    BACKGROUND: "#002b36",
     HIGHLIGHT: '#03fc9d'
   },
   "matrix": {

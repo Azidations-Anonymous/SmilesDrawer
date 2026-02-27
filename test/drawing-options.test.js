@@ -373,14 +373,12 @@ test('SvgWrapper dashed wedges respect inset padding', () => {
   assert(Math.abs(startX - inset) < 1e-3, `expected first dash to start near inset ${inset}, saw ${startX}`);
 });
 
-test('SvgWrapper dashed wedges switch colors at the configured threshold', () => {
-  const threshold = 0.3;
+test('SvgWrapper dashed wedges use a gradient with both element colors', () => {
   const { wrapper } = createWrapper({
     rendering: {
       bonds: {
         bondLength: 40,
         bondThickness: 2,
-        dashedColorSwitchThreshold: threshold,
         dashedInsetPx: 0,
         dashedStepFactor: 0.4,
         dashedWidthFactorSvg: 0.25,
@@ -393,28 +391,21 @@ test('SvgWrapper dashed wedges switch colors at the configured threshold', () =>
     }
   });
 
-  const strokes = [];
-  const originalDrawLine = wrapper.drawLine;
-  wrapper.drawLine = function (_segment, _dashed, _gradient, _linecap, strokeColor) {
-    strokes.push(strokeColor);
-  };
+  const line = new Line(new Vector2(0, 0), new Vector2(40, 0), 'N', 'O');
+  wrapper.drawDashedWedge(line);
 
-  try {
-    const line = new Line(new Vector2(0, 0), new Vector2(40, 0), 'N', 'O');
-    wrapper.drawDashedWedge(line);
-  } finally {
-    wrapper.drawLine = originalDrawLine;
-  }
+  const nColor = wrapper.themeManager.getColor('N');
+  const oColor = wrapper.themeManager.getColor('O');
 
-  const leftColor = wrapper.themeManager.getColor('N');
-  const rightColor = wrapper.themeManager.getColor('O');
-  const coloredStrokes = strokes.filter(Boolean);
-  assert(coloredStrokes.includes(leftColor), 'expected left color to appear');
-  assert(coloredStrokes.includes(rightColor), 'expected right color to appear');
-  const firstColor = coloredStrokes[0];
-  const lastColor = coloredStrokes[coloredStrokes.length - 1];
-  assert.equal(firstColor, leftColor);
-  assert.equal(lastColor, rightColor);
+  // renderWedge creates a linearGradient with two stops for the element colors
+  assert.ok(wrapper.gradients.length > 0, 'expected at least one gradient');
+  const gradient = wrapper.gradients[wrapper.gradients.length - 1];
+  const stops = Array.from(gradient.childNodes).filter((n) => n.nodeName.toLowerCase() === 'stop');
+  assert.equal(stops.length, 2, 'gradient should have two color stops');
+
+  const stopColors = stops.map((s) => s.getAttribute('stop-color'));
+  assert(stopColors.includes(nColor), `expected N color (${nColor}) in gradient stops: ${stopColors}`);
+  assert(stopColors.includes(oColor), `expected O color (${oColor}) in gradient stops: ${stopColors}`);
 });
 
 test('Aromatic overlays use the configured stroke color', () => {
