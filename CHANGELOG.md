@@ -4,28 +4,36 @@ All notable changes to this project will be documented in this file.
 ## [3.0.0]
 ### Added
 - Complete TypeScript toolchain and source conversion, including strict interfaces for drawers, managers, SSSR, stereochemistry, and options plus new drawing surface abstractions.
-- A getPositionData() browser API (with versioned metadata baked into builds), atom annotations, Johnson cycle enumeration, and PIKAChU-style overlap/parity plans for higher-fidelity layouts.
+- `IUserOptions` nested options schema with automatic normalizer for legacy flat keys; every rendering, layout, typography, and annotation parameter is individually addressable.
+- A `getPositionData()` browser API (with versioned metadata baked into builds), atom annotations, Johnson cycle enumeration, and PIKAChU-style overlap/parity plans for higher-fidelity layouts.
+- Aromatic pi-system overlays rendered as dashed polygons with configurable inset and stroke color, aligned with PIKAChU-style detection (only implicit aromatic rings from lowercase SMILES).
+- SVG label rewrite: charges, hydrogens, and isotopes are individual `<tspan>` glyphs with per-category spacing, configurable mask radii, and theme-colored text outlines.
+- Solid wedges drawn as trapezoids with configurable base width (`wedgeBaseWidthPx`) and gradient-based color transitions aligned with stereochemistry context.
+- Points atom visualization mode with stroke-based outlines and unified ball/point radius controls.
+- Playground overhaul: SVG/PNG export toggle with resolution slider (1×–8×), Tweakpane controls for every option category (bonds, stereochemistry, atoms, aromatic, layout, typography, annotations), and advanced debug toggle with live log export.
 - A regression and smoke-test platform with dataset filtering, regex selection, copy-to-clipboard buttons, PNG generation (white backgrounds, single-SMILES mode), timestamped outputs, and automated comparison reports/bisect helpers.
 - GitHub Pages deployment workflow that rebuilds docs/dist from source, exposes downloadable SVGs from the playground, and publishes refreshed documentation without tracking generated assets.
-- Configurable iteration/time guards for the overlap finetuning pass (new `finetuneOverlapMaxSteps`/`finetuneOverlapMaxDurationMs` options) plus regression coverage in `test/overlap-finetune.js` that locks the Fig. 2B clash examples in place.
-- Regression metadata now serialises `ringDiagnostics` for both baselines and candidates, exposes per-edge `chiralDict` data, and ships with a `scripts/dump-cis-trans.js` CLI so stereochemical diffs can be debugged without running the full regression harness.
-- Added `cisTransDiagnostics` (per-double-bond orientation checks) to the regression JSON/CLI tools so we can see which substituent pairs failed and how they were evaluated without rerunning the full layout debugger.
-- `CisTransManager` now mirrors Pikachu’s ring/subtree flipping algorithm: it iterates multiple flip plans, re-checks orientations after each attempt, and only marks a stereobond as fixed when the recorded `chiralDict` matches the drawing. Macrocycles no longer flip back and forth after parity fixes.
+- GitHub Actions CI workflow.
+- Upstream regression test suite guarding 7 specific bug fixes (mesylate labels, pseudo-element iteration, bridgedRing reset, norbornane SSSR, chain angles, quaternary layout, pinched pairs).
 
 ### Changed
-- Re-architected the runtime: DrawerBase responsibilities were split into dedicated managers, Graph/Kamada-Kawais code was modularized, and jsdom-based tests were replaced with faster linkedom-based runs.
+- Repository moved from `reymond-group/smilesDrawer` to `Azidations-Anonymous/SmilesDrawer`; updated all internal URLs, CDN references, and `package.json`.
+- README rewritten for v3: modern `SmiDrawer` API front-and-center, auto-generated default options block, legacy namespace API documented separately, stale PIKAChU/surge.sh/v1 content removed.
+- Re-architected the runtime: DrawerBase responsibilities were split into dedicated managers, Graph/Kamada-Kawai code was modularized, and jsdom-based tests were replaced with faster linkedom-based runs.
 - Kamada-Kawai layout internals were rewritten for determinism (tail-recursed relaxation, guarded Hessian/energy updates, short-circuited empty layouts) and instrumented with property-based tests plus benchmarking hooks.
-- Regression reporting now filters numeric noise, treats deltas below 50 ms as neutral, repositions performance panels, and collapses JSON diffs for easier triage while smoke/regression scripts gained clearer CLI ergonomics.
+- Solid and dashed wedge drawing unified into a shared `renderWedge` path with SVG gradient-based color transitions.
+- Layout prioritizes unique substituents when branching and only reorders identical branches in fallback layouts.
+- Regression reporting now filters numeric noise, treats deltas below 50 ms as neutral, repositions performance panels, and collapses JSON diffs for easier triage while smoke/regression scripts gained clearer CLI ergonomics.
 - Playground and packaging updates now consume the dist bundle directly, restore the `smiles-drawer.js` symlink, and remove legacy position-data panels in favor of the runtime API.
-- SVG label rendering now uses the Pikachu-style absolute layout exclusively: every glyph gets its own `<text>` node (no `<g>` transforms), mask halos follow the rendered anchor, the old legacy stacking path was removed, and charges/isotopes/hydrogen counts are drawn as separate glyphs with theme-configurable halos/outlines.
-- Atom annotations now have first-class rendering support via `showAtomAnnotations`, a customizable formatter, and styling knobs for color/offset/font size.
-- SSSR parity is now the default: the experimental flag was removed, the collector guard matches PIKAChU’s “one extra candidate” rule, and aromatic indicators leverage the Johnson cycle inventory so fused/macrocyclic aromatics render correctly.
 
 ### Fixed
-- Stereochemical accuracy improved via cis/trans stereobond corrections, additional SSSR parity tests, deterministic neighbour ordering, and refactored cycle candidate handling.
+- Solarized-dark theme background corrected from `#fff` to `#002b36`.
+- SVG label centering fixes (reymond-group#207, reymond-group#195).
+- Cis/trans sequence-aware stereobond re-evaluation with ring fallbacks, chiral dict preservation across metadata rebuilds, and orientation source tracking.
+- Stereochemical accuracy improved via additional SSSR parity tests, deterministic neighbour ordering, and refactored cycle candidate handling.
 - Overlap/bridged-ring issues were addressed by preventing pivot rotation, keeping chiral wedges visible when hydrogens are hidden, and refining bridged-ring bookkeeping/logging.
 - Baseline/regression stability saw fixes for dataset loading, hidden SMILES filtering, position-data export, and guardrails that verify `src/` before comparing builds.
-- Macrocyclic double bonds no longer oscillate between cis/trans states: the cis/trans manager now mirrors Pikachu’s ring-branch flipping rules (respecting already-fixed stereobonds) and keeps its orientation maps in sync via the new `chiralDict` storage.
+- `app.js` version corrected from `2.1.10` to `3.0.0`; Python notebook example CDN updated to `3.0.0`.
 
 ## [2.1.10] - 2025-03-29
 ### Fixed
@@ -45,7 +53,7 @@ All notable changes to this project will be documented in this file.
 
 ## [2.1.7] - 2023-01-21
 ### Fixed
-- Corrected the GaussDrawer’s chroma import path so the module loads in both bundlers and Node.
+- Corrected the GaussDrawer's chroma import path so the module loads in both bundlers and Node.
 
 ## [2.1.6] - 2023-01-13
 ### Changed
@@ -119,13 +127,9 @@ All notable changes to this project will be documented in this file.
 - Removed implicit hydrogens from aromatic nitrogens, matching standard valence expectations.
 
 ## [1.0.7] - 2018-02-08
-### Added
 ### Changed
 - Bugfixes
-### Removed
 
 ## [1.0.6] - 2018-02-05
 ### Added
 - The method `getMolecularFormula()` has been added. See README for details.
-### Changed
-### Removed
