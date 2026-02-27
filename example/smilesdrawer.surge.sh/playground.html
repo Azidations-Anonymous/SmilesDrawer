@@ -272,8 +272,6 @@
             }
         };
 
-        logCurrentOptions();
-
         let theme = 'custom';
 
         let reactionOptions = {
@@ -666,6 +664,7 @@
             reactionFontFamily: initialReactionFontFamily,
             pngResolution: 2,
         };
+        logCurrentOptions();
         const syncDashPattern = () => {
             const existingPattern = moleculeOptions.rendering.bonds.dashPattern || [];
             const remainingSegments = existingPattern.length > 2 ? existingPattern.slice(2) : [];
@@ -1937,7 +1936,9 @@
         function rasterizeSvgToCanvas(svgElement, canvasElement) {
             const logicalW = moleculeOptions.canvas.width || 500;
             const logicalH = moleculeOptions.canvas.height || 500;
-            const res = uiState.pngResolution || 1;
+            const maxPixels = 16384;
+            const maxRes = Math.max(1, Math.floor(Math.min(maxPixels / logicalW, maxPixels / logicalH)));
+            const res = Math.min(uiState.pngResolution || 1, maxRes);
             const pixelW = logicalW * res;
             const pixelH = logicalH * res;
 
@@ -1956,7 +1957,10 @@
                 const ctx = canvasElement.getContext('2d');
                 ctx.drawImage(image, 0, 0, pixelW, pixelH);
             };
-            image.src = 'data:image/svg+xml;charset-utf-8,' + encodeURIComponent(clone.outerHTML);
+            image.onerror = function (err) {
+                console.warn('SVG rasterisation failed', err);
+            };
+            image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(clone.outerHTML);
         }
 
         function drawAndCollect(smiles, displayKey) {
@@ -2049,7 +2053,9 @@
             const target = close.closest('.modal');
 
             close.addEventListener('click', () => {
-                target.classList.remove('is-active');
+                if (target) {
+                    target.classList.remove('is-active');
+                }
             });
         });
     </script>

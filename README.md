@@ -452,7 +452,7 @@ node scripts/dump-cis-trans.js --smiles "<SMILES>" --pretty
 
 ## Citation
 
-If you use this code or application, please cite the original paper published by the Journal of Chemical Information and Modeling: [10.1021/acs.jcim.7b00425](http://dx.doi.org/10.1021/acs.jcim.7b00425)
+If you use this code or application, please cite the original paper published by the Journal of Chemical Information and Modeling: [10.1021/acs.jcim.7b00425](https://doi.org/10.1021/acs.jcim.7b00425)
 
 ## Contributors
 
