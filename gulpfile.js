@@ -17,6 +17,7 @@ var minify = require("gulp-babel-minify");
 var jsdoc = require("gulp-jsdoc3");
 var webpack = require("webpack-stream");
 var updateReadmeDefaultOptions = require("./scripts/update-readme-default-options").updateReadmeDefaultOptions;
+var syncRepoUrls = require("./scripts/sync-repo-urls").syncRepoUrls;
 
 function compile(watch) {
   var bundler = watchify(
@@ -84,9 +85,15 @@ function syncReadmeTask(done) {
   done();
 }
 
-gulp.task("sync-readme-default-options", syncReadmeTask);
+function syncRepoUrlsTask(done) {
+  syncRepoUrls();
+  done();
+}
 
-gulp.task("build", gulp.series(syncReadmeTask, function() {
+gulp.task("sync-readme-default-options", syncReadmeTask);
+gulp.task("sync-repo-urls", syncRepoUrlsTask);
+
+gulp.task("build", gulp.series(syncReadmeTask, syncRepoUrlsTask, function() {
   return new Promise(function(resolve, reject) {
     compile();
     resolve();
