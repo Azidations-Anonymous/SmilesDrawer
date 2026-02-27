@@ -9,15 +9,15 @@ No server, no images, no templates — just a SMILES string in, a structure out.
             <td><a href="https://azidations-anonymous.github.io/SmilesDrawer/">Reactions & Highlights</a></td>
         </tr>
         <tr>
-            <td><a href="https://azidations-anonymous.github.io/SmilesDrawer/"><img src="https://github.com/reymond-group/smilesDrawer/raw/master/readme/main.png"></img></a></td>
-            <td><a href="https://azidations-anonymous.github.io/SmilesDrawer/"><img src="https://github.com/reymond-group/smilesDrawer/raw/master/readme/rxn_highlight.png"></img></a></td>
+            <td><a href="https://azidations-anonymous.github.io/SmilesDrawer/"><img src="https://github.com/Azidations-Anonymous/SmilesDrawer/raw/master/readme/main.png"></img></a></td>
+            <td><a href="https://azidations-anonymous.github.io/SmilesDrawer/"><img src="https://github.com/Azidations-Anonymous/SmilesDrawer/raw/master/readme/rxn_highlight.png"></img></a></td>
         </tr>
         <tr>
             <td><a href="https://azidations-anonymous.github.io/SmilesDrawer/playground/index.html">Playground</a></td>
             <td></td>
         </tr>
         <tr>
-            <td><a href="https://azidations-anonymous.github.io/SmilesDrawer/playground/index.html"><img src="https://github.com/reymond-group/smilesDrawer/raw/master/readme/style.png"></img></a></td>
+            <td><a href="https://azidations-anonymous.github.io/SmilesDrawer/playground/index.html"><img src="https://github.com/Azidations-Anonymous/SmilesDrawer/raw/master/readme/style.png"></img></a></td>
             <td></td>
         </tr>
     </tbody>
